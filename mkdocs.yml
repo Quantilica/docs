@@ -1,0 +1,60 @@
+site_name: Brazilian Public Data Suite
+site_description: Tools for extracting, processing and analyzing Brazilian public datasets.
+site_author: D.K. Komesu
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - content.code.annotate
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+nav:
+  - Home:
+      - Overview: index.md
+
+  - IBGE (Macroeconomics):
+      - Overview: ibge/index.md
+      - sidra-fetcher: ibge/sidra-fetcher.md
+      - ibge-sidra-tabelas: ibge/ibge-sidra-tabelas.md
+
+  - Treasury (Finance):
+      - Overview: tesouro/index.md
+      - tddata: tesouro/tddata.md
+      - Portfolio Returns Guide: tesouro/calculo-retornos.md
+
+  - Labor Market:
+      - Overview: trabalho/index.md
+      - pdet-data: trabalho/pdet-data.md
+      - Parquet + Polars Guide: trabalho/guia-parquet.md
+
+  - Foreign Trade:
+      - Overview: comex/index.md
+      - comexdown: comex/comexdown.md
+
+  - Public Health:
+      - Overview: saude/index.md
+      - datasus-fetcher: saude/datasus-fetcher.md
+
+  - Climate & Environment:
+      - Overview: clima/index.md
+      - inmet-bdmep-data: clima/inmet-bdmep-data.md
+
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Design Principles: architecture/design-principles.md
+
+  - Concepts:
+      - Data Engineering: concepts/data-engineering.md
+      - Pipelines: concepts/pipelines.md
+      - Storage: concepts/storage.md
+
+plugins:
+  - search
