@@ -19,6 +19,8 @@ theme:
 nav:
   - Home:
       - Overview: index.md
+      - Design Philosophy: design-philosophy.md
+      - Best Practices: best-practices.md
 
   - IBGE (Macroeconomics):
       - Overview: ibge/index.md
