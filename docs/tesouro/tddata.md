@@ -30,8 +30,7 @@ The minimal installation includes only `httpx` and `tqdm` for downloading data. 
 
 ### The `tddata` CLI
 
-The package includes a comprehensive Command-Line Interface (CLI) for downloading, inspecting, and converting Tesouro Direto data. See [CLI.md](docs/CLI.md) for complete documentation including all commands, options, and examples.
-
+The package includes a comprehensive Command-Line Interface (CLI) for downloading, inspecting, and converting Tesouro Direto data.
 ### The `tddata` Python Package
 
 You can use `tddata` as a library in your Python scripts or Jupyter Notebooks.
