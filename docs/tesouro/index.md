@@ -254,30 +254,6 @@ result.write_parquet("treasury_processed.parquet")
 df = pl.read_parquet("treasury_processed.parquet")
 ```
 
-### 6. Normalize Real Returns (NTN-B)
-
-For IPCA-indexed bonds, separate nominal yield from inflation:
-
-```python
-from ibge_sidra_tabelas import SidraClient
-
-# Get NTN-B yields
-ntnb = pl.read_parquet("ntnb_data.parquet")
-
-# Get IPCA inflation
-ibge = SidraClient()
-ipca = ibge.fetch(table="1737", variable=63)
-
-# Calculate real yield
-combined = (
-    ntnb
-    .join(ipca.rename({"value": "ipca_monthly"}), on="date")
-    .with_columns([
-        (pl.col("yield") - pl.col("ipca_monthly")).alias("real_yield")
-    ])
-)
-```
-
 ## Key Concepts
 
 ### Prefixed Bonds (LTN, NTN-F)
