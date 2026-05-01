@@ -97,10 +97,12 @@ Processed Data (stored)
 **When to use**: Data is small, transformations are complex
 
 **Pros**:
+
 - Reduced storage (only store processed data)
 - Reduced transfer (only move clean data)
 
 **Cons**:
+
 - Transformation failures lose raw data
 - Hard to change transformations later (have to re-fetch)
 
@@ -119,11 +121,13 @@ Raw Data (stored)
 **When to use**: Data is large, transformations evolve
 
 **Pros**:
+
 - Raw data preserved (debugging, re-processing)
 - Flexible transformations (no re-fetch)
 - Parallelizable (transform many ways in parallel)
 
 **Cons**:
+
 - Requires more storage
 - Need tools to handle raw data
 
@@ -364,29 +368,34 @@ if change > 0.50:
 ## Tools for Data Engineering
 
 ### Extraction
+
 - **HTTP clients**: requests, httpx
 - **Database drivers**: psycopg2, sqlite3
 - **Cloud SDKs**: boto3 (AWS), google-cloud (GCP)
 
 ### Transformation
+
 - **Pandas**: Flexible, widely-used
 - **Polars**: Fast, memory-efficient
 - **DuckDB**: SQL on files/dataframes
 - **Spark**: Distributed processing
 
 ### Storage
+
 - **Parquet**: Columnar, compressed
 - **PostgreSQL**: Relational, ACID
 - **S3/Cloud Storage**: Data lake
 - **Snowflake/BigQuery**: Cloud data warehouse
 
 ### Orchestration
+
 - **Apache Airflow**: Workflow scheduler
 - **Dagster**: Data-aware orchestration
 - **Prefect**: Modern flow orchestration
 - **cron**: Simple scheduled jobs
 
 ### Monitoring
+
 - **Prometheus**: Metrics collection
 - **Grafana**: Dashboarding
 - **DataDog**: APM and monitoring

@@ -2,6 +2,10 @@
 
 A modular platform for extracting, processing and analyzing Brazilian public datasets.
 
+<div align="center">
+  <img src="../assets/logo.png" alt="Logo" width="200" height="200">
+</div>
+
 ## The Problem
 
 Brazilian public data is fragmented across multiple government agencies, each with its own data infrastructure:
@@ -26,7 +30,7 @@ This platform provides a set of **specialized, modular tools** designed to handl
 | Component | Architecture Pattern | Infrastructure Challenge |
 |-----------|---------------------|--------------------------|
 | **sidra-fetcher** | Dual sync/async clients with smart caching | Unstable IBGE REST API, rate limiting |
-| **sidra-sql** | Data warehousing with dimensional modeling | Table discovery across thousands of datasets |
+| **sidra-sql** | Plugin-based ETL motor with star-schema modeling | Streaming bulk load + revision history (SCD II) |
 | **tddata** | Financial engineering with FIFO lot matching | Streaming portfolio transactions, GIPS compliance |
 | **pdet-data** | Big Data transformation with Polars vectorial processing | 50M+ row CSVs that exhaust Pandas memory |
 | **comexdown** | Resilient extraction agent with temporal idempotency | Legacy government servers, SSL issues, colossal files |
@@ -83,6 +87,7 @@ Analytics / BI / Research
 ## Key Components
 
 ### sidra-fetcher
+
 **Dual client pattern** for IBGE SIDRA macroeconomic extraction. Provides both synchronous (simplicity) and asynchronous (performance) clients with smart caching via HEAD requests checking Last-Modified headers.
 
 - **Sync mode** (~60s): Sequential table fetches for one-off queries or simplicity
@@ -91,14 +96,17 @@ Analytics / BI / Research
 - **Use when**: You need real-time economic indicators, inflation data, or employment statistics from SIDRA with flexible sync/async requirements
 
 ### sidra-sql
-**Data warehousing** layer that catalogs SIDRA's 5000+ tables with dimensional modeling. Implements Slowly Changing Dimensions (SCD Type II) to track table schema evolution and audit trails.
 
-- **Table discovery**: Navigate SIDRA's taxonomy programmatically (no manual browsing)
-- **Schema tracking**: Versioned layouts with SCD Type II for historical accuracy
-- **Metadata pipelines**: Declarative table selection with filtering and aggregation
-- **Use when**: Building a data warehouse, discovering new tables, or tracking schema changes over time
+**Plugin-based ETL motor** that ingests SIDRA tables into a normalized PostgreSQL star schema. Streaming bulk load via PostgreSQL `COPY FROM STDIN` (400k+ rows/sec). Implements Slowly Changing Dimensions (SCD Type II) so historical revisions are preserved instead of overwritten.
+
+- **Declarative TOML pipelines**: `fetch.toml` + `transform.toml` + `transform.sql` per dataset; no Python required
+- **Plugin system**: Pre-built catalog at `sidra-pipelines`; one-command install + run
+- **Star schema**: 5 tables (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`) decouple metadata from facts
+- **SCD Type II**: `ativo` + `modificacao` columns reproduce any historical snapshot
+- **Use when**: Building a reproducible data warehouse, exposing IBGE data to BI tools, or tracking IBGE revisions over time
 
 ### tddata
+
 **Financial engineering suite** for Treasury Direct fixed-income analysis. Features FIFO inventory control algorithm, Modified Dietz Method for GIPS-compliant portfolio performance measurement, and async concurrent bond downloads.
 
 - **Smart async fetching** (3x faster than sync): Parallel bond downloads with idempotence checks
@@ -108,6 +116,7 @@ Analytics / BI / Research
 - **Use when**: Building fixed-income analytics, calculating portfolio performance, or analyzing Brazilian government bond yields
 
 ### pdet-data
+
 **Big Data transformation engine** for Brazilian labor market microdata. Multithreaded Polars vectorial processing transforms legacy CSV/TXT formats into efficient Parquet columnar storage with 95%+ compression.
 
 - **Raw-to-Parquet conversion**: 8 GB CSV → 0.4 GB Parquet (96% compression)
@@ -117,6 +126,7 @@ Analytics / BI / Research
 - **Use when**: Processing 50M+ row employment datasets that exhaust Pandas memory
 
 ### comexdown
+
 **Resilient network extraction agent** for Siscomex trade data with streaming efficiency and SSL resilience. Handles legacy government infrastructure instability through temporal idempotency and exponential backoff.
 
 - **Temporal idempotency** (57x speedup): HEAD requests check Last-Modified; skip unchanged files
@@ -127,6 +137,7 @@ Analytics / BI / Research
 - **Use when**: Downloading gigabyte-scale trade datasets or analyzing import/export patterns
 
 ### datasus-fetcher
+
 **Multithreaded concurrent crawler** for DATASUS epidemiological systems hosted on legacy FTP servers. Producer-Consumer threading pattern with recursive directory crawling and semantic filename parsing.
 
 - **Multithreaded concurrency** (6-10x speedup): Pool-based parallelization with 5-10 concurrent FTP connections
@@ -224,58 +235,73 @@ result = crawler.fetch_subsystem(
 ## Use Cases
 
 ### Real-Time Economic Monitoring
+
 Use async sidra-fetcher to concurrently fetch GDP, inflation, and employment from IBGE SIDRA. 4x faster than sequential approaches. Combine with tddata for yield curves and macro analysis.
 
 ### Portfolio Analytics & Risk Management
+
 Fetch Treasury Direct historical yields with tddata. Calculate GIPS-compliant returns using Modified Dietz Method with FIFO lot matching. Analyze duration and convexity risk across your fixed-income holdings.
 
 ### Labor Market Dynamics
+
 Process 50M+ row RAIS employment records with pdet-data (raw CSV → Parquet in 62s). Analyze wage trends, job creation, and sectoral shifts using Polars vectorial processing. Track monthly flows with CAGED data.
 
 ### Trade Competitiveness & Supply Chain
+
 Download complete trade flows from Siscomex with comexdown (57x speedup via smart caching). Analyze export specialization, import dependency, and competitiveness indices by commodity and destination.
 
 ### Epidemiological Surveillance & Public Health
+
 Concurrently crawl DATASUS FTP servers with datasus-fetcher (6-10x speedup). Build disease burden studies from complete microdata (SIM mortality, SINASC births). Track health inequities and resource allocation efficiency.
 
 ## Design Philosophy
 
 ### Modularity
+
 Each tool is independent. Use only what you need; don't pull in unnecessary dependencies.
 
 ### Performance
+
 Prefer columnar storage (Parquet) for analytical queries. Support PostgreSQL for operational access.
 
 ### Resilience
+
 Handle API failures, retries, and partial failures gracefully. Never silently drop data.
 
 ### Reproducibility
+
 All transformations are deterministic and logged. Replay any pipeline from raw data.
 
 ### No Magic
+
 Explicit is better than implicit. Know what data is being fetched, transformed, and stored.
 
 ## Getting Started
 
 ### By Use Case
 
-**Economic Indicators?** → [IBGE (sidra-fetcher, sidra-sql)](ibge/index.md)
+**Economic Indicators?** → [IBGE (sidra-fetcher, sidra-sql, sidra-pipelines)](ibge/index.md)
+
 - Real-time GDP, inflation, employment statistics
-- Smart async caching for fast, concurrent fetches
+- Async fetching for ad-hoc analysis; declarative TOML pipelines for production warehousing
 
 **Fixed-Income Analysis?** → [Treasury Direct (tddata)](tesouro/index.md)
+
 - GIPS-compliant portfolio returns with Modified Dietz
 - FIFO inventory control for per-lot attribution
 
 **Employment & Wages?** → [Labor Market (pdet-data)](trabalho/index.md)
+
 - 50M+ row RAIS microdata processed in seconds with Polars
 - Monthly job flows from CAGED
 
 **Trade Patterns?** → [Foreign Trade (comexdown)](comex/index.md)
+
 - Complete Siscomex datasets with temporal idempotency
 - 57x speedup via smart caching
 
 **Disease Surveillance?** → [Public Health (datasus-fetcher)](saude/index.md)
+
 - Multithreaded FTP crawling (6-10x faster than sequential)
 - Complete microdata from DATASUS epidemiological systems
 

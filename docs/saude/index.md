@@ -11,6 +11,7 @@ Far more than a simple data client, it understands the complex taxonomy of Brazi
 Obtaining complete Brazilian public health microdata encounters severe infrastructure barriers:
 
 ### 1. FTP Protocol Limitations
+
 DATASUS primarily hosts data on public FTP (`ftp.datasus.gov.br`). The FTP protocol is inherently:
 - Synchronous (one file at a time)
 - Prone to silent transfer failures
@@ -18,11 +19,13 @@ DATASUS primarily hosts data on public FTP (`ftp.datasus.gov.br`). The FTP proto
 - Severely limited per-thread bandwidth
 
 ### 2. Labyrinth of Directories & Cryptic Nomenclature
+
 Files (often in proprietary `.dbc` format) are scattered across dozens of nested directories. Filenames encode complex business logic positionally:
 - `RDSP2001.dbc` = AIH Reduced, SP state, Year 2020, Month 01
 - Manual parsing is error-prone and brittle
 
 ### 3. Infeasible Sequential Downloads
+
 Downloading all data (all states, all years, all subsystems) sequentially via scripts can take weeks. Network failures mid-transfer mean total loss of progress.
 
 **datasus-fetcher** solves these through multithreaded concurrency, semantic file parsing, and intelligent resumption.

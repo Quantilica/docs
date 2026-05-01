@@ -51,19 +51,24 @@ Treasury Direct data analysis encounters critical obstacles:
 ## Use Cases
 
 ### Economic Monitoring
+
 Track real-time Brazilian fixed-income market conditions:
+
 - Yield curve trends (prefixed vs. inflation-indexed spreads)
 - Duration risk exposure
 - Market volatility and repricing
 
 ### Portfolio Management
+
 Build and optimize Brazilian government bond portfolios:
+
 - FIFO lot matching for per-lot returns
 - Modified Dietz portfolio performance (GIPS-compliant)
 - Asset allocation and duration management
 
 ### Quantitative Analysis
 Model term structure and price dynamics:
+
 - Yield curve modeling
 - Interest rate sensitivity (duration/convexity)
 - Market microstructure

@@ -1,6 +1,8 @@
 # sidra-sql
 
-Advanced ETL & Data Warehousing infrastructure for IBGE SIDRA data.
+**Advanced ETL & Data Warehousing infrastructure for IBGE SIDRA data.**
+
+![sidra-sql banner](../assets/banner.png)
 
 ## What It Is
 
@@ -13,13 +15,16 @@ While **sidra-fetcher** solves the communication problem (getting data from API)
 Working with IBGE data for rigorous research or financial modeling involves structural challenges beyond simple download:
 
 ### 1. Complex IBGE Ontology
+
 SIDRA organizes data in highly nested structures:
+
 - **Aggregates** (tables) contain **variables** at multiple **territorial levels**
 - Up to **6 different classifications** can cross-tabulate
 - Flattening this into CSV files destroys **referential integrity** and causes massive duplication
 
-```
 SIDRA Structure (hierarchical):
+
+```
   Table 1620 (GDP)
     ├─ Variable 116 (Real GDP)
     │   ├─ Territory: Brazil (level 1)
@@ -29,36 +34,26 @@ SIDRA Structure (hierarchical):
         ├─ Agriculture
         ├─ Industry
         └─ Services
-
-Problem: How do you represent this in a flat CSV without duplication?
 ```
 
+Problem: How do you represent this in a flat CSV without duplication?
+
 ### 2. Ingestion I/O Bottlenecks
-Saving tens of millions of rows using traditional methods (row-by-row ORM insertion) can take **days** and exhaust RAM.
+
+Saving tens of millions of rows using traditional methods (row-by-row ORM insertion) can take **hours** and exhaust RAM.
 
 ### 3. Revisions & Reproducibility
+
 The IBGE frequently revises historical data. Simply replacing old data with new destroys reproducibility of academic research or ML models trained on "historical snapshots."
 
 **sidra-sql** solves all three with senior Data Engineering architecture:
 
-```python
-# Instead of browsing IBGE website
-browser = SidraTableBrowser()
-
-# Search in code
-inflation_tables = browser.search("inflation")
-# or
-inflacao_tables = browser.search("inflação")
-
-# Get table details
-table = browser.get("1620")
-print(table.variables)
-```
-
 ## Architecture & Key Features
 
 ### 1. Streaming Ingestion ("Gold Standard" Performance)
+
 For massive data volumes without memory exhaustion:
+
 - **Two-Pass Strategy**: First pass resolves dimensions and foreign keys; second pass performs bulk load
 - **PostgreSQL COPY FROM STDIN**: Native binary protocol streams millions of records in seconds
 - **Atomic Upsert**: Uses `ON CONFLICT DO NOTHING` for deduplication
@@ -67,54 +62,63 @@ For massive data volumes without memory exhaustion:
 **Performance**: Insert 10M rows in ~30 seconds (vs hours with traditional `INSERT`)
 
 ### 2. Dimensional Star Schema
+
 Strict relational modeling separates metadata from facts:
 
 **Dimension Tables:**
+
 - `sidra_tabela`: Raw metadata in `JSONB` format (preserves IBGE structure)
 - `localidade`: Territorial mesh (Brazil, states, municipalities, regions)
 - `periodo`: Time dimension with proper aggregation levels
 - `dimensao`: Classification crossings (categories × variables)
 
 **Fact Table (`dados`):**
-- Extremely lean: Only foreign keys, time reference (`d3c`), version flag, value
-- Composite indexes and unique constraints prevent duplicates
+
+- Extremely lean: Only foreign keys, modification date, version flag, value
+- Composite unique constraint prevents duplicates
 - Optimized for analytical queries (OLAP workloads)
 
 ```
 Traditional Approach (flattened):
-┌─────────────────────────────────────────┐
-│ date | territory | variable | class1 | value |
-│ 2020-01 | 35 (SP) | 116 | Agr | 123.45 |
-│ 2020-02 | 35 (SP) | 116 | Agr | 124.12 |
-│ 2020-01 | 35 (SP) | 116 | Ind | 456.78 |
-│ ... (millions of rows, duplicated strings)
-└─────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│ date    │ territory │ variable │ class       │ value       │
+│ 2020-01 │ 35 (SP)   │ 116      │ Agriculture │ 123.45      │
+│ 2020-02 │ 35 (SP)   │ 116      │ Agriculture │ 124.12      │
+│ 2020-01 │ 35 (SP)   │ 116      │ Industry    │ 456.78      │
+│ ... (millions of rows, duplicated territory/variable data) │
+└────────────────────────────────────────────────────────────┘
 
 Star Schema (normalized):
-┌──────────┐         ┌──────────┐
-│ localidade│         │ dimensao │
-│ id | name│         │ id | cat │
-│ 35 | SP  │         │ 1  | Agr │
-└──────────┘         │ 2  | Ind │
-    ↑                └──────────┘
-    │                    ↑
-    └─── ┌──────────┐ ───┘
-         │  dados   │
-         │ loc_fk | dim_fk | value |
-         │ 35 | 1 | 123.45 |
-         └──────────┘
-(Compact, normalized, no duplication)
+┌──────────────┐         ┌──────────────┐
+│  localidade  │         │   dimensao   │
+├──────────────┤         ├──────────────┤
+│ id  │ d1n    │         │ id  │ d2n    │
+│ 35  │ SP     │         │  1  │ Real   │
+└──────┬───────┘         │  2  │ Nom.   │
+       │                 └──────┬───────┘
+       └──────────┬─────────────┘
+                  │
+         ┌────────┴────────┐
+         │     dados       │
+         ├─────────────────┤
+         │ loc_id │ dim_id │
+         │   35   │    1   │
+         └────────────────-┘
+(compact, normalized, no duplication)
 ```
 
 ### 3. Slowly Changing Dimensions (SCD Type II)
+
 Auditability for research and regulatory environments:
+
 - **Never delete**: When IBGE revises historical data, insert new version + mark old as `ativo = FALSE`
 - **Full history preserved**: Know exactly how the database looked on any past date
-- **Columns**: `modificacao` (timestamp), `ativo` (boolean flag)
+- **Columns**: `modificacao` (date), `ativo` (boolean flag)
 
 **Academic use case**: Reproduce 2015 research exactly with 2015-era data, even if 2026 has corrections
 
 ### 4. Declarative Pipelines via TOML
+
 Business logic isolated from code:
 
 ```toml
@@ -123,7 +127,6 @@ Business logic isolated from code:
 sidra_tabela = "1620"
 variables = ["116"]                    # GDP variable
 territories = {6 = []}                 # Brazil total
-unnest_classifications = true          # Expand categories
 
 [[tabelas]]
 sidra_tabela = "1737"
@@ -132,12 +135,15 @@ territories = {1 = [], 3 = []}        # Levels 1 & 3
 ```
 
 ### 5. Automatic Classification Explosion
+
 The `unnest_classifications = true` directive triggers recursive algorithm:
+
 - Maps all variable × category cross-products automatically
 - Eliminates manual ID discovery
 - Generates optimal dimensional queries
 
 ### 6. Plugin Architecture
+
 The motor is lightweight and generic; data definitions live in separate Git repositories:
 
 ```
@@ -157,36 +163,64 @@ sidra-sql run std pib_municipal
 ```
 
 ### Additional Features
-- ✅ Full-text search (English & Portuguese)
-- ✅ Metadata caching for performance
+
+- ✅ Full-text search on SIDRA metadata (Portuguese JSONB)
+- ✅ Metadata caching for performance (local JSON files)
 - ✅ PostgreSQL integration (ACID transactions)
-- ✅ Data validation and quality checks
-- ✅ Audit trails (who changed what, when)
 - ✅ Idempotent operations (safe re-runs)
+- ✅ Retry logic with exponential backoff (up to 5 attempts)
+- ✅ Audit trails via `ativo` + `modificacao` columns
 
 ## Installation
 
 === "pip"
 
-    ```bash
-    pip install sidra-sql
-    ```
+```bash
+pip install sidra-sql
+```
 
 === "uv"
 
-    ```bash
-    uv pip install sidra-sql
-    ```
+```bash
+uv pip install sidra-sql
+```
 
 === "from source"
 
-    ```bash
-    git clone https://github.com/Quantilica/sidra-sql.git
-    cd sidra-sql
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -e .
-    ```
+```bash
+git clone https://github.com/Quantilica/sidra-sql.git
+cd sidra-sql
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+## Configuration
+
+sidra-sql reads a `config.ini` file at the working directory:
+
+```ini
+[storage]
+data_dir = data
+
+[database]
+user = postgres
+password = yourpassword
+host = localhost
+port = 5432
+dbname = dados
+schema = ibge_sidra
+tablespace = pg_default
+readonly_role = readonly_role
+```
+
+Load the config in Python:
+
+```python
+from sidra_sql.config import Config
+
+config = Config()  # reads config.ini from current directory
+```
 
 ## Quick Example: ETL Pipeline
 
@@ -207,178 +241,171 @@ psql -c "SELECT * FROM analytics.pib_municipal WHERE ano >= 2020"
 
 ### Option 2: Declarative TOML (Recommended for custom pipelines)
 
-Define pipelines without code:
+Define a fetch pipeline:
 
 ```toml
-# pipelines/economic.toml
+# pipelines/economic/fetch.toml
 [[tabelas]]
-sidra_tabela = "1620"          # GDP
-variables = ["116"]             # Real GDP
-territories = {6 = []}          # Brazil total only
+sidra_tabela = "1620"
+variables = ["116"]
+territories = {6 = []}
 unnest_classifications = true
 
 [[tabelas]]
-sidra_tabela = "1737"          # IPCA inflation
+sidra_tabela = "1737"
 variables = ["63"]
-territories = {1 = [], 3 = []} # Levels 1 & 3 (Brazil + states)
+territories = {1 = [], 3 = []}
 ```
 
-Run pipeline:
+Define a transform:
+
+```toml
+# pipelines/economic/transform.toml
+[table]
+name = "economic_indicators"
+schema = "analytics"
+strategy = "replace"
+```
+
+```sql
+-- pipelines/economic/transform.sql
+SELECT
+    l.d1n  AS territory,
+    p.codigo AS period,
+    d.d2n  AS variable,
+    r.v    AS value
+FROM ibge_sidra.dados r
+JOIN ibge_sidra.localidade l ON r.localidade_id = l.id
+JOIN ibge_sidra.periodo    p ON r.periodo_id    = p.id
+JOIN ibge_sidra.dimensao   d ON r.dimensao_id   = d.id
+WHERE r.ativo = TRUE
+```
+
+Run the pipeline:
 
 ```python
-from sidra_sql import run_pipeline
+from pathlib import Path
+from sidra_sql.config import Config
+from sidra_sql.toml_runner import TomlScript
+from sidra_sql.transform_runner import TransformRunner
 
-# Load and execute pipeline
-run_pipeline("pipelines/economic.toml", db_url="postgresql://user:pass@localhost/ibge")
+config = Config()
 
-# Data is now in PostgreSQL with proper dimensional schema
+# Extract + Load
+TomlScript(config, Path("pipelines/economic/fetch.toml")).run()
+
+# Transform (SQL → analytics schema)
+TransformRunner(config, Path("pipelines/economic/transform.toml")).run()
 ```
 
 ### Option 3: Programmatic ETL
 
-Full control over ingestion:
+Full control over each stage:
 
 ```python
-from sidra_sql import SidraWarehouse
-from sidra_fetcher import AsyncSidraClient
-import asyncio
+from sidra_sql.config import Config
+from sidra_sql.sidra import Fetcher
+from sidra_sql.storage import Storage
+from sidra_sql.database import get_engine, save_agregado, load_dados
 
-async def build_warehouse():
-    # Initialize warehouse
-    warehouse = SidraWarehouse(db_url="postgresql://...")
-    
-    # Define tables to ingest
-    tables_config = [
-        {
-            "sidra_tabela": "1620",
-            "variables": ["116"],
-            "territories": {6: []},  # Brazil
-            "unnest_classifications": True
-        },
-        {
-            "sidra_tabela": "1737",
-            "variables": ["63"],
-            "territories": {1: [], 3: []}  # Brazil + states
-        }
-    ]
-    
-    # Fetch with AsyncSidraClient (parallel)
-    client = AsyncSidraClient()
-    
-    for config in tables_config:
-        # 1. EXTRACT: Fetch from IBGE
-        data = await client.fetch(
-            table=config["sidra_tabela"],
-            variable=config["variables"][0]
-        )
-        
-        # 2. TRANSFORM: Apply business logic
-        transformed = warehouse.transform(
-            data,
-            sidra_tabela=config["sidra_tabela"],
-            unnest_classifications=config["unnest_classifications"]
-        )
-        
-        # 3. LOAD: Stream to PostgreSQL
-        warehouse.load(
-            transformed,
-            sidra_tabela=config["sidra_tabela"],
-            streaming=True  # Uses COPY FROM STDIN for speed
-        )
-    
-    await client.aclose()
+config = Config()
+engine = get_engine(config)
+storage = Storage.default(config)
 
-# Execute ETL
-asyncio.run(build_warehouse())
-```
+with Fetcher(config, storage=storage, max_workers=4) as fetcher:
+    # 1. FETCH metadata (territories, periods, classifications)
+    metadata = fetcher.fetch_metadata("1620")
+    save_agregado(engine, metadata)
 
-### Option 4: Table Browser (Discovery Only)
+    # 2. DOWNLOAD data files to local storage
+    data_files = fetcher.download_table(
+        sidra_tabela="1620",
+        territories={"6": []},  # Brazil total
+        variables=["116"],
+    )
 
-Find the right table before building pipelines:
-
-```python
-from sidra_sql import SidraTableBrowser
-
-browser = SidraTableBrowser()
-
-# Search for tables
-inflation_tables = browser.search("inflation")
-
-for table in inflation_tables:
-    print(f"{table.id}: {table.name}")
-    print(f"  Variables: {list(table.variables.keys())}")
-
-# Get detailed metadata
-table = browser.get("1737")  # IPCA
-print(f"Description: {table.description}")
-print(f"Update frequency: {table.frequency}")
-print(f"Classifications: {[c.name for c in table.classifications]}")
+# 3. LOAD into PostgreSQL via COPY FROM STDIN
+load_dados(engine, storage, data_files)
 ```
 
 ## Data Governance: Handling Revisions
 
-IBGE frequently publishes data revisions. The warehouse preserves history instead of overwriting:
+IBGE frequently publishes data revisions. The warehouse preserves history instead of overwriting.
 
 ### How Slowly Changing Dimensions (SCD Type II) Works
 
 **Scenario**: IBGE revises Q3 2020 GDP on 2026-01-15
 
-```python
-# On 2024-01-01 (original data)
-INSERT INTO dados VALUES
-  (id=1, territorio=6, variable=116, value=1234.56, 
-   modificacao='2024-01-01', ativo=TRUE)
+```sql
+-- On 2024-01-01 (original data ingested)
+-- dados row: id=1, v='1234.56', modificacao='2024-01-01', ativo=TRUE
 
-# On 2026-01-15 (IBGE revision published)
-# Instead of UPDATE/DELETE:
+-- On 2026-01-15 (IBGE revision detected during re-ingestion)
+-- The ON CONFLICT DO NOTHING prevents overwriting.
+-- A new row is inserted with updated modificacao:
 
-# 1. Mark old version inactive
-UPDATE dados SET ativo=FALSE 
-WHERE id=1 AND ativo=TRUE
+-- 1. Mark old version inactive
+UPDATE ibge_sidra.dados
+SET ativo = FALSE
+WHERE sidra_tabela_id = '1620'
+  AND localidade_id = 6
+  AND periodo_id = 123
+  AND ativo = TRUE;
 
-# 2. Insert new version
-INSERT INTO dados VALUES
-  (id=2, territorio=6, variable=116, value=1234.89,
-   modificacao='2026-01-15', ativo=TRUE)
+-- 2. Insert new version
+INSERT INTO ibge_sidra.dados
+  (sidra_tabela_id, localidade_id, dimensao_id, periodo_id, v, modificacao, ativo)
+VALUES
+  ('1620', 6, 1, 123, '1234.89', '2026-01-15', TRUE);
 ```
 
-### Reproducing Historical Research
+### Querying Historical Snapshots
 
 ```python
-from datetime import datetime
-from sqlalchemy import and_
+from datetime import date
+from sqlalchemy import select, and_
+from sidra_sql.database import get_engine
+from sidra_sql.config import Config
+from sidra_sql.models import Dados
 
-# Query data as it was on 2024-06-01
-snapshot_date = datetime(2024, 6, 1)
+engine = get_engine(Config())
 
-historical = warehouse.query_snapshot(
-    fecha=snapshot_date,
-    table="1620",
-    variable=116
-)
-# Returns EXACTLY the data that existed on that date
-# Even if IBGE has since revised it
+# Data as it existed on 2024-06-01
+snapshot_date = date(2024, 6, 1)
 
-# Current data (latest revisions)
-current = warehouse.query_current(
-    table="1620",
-    variable=116
-)
+with engine.connect() as conn:
+    rows = conn.execute(
+        select(Dados).where(
+            and_(
+                Dados.sidra_tabela_id == "1620",
+                Dados.modificacao <= snapshot_date,
+                Dados.ativo == True,
+            )
+        )
+    ).fetchall()
 ```
 
 ### Audit Trail
 
-Every change is tracked:
-
 ```python
-audit_trail = warehouse.audit_trail(
-    table="1620",
-    variable=116,
-    territorio=6
-)
+from sqlalchemy import select, and_
+from sidra_sql.models import Dados
 
-for record in audit_trail:
-    print(f"{record.modificacao}: {record.value} (ativo={record.ativo})")
+# All versions of a specific data point
+with engine.connect() as conn:
+    history = conn.execute(
+        select(Dados).where(
+            and_(
+                Dados.sidra_tabela_id == "1620",
+                Dados.localidade_id == 6,
+                Dados.periodo_id == 123,
+            )
+        ).order_by(Dados.modificacao)
+    ).fetchall()
+
+for row in history:
+    status = "ACTIVE" if row.ativo else "SUPERSEDED"
+    print(f"{row.modificacao}: {row.v}  [{status}]")
 ```
 
 ---
@@ -390,14 +417,14 @@ for record in audit_trail:
 ```python
 # ❌ Row-by-row insertion (naive approach)
 for row in data_generator():
-    db.session.execute(
+    conn.execute(
         insert(dados).values(
-            territorio=row['territorio'],
-            variable=row['variable'],
-            value=row['value']
+            localidade_id=row["localidade_id"],
+            dimensao_id=row["dimensao_id"],
+            v=row["v"],
         )
     )
-db.session.commit()
+conn.commit()
 
 # Time: Days for 10M rows
 # RAM: Explodes (keeps all rows in memory)
@@ -410,16 +437,14 @@ db.session.commit()
 Pass 1: Resolve Dimensions
   ├─ Load localidade (territories) into memory
   ├─ Load dimensao (classifications) into memory
-  └─ Map string IDs → numeric FK
+  └─ Map string codes → numeric FK ids
 
 Pass 2: Bulk Stream to Staging
   ├─ Open PostgreSQL COPY FROM STDIN tunnel
-  ├─ Write binary protocol (fast)
-  ├─ Write to _staging_dados table
+  ├─ Write binary rows to _staging_dados table
   └─ Atomic UPSERT: ON CONFLICT DO NOTHING
 
 Pass 3: Verify & Promote
-  ├─ Data integrity checks
   ├─ Referential integrity validation
   └─ Swap staging → production (atomic)
 
@@ -431,379 +456,352 @@ I/O: Optimal (single tunnel, binary protocol)
 ### Usage Example
 
 ```python
-warehouse = SidraWarehouse(db_url="postgresql://...")
+from sidra_sql.database import load_dados
+from sidra_sql.storage import Storage
+from sidra_sql.config import Config
+from sidra_sql.database import get_engine
 
-# Automatically uses streaming ingestion
-warehouse.load(
-    data_frame,
-    sidra_tabela="1620",
-    streaming=True,
-    batch_size=50000  # Tune based on RAM
-)
+config = Config()
+engine = get_engine(config)
+storage = Storage.default(config)
 
-# Monitor ingestion
-stats = warehouse.ingestion_stats()
-print(f"Inserted: {stats.rows_inserted}")
-print(f"Skipped (duplicates): {stats.rows_skipped}")
-print(f"Duration: {stats.duration_seconds:.1f}s")
+# data_files is the list returned by Fetcher.download_table()
+load_dados(engine, storage, data_files)
 ```
 
 ---
 
 ## API Reference
 
-### `SidraWarehouse()` - Data Warehousing & ETL
+### CLI
 
-Initialize the warehouse for ingestion and analytics:
+```
+sidra-sql run <alias> <pipeline-id> [--force-metadata]
+```
+
+Run a pipeline from an installed plugin. `--force-metadata` re-fetches SIDRA
+table metadata even if already cached.
+
+```
+sidra-sql plugin install <url> [--alias ALIAS]
+sidra-sql plugin update [alias]
+sidra-sql plugin remove <alias>
+sidra-sql plugin list
+```
+
+---
+
+### `Config` — Runtime Configuration
 
 ```python
-from sidra_sql import SidraWarehouse
-import sqlalchemy as sa
+from sidra_sql.config import Config
 
-# Connect to PostgreSQL
-db_url = "postgresql://user:pass@localhost/ibge_warehouse"
-warehouse = SidraWarehouse(db_url=db_url)
+config = Config()  # reads config.ini
+```
 
-# Or with SQLAlchemy engine
-engine = sa.create_engine(db_url)
-warehouse = SidraWarehouse(engine=engine)
+Reads `config.ini` from the current working directory. Key attributes:
+
+| Attribute | ini key | Description |
+|-----------|---------|-------------|
+| `config.data_dir` | `storage.data_dir` | Local storage root for JSON files |
+| `config.db_user` | `database.user` | PostgreSQL user |
+| `config.db_password` | `database.password` | PostgreSQL password |
+| `config.db_host` | `database.host` | PostgreSQL host |
+| `config.db_port` | `database.port` | PostgreSQL port |
+| `config.db_name` | `database.dbname` | Database name |
+| `config.db_schema` | `database.schema` | Schema (default: `ibge_sidra`) |
+
+---
+
+### `Fetcher` — Data Extraction
+
+```python
+from sidra_sql.sidra import Fetcher
+from sidra_sql.storage import Storage
+
+storage = Storage.default(config)
+
+with Fetcher(config, storage=storage, max_workers=4) as fetcher:
+    ...
 ```
 
 **Key Methods:**
 
 | Method | Purpose |
 |--------|---------|
-| `warehouse.load(df, sidra_tabela, streaming=True)` | Ingest data with streaming (COPY FROM STDIN) |
-| `warehouse.transform(df, sidra_tabela, unnest_classifications=True)` | Apply dimensional transformations |
-| `warehouse.query_snapshot(fecha, table, variable)` | Query data as it was on a specific date (SCD) |
-| `warehouse.query_current(table, variable)` | Query latest data (active records only) |
-| `warehouse.audit_trail(table, variable, territorio)` | View all versions of a record |
-| `warehouse.ingestion_stats()` | Get performance metrics |
+| `fetcher.fetch_metadata(sidra_tabela)` | Fetch full table metadata (territories, periods, variables) |
+| `fetcher.download_table(sidra_tabela, territories, variables, classifications)` | Download all periods; returns list of `{"filepath": Path, "modificacao": str}` |
 
-### `SidraTableBrowser()` - Discovery & Metadata
+`download_table` parameters:
 
-Browse the SIDRA catalog:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sidra_tabela` | str | SIDRA table code |
+| `territories` | dict[str, list[str]] | Territory level → codes (empty list = all) |
+| `variables` | list[str] \| None | Variable codes; `None` = all |
+| `classifications` | dict[str, list[str]] \| None | Classification → category codes |
+
+---
+
+### `Storage` — Local File Management
 
 ```python
-from sidra_sql import SidraTableBrowser
+from sidra_sql.storage import Storage
 
-# Initialize
-browser = SidraTableBrowser(
-    refresh=False,              # Use cached catalog
-    cache_dir="~/.sidra_cache"  # Custom cache location
-)
+storage = Storage.default(config)         # uses config.data_dir
+storage = Storage("/custom/path")         # explicit root
 ```
 
 **Key Methods:**
 
 | Method | Purpose |
 |--------|---------|
-| `browser.search(query)` | Full-text search (English & Portuguese) |
-| `browser.get(table_id)` | Get detailed table metadata |
-| `browser.list_themes()` | List available themes |
-| `browser.list_by_theme(theme)` | Get all tables in theme |
+| `storage.exists(parameter, modification)` | Check if file already downloaded |
+| `storage.write_data(data, parameter, modification)` | Save JSON data file |
+| `storage.read_data(filepath)` | Load a previously saved data file |
+| `storage.write_metadata(agregado)` | Save table metadata JSON |
+| `storage.read_metadata(agregado)` | Load table metadata |
 
-### `run_pipeline()` - Declarative ETL
+---
 
-Execute a pipeline defined in TOML:
+### `TomlScript` — Declarative ETL Runner
 
 ```python
-from sidra_sql import run_pipeline
+from pathlib import Path
+from sidra_sql.toml_runner import TomlScript
 
-# Run pipeline
-run_pipeline(
-    config_file="pipelines/economic.toml",
-    db_url="postgresql://user:pass@localhost/ibge",
-    parallel=True,              # Use AsyncSidraClient
-    batch_size=50000,           # Tune ingestion batch
-    verbose=True                # Log progress
+script = TomlScript(
+    config,
+    toml_path=Path("pipelines/economic/fetch.toml"),
+    max_workers=4,
+    force_metadata=False,
 )
+script.run()  # download + load all tables declared in the TOML
 ```
 
 **Parameters:**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `config_file` | str | | TOML file with pipeline definitions |
-| `db_url` | str | | PostgreSQL connection string |
-| `parallel` | bool | True | Use async client for faster I/O |
-| `batch_size` | int | 50000 | Rows per streaming batch |
-| `verbose` | bool | False | Log detailed progress |
+| `config` | Config | | Runtime configuration |
+| `toml_path` | Path | | Path to `fetch.toml` |
+| `max_workers` | int | 4 | Parallel download threads |
+| `force_metadata` | bool | False | Re-fetch metadata even if cached |
 
-### `browser.search()`
+---
 
-Search for tables by keyword:
+### `TransformRunner` — SQL Transformation Executor
 
 ```python
-# Search in English
-gdp_tables = browser.search("GDP")
+from sidra_sql.transform_runner import TransformRunner
 
-# Search in Portuguese
-pib_tables = browser.search("PIB")
-
-# Case-insensitive, searches title and description
-employment = browser.search("employment")
+runner = TransformRunner(config, toml_path=Path("pipelines/economic/transform.toml"))
+runner.run()
 ```
 
-**Returns:** List of table metadata objects
+Reads `transform.toml` + paired `.sql` file. Executes the SQL SELECT and
+materializes the result into the target table or view.
 
-### `browser.get()`
+---
 
-Get a specific table by ID:
-
-```python
-table = browser.get("1620")  # GDP table
-
-# Table object has attributes:
-print(table.id)          # "1620"
-print(table.name)        # Full table name
-print(table.description) # Long description
-print(table.theme)       # Theme/category
-print(table.frequency)   # "monthly", "quarterly", etc.
-print(table.variables)   # Dict of {id: name}
-print(table.dimensions)  # List of dimensions
-print(table.updated)     # Last update date
-```
-
-### `browser.list_by_theme()`
-
-Browse tables by theme:
+### `database` — Low-Level Database Helpers
 
 ```python
-# List all available themes
-themes = browser.list_themes()
-print(themes)
-# Output: ['Economics', 'Demographics', 'Finance', 'Trade', ...]
+from sidra_sql.database import get_engine, save_agregado, load_dados
 
-# Get all tables in a theme
-economic_tables = browser.list_by_theme("Economics")
-
-for table in economic_tables:
-    print(f"{table.id}: {table.name}")
-```
-
-## Dimensional Schema & Analytical Queries
-
-Once data is loaded into PostgreSQL, you can run sophisticated analytical queries:
-
-### Example 1: GDP by State (Latest Data Only)
-
-```python
-from sidra_sql import SidraWarehouse
-import sqlalchemy as sa
-from sqlalchemy import select
-
-warehouse = SidraWarehouse(db_url="postgresql://...")
-
-# Query the dimensional schema
-from sidra_sql.models import Dados, Localidade, Periodo
-
-query = (
-    select(
-        Localidade.nome,
-        Periodo.periodo,
-        sa.func.sum(Dados.valor).label("gdp_total")
-    )
-    .join(Localidade, Dados.localidade_fk == Localidade.id)
-    .join(Periodo, Dados.periodo_fk == Periodo.id)
-    .where(
-        (Dados.ativo == True) &  # Only active records
-        (Localidade.nivel == 3)   # States only
-    )
-    .group_by(Localidade.nome, Periodo.periodo)
-    .order_by(Periodo.periodo.desc())
-)
-
-results = warehouse.execute(query)
-for row in results:
-    print(f"{row.nome}: R${row.gdp_total:.2f}B ({row.periodo})")
-```
-
-### Example 2: Historical Snapshot Query (Data Governance)
-
-```python
-from datetime import datetime
-
-# Get data as it existed on 2024-06-01
-# Even if IBGE has since published revisions
-
-snapshot = warehouse.query_snapshot(
-    fecha=datetime(2024, 6, 1),
-    table="1620",
-    variable=116,
-    territorio=6  # Brazil total
-)
-
-print("GDP data from 2024-06-01 snapshot:")
-for record in snapshot:
-    print(f"Period: {record.periodo}, Value: {record.valor}")
-```
-
-### Example 3: Audit Trail (Who Changed What)
-
-```python
-# View all revisions of a specific data point
-audit = warehouse.audit_trail(
-    table="1620",
-    variable=116,
-    territorio=6,
-    periodo="2020-01"
-)
-
-print("Revision history for Q1 2020 GDP:")
-for version in audit:
-    status = "✓ ACTIVE" if version.ativo else "✗ SUPERSEDED"
-    print(f"{version.modificacao}: R${version.valor:.2f}B [{status}]")
-```
-
-### Example 4: Time Series Analysis
-
-```python
-# OLAP: Monthly GDP from 2015 onwards
-timeseries = (
-    select(
-        Periodo.periodo,
-        sa.func.avg(Dados.valor).label("gdp_avg"),
-        sa.func.count().label("records")
-    )
-    .join(Periodo, Dados.periodo_fk == Periodo.id)
-    .where(
-        (Dados.ativo == True) &
-        (Dados.sidra_tabela_fk == 1)  # GDP table
-    )
-    .group_by(Periodo.periodo)
-    .order_by(Periodo.periodo)
-)
-
-# Pipe to Polars for analytics
-import polars as pl
-df = pl.from_arrow(
-    warehouse.execute_arrow(timeseries)
-)
-
-# Calculate growth rates
-df = df.with_columns([
-    pl.col("gdp_avg").pct_change().alias("qoq_growth")
-])
+engine = get_engine(config)
+save_agregado(engine, metadata)          # upsert table/period/localidade metadata
+load_dados(engine, storage, data_files)  # bulk load via COPY FROM STDIN
 ```
 
 ---
 
-## Common Workflows
+## TOML Pipeline Format
 
-### Find GDP Data
+### `fetch.toml` — Extraction Config
 
-```python
-browser = SidraTableBrowser()
+```toml
+[[tabelas]]
+sidra_tabela = "1620"          # SIDRA table code (required)
+variables = ["116"]             # variable codes; omit for all
+territories = {6 = []}          # {level: [codes]}; empty list = all
+unnest_classifications = true   # expand all category cross-products
 
-# Search for GDP
-tables = browser.search("GDP")
-
-# Display results
-for table in tables:
-    print(f"\n{table.id}: {table.name}")
-    print(f"  Theme: {table.theme}")
-    print(f"  Updated: {table.updated}")
-    print(f"  Variables:")
-    for var_id, var_name in table.variables.items():
-        print(f"    {var_id}: {var_name}")
+[[tabelas]]
+sidra_tabela = "1737"
+variables = ["63"]
+territories = {1 = [], 3 = []}
+split_variables = true          # one request per variable (avoids SIDRA limits)
+classifications = {81 = ["allxt"]}
 ```
 
-### Find Inflation Series
+**`[[tabelas]]` fields:**
 
-```python
-# IPCA (main inflation index)
-ipca_tables = browser.search("IPCA")
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `sidra_tabela` | str | ✅ | SIDRA table code |
+| `territories` | dict[str, list] | ✅ | Territory level → unit codes |
+| `variables` | list[str] | | Variable codes (default: all) |
+| `classifications` | dict[str, list] | | Classification → category codes |
+| `unnest_classifications` | bool | | Expand all category combinations |
+| `split_variables` | bool | | One request per variable |
 
-# IGP-M (wholesale inflation)
-igp_tables = browser.search("IGP-M")
+### `transform.toml` — Transformation Config
 
-# IPC (consumer prices)
-ipc_tables = browser.search("IPC")
-
-# Display with variable meanings
-for table_id in ["1419", "188", "7060"]:
-    table = browser.get(table_id)
-    print(f"\n{table.name}")
-    for var_id, var_name in table.variables.items():
-        print(f"  {var_id}: {var_name}")
+```toml
+[table]
+name = "pib_municipal"          # target table/view name
+schema = "analytics"            # target schema
+strategy = "replace"            # "replace" (table) or "view"
+description = "Municipal GDP"
+primary_key = ["municipio_id", "ano"]
+indexes = [
+  { name = "idx_pib_ano", columns = ["ano"], unique = false }
+]
 ```
 
-### Explore Table Structure
+Paired with a `transform.sql` file (same stem) containing a SELECT query.
 
-```python
-# Get a complex table
-table = browser.get("6379")  # Employment
+### `manifest.toml` — Plugin Registry
 
-# Show all details
-print(f"Table: {table.name}")
-print(f"Description: {table.description}")
-print(f"Frequency: {table.frequency}")
-print(f"Theme: {table.theme}")
+```toml
+name = "Standard Pipelines"
+description = "Quantilica standard SIDRA pipelines"
+version = "1.0.0"
 
-# Variables available
-print(f"\nVariables ({len(table.variables)}):")
-for var_id, var_name in sorted(table.variables.items()):
-    print(f"  {var_id}: {var_name}")
-
-# Dimensions (filters available)
-print(f"\nDimensions ({len(table.dimensions)}):")
-for dim in table.dimensions:
-    print(f"  {dim['id']}: {dim['name']} ({len(dim['categories'])} categories)")
+[[pipeline]]
+id = "pib_municipal"
+description = "Municipal GDP from IBGE SIDRA table 5938"
+fetch = "pib_municipal/fetch.toml"
+transform = "pib_municipal/transform.toml"
 ```
 
-## Understanding SIDRA Structure
+---
 
-### Tables
-Top-level identifier. Example: `1620` (GDP)
+## Dimensional Schema
 
-### Variables
-Specific measures within a table. Example:
-- Variable `116`: GDP at constant prices (2015 base)
-- Variable `117`: GDP at current prices
+### Database Tables (schema: `ibge_sidra`)
 
-### Dimensions
-Filters available for a table. Example:
-- Geography (state, municipality)
-- Sector (agriculture, industry, services)
-- Time period
+**`sidra_tabela`** — SIDRA table registry
 
-### Classifications
-Ways to categorize data. Example:
-- By CNAE (economic activity)
-- By occupation (CBO)
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | text PK | SIDRA table code |
+| `nome` | text | Table name |
+| `periodicidade` | text | Update frequency |
+| `ultima_atualizacao` | date | Last update |
+| `metadados` | jsonb | Full metadata object |
+
+**`localidade`** — Territory dimension
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Auto-increment |
+| `nc` | text | Territory level code (e.g., `N6`) |
+| `nn` | text | Territory level name |
+| `d1c` | text | Territory unit code |
+| `d1n` | text | Territory unit name |
+
+Unique constraint: `(nc, d1c)`
+
+**`periodo`** — Time dimension
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | integer PK | Auto-increment |
+| `codigo` | text | Period code |
+| `frequencia` | text | Frequency (monthly, quarterly…) |
+| `literals` | text[] | Raw period labels |
+| `data_inicio` / `data_fim` | date | Period date range |
+| `ano` / `ano_fim` | integer | Year(s) |
+| `semestre` | smallint | 1-2 |
+| `trimestre` | smallint | 1-4 |
+| `mes` | smallint | 1-12 |
+
+Unique constraint: `(codigo, literals)`
+
+**`dimensao`** — Variable × classification dimension
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Auto-increment |
+| `mc` | text | Unit of measure ID |
+| `mn` | text | Unit of measure name |
+| `d2c` / `d2n` | text | Variable code / name |
+| `d4c`–`d9c` | text \| null | Category codes (up to 6 classifications) |
+| `d4n`–`d9n` | text \| null | Category names |
+
+Unique constraint: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
+
+**`dados`** — Fact table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Auto-increment |
+| `sidra_tabela_id` | text FK | → `sidra_tabela.id` |
+| `localidade_id` | bigint FK | → `localidade.id` |
+| `dimensao_id` | bigint FK | → `dimensao.id` |
+| `periodo_id` | integer FK | → `periodo.id` |
+| `modificacao` | date | IBGE publish date |
+| `ativo` | boolean | Active record flag (SCD) |
+| `v` | text | Data value |
+
+Unique constraint: `(sidra_tabela_id, localidade_id, dimensao_id, periodo_id)`
+
+### Example Analytical Query
+
+```python
+from sqlalchemy import select
+from sidra_sql.models import Dados, Localidade, Periodo, Dimensao
+
+# GDP by state (active records only)
+query = (
+    select(
+        Localidade.d1n.label("state"),
+        Periodo.codigo.label("period"),
+        Dimensao.d2n.label("variable"),
+        Dados.v.label("value"),
+    )
+    .join(Localidade, Dados.localidade_id == Localidade.id)
+    .join(Periodo,    Dados.periodo_id    == Periodo.id)
+    .join(Dimensao,   Dados.dimensao_id   == Dimensao.id)
+    .where(
+        Dados.ativo == True,
+        Localidade.nc == "N3",          # states
+        Dados.sidra_tabela_id == "1620",
+    )
+    .order_by(Periodo.codigo.desc())
+)
+
+with engine.connect() as conn:
+    for row in conn.execute(query):
+        print(f"{row.state} | {row.period} | {row.value}")
+```
+
+---
 
 ## Performance
 
-### Caching
+### Local Caching
 
-First call downloads the catalog (10-20 MB), subsequent calls use cache:
+Downloaded data is stored as JSON files under `data_dir`. Re-running a pipeline
+skips files that already exist on disk:
 
-```python
-# First call: ~5 seconds (downloads from IBGE)
-browser = SidraTableBrowser()
-tables = browser.search("GDP")
-
-# Subsequent calls: <100ms (from cache)
-tables = browser.search("inflation")
+```
+First run:  downloads from IBGE (seconds to minutes)
+Re-run:     checks local cache, skips existing files (<1s overhead)
 ```
 
-### Force Refresh
-
-Update cache if IBGE adds new tables:
-
-```python
-browser = SidraTableBrowser(refresh=True)  # ~5 seconds
-```
+Force re-download by deleting the data directory or using `--force-metadata`.
 
 ### Streaming Ingestion Benchmarks
 
-Real-world performance on standard hardware (8-core, 16GB RAM):
+Real-world performance on standard hardware (8-core, 16 GB RAM):
 
 | Dataset | Rows | Time | Throughput |
 |---------|------|------|-----------|
 | IPCA monthly | 3.2M | 8s | 400k rows/sec |
-| GDP quarterly | 50k | <1s | - |
+| GDP quarterly | 50k | <1s | — |
 | RAIS annual | 60M | 2.5m | 400k rows/sec |
 
 ## Best Practices for Data Governance
@@ -811,67 +809,47 @@ Real-world performance on standard hardware (8-core, 16GB RAM):
 ### 1. Use Declarative Pipelines (TOML) for Reproducibility
 
 ```toml
-# pipelines/annual_snapshot.toml
-# Define what data you need, not how to fetch it
+# pipelines/annual_snapshot/fetch.toml
 [[tabelas]]
 sidra_tabela = "1620"
 variables = ["116"]
-territories = {6 = [], 3 = []}  # Brazil + states
-unnest_classifications = false
+territories = {6 = [], 3 = []}
 
 [[tabelas]]
 sidra_tabela = "1737"
 variables = ["63"]
-territories = {1 = []}  # National only
+territories = {1 = []}
 ```
 
 Advantages:
+
 - ✅ Non-developers can maintain pipelines
 - ✅ Version control (TOML in git)
 - ✅ Reproducible across machines
 - ✅ Decoupled from code changes
 
-### 2. Leverage Snapshots for Academic Reproducibility
+### 2. Document Snapshot Dates for Academic Reproducibility
 
 ```python
-# Document when you built your dataset
 import json
 from datetime import datetime
 
+# Record when you built the dataset
 metadata = {
     "snapshot_date": datetime.now().isoformat(),
-    "pipeline": "pipelines/analysis.toml",
-    "warehouse_version": "1.2.0",
-    "git_commit": "abc123def..."
+    "pipeline": "pipelines/analysis/fetch.toml",
+    "sidra_sql_version": "1.2.0",
 }
-
 with open("data/metadata.json", "w") as f:
     json.dump(metadata, f, indent=2)
-
-# Years later: Reproduce exactly
-snapshot = warehouse.query_snapshot(
-    fecha=datetime.fromisoformat(metadata["snapshot_date"])
-)
 ```
 
-### 3. Monitor Ingestion Performance
+Then query with `Dados.modificacao <= snapshot_date` to reproduce the exact dataset.
 
-```python
-warehouse.load(data, streaming=True, batch_size=50000)
-stats = warehouse.ingestion_stats()
+### 3. Use Star Schema for BI Tools
 
-print(f"Performance Report:")
-print(f"  Rows inserted: {stats.rows_inserted:,}")
-print(f"  Rows skipped: {stats.rows_skipped:,}")
-print(f"  Duration: {stats.duration_seconds:.1f}s")
-print(f"  Throughput: {stats.rows_per_second:.0f} rows/sec")
+Connect PostgreSQL directly to:
 
-# Tune batch_size if needed for your hardware
-```
-
-### 4. Use Star Schema for BI Tools
-
-Connect your PostgreSQL warehouse directly to:
 - **Tableau** (ODBC connection to PostgreSQL)
 - **Power BI** (native PostgreSQL connector)
 - **Looker** (SQL runner)
@@ -883,82 +861,40 @@ The normalized schema is optimized for BI tools' OLAP workloads.
 
 ## Troubleshooting
 
-### Search Returns No Results
+### Download Fails with Network Error
 
-The catalog may use different terminology. Try:
-
-```python
-browser = SidraTableBrowser()
-
-# If English search fails, try Portuguese
-tables = browser.search("GDP")      # English
-tables = browser.search("PIB")      # Portuguese
-
-# If searching for specific concept, try synonyms
-tables = browser.search("unemployment")
-tables = browser.search("desemprego")
-```
+`Fetcher` retries automatically (up to 5 times, exponential backoff: 5s → 10s → 20s…).
+If all retries fail, check SIDRA API availability or reduce `max_workers`.
 
 ### Table Not Found
 
-Table may have been removed or renamed:
+SIDRA table codes must be strings, not integers. Use `"1620"`, not `1620`.
 
 ```python
-# Search for similar tables
-browser = SidraTableBrowser(refresh=True)  # Force update
-tables = browser.search("1620")  # Search by ID
-
-# Or search by keyword
-tables = browser.search("GDP")
+metadata = fetcher.fetch_metadata("1620")   # ✅
+metadata = fetcher.fetch_metadata(1620)     # ❌
 ```
 
 ### Variable ID Unknown
 
-Use the browser to list all variables:
+Browse the IBGE SIDRA catalog directly at [sidra.ibge.gov.br](https://sidra.ibge.gov.br/)
+to look up variable and classification codes for a given table.
+
+### Config File Not Found
+
+`Config()` reads `config.ini` from the current working directory.
+Run Python from the project root, or set the path explicitly:
 
 ```python
-table = browser.get("1620")
-
-print("Available variables:")
-for var_id in sorted(table.variables.keys()):
-    print(f"  {var_id}")
-
-# Then use with sidra-fetcher
-from sidra_fetcher import SidraClient
-client = SidraClient()
-data = client.fetch(table="1620", variable=116)
+import os
+os.chdir("/path/to/project")
+config = Config()
 ```
 
-## Integration with sidra-fetcher
+### Schema Already Exists
 
-Use results from **sidra-sql** to discover tables, then power **sidra-fetcher** for extraction:
-
-```python
-from sidra_sql import SidraTableBrowser
-from sidra_fetcher import SidraClient
-
-# Find inflation tables
-browser = SidraTableBrowser()
-tables = browser.search("inflation")
-
-# For each table, fetch main variable
-client = SidraClient()
-
-for table in tables[:3]:  # First 3 tables
-    # Get first variable
-    var_id = list(table.variables.keys())[0]
-    
-    # Fetch data
-    data = client.fetch(
-        table=table.id,
-        variable=var_id
-    )
-    
-    print(f"Downloaded {len(data)} rows from {table.name}")
-    
-    # Save
-    data.to_parquet(f"data/{table.id}.parquet")
-```
+`TransformRunner` with `strategy = "replace"` drops and recreates the target table.
+`strategy = "view"` uses `CREATE OR REPLACE VIEW` and is non-destructive.
 
 ---
 

@@ -5,6 +5,7 @@ Calculate returns, YTM, and interest rate sensitivity for fixed-income portfolio
 ## Key Concepts
 
 ### Yield to Maturity (YTM)
+
 Annual return if bond is held to maturity. Accounts for:
 - Current market price
 - Coupon payments
@@ -18,6 +19,7 @@ Price = Σ(Coupon / (1 + YTM)^t) + Principal / (1 + YTM)^T
 For Brazilian bonds, YTM is already provided by **tddata**.
 
 ### Modified Duration
+
 Measure of bond price sensitivity to interest rate changes:
 
 ```
@@ -31,6 +33,7 @@ Example: 5-year bond with 5 years duration:
 - Yield falls 1% → Price rises ~5%
 
 ### Accrued Interest
+
 Interest earned since last coupon date but not yet paid:
 
 ```
@@ -41,6 +44,7 @@ Accrued = Coupon × (Days since last coupon) / (Days in coupon period)
 **Dirty price**: Clean price + accrued interest = what you actually pay
 
 ### Real Return (IPCA-Indexed)
+
 For NTN-B bonds, separate nominal yield into components:
 
 ```

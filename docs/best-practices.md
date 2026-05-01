@@ -110,21 +110,18 @@ if not is_cached("SIM", 2023, "SP"):
 import asyncio
 from sidra_fetcher import AsyncSidraClient
 
-async def fetch_multiple_tables():
-    client = AsyncSidraClient()
-    
-    # ✅ Concurrent: fetch 3 tables simultaneously
-    results = await asyncio.gather(
-        client.fetch(table="1620", variable=116),  # GDP
-        client.fetch(table="1419", variable=11),   # Inflation
-        client.fetch(table="6381", variable=4099)  # Unemployment
-    )
-    
-    return results
+async def fetch_multiple_metadata():
+    async with AsyncSidraClient(timeout=60) as client:
+        # ✅ Concurrent: fetch metadata for 3 aggregates simultaneously
+        return await asyncio.gather(
+            client.get_agregado(1620),  # GDP
+            client.get_agregado(1419),  # IPCA inflation
+            client.get_agregado(6381),  # Unemployment (PNADC)
+        )
 
-# Sequential: ~60 seconds
-# Concurrent: ~15 seconds (4x faster)
-results = asyncio.run(fetch_multiple_tables())
+# Sequential: ~6 seconds
+# Concurrent: ~2 seconds (3x faster)
+agregados = asyncio.run(fetch_multiple_metadata())
 ```
 
 ### Pattern: Multithreaded FTP Crawling

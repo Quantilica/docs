@@ -120,42 +120,46 @@ All transformations are **deterministic and logged**:
 ## Data Flow Example: Economic Analysis Pipeline
 
 ```python
-# 1. EXTRACT: Use specialized clients
-from sidra_fetcher import SidraClient
-from tddata import TreasuryClient
-
-sidra = SidraClient()
-treasury = TreasuryClient()
-
-# Fetch GDP and government bond yields
-gdp = sidra.fetch(table="1620", variable=116)
-bonds = treasury.fetch(bond_type="NTN-F")
-
-# 2. TRANSFORM: Use Polars for fast processing
+# 1. EXTRACT: each tool uses its own access pattern
 import polars as pl
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# Join economic data
+# SIDRA: build a Parametro and request the URL
+gdp_param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+with SidraClient(timeout=60) as client:
+    gdp = pl.DataFrame(client.get(gdp_param.url()))
+
+# Treasury Direct: convert raw CSVs to Parquet
+from tddata.converter import convert_to_parquet
+convert_to_parquet(src_dir="raw/tesouro", dest_dir="data/tesouro", dataset_type="precos")
+bonds = pl.read_parquet("data/tesouro/precos.parquet")
+
+# 2. TRANSFORM: Polars
 combined = gdp.join(bonds, on="date", how="inner")
-
-# Add derived metrics
 combined = combined.with_columns([
-    pl.col("gdp").pct_change().alias("gdp_growth"),
-    (pl.col("yield").pct_change()).alias("yield_change")
+    pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("gdp_growth"),
+    pl.col("yield").pct_change().alias("yield_change"),
 ])
 
-# 3. LOAD: Output to storage
+# 3. LOAD
 combined.write_parquet("gdp_bonds_analysis.parquet")
-# Or to PostgreSQL:
 combined.write_database(
     "gdp_bonds",
-    connection_string="postgresql://user:pass@host/db"
+    connection="postgresql://user:pass@host/db",
 )
 
-# 4. ANALYZE: Load and analyze
+# 4. ANALYZE
 data = pl.read_parquet("gdp_bonds_analysis.parquet")
-
-correlation = data["gdp_growth"].pearson_correlation(data["yield_change"])
-print(f"GDP growth vs bond yield correlation: {correlation:.3f}")
+print(data.select(pl.corr("gdp_growth", "yield_change")))
 ```
 
 ## Tool Responsibilities
@@ -165,12 +169,14 @@ print(f"GDP growth vs bond yield correlation: {correlation:.3f}")
 **Responsibility**: Reliably get data from government APIs
 
 **Do**:
+
 - Handle API quirks (pagination, rate limits, retries)
 - Normalize date formats
 - Validate schema
 - Export to standard formats (Parquet, DataFrame)
 
 **Don't**:
+
 - Transform data (that's the user's job)
 - Make analytic assumptions
 - Hide failures silently
@@ -180,12 +186,14 @@ print(f"GDP growth vs bond yield correlation: {correlation:.3f}")
 **Responsibility**: Efficient, reliable data storage
 
 **Parquet** (recommended for analysis):
+
 - Columnar format (fast analytical queries)
 - Highly compressed (80%+ space savings)
 - Schema preserved
 - No database infrastructure needed
 
 **PostgreSQL** (recommended for operations):
+
 - ACID transactions (consistency)
 - Real-time data access
 - Backups and replication
@@ -196,11 +204,13 @@ print(f"GDP growth vs bond yield correlation: {correlation:.3f}")
 **Responsibility**: Fast, flexible data transformation
 
 Use Polars for:
+
 - Large files (Parquet, CSV)
 - Complex transformations
 - Lazy evaluation (optimization)
 
 Use Pandas for:
+
 - Integration with statistical libraries
 - Complex custom functions
 - Smaller datasets

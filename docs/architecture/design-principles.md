@@ -26,22 +26,20 @@ You can use ONLY sidra-fetcher without touching tddata or comexdown.
 ### Example: Two Analysts, Same Platform, Different Tools
 
 ```python
-# Economist A: Only needs macroeconomic data
+# Economist A: Only needs SIDRA metadata
 from sidra_fetcher import SidraClient
-client = SidraClient()
-gdp = client.fetch(table="1620", variable=116)
+with SidraClient() as client:
+    agregado = client.get_agregado_metadados(1620)
 
 # Economist B: Only needs labor market data
-from pdet_data import RAISClient
-client = RAISClient()
-employment = client.aggregate(year=2023, group_by="sector")
+from pdet_data.fetch import connect, fetch_rais
+ftp = connect()
+fetch_rais(ftp, dest_dir="raw/rais")
 
 # Economist C: Needs both + trade data
 from sidra_fetcher import SidraClient
-from comexdown import TradeClient
-
-macro = SidraClient().fetch(...)
-trade = TradeClient().fetch_exports(year=2023)
+import comexdown
+# (each tool uses its own access pattern; no shared abstraction required)
 ```
 
 ## 2. Resilience
@@ -66,20 +64,13 @@ Partial failure            Continue with partial data (logged)
 ```python
 from sidra_fetcher import SidraClient
 
-client = SidraClient(
-    max_retries=5,        # Try up to 5 times
-    backoff_factor=2,     # 1s, 2s, 4s, 8s, 16s delays
-    timeout=60
-)
-
-# Automatic retries on failure
-data = client.fetch(table="1620", variable=116)
-# ↓
-# Attempt 1: timeout
-# [wait 1 second]
-# Attempt 2: timeout
-# [wait 2 seconds]
-# Attempt 3: success ✓
+# SidraClient retries metadata methods automatically via tenacity
+# (3 attempts; exponential backoff on get_agregado_periodos)
+with SidraClient(timeout=60) as client:
+    agregado = client.get_agregado_metadados(1620)
+    # Attempt 1: timeout
+    # Attempt 2: timeout
+    # Attempt 3: success ✓
 ```
 
 ### Error Handling Philosophy
@@ -218,19 +209,30 @@ df = fetch_gdp()  # Where from? Updated when? Cached?
 ### Pattern: Explicit Everything
 
 ```python
-# Good: Be clear about what's happening
-gdp = SidraClient().fetch(
-    table="1620",        # GDP table
-    variable=116,        # Real, seasonally adjusted
-    frequency="quarterly",
-    initial_date="2015-01-01"
+import polars as pl
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+# Good: every parameter is named and visible
+param = Parametro(
+    agregado="1620",                      # GDP table
+    territorios={"1": ["all"]},           # Brazil total
+    variaveis=["116"],                    # Real GDP
+    periodos=["202001", "202002", "202003", "202004"],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
 )
 
+with SidraClient(timeout=60) as client:
+    rows = client.get(param.url())
+
 # Explicit failure handling
-if len(gdp) == 0:
+if not rows:
     raise ValueError("No data returned from IBGE")
 
 # Explicit output
+gdp = pl.DataFrame(rows)
 gdp.write_parquet("gdp_data.parquet")
 print(f"Saved {len(gdp)} GDP observations to gdp_data.parquet")
 ```
@@ -262,17 +264,13 @@ client.fetch(cache=True)  # Can't control cache location
 ### Pattern: User Decides
 
 ```python
-# Good: Multiple output options
-gdp.to_parquet("gdp.parquet")
-gdp.to_csv("gdp.csv")
-gdp.to_postgres("gdp_table", connection_string=...)
+# Good: user picks output format and destination
+gdp.write_parquet("gdp.parquet")
+gdp.write_csv("gdp.csv")
+gdp.write_database("gdp_table", connection="postgresql://...")
 
-# Good: Flexible configuration
-client = SidraClient(
-    cache_dir="/custom/cache",  # User specifies
-    timeout=120,
-    rate_limit=0.5
-)
+# Good: client exposes a small, explicit knob set
+client = SidraClient(timeout=120)
 ```
 
 ## 7. Data Integrity

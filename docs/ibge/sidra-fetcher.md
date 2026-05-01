@@ -4,22 +4,26 @@ Advanced SDK for programmatic extraction from IBGE's SIDRA API.
 
 ## What It Is
 
-**`sidra-fetcher`** is a production-grade Python SDK (Software Development Kit) engineered for robust, scalable extraction of data from the Sistema IBGE de Recuperação Automática (SIDRA). 
+**`sidra-fetcher`** is a production-grade Python SDK engineered for robust extraction of data and metadata from the Sistema IBGE de Recuperação Automática (SIDRA).
 
-It serves as the network infrastructure layer between IBGE servers and data science applications, replacing manual URL construction and error handling with a strongly-typed, object-oriented, and resilient interface.
+It serves as the network infrastructure layer between IBGE servers and data science applications: typed metadata models, URL abstraction via the `Parametro` class, and resilient HTTP clients (sync + async) with automatic retries.
 
 ## Problem It Solves
 
 SIDRA is one of Brazil's richest data sources—housing everything from IPCA inflation to Census demographics. However, consuming this data at scale encounters **two severe engineering bottlenecks**:
 
 ### 1. Network Instability
+
 Government servers frequently suffer overload, resulting in:
+
 - Connection drops and timeouts
 - Transient errors (HTTP 429 rate limiting, 500+ server errors)
 - Scripts that fail and interrupt entire pipelines
 
 ### 2. Parametric Complexity
+
 The SIDRA API uses cryptic positional URL structures:
+
 ```
 /t/1737/n1/all/n3/all/v/2265/p/all/d/m
 ```
@@ -29,44 +33,61 @@ Manual URL construction via string concatenation is error-prone and difficult to
 **`sidra-fetcher` was architected specifically to mitigate both bottlenecks:**
 
 ```python
-# Instead of managing retries, pagination, and format conversion
-data = client.fetch(table="1620", variable=116)
-# You get a clean DataFrame with normalized dates and types
+# Build a SIDRA request declaratively, no string concatenation
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+
+with SidraClient(timeout=60) as client:
+    data = client.get(param.url())  # raw list[dict] from SIDRA
 ```
 
 ## Architecture & Key Features
 
 ### Dual Client Model (Sync + Async)
-The library does not enforce a single concurrency paradigm. It exposes two main classes based on `httpx`:
 
-- **`SidraClient`**: Synchronous client for point extractions, notebook exploration, or ThreadPoolExecutor-based workflows
-- **`AsyncSidraClient`**: 100% asynchronous using `asyncio`. Fetch metadata, locations, and periods concurrently via `asyncio.gather()`, drastically reducing I/O-bound wait times
+The library exposes two HTTP clients based on `httpx`:
+
+- **`SidraClient`**: Synchronous client for point extractions, notebook exploration, or `ThreadPoolExecutor` workflows
+- **`AsyncSidraClient`**: 100% asynchronous via `asyncio`. Fetch metadata, periods, and localidades concurrently with `asyncio.gather()`, drastically reducing I/O-bound wait times
 
 ### Industrial-Grade Resilience (Smart Retries)
-Implements tolerance policies using `tenacity`:
-- ✅ Exponential backoff: Failed requests retry with increasing delays (5s → 10s → 20s...)
-- ✅ Handles transient failures: `httpx.ReadTimeout`, `httpx.NetworkError`, HTTP 429/500+
-- ✅ Respects infrastructure: Automatic throttling for government servers
+
+Tolerance policies via `tenacity`:
+- ✅ Retries up to 3 attempts on each metadata method
+- ✅ Exponential backoff for periodos requests (`min=3`, `max=30` seconds)
+- ✅ Handles transient `httpx` failures (timeouts, network errors)
 
 ### URL Abstraction Engine (`Parametro`)
-The `sidra.py` module eliminates magic strings:
+
+The `sidra_fetcher.sidra` module eliminates magic strings:
 - ✅ Transforms Python dicts/lists → valid SIDRA URLs transparently
-- ✅ Native enums for Formats (`Formato.A`, `Formato.C`) and Precision (`Precisao.M`, `Precisao.D2`)
-- ✅ Reverse engineering: Parse URLs directly from SIDRA website → Python configuration objects
+- ✅ Native enums for output `Formato` (`A`, `C`, `N`, `U`) and `Precisao` (`S`, `M`, `D0`–`D20`)
+- ✅ Reverse engineering: `parameter_from_url()` parses any SIDRA URL → `Parametro` object
 
 ### Strict Domain Modeling (Strong Typing)
-Abandons generic dictionaries for rich dataclasses:
-- ✅ Query metadata → deeply nested `Agregado` objects
-- ✅ Contains: `Variavel`, `Classificacao`, `Categoria`, `Periodo`, `Localidade`
-- ✅ IDE autocompletion and linter integration
-- ✅ Type safety at development time
+
+Metadata responses are parsed into rich dataclasses:
+- ✅ `Agregado` (root) → `Variavel`, `Classificacao`, `Categoria`, `Periodicidade`, `AgregadoNivelTerritorial`
+- ✅ `Periodo`, `Localidade`, `NivelTerritorial`
+- ✅ `IndicePesquisaAgregados`, `IndiceAgregado` for catalog navigation
+- ✅ IDE autocompletion + linter integration
 
 ### Additional Features
-- ✅ Multiple output formats (Parquet, CSV, PostgreSQL, DataFrame)
-- ✅ Transparent pagination (handled internally)
-- ✅ Date normalization (ISO 8601)
-- ✅ Status code tracking (suppressed values)
-- ✅ Logging and debugging support
+- ✅ Streaming HTTP responses (low memory footprint)
+- ✅ JSON parsing of all responses
+- ✅ Reader helpers (`read_metadados`, `read_periodos`, `read_localidades`)
+- ✅ Save/load metadata to disk (`save_agregado`, `load_agregado`)
+- ✅ Logging via stdlib `logging` (logger name = `sidra_fetcher`)
 
 ## Installation
 
@@ -82,130 +103,89 @@ Abandons generic dictionaries for rich dataclasses:
     uv pip install sidra-fetcher
     ```
 
-=== "poetry"
+=== "from source"
 
     ```bash
-    poetry add sidra-fetcher
+    pip install git+https://github.com/Quantilica/sidra-fetcher.git
     ```
 
-## Async/Await: High-Throughput Data Extraction
+## Async/Await: High-Throughput Metadata Extraction
 
-For large-scale extractions, use the **`AsyncSidraClient`** to fetch multiple tables concurrently. This dramatically reduces total execution time when network I/O is the bottleneck.
+For large-scale metadata harvesting, use the **`AsyncSidraClient`** to fetch multiple aggregates concurrently. Network I/O is the bottleneck; `asyncio.gather()` removes it.
 
 ### Sync vs Async Performance
 
 **Sync approach** (sequential):
+
 ```
-Fetch table 1620: 10 seconds
-Fetch table 1612: 10 seconds
-Fetch table 1637: 10 seconds
-Total: 30 seconds
+Fetch metadata for table 1620: ~2 seconds
+Fetch metadata for table 1612: ~2 seconds
+Fetch metadata for table 1637: ~2 seconds
+Total: ~6 seconds
 ```
 
 **Async approach** (concurrent):
+
 ```
-Fetch tables 1620, 1612, 1637 in parallel
-Total: ~10 seconds (3x faster!)
+Fetch all three concurrently
+Total: ~2 seconds (3x faster)
 ```
 
 ### Async Example
 
 ```python
 import asyncio
-import polars as pl
 from sidra_fetcher import AsyncSidraClient
 
-async def fetch_macroeconomic_suite():
-    """
-    Fetch GDP, GVA, and Investment data concurrently.
-    Demonstrates the power of AsyncSidraClient.
-    """
-    client = AsyncSidraClient(timeout=60, max_retries=5)
-    
-    try:
-        # Define extraction tasks
-        tasks = [
-            client.fetch(
-                table="1620",      # GDP at constant prices
-                variable=116,
-                frequency="quarterly",
-                initial_date="2015-01-01"
-            ),
-            client.fetch(
-                table="1612",      # GVA by activity
-                variable=117,
-                frequency="quarterly"
-            ),
-            client.fetch(
-                table="1637",      # Gross capital formation
-                variable=119,
-                frequency="quarterly"
-            )
-        ]
-        
-        # Execute all tasks concurrently
-        results = await asyncio.gather(*tasks)
-        gdp, gva, investment = results
-        
-        # Combine and analyze
-        combined = gdp.join(
-            gva, on="date", how="inner", suffix="_gva"
-        ).join(
-            investment, on="date", how="inner", suffix="_inv"
+async def fetch_macro_metadata():
+    """Fetch metadata for GDP, GVA, and Investment aggregates concurrently."""
+    async with AsyncSidraClient(timeout=60) as client:
+        gdp_meta, gva_meta, inv_meta = await asyncio.gather(
+            client.get_agregado(1620),  # GDP
+            client.get_agregado(1612),  # GVA
+            client.get_agregado(1637),  # Investment
         )
-        
-        # Save
-        combined.write_parquet("macro_data.parquet")
-        
-        print(f"✓ Fetched {len(combined)} rows in ~10 seconds")
-        return combined
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        raise
-    finally:
-        await client.aclose()
+    return gdp_meta, gva_meta, inv_meta
 
-# Run the async pipeline
-if __name__ == "__main__":
-    result = asyncio.run(fetch_macroeconomic_suite())
-    print(result.head())
+gdp, gva, inv = asyncio.run(fetch_macro_metadata())
+print(f"{gdp.nome}: {len(gdp.periodos)} periods, {len(gdp.localidades)} localidades")
 ```
 
 ## Quick Example (Synchronous)
 
 ```python
 from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+with SidraClient(timeout=60) as client:
+    # 1. Fetch metadata
+    agregado = client.get_agregado_metadados(1620)
+    print(f"Table: {agregado.nome}")
+    print(f"Variables: {[v.id for v in agregado.variaveis]}")
+
+    # 2. Build a data request
+    param = Parametro(
+        agregado="1620",
+        territorios={"1": ["all"]},   # Brazil total
+        variaveis=["116"],
+        periodos=[],                  # all periods
+        classificacoes={},
+        formato=Formato.A,
+        decimais={"": Precisao.M},
+    )
+
+    # 3. Fetch the data (raw list[dict])
+    rows = client.get(param.url())
+    print(f"Got {len(rows)} rows")
+```
+
+The data is returned as a `list[dict]` matching the SIDRA `/values` JSON schema.
+Convert to a DataFrame yourself with Polars or pandas:
+
+```python
 import polars as pl
-
-client = SidraClient()
-
-# Fetch quarterly GDP (Table 1620, variable 116)
-gdp = client.fetch(
-    table="1620",
-    variable=116,
-    frequency="quarterly",
-    initial_date="2015-01-01"
-)
-
-# Data is returned as Polars DataFrame
-print(gdp.head())
-# Output:
-# shape: (24, 3)
-# date       | value      | status_code
-# 2015-01-01 | 1234.567   | null
-# 2015-04-01 | 1245.890   | null
-# 2015-07-01 | 1256.234   | null
-# ...
-
-# Calculate quarter-over-quarter growth
-gdp_with_growth = gdp.with_columns([
-    pl.col("value").pct_change().alias("qoq_growth")
-])
-
-# Save to Parquet (80%+ compression vs CSV)
-gdp_with_growth.to_parquet("gdp_quarterly.parquet")
-print(f"✓ Saved {len(gdp_with_growth)} observations")
+df = pl.DataFrame(rows)
+df.write_parquet("gdp.parquet")
 ```
 
 ## How It Works
@@ -213,524 +193,373 @@ print(f"✓ Saved {len(gdp_with_growth)} observations")
 ### Architecture
 
 ```
-High-level API call:
-  client.fetch(table="1620", variable=116, ...)
-    ↓
-URL Abstraction Engine (Parametro):
-  Converts Python args → SIDRA URL
-  /t/1620/n1/all/v/116/p/all/d/m
-    ↓
-HTTP Client (with Resilience):
-  Exponential backoff + smart retries
-  Handles timeouts, rate limiting, transient errors
-    ↓
-Paginated responses:
-  SIDRA returns data in pages (~2000 rows/page)
-  Transparently reassembles full dataset
-    ↓
-Type normalization:
-  Parses JSON → strongly-typed Polars DataFrame
-  ISO 8601 dates, proper numeric types
-    ↓
-Return to user:
-  Clean, validated Polars DataFrame
+Build a Parametro:
+    Parametro(agregado="1620", variaveis=["116"], ...)
+         ↓
+Render URL:
+    parametro.url()
+    → /t/1620/n1/all/v/116/p/all/h/y/f/a/d/m
+         ↓
+HTTP Client (with @retry decorators):
+    client.get(url)
+    → tenacity retries on transient failures
+    → streams the response body
+         ↓
+JSON parsing:
+    Returns raw list[dict] (SIDRA /values format)
+         ↓
+User processes data:
+    Polars / pandas / database insert
 ```
 
 ### URL Abstraction: No More Magic Strings
 
-Instead of hand-crafting SIDRA URLs:
-
 ```python
 # ❌ Error-prone (manual URL construction)
 url = f"/t/1620/n1/all/v/116/p/all/d/m?lang=en"
-# Easy to make mistakes with positional args
 
 # ✅ Type-safe (Parametro abstraction)
-from sidra_fetcher import Parametro
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 param = Parametro(
-    tabela=1620,
-    variavel=116,
-    formato=Formato.C,  # Column-based
-    precisao=Precisao.M  # Monthly precision
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
 )
-# IDE autocompletion + validation
+print(param.url())
+# https://apisidra.ibge.gov.br/values/t/1620/n1/all/v/116/p/all/h/y/f/a/d/m
 ```
 
 ### Reverse Engineering: URL to Python
 
-Copied a URL from the SIDRA website? Paste it directly:
+Copied a URL from the SIDRA website? Parse it directly:
 
 ```python
-from sidra_fetcher import parameter_from_url
+from sidra_fetcher.sidra import parameter_from_url
 
-url = "https://sidra.ibge.gov.br/api/values/table/1737/classifications/58/category/all/periods/all/..."
-
-# Automatically parse to Parametro object
+url = "https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2265/p/all/d/m"
 param = parameter_from_url(url)
-print(param.tabela)  # 1737
-print(param.variavel)  # 2265
+print(param.agregado)   # "1737"
+print(param.variaveis)  # ["2265"]
+print(param.territorios)  # {"1": ["all"]}
 ```
 
-### Authentication
+### Authentication & Rate Limits
 
-SIDRA API is public—no authentication required. But rate limiting applies:
-
-- Default: 1 request per second
-- Can be adjusted with `rate_limit` parameter
-
-```python
-# More aggressive rate limit (5 requests/sec)
-# Use with caution - may trigger API throttling
-client = SidraClient(rate_limit=0.2)
-```
+SIDRA API is public—no authentication required. Be courteous with rate (especially during business hours in Brazil); `tenacity` handles transient failures but won't help if you saturate the server.
 
 ### Retry Logic
 
-Built-in exponential backoff:
+Retries are wired in via `tenacity` decorators on each metadata method:
+
+- `get_indice_pesquisas_agregados`: up to 3 attempts
+- `get_agregado_metadados`: up to 3 attempts
+- `get_agregado_periodos`: up to 3 attempts with exponential backoff (3s → 30s)
+
+The raw `client.get(url)` is **not** decorated with retry. If you need retries on data downloads, wrap your call:
 
 ```python
-client = SidraClient(
-    max_retries=5,        # Try up to 5 times
-    backoff_factor=2,     # Wait 1s, 2s, 4s, 8s, 16s
-    timeout=60            # 60-second timeout per request
-)
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-# Fetch with automatic retries
-data = client.fetch(table="1620", variable=116)
+@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=3, max=60))
+def fetch_with_retry(client, url):
+    return client.get(url)
+
+rows = fetch_with_retry(client, param.url())
 ```
-
-On repeated failures, raises `SidraClientError` with details.
 
 ## API Reference
 
-### `SidraClient()` - Synchronous Client
-
-Initialize the synchronous client for point extractions or thread-based parallelism:
+### `SidraClient(timeout=60)` — Synchronous Client
 
 ```python
 from sidra_fetcher import SidraClient
 
-client = SidraClient(
-    timeout=60,
-    max_retries=5,
-    backoff_factor=2,
-    rate_limit=1.0,    # Seconds between requests (respects IBGE infrastructure)
-    debug=False        # Enable debug logging
-)
+with SidraClient(timeout=60) as client:
+    ...
 ```
 
-**Parameters:**
+**Constructor:**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `timeout` | int | 60 | Request timeout in seconds |
-| `max_retries` | int | 5 | Max retry attempts before giving up |
-| `backoff_factor` | float | 2 | Exponential backoff multiplier (1s → 2s → 4s...) |
-| `rate_limit` | float | 1.0 | Minimum seconds between requests (prevents overwhelming IBGE) |
-| `debug` | bool | False | Enable debug logging to stderr |
+| `timeout` | int | 60 | Per-request timeout in seconds |
 
-### `AsyncSidraClient()` - Asynchronous Client
+**Methods:**
 
-Initialize the async client for concurrent, high-throughput extractions:
+| Method | Returns | Purpose |
+|--------|---------|---------|
+| `client.get(url)` | `Any` (parsed JSON) | Raw GET request; use for `Parametro.url()` data downloads |
+| `client.get_indice_pesquisas_agregados()` | `list[IndicePesquisaAgregados]` | Index of all surveys + their aggregates |
+| `client.get_agregado_metadados(agregado_id)` | `Agregado` | Variables, classifications, periodicidade, territorial levels |
+| `client.get_agregado_periodos(agregado_id)` | `list[Periodo]` | All periods for the aggregate |
+| `client.get_agregado_localidades(agregado_id, localidades_nivel)` | `list[Localidade]` | Territorial units at the requested level(s) |
+| `client.get_agregado(agregado_id)` | `Agregado` | Composed: metadata + periods + all localidades |
+| `client.get_acervo(acervo)` | `Any` | Fetch the acervo index (`AcervoEnum.A` / `.E`) |
+
+Use as a context manager (`with SidraClient(...) as client:`) to ensure the underlying `httpx.Client` is closed.
+
+### `AsyncSidraClient(timeout=60)` — Asynchronous Client
 
 ```python
 from sidra_fetcher import AsyncSidraClient
 import asyncio
 
 async def main():
-    client = AsyncSidraClient(
-        timeout=60,
-        max_retries=5,
-        backoff_factor=2,
-        rate_limit=0.5  # More aggressive rate limiting (every 0.5s)
-    )
-    
-    try:
-        # Fetch multiple tables concurrently
+    async with AsyncSidraClient(timeout=60) as client:
         results = await asyncio.gather(
-            client.fetch(table="1620", variable=116),
-            client.fetch(table="1612", variable=117),
-            client.fetch(table="1637", variable=119)
+            client.get_agregado(1620),
+            client.get_agregado(1612),
+            client.get_agregado(1637),
         )
-        return results
-    finally:
-        await client.aclose()  # Clean up connection pool
+    return results
 
-# Run
-results = asyncio.run(main())
+asyncio.run(main())
 ```
 
-**When to use:**
-- Fetching **multiple tables** (concurrent I/O)
-- Large-scale data pipelines with many extraction tasks
-- Minimizing total execution time (network I/O is the bottleneck)
+Same method surface as `SidraClient`, but every method is `async`. Use `async with` for the context manager.
 
-### Domain Model: Strongly-Typed Objects
-
-Instead of generic dictionaries, `sidra-fetcher` returns richly-structured dataclasses:
+### `Parametro` — SIDRA URL Builder
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-client = SidraClient()
-
-# Get metadata for a table
-agregado = client.get_agregado(1620)
-
-# Returns Agregado object (not a dict!)
-print(f"Nome: {agregado.nome}")
-print(f"Descrição: {agregado.descricao}")
-print(f"Frequência: {agregado.frequencia}")
-
-# Nested structure: Agregado → Variavel → Classificacao → Categoria
-for variavel in agregado.variaveis:
-    print(f"\nVariável: {variavel.id} - {variavel.nome}")
-    
-    for classificacao in variavel.classificacoes:
-        print(f"  Classificação: {classificacao.nome}")
-        
-        for categoria in classificacao.categorias:
-            print(f"    → {categoria.nome}")
-
-# Strongly typed = IDE autocomplete + type checking
-# No more 'dict' → 'KeyError' surprises
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"], "3": ["35", "33"]},
+    variaveis=["116", "117"],
+    periodos=["202301", "202302"],
+    classificacoes={"11255": ["all"]},
+    cabecalho=True,
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+url = param.url()
 ```
 
-### `client.fetch()`
+**Constructor:**
 
-Fetch a single time series:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `agregado` | str | required | SIDRA table code |
+| `territorios` | dict[str, list[str]] | required | Territory level → unit codes (`["all"]` or `[]` = all) |
+| `variaveis` | list[str] | required | Variable codes (empty = all) |
+| `periodos` | list[str] | required | Period codes (empty = all) |
+| `classificacoes` | dict[str, list[str]] | required | Classification → category codes |
+| `cabecalho` | bool | True | Include header row (`/h/y` vs `/h/n`) |
+| `formato` | Formato | `Formato.A` | Output formato (`A`, `C`, `N`, `U`) |
+| `decimais` | dict[str, Precisao] | `{"": Precisao.M}` | Decimal precision per variable |
+
+**Helpers:**
+
+| Function | Purpose |
+|----------|---------|
+| `param.url()` | Render the full SIDRA `/values` URL |
+| `param.assign(name, value)` | Return a copy with one field replaced |
+| `parameter_from_url(url)` | Parse a SIDRA URL → `Parametro` |
+| `get_sidra_url_request_period(parametro, period_id)` | Render URL with periods replaced by a single period |
+
+### Domain Model (Dataclasses)
+
+Returned by metadata methods:
 
 ```python
-data = client.fetch(
-    table="1620",           # SIDRA table ID
-    variable=116,           # Variable ID
-    frequency="quarterly",  # Optional: "monthly", "quarterly", "annual", "daily"
-    initial_date="2015-01-01",  # Optional: start date
-    final_date="2023-12-31",    # Optional: end date
-    dimensions=None,        # Optional: filter by dimensions
-    classification=None     # Optional: filter by classification
+from sidra_fetcher.agregados import (
+    Agregado, Variavel, Classificacao, Categoria,
+    Periodo, Localidade, NivelTerritorial,
+    Periodicidade, AgregadoNivelTerritorial,
+    Pesquisa, IndicePesquisaAgregados, IndiceAgregado,
 )
 ```
 
-**Returns:** Polars DataFrame with columns:
-- `date`: ISO 8601 date (YYYY-MM-DD)
-- `value`: Numeric value (float)
-- `status_code`: "." for suppressed, None otherwise
+`Agregado` (returned by `get_agregado_metadados` / `get_agregado`):
 
-### `client.fetch_multiple()`
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `id` | str | Aggregate id |
+| `nome` | str | Aggregate name |
+| `url` | str | SIDRA URL for this table |
+| `pesquisa` | Pesquisa | Owning survey |
+| `assunto` | str | Subject |
+| `periodicidade` | Periodicidade | Frequency + date range |
+| `nivel_territorial` | AgregadoNivelTerritorial | Supported levels |
+| `variaveis` | list[Variavel] | Available variables |
+| `classificacoes` | list[Classificacao] | Available classifications |
+| `periodos` | list[Periodo] | Periods (populated by `get_agregado`) |
+| `localidades` | list[Localidade] | Localities (populated by `get_agregado`) |
 
-Fetch multiple variables from one table efficiently:
+### Reader Helpers
 
 ```python
-data = client.fetch_multiple(
-    table="1620",
-    variables=[116, 117, 118],
-    frequency="quarterly"
+from sidra_fetcher.reader import (
+    read_metadados,
+    read_periodos,
+    read_localidades,
+    save_agregado,
+    load_agregado,
+    flatten_aggregate_metadata,
+    flatten_surveys_metadata,
 )
 
-# Returns DataFrame with columns:
-# date, value_116, value_117, value_118
-```
+# Persist an Agregado to disk for later reuse
+save_agregado(agregado, "agregado_1620.json")
 
-### `client.list_tables()`
-
-Search the SIDRA catalog:
-
-```python
-# Search by keyword
-tables = client.search_tables("GDP")
-
-for table in tables:
-    print(f"{table['id']}: {table['name']}")
-```
-
-## Output Formats
-
-### Parquet (Recommended)
-
-Columnar format, compressed, ideal for analytics:
-
-```python
-data = client.fetch(table="1620", variable=116)
-data.to_parquet("gdp.parquet")
-
-# Later, load efficiently
-import polars as pl
-df = pl.read_parquet("gdp.parquet")
-```
-
-### CSV
-
-Human-readable, but less efficient:
-
-```python
-data.to_csv("gdp.csv")
-```
-
-### PostgreSQL
-
-For operational access and data warehousing:
-
-```python
-data.to_postgres(
-    table="sidra_gdp",
-    connection_string="postgresql://user:pass@localhost/db"
-)
-```
-
-Or using Polars directly:
-
-```python
-data.write_database(
-    "sidra_gdp",
-    connection_string="postgresql://user:pass@localhost/db",
-    if_exists="append"
-)
+# Reload it without hitting the API
+agregado = load_agregado("agregado_1620.json")
 ```
 
 ## Common Patterns
 
-### Incremental Updates
-
-Add new data without re-fetching everything:
+### Discover a Table's Variables and Periods
 
 ```python
-# Load existing data
-existing = pl.read_parquet("gdp.parquet")
-last_date = existing["date"].max()
+from sidra_fetcher import SidraClient
 
-# Fetch only new data
-new_data = client.fetch(
-    table="1620",
-    variable=116,
-    initial_date=last_date
-)
+with SidraClient() as client:
+    agregado = client.get_agregado_metadados(1620)
 
-# Combine and deduplicate
-combined = pl.concat([existing, new_data]).unique(subset=["date"])
-combined.to_parquet("gdp.parquet")
+    print(f"Table: {agregado.nome}")
+    print(f"Periodicidade: {agregado.periodicidade.frequencia}")
+
+    print("\nVariables:")
+    for v in agregado.variaveis:
+        print(f"  {v.id}: {v.nome} ({v.unidade})")
+
+    print("\nClassifications:")
+    for c in agregado.classificacoes:
+        print(f"  {c.id}: {c.nome} ({len(c.categorias)} categories)")
 ```
 
-### Multi-Variable Pipeline
-
-Fetch multiple variables and combine:
+### Build a Data Request from a SIDRA Web URL
 
 ```python
-# Option 1: Use fetch_multiple (more efficient)
-data = client.fetch_multiple(
-    table="1620",
-    variables=[116, 117, 118]
-)
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import parameter_from_url
 
-# Option 2: Manual combination
-gdp_nominal = client.fetch(table="1620", variable=116)
-gdp_real = client.fetch(table="1620", variable=117)
+# Copied from sidra.ibge.gov.br
+web_url = "https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2265/p/all/d/m"
+param = parameter_from_url(web_url)
 
-combined = gdp_nominal.join(
-    gdp_real,
-    on="date",
-    suffix="_real"
-)
+with SidraClient() as client:
+    rows = client.get(param.url())
 ```
 
-### Parallel Fetching
+### Period-by-Period Streaming
 
-Fetch from multiple tables in parallel:
+For large tables, fetch one period at a time to bound memory:
 
 ```python
-from concurrent.futures import ThreadPoolExecutor
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao, get_sidra_url_request_period
 
-tables = [
-    ("1620", 116),  # GDP
-    ("1612", 116),  # GVA
-    ("1637", 116),  # Investment
-]
+base = Parametro(
+    agregado="1620",
+    territorios={"6": []},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
 
-with ThreadPoolExecutor(max_workers=3) as executor:
-    results = {
-        table_id: executor.submit(
-            client.fetch, table=table_id, variable=var_id
+with SidraClient() as client:
+    periodos = client.get_agregado_periodos(1620)
+    for p in periodos:
+        url = get_sidra_url_request_period(base, p.id)
+        rows = client.get(url)
+        # process / persist `rows` here
+```
+
+### Concurrent Metadata Harvesting
+
+```python
+import asyncio
+from sidra_fetcher import AsyncSidraClient
+
+async def harvest(table_ids):
+    async with AsyncSidraClient(timeout=60) as client:
+        return await asyncio.gather(
+            *(client.get_agregado(tid) for tid in table_ids)
         )
-        for table_id, var_id in tables
-    }
-    
-    data = {k: v.result() for k, v in results.items()}
+
+agregados = asyncio.run(harvest([1620, 1612, 1637, 1737]))
 ```
 
-### Time Series Analysis
+### Convert to DataFrame and Persist
 
 ```python
 import polars as pl
 
-data = client.fetch(table="1620", variable=116, frequency="quarterly")
-
-# Calculate growth rate
-growth = data.with_columns([
-    pl.col("value").pct_change().alias("qoq_growth"),
-    pl.col("value").pct_change(4).alias("yoy_growth")
-])
-
-# Rolling average (2-year window)
-smoothed = data.with_columns([
-    pl.col("value").rolling_mean(window_size=8).alias("ma_2yr")
-])
-```
-
-## Handling Missing Data
-
-SIDRA marks suppressed values with ".":
-
-```python
-data = client.fetch(table="1620", variable=116)
-
-# Filter missing values
-clean = data.filter(pl.col("status_code") != ".")
-
-# Count missing by year
-missing_by_year = (
-    data
-    .with_columns(pl.col("date").dt.year().alias("year"))
-    .filter(pl.col("status_code") == ".")
-    .group_by("year")
-    .agg(pl.col("status_code").count().alias("count"))
-)
-```
-
-## Industrial-Grade Error Handling
-
-The library automatically handles transient failures. Manual intervention is only needed for permanent errors.
-
-### Automatic Retry Strategy
-
-```python
-from sidra_fetcher import SidraClient
-
-client = SidraClient(
-    max_retries=5,
-    backoff_factor=2
-)
-
-# Automatic behavior on failure:
-try:
-    data = client.fetch(table="1620", variable=116)
-    # Attempt 1: Timeout
-    # [Wait 5 seconds]
-    # Attempt 2: Timeout
-    # [Wait 10 seconds]
-    # Attempt 3: Success ✓
-except Exception as e:
-    print(f"Permanent failure after retries: {e}")
-```
-
-### Catching Specific Errors
-
-```python
-from sidra_fetcher import SidraClientError, SidraTimeoutError, SidraRateLimitError
-import logging
-
-logger = logging.getLogger(__name__)
-
-try:
-    data = client.fetch(table="1620", variable=116)
-    
-except SidraTimeoutError as e:
-    logger.warning(f"API timeout (transient): {e}")
-    # Retries already attempted. Consider trying again later.
-    
-except SidraRateLimitError as e:
-    logger.warning(f"Rate limited: {e}")
-    # IBGE is rejecting requests. Back off for a few minutes.
-    
-except SidraClientError as e:
-    logger.error(f"Unrecoverable error: {e}")
-    # Table doesn't exist, invalid variable, etc.
-    raise
-```
-
-### Monitoring for Production Pipelines
-
-```python
-import logging
-from sidra_fetcher import SidraClient
-
-logging.basicConfig(level=logging.DEBUG)
-
-client = SidraClient(debug=True)
-
-# Enable detailed logging for debugging
-data = client.fetch(table="1620", variable=116)
-# Output:
-# [DEBUG] SidraClient: Fetching table 1620, variable 116
-# [DEBUG] SidraClient: Constructed URL: /t/1620/v/116/p/all/d/m
-# [DEBUG] SidraClient: Attempt 1/5 to https://api.sidra.ibge.gov.br/...
-# [DEBUG] SidraClient: Got 200 OK, 348 rows
-# [DEBUG] SidraClient: Normalization: dates to ISO 8601, types inferred
+rows = client.get(param.url())  # list[dict]
+df = pl.DataFrame(rows)
+df.write_parquet("data.parquet")
 ```
 
 ## Performance Tips
 
-### 1. Use Frequency Filter
+### 1. Cache Metadata to Disk
 
-Specify frequency to reduce data volume:
-
-```python
-# Good: Returns ~90 rows (quarterly for 22 years)
-data = client.fetch(
-    table="1620",
-    variable=116,
-    frequency="quarterly"
-)
-
-# Less good: Returns ~1000+ rows (monthly)
-data = client.fetch(table="1620", variable=116, frequency="monthly")
-```
-
-### 2. Use Date Range
-
-Limit historical data:
+Metadata changes infrequently. Save it once, reload from disk on subsequent runs:
 
 ```python
-# Fetch only recent 5 years (much faster)
-data = client.fetch(
-    table="1620",
-    variable=116,
-    initial_date="2019-01-01"
-)
+from pathlib import Path
+from sidra_fetcher import SidraClient
+from sidra_fetcher.reader import save_agregado, load_agregado
+
+cache = Path("agregado_1620.json")
+
+if cache.exists():
+    agregado = load_agregado(cache)
+else:
+    with SidraClient() as client:
+        agregado = client.get_agregado(1620)
+    save_agregado(agregado, cache)
 ```
 
-### 3. Batch Operations
+### 2. Filter Periods Server-Side
 
-Don't fetch in a loop:
+Don't fetch all history if you only need a window. Use the `periodos` field on `Parametro`:
 
 ```python
-# Bad: Multiple round trips
-for var_id in [116, 117, 118]:
-    data = client.fetch(table="1620", variable=var_id)
-
-# Good: One round trip
-data = client.fetch_multiple(
-    table="1620",
-    variables=[116, 117, 118]
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=["202001", "202002", "202003"],  # only Q1-Q3 2020
+    classificacoes={},
 )
 ```
+
+### 3. Use Async for Many Tables
+
+If you're harvesting metadata for dozens of aggregates, `AsyncSidraClient` + `asyncio.gather` is significantly faster than a sync loop.
+
+### 4. Stream Period-by-Period for Huge Tables
+
+Tables like RAIS, Censo, and PAM municipal have millions of rows. Iterate periods individually and persist each chunk; never load the entire table into memory.
 
 ## Debugging
 
-Enable debug logging:
+`sidra_fetcher` uses the stdlib `logging` module under the logger name `sidra_fetcher`. Enable debug output:
 
 ```python
-client = SidraClient(debug=True)
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("sidra_fetcher").setLevel(logging.DEBUG)
 
-data = client.fetch(table="1620", variable=116)
-# Output:
-# [DEBUG] Fetching SIDRA table 1620, variable 116
-# [DEBUG] API request: https://api.sidra.ibge.gov.br/values/table/1620/...
-# [DEBUG] Response: 200 OK, 256 rows
+from sidra_fetcher import SidraClient
+with SidraClient() as client:
+    rows = client.get("https://apisidra.ibge.gov.br/values/t/1620/n1/all/v/116/p/all/d/m")
+# Logs the URL, request duration, and response size
 ```
 
 ## See Also
 
-- [IBGE Overview](index.md)
-- [sidra-sql](sidra-sql.md) — Table browser and catalog
-- [Architecture](../architecture/overview.md)
+- [sidra-sql](sidra-sql.md) — Data warehousing & ETL motor that consumes `sidra-fetcher`
+- [sidra-pipelines](sidra-pipelines.md) — Standard pipeline catalog
+- [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
+- [SIDRA API Help (Portuguese)](https://apisidra.ibge.gov.br/home/ajuda)
