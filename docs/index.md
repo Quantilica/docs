@@ -26,7 +26,7 @@ This platform provides a set of **specialized, modular tools** designed to handl
 | Component | Architecture Pattern | Infrastructure Challenge |
 |-----------|---------------------|--------------------------|
 | **sidra-fetcher** | Dual sync/async clients with smart caching | Unstable IBGE REST API, rate limiting |
-| **ibge-sidra-tabelas** | Data warehousing with dimensional modeling | Table discovery across thousands of datasets |
+| **sidra-sql** | Data warehousing with dimensional modeling | Table discovery across thousands of datasets |
 | **tddata** | Financial engineering with FIFO lot matching | Streaming portfolio transactions, GIPS compliance |
 | **pdet-data** | Big Data transformation with Polars vectorial processing | 50M+ row CSVs that exhaust Pandas memory |
 | **comexdown** | Resilient extraction agent with temporal idempotency | Legacy government servers, SSL issues, colossal files |
@@ -90,7 +90,7 @@ Analytics / BI / Research
 - **Smart caching**: Skip unchanged tables via URL parametrization; idempotence checks
 - **Use when**: You need real-time economic indicators, inflation data, or employment statistics from SIDRA with flexible sync/async requirements
 
-### ibge-sidra-tabelas
+### sidra-sql
 **Data warehousing** layer that catalogs SIDRA's 5000+ tables with dimensional modeling. Implements Slowly Changing Dimensions (SCD Type II) to track table schema evolution and audit trails.
 
 - **Table discovery**: Navigate SIDRA's taxonomy programmatically (no manual browsing)
@@ -259,7 +259,7 @@ Explicit is better than implicit. Know what data is being fetched, transformed, 
 
 ### By Use Case
 
-**Economic Indicators?** → [IBGE (sidra-fetcher, ibge-sidra-tabelas)](ibge/index.md)
+**Economic Indicators?** → [IBGE (sidra-fetcher, sidra-sql)](ibge/index.md)
 - Real-time GDP, inflation, employment statistics
 - Smart async caching for fast, concurrent fetches
 

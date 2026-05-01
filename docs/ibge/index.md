@@ -22,26 +22,70 @@ SIDRA is Brazil's richest data source, but consuming it at scale encounters crit
 - **Complex structure**: Tables contain nested classifications, categories, and dimensions
 - **Fragmented documentation**: Spread across multiple Portuguese-language websites
 
-## Our Solution: Advanced SDK + Table Browser
+---
 
-### **sidra-fetcher** — Industrial-Grade SDK
+## The IBGE Data Tools Ecosystem
 
-An advanced Python SDK engineered to solve both engineering bottlenecks:
+We provide **two complementary stacks** for different use cases:
 
-**Architecture:**
-- **Dual Client Model**: 
-  - `SidraClient`: Synchronous, ideal for point extractions
-  - `AsyncSidraClient`: Fully asynchronous (3x faster for multi-table extraction)
-- **Smart Resilience**: Exponential backoff with automatic retries; handles timeouts, rate limiting, transient errors
-- **URL Abstraction**: Eliminates magic strings via `Parametro` class; reverse engineering support
-- **Strong Typing**: Metadata returned as dataclasses (`Agregado`, `Variavel`, `Classificacao`), not dicts
-- **Multiple Formats**: Parquet, CSV, PostgreSQL, Polars DataFrames
+### Stack 1: Flexible SDK (For Exploration & Custom Workflows)
 
-**Example Performance:**
-- Sync: Fetch 3 tables = 30 seconds
-- Async: Fetch 3 tables in parallel = 10 seconds (3x faster)
+**Tools:** `sidra-fetcher` + `sidra-sql`
 
-### **ibge-sidra-tabelas** — Table Browser
+For data scientists and analysts who need:
+- Quick notebook exploration
+- Custom extraction logic
+- On-demand data fetching
+- Flexible output formats (Parquet, CSV, DataFrames)
+
+```
+IBGE SIDRA API
+    ↓
+sidra-fetcher (extraction + URL abstraction)
+    ↓
+sidra-sql (table browser + metadata)
+    ↓
+Your analysis (Python/Jupyter)
+```
+
+### Stack 2: Enterprise ETL (For Production Pipelines)
+
+**Tools:** `sidra-sql` + `sidra-pipelines`
+
+For data engineers building:
+- Automated, reproducible pipelines
+- Normalized relational databases
+- Multi-user data warehouses
+- Declarative (no-code) definitions
+
+```
+IBGE SIDRA API
+    ↓
+sidra-sql (motor: download + normalize + load)
+    ↓
+PostgreSQL (fully normalized schema)
+    ↓
+SQL transformations → Analytics tables
+    ↓
+Power BI, Metabase, SQL queries
+```
+
+---
+
+## Tool Reference
+
+### 🔍 Stack 1: Exploration & Notebooks
+
+**[sidra-fetcher](sidra-fetcher.md) — Industrial-Grade SDK**
+
+An advanced Python SDK for robust extraction:
+- **Dual clients:** `SidraClient` (sync) vs `AsyncSidraClient` (async, 3x faster)
+- **Smart resilience:** Exponential backoff, automatic retries
+- **URL abstraction:** No magic strings; `Parametro` class
+- **Strong typing:** Metadata as dataclasses, not dicts
+- **Multiple formats:** Parquet, CSV, PostgreSQL, Polars DataFrames
+
+**[sidra-sql](sidra-sql.md) — Table Browser**
 
 Programmatic catalog navigation:
 - Full-text search (English & Portuguese)
@@ -49,77 +93,76 @@ Programmatic catalog navigation:
 - Browse structure without leaving Python
 - Find the right table programmatically
 
-## Common Use Cases
-
-### Economic Monitoring
-Track Brazil's real-time economic performance:
-- GDP growth (quarterly and annual)
-- Industrial production
-- Retail sales
-- Investment flows
-
-### Macroeconomic Analysis
-Build macro models and economic indicators:
-- Inflation (multiple measures: IPCA, IGP-M, IPC)
-- Employment and unemployment
-- Wage growth by sector
-- Trade balance and exchange rates
-
-### Demographics & Social Research
-Population, household composition, labor force participation.
-
-## Architecture: How sidra-fetcher & ibge-sidra-tabelas Work Together
-
-```
-┌─────────────────────────────────────────────────────┐
-│     IBGE SIDRA API (Unreliable, Complex)            │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│  sidra-fetcher (Communication Layer)                 │
-│  ────────────────────────────────────────────────    │
-│  ✓ Smart retries & exponential backoff              │
-│  ✓ Async for high throughput                        │
-│  ✓ URL abstraction (no magic strings)               │
-│  ✓ Returns: Clean Polars DataFrames                 │
-└──────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│  ibge-sidra-tabelas (Data Warehousing Layer)        │
-│  ────────────────────────────────────────────────    │
-│  ✓ Streaming ingestion (COPY FROM STDIN)            │
-│  ✓ Dimensional schema (Star model)                  │
-│  ✓ Slowly Changing Dimensions (history)            │
-│  ✓ Audit trails & reproducibility                  │
-│  ✓ Declarative pipelines (TOML)                    │
-└──────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│     PostgreSQL Data Warehouse (Optimized)           │
-│     (Ready for BI, analytics, machine learning)     │
-└──────────────────────────────────────────────────────┘
-```
-
-### When to Use Each Tool
-
-**Use sidra-fetcher alone when:**
-- Quick data exploration (notebook)
+**Best for:**
+- Jupyter notebooks & quick exploration
 - One-off analysis
 - Small datasets (<100 MB)
-- You don't need historical audit trails
+- When you need custom transformation logic
+- Academic research workflows
 
-**Use ibge-sidra-tabelas when:**
-- Building production data pipelines
-- Need reproducibility (academic/regulatory)
-- Handling large volumes (millions of rows)
-- Multi-user access (share via PostgreSQL)
-- Require historical data governance
+---
 
-**Use both together (recommended) when:**
-- Enterprise data platform
-- Long-term analytics infrastructure
-- Team collaboration
-- Need to track data revisions
+### 🏭 Stack 2: Production ETL
+
+**[sidra-sql](sidra-sql.md) — ETL Motor**
+
+Industrial-strength pipeline orchestration:
+- **Plugin architecture:** Lightweight motor + separate data definitions
+- **Full normalization:** 5-table relational schema
+- **Bulk loading:** COPY protocol (100k+ rows/sec)
+- **Idempotent operations:** Safe re-execution
+- **SQL transformations:** Generate analytics tables automatically
+- **Complete audit trail:** Track all data modifications
+
+**[sidra-pipelines](sidra-pipelines.md) — Standard Library**
+
+Pre-built catalog of 14 production-ready pipelines:
+- GDP, inflation, population, agriculture, etc.
+- One-command deployment: `sidra-sql run std pib_municipal`
+- Ready for Power BI, Metabase, analytics
+- Extensible for custom datasets
+
+**Best for:**
+- Production data pipelines (hourly/daily)
+- Enterprise data warehouses
+- Multi-user access via PostgreSQL
+- Reproducible, auditable datasets
+- Academic/regulatory compliance
+- Complex multi-table workflows
+
+---
+
+## When to Use Each Stack
+
+| Dimension | Exploration (Stack 1) | Production (Stack 2) |
+|-----------|---|---|
+| **Setup time** | Minutes (pip install) | ~30 minutes (config + PostgreSQL) |
+| **Maintenance** | None (ad-hoc) | Scheduled pipeline runs |
+| **Data freshness** | On-demand | Hourly/daily/weekly |
+| **Scalability** | Notebooks, personal use | Multi-user, enterprise |
+| **Dependencies** | Python only | Python + PostgreSQL |
+| **Data validation** | Manual | Automated (constraints, uniqueness) |
+| **Audit trail** | Basic logging | Full metadata persistence |
+| **Transformation** | Python (Polars, pandas) | SQL (declarative) |
+| **Sharing results** | CSV/Parquet exports | SQL queries + BI tools |
+
+### Decision Tree
+
+```
+Do you need:
+├─ Quick exploration in a notebook?
+│  └─ Use sidra-fetcher ✓
+├─ One-off data extraction?
+│  └─ Use sidra-fetcher ✓
+├─ Daily/hourly automated pipeline?
+│  └─ Use sidra-sql + sidra-pipelines ✓
+├─ Multi-user data warehouse?
+│  └─ Use sidra-sql + sidra-pipelines ✓
+├─ Fully normalized relational schema?
+│  └─ Use sidra-sql ✓
+└─ Custom transformation logic in Python?
+   └─ Use sidra-fetcher ✓
+```
 
 ---
 
@@ -133,15 +176,100 @@ Population, household composition, labor force participation.
 | **Trade** | Exports, imports, balance | Trade analysis |
 | **Employment** | Unemployment, hours worked | Labor market |
 | **Demographics** | Population, migration | Social research |
+| **Agriculture** | Crops, livestock, forestry | Agricultural analysis |
+
+---
+
+## Common Use Cases
+
+### 📊 Economic Monitoring (→ Stack 2: Production ETL)
+
+Track Brazil's real-time economic performance with automated pipelines:
+- GDP growth (quarterly and annual)
+- Inflation (IPCA, INPC, IPCA-15)
+- Industrial production
+
+**Command:**
+```bash
+sidra-sql run std pib_municipal
+sidra-sql run std ipca
+```
+
+### 📈 Macroeconomic Analysis (→ Either stack)
+
+**Ad-hoc analysis:** Use `sidra-fetcher` in Python
+```python
+from sidra_fetcher import AsyncSidraClient
+client = AsyncSidraClient()
+gdp = await client.fetch(table="1620", variable=116)
+```
+
+**Recurring analysis:** Use `sidra-sql` + PostgreSQL
+```sql
+SELECT * FROM analytics.pib_municipal
+WHERE ano >= 2020;
+```
+
+### 👥 Demographics & Social Research (→ Stack 2: Production ETL)
+
+Population, household composition, census data:
+```bash
+sidra-sql run std censo_populacao
+sidra-sql run std estimativa_populacao
+```
+
+### 🌾 Agricultural Analysis (→ Stack 2: Production ETL)
+
+Crop production and livestock data:
+```bash
+sidra-sql run std pam_lavouras_temporarias
+sidra-sql run std ppm_rebanhos
+sidra-sql run std pevs_producao
+```
+
+---
+
+## Example Workflows
+
+### Workflow A: Quick Analysis (Stack 1)
+
+```python
+from sidra_fetcher import AsyncSidraClient
+import asyncio
+
+async def analyze_gdp():
+    client = AsyncSidraClient()
+    gdp = await client.fetch(table="1620", variable=116, initial_date="2020-01-01")
+    gdp.write_parquet("gdp_recent.parquet")
+    return gdp
+
+# Run once, analyze in notebook
+data = asyncio.run(analyze_gdp())
+```
+
+### Workflow B: Production Dashboard (Stack 2)
+
+```bash
+# 1. Install pipelines
+sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
+
+# 2. Run pipeline (creates PostgreSQL tables)
+sidra-sql run std ipca
+
+# 3. Connect Power BI to analytics.ipca table
+# → Real-time dashboard ready
+```
+
+---
 
 ## Getting Started
 
-### Workflow: Discover → Extract → Analyze
+### Quick Exploration (sidra-fetcher)
 
 #### Step 1: Discover the Right Table
 
 ```python
-from ibge_sidra_tabelas import SidraTableBrowser
+from sidra_sql import SidraTableBrowser
 
 browser = SidraTableBrowser()
 
@@ -156,34 +284,29 @@ for table in gdp_tables:
     print(f"  Available variables: {len(table.variables)}")
 ```
 
-#### Step 2: Extract Data (Choose Sync or Async)
+#### Step 2: Extract Data
 
-**Option A: Synchronous (single table or sequential)**
-
+**Synchronous (single table):**
 ```python
 from sidra_fetcher import SidraClient
 
 client = SidraClient()
-
 gdp = client.fetch(
     table="1620",
     variable=116,
     frequency="quarterly",
     initial_date="2015-01-01"
 )
-
-print(f"✓ Fetched {len(gdp)} quarterly observations")
+print(f"✓ Fetched {len(gdp)} observations")
 ```
 
-**Option B: Asynchronous (multiple tables concurrently — 3x faster)**
-
+**Asynchronous (multiple tables, 3x faster):**
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
 
 async def fetch_macro_suite():
     client = AsyncSidraClient()
-    
     try:
         results = await asyncio.gather(
             client.fetch(table="1620", variable=116),  # GDP
@@ -195,7 +318,6 @@ async def fetch_macro_suite():
         await client.aclose()
 
 gdp, gva, investment = asyncio.run(fetch_macro_suite())
-print(f"✓ Fetched 3 tables in ~10 seconds (async vs 30s sync)")
 ```
 
 #### Step 3: Store and Analyze
@@ -203,302 +325,121 @@ print(f"✓ Fetched 3 tables in ~10 seconds (async vs 30s sync)")
 ```python
 import polars as pl
 
-# Calculate economic growth rates
+# Calculate growth rates
 gdp_analysis = gdp.with_columns([
     pl.col("value").pct_change().alias("qoq_growth"),
     pl.col("value").pct_change(4).alias("yoy_growth")
 ])
 
-# Save to Parquet (80%+ compression vs CSV)
-gdp_analysis.to_parquet("gdp_quarterly.parquet")
-
-# Or to PostgreSQL for operational access
-gdp_analysis.to_postgres(
-    table="gdp_quarterly",
-    connection_string="postgresql://user:pass@localhost/db"
-)
+# Save to Parquet (80%+ compression)
+gdp_analysis.write_parquet("gdp_quarterly.parquet")
 ```
 
-## Tools in This Section
+### Production Pipeline (sidra-sql)
 
-### [sidra-fetcher](sidra-fetcher.md)
-Advanced SDK for robust SIDRA extraction. Master:
-- **Dual Clients**: `SidraClient` (sync) vs `AsyncSidraClient` (async)
-- **Smart Resilience**: Exponential backoff, automatic retries, rate limiting
-- **URL Abstraction**: `Parametro` class eliminates magic strings
-- **Domain Modeling**: Strongly-typed metadata objects
-- **Industrial Error Handling**: Production-grade logging and monitoring
-- **Multiple Output Formats**: Parquet, CSV, PostgreSQL, DataFrames
+```bash
+# 1. Install sidra-sql
+git clone https://github.com/Quantilica/sidra-sql.git
+cd sidra-sql
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
 
-### [ibge-sidra-tabelas](ibge-sidra-tabelas.md)
-Complete Data Warehousing & ETL infrastructure. Build enterprise-grade data systems with:
-- **Declarative Pipelines (TOML)**: Define what to fetch without coding
-- **Streaming Ingestion**: Load 10M+ rows in seconds (COPY FROM STDIN protocol)
-- **Star Schema (Dimensional Model)**: Optimized for analytical queries
-- **Slowly Changing Dimensions (SCD)**: Preserve history for academic reproducibility
-- **Table Discovery**: Full-text search (English & Portuguese)
-- **Audit Trails**: Track all data revisions with modification timestamps
+# 2. Configure database
+cat > config.ini << EOF
+[database]
+user = postgres
+password = your_password
+host = localhost
+port = 5432
+dbname = dados
+schema = ibge_sidra
+EOF
+
+# 3. Install official pipelines
+sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
+
+# 4. Run a pipeline
+sidra-sql run std pib_municipal
+
+# 5. Query results
+psql -U postgres -d dados << EOF
+SELECT * FROM analytics.pib_municipal
+WHERE ano >= 2015
+ORDER BY localidade, periodo;
+EOF
+```
+
+---
 
 ## Best Practices
 
-### 1. Choose the Right Client: Sync vs Async
+### 1. Choose the Right Tool Early
 
-**Use `SidraClient` (Synchronous) when:**
-- Fetching a single table
-- Working in Jupyter notebooks
-- Sequential extraction is acceptable
+- Notebook/exploration → sidra-fetcher
+- Production pipeline → sidra-sql + sidra-pipelines
 
-**Use `AsyncSidraClient` (Asynchronous) when:**
-- Fetching multiple tables concurrently
-- Building production pipelines
-- Minimizing total execution time (network I/O is the bottleneck)
+### 2. Use Async for Multi-Table Extraction
 
+Concurrent fetching is 3x faster than sequential:
 ```python
-# Sync: Good for single-table workflows
-from sidra_fetcher import SidraClient
+# 30 seconds
 client = SidraClient()
 gdp = client.fetch(table="1620", variable=116)
+gva = client.fetch(table="1612", variable=117)
 
-# Async: 3x faster for multi-table extraction
-import asyncio
-from sidra_fetcher import AsyncSidraClient
-
-async def pipeline():
-    client = AsyncSidraClient()
-    results = await asyncio.gather(
-        client.fetch(table="1620", variable=116),
-        client.fetch(table="1612", variable=117)
-    )
-    await client.aclose()
-    return results
-
-asyncio.run(pipeline())
-```
-
-### 2. Know Your Table Structure Before Fetching
-
-Use metadata exploration to avoid errors:
-
-```python
-from ibge_sidra_tabelas import SidraTableBrowser
-
-browser = SidraTableBrowser()
-table = browser.get("1620")  # GDP table
-
-print(f"Name: {table.name}")
-print(f"Description: {table.description}")
-print(f"Available variables:")
-for var_id, var_name in table.variables.items():
-    print(f"  {var_id}: {var_name}")
-```
-
-### 3. Use Specific Date Ranges
-
-Fetching all historical data can be slow. Always specify dates:
-
-```python
-# ✅ Good: Last 5 years
-data = client.fetch(
-    table="1620",
-    variable=116,
-    initial_date="2019-01-01"
+# 10 seconds (async)
+results = await asyncio.gather(
+    client.fetch(table="1620", variable=116),
+    client.fetch(table="1612", variable=117)
 )
-
-# ❌ Slow: All historical (can take 30+ seconds)
-data = client.fetch(table="1620", variable=116)
 ```
 
-### 4. Handle Missing Data Properly
-
-SIDRA uses "." for suppressed or unavailable values:
-
-```python
-import polars as pl
-
-df = pl.read_parquet("gdp.parquet")
-
-# Check for missing
-missing_count = df.filter(pl.col("status_code") == ".").len()
-print(f"Suppressed observations: {missing_count}")
-
-# Remove if needed
-clean = df.filter(pl.col("status_code") != ".")
-```
-
-### 5. Validate Data Quality
-
-Always validate before storing or analyzing:
-
-```python
-# Schema validation
-expected = {"date", "value", "status_code"}
-assert expected.issubset(set(df.columns)), "Missing columns"
-
-# Data completeness
-assert len(df) > 100, "Too few observations"
-
-# Date coverage
-date_range = df['date'].max() - df['date'].min()
-print(f"Data spans {date_range.days} days")
-```
-
-### 6. Leverage Async for Production Pipelines
-
-In production, use async to maximize throughput:
-
-```python
-import asyncio
-from sidra_fetcher import AsyncSidraClient
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
-async def daily_economic_pipeline():
-    """
-    Fetch full macro suite daily.
-    With AsyncSidraClient: ~10 seconds
-    With SidraClient: ~30 seconds
-    """
-    client = AsyncSidraClient(max_retries=5)
-    
-    try:
-        tables = {
-            "gdp": client.fetch(table="1620", variable=116),
-            "inflation": client.fetch(table="1737", variable=63),
-            "unemployment": client.fetch(table="6381", variable=4099)
-        }
-        results = await asyncio.gather(*tables.values())
-        return dict(zip(tables.keys(), results))
-    finally:
-        await client.aclose()
-
-# Run daily via cron or scheduler
-data = asyncio.run(daily_economic_pipeline())
-print("✓ Daily macro data updated")
-```
-
-## Performance Tips & Optimization
-
-### 1. Use AsyncSidraClient for Multi-Table Extraction
-
-Concurrent fetching is dramatically faster:
-
-```python
-import asyncio
-from sidra_fetcher import AsyncSidraClient
-import time
-
-# ❌ Sync: Sequential = 30 seconds total
-start = time.time()
-client = SidraClient()
-gdp = client.fetch(table="1620", variable=116)         # 10s
-gva = client.fetch(table="1612", variable=117)         # 10s
-inv = client.fetch(table="1637", variable=119)         # 10s
-print(f"Sync time: {time.time() - start:.1f}s")  # ~30s
-
-# ✅ Async: Concurrent = 10 seconds total
-async def fetch_concurrent():
-    start = time.time()
-    client = AsyncSidraClient()
-    try:
-        results = await asyncio.gather(
-            client.fetch(table="1620", variable=116),
-            client.fetch(table="1612", variable=117),
-            client.fetch(table="1637", variable=119)
-        )
-        print(f"Async time: {time.time() - start:.1f}s")  # ~10s
-        return results
-    finally:
-        await client.aclose()
-
-asyncio.run(fetch_concurrent())
-```
-
-### 2. Filter Data on Fetch
+### 3. Filter Data on Fetch
 
 Reduce data volume before loading:
-
 ```python
 # Good: Filter by date on fetch
 recent = client.fetch(
     table="1620",
     variable=116,
-    initial_date="2020-01-01"  # Only recent data
+    initial_date="2020-01-01"  # Only recent
 )
 
-# Less good: Fetch all, filter locally
+# Less efficient: Fetch all, filter locally
 all_data = client.fetch(table="1620", variable=116)
 recent = all_data.filter(pl.col("date") >= "2020-01-01")
 ```
 
-### 3. Store to Parquet, Not CSV
+### 4. Store to Parquet, Not CSV
 
 Parquet is 80%+ smaller and faster to read:
-
 ```python
-import polars as pl
+# Good
+df.write_parquet("data.parquet")
 
-df = pl.read_parquet("gdp.parquet")
-
-# Save to Parquet (1 MB)
-df.write_parquet("gdp_processed.parquet")  # ✅
-
-# vs CSV (4.5 MB)
-df.write_csv("gdp_processed.csv")  # ❌ Larger, slower
+# Not efficient
+df.write_csv("data.csv")
 ```
 
-### 4. Incremental Updates for Production
+### 5. Leverage Production Features in sidra-sql
 
-Only fetch new data, not the entire history:
+Use idempotent operations for safe re-execution:
+```bash
+# Safe to run multiple times
+sidra-sql run std pib_municipal
 
-```python
-import polars as pl
-from sidra_fetcher import SidraClient
-
-client = SidraClient()
-
-# Load existing
-existing = pl.read_parquet("gdp.parquet")
-last_date = existing["date"].max()
-
-# Fetch only new data
-new_data = client.fetch(
-    table="1620",
-    variable=116,
-    initial_date=last_date
-)
-
-# Combine and save
-updated = pl.concat([existing, new_data]).unique(subset=["date"])
-updated.to_parquet("gdp.parquet")
-
-print(f"Updated: {len(new_data)} new observations")
+# Same data → cache hit → instant completion
+sidra-sql run std pib_municipal
 ```
 
-### 5. Leverage Caching for Repeated Queries
-
-Cache metadata to avoid repeated API calls:
-
-```python
-from ibge_sidra_tabelas import SidraTableBrowser
-
-# First call: Downloads catalog (~20 MB, 5 seconds)
-browser = SidraTableBrowser()
-tables = browser.search("GDP")
-
-# Subsequent calls: Use cache (<100 ms)
-tables_2 = browser.search("inflation")  # Fast (cached)
-tables_3 = browser.search("employment")  # Fast (cached)
-
-# Force refresh if needed
-browser = SidraTableBrowser(refresh=True)  # Re-download catalog
-```
+---
 
 ## Troubleshooting
 
 ### "Table not found"
-SIDRA table IDs can change. Verify the table exists:
 
+SIDRA table IDs can change. Verify:
 ```python
 browser = SidraTableBrowser()
 try:
@@ -509,8 +450,8 @@ except ValueError:
 ```
 
 ### Timeout errors
-SIDRA API is slow. Increase timeout and add retries:
 
+Increase timeout and retries:
 ```python
 client = SidraClient(
     timeout=60,
@@ -519,12 +460,25 @@ client = SidraClient(
 )
 ```
 
-### Inconsistent date formats
-Output is normalized to ISO format (YYYY-MM-DD). But raw API may use different formats.
+### PostgreSQL connection error (sidra-sql)
+
+Verify `config.ini`:
+- Database exists: `createdb dados`
+- User has permissions: `ALTER USER postgres WITH PASSWORD 'password';`
+- Test connection: `psql -U postgres -h localhost -d dados`
+
+---
 
 ## Learn More
 
+### Stack 1 (SDK):
 - [sidra-fetcher Documentation](sidra-fetcher.md)
-- [ibge-sidra-tabelas Guide](ibge-sidra-tabelas.md)
+- [sidra-sql Guide](sidra-sql.md)
+
+### Stack 2 (Production ETL):
+- [sidra-sql Documentation](sidra-sql.md)
+- [sidra-pipelines Catalog](sidra-pipelines.md)
+
+### External Resources:
 - [IBGE Official Website (Portuguese)](https://www.ibge.gov.br/)
 - [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
