@@ -732,5 +732,5 @@ data = client.fetch(table="1620", variable=116)
 ## See Also
 
 - [IBGE Overview](index.md)
-- [ibge-sidra-tabelas](ibge-sidra-tabelas.md) — Table browser and catalog
+- [sidra-sql](sidra-sql.md) — Table browser and catalog
 - [Architecture](../architecture/overview.md)

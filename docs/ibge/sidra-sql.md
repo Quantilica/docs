@@ -1,12 +1,12 @@
-# ibge-sidra-tabelas
+# sidra-sql
 
 Advanced ETL & Data Warehousing infrastructure for IBGE SIDRA data.
 
 ## What It Is
 
-**`ibge-sidra-tabelas`** is a complete Data Warehousing and ETL (Extract, Transform, Load) infrastructure designed to ingest, structure, and version data extracted from SIDRA.
+**`sidra-sql`** is a complete Data Warehousing and ETL (Extract, Transform, Load) infrastructure designed to ingest, structure, and version data extracted from SIDRA.
 
-While **sidra-fetcher** solves the communication problem (getting data from API), **ibge-sidra-tabelas** solves the **governance, persistence, and reproducibility** problem. It converts raw, hierarchical IBGE data into a PostgreSQL relational database optimized for heavy analytical queries.
+While **sidra-fetcher** solves the communication problem (getting data from API), **sidra-sql** solves the **governance, persistence, and reproducibility** problem. It converts raw, hierarchical IBGE data into a PostgreSQL relational database optimized for heavy analytical queries.
 
 ## Problem It Solves
 
@@ -39,7 +39,7 @@ Saving tens of millions of rows using traditional methods (row-by-row ORM insert
 ### 3. Revisions & Reproducibility
 The IBGE frequently revises historical data. Simply replacing old data with new destroys reproducibility of academic research or ML models trained on "historical snapshots."
 
-**ibge-sidra-tabelas** solves all three with senior Data Engineering architecture:
+**sidra-sql** solves all three with senior Data Engineering architecture:
 
 ```python
 # Instead of browsing IBGE website
@@ -137,30 +137,75 @@ The `unnest_classifications = true` directive triggers recursive algorithm:
 - Eliminates manual ID discovery
 - Generates optimal dimensional queries
 
+### 6. Plugin Architecture
+The motor is lightweight and generic; data definitions live in separate Git repositories:
+
+```
+Plugin (your Git repo)
+├── manifest.toml       ← pipeline registry
+├── pipeline-a/
+│   ├── fetch.toml      ← what to download from SIDRA
+│   ├── transform.toml  ← analytics table config
+│   └── transform.sql   ← denormalization query
+```
+
+Install and run:
+
+```bash
+sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
+sidra-sql run std pib_municipal
+```
+
 ### Additional Features
 - ✅ Full-text search (English & Portuguese)
 - ✅ Metadata caching for performance
 - ✅ PostgreSQL integration (ACID transactions)
 - ✅ Data validation and quality checks
 - ✅ Audit trails (who changed what, when)
+- ✅ Idempotent operations (safe re-runs)
 
 ## Installation
 
 === "pip"
 
     ```bash
-    pip install ibge-sidra-tabelas
+    pip install sidra-sql
     ```
 
 === "uv"
 
     ```bash
-    uv pip install ibge-sidra-tabelas
+    uv pip install sidra-sql
+    ```
+
+=== "from source"
+
+    ```bash
+    git clone https://github.com/Quantilica/sidra-sql.git
+    cd sidra-sql
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -e .
     ```
 
 ## Quick Example: ETL Pipeline
 
-### Option 1: Declarative TOML (Recommended)
+### Option 1: CLI (Recommended)
+
+Use the pre-built standard pipelines from [sidra-pipelines](sidra-pipelines.md):
+
+```bash
+# Install standard catalog
+sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
+
+# Run a pipeline (download + load + transform)
+sidra-sql run std pib_municipal
+
+# Query results in PostgreSQL
+psql -c "SELECT * FROM analytics.pib_municipal WHERE ano >= 2020"
+```
+
+### Option 2: Declarative TOML (Recommended for custom pipelines)
 
 Define pipelines without code:
 
@@ -181,7 +226,7 @@ territories = {1 = [], 3 = []} # Levels 1 & 3 (Brazil + states)
 Run pipeline:
 
 ```python
-from ibge_sidra_tabelas import run_pipeline
+from sidra_sql import run_pipeline
 
 # Load and execute pipeline
 run_pipeline("pipelines/economic.toml", db_url="postgresql://user:pass@localhost/ibge")
@@ -189,12 +234,12 @@ run_pipeline("pipelines/economic.toml", db_url="postgresql://user:pass@localhost
 # Data is now in PostgreSQL with proper dimensional schema
 ```
 
-### Option 2: Programmatic ETL
+### Option 3: Programmatic ETL
 
 Full control over ingestion:
 
 ```python
-from ibge_sidra_tabelas import SidraWarehouse
+from sidra_sql import SidraWarehouse
 from sidra_fetcher import AsyncSidraClient
 import asyncio
 
@@ -247,12 +292,12 @@ async def build_warehouse():
 asyncio.run(build_warehouse())
 ```
 
-### Option 3: Table Browser (Discovery Only)
+### Option 4: Table Browser (Discovery Only)
 
 Find the right table before building pipelines:
 
 ```python
-from ibge_sidra_tabelas import SidraTableBrowser
+from sidra_sql import SidraTableBrowser
 
 browser = SidraTableBrowser()
 
@@ -412,7 +457,7 @@ print(f"Duration: {stats.duration_seconds:.1f}s")
 Initialize the warehouse for ingestion and analytics:
 
 ```python
-from ibge_sidra_tabelas import SidraWarehouse
+from sidra_sql import SidraWarehouse
 import sqlalchemy as sa
 
 # Connect to PostgreSQL
@@ -440,7 +485,7 @@ warehouse = SidraWarehouse(engine=engine)
 Browse the SIDRA catalog:
 
 ```python
-from ibge_sidra_tabelas import SidraTableBrowser
+from sidra_sql import SidraTableBrowser
 
 # Initialize
 browser = SidraTableBrowser(
@@ -463,7 +508,7 @@ browser = SidraTableBrowser(
 Execute a pipeline defined in TOML:
 
 ```python
-from ibge_sidra_tabelas import run_pipeline
+from sidra_sql import run_pipeline
 
 # Run pipeline
 run_pipeline(
@@ -537,18 +582,6 @@ for table in economic_tables:
     print(f"{table.id}: {table.name}")
 ```
 
-### `browser.list_themes()`
-
-Get available themes:
-
-```python
-themes = browser.list_themes()
-
-for theme in themes:
-    tables = browser.list_by_theme(theme)
-    print(f"{theme}: {len(tables)} tables")
-```
-
 ## Dimensional Schema & Analytical Queries
 
 Once data is loaded into PostgreSQL, you can run sophisticated analytical queries:
@@ -556,14 +589,14 @@ Once data is loaded into PostgreSQL, you can run sophisticated analytical querie
 ### Example 1: GDP by State (Latest Data Only)
 
 ```python
-from ibge_sidra_tabelas import SidraWarehouse
+from sidra_sql import SidraWarehouse
 import sqlalchemy as sa
 from sqlalchemy import select
 
 warehouse = SidraWarehouse(db_url="postgresql://...")
 
 # Query the dimensional schema
-from ibge_sidra_tabelas.models import Dados, Localidade, Periodo
+from sidra_sql.models import Dados, Localidade, Periodo
 
 query = (
     select(
@@ -696,24 +729,6 @@ for table_id in ["1419", "188", "7060"]:
         print(f"  {var_id}: {var_name}")
 ```
 
-### Find Employment Data
-
-```python
-# Unemployment rate
-unemployment = browser.search("unemployment")
-
-# Employment by sector
-employment_sector = browser.search("employment by sector")
-
-# Job creation/destruction
-job_flows = browser.search("job")
-
-# Display all results
-for tables in [unemployment, employment_sector, job_flows]:
-    for table in tables:
-        print(f"{table.id}: {table.name}")
-```
-
 ### Explore Table Structure
 
 ```python
@@ -735,31 +750,6 @@ for var_id, var_name in sorted(table.variables.items()):
 print(f"\nDimensions ({len(table.dimensions)}):")
 for dim in table.dimensions:
     print(f"  {dim['id']}: {dim['name']} ({len(dim['categories'])} categories)")
-```
-
-### Build a Data Dictionary
-
-```python
-# Export all table info to CSV for reference
-import pandas as pd
-
-browser = SidraTableBrowser()
-tables = browser.search("")  # Get all tables
-
-data = []
-for table in tables:
-    for var_id, var_name in table.variables.items():
-        data.append({
-            "table_id": table.id,
-            "table_name": table.name,
-            "variable_id": var_id,
-            "variable_name": var_name,
-            "theme": table.theme,
-            "frequency": table.frequency
-        })
-
-df = pd.DataFrame(data)
-df.to_csv("sidra_data_dictionary.csv", index=False)
 ```
 
 ## Understanding SIDRA Structure
@@ -806,92 +796,15 @@ Update cache if IBGE adds new tables:
 browser = SidraTableBrowser(refresh=True)  # ~5 seconds
 ```
 
-### Clear Cache
+### Streaming Ingestion Benchmarks
 
-```python
-import shutil
-shutil.rmtree(browser.cache_dir)
-```
+Real-world performance on standard hardware (8-core, 16GB RAM):
 
-## Troubleshooting
-
-### Search Returns No Results
-
-The catalog may use different terminology. Try:
-
-```python
-browser = SidraTableBrowser()
-
-# If English search fails, try Portuguese
-tables = browser.search("GDP")      # English
-tables = browser.search("PIB")      # Portuguese
-
-# If searching for specific concept, try synonyms
-tables = browser.search("unemployment")
-tables = browser.search("jobless rate")
-tables = browser.search("desemprego")
-```
-
-### Table Not Found
-
-Table may have been removed or renamed:
-
-```python
-# Search for similar tables
-browser = SidraTableBrowser(refresh=True)  # Force update
-tables = browser.search("1620")  # Search by ID
-
-# Or search by keyword
-tables = browser.search("GDP")
-```
-
-### Variable ID Unknown
-
-Use the browser to list all variables:
-
-```python
-table = browser.get("1620")
-
-print("Available variables:")
-for var_id in sorted(table.variables.keys()):
-    print(f"  {var_id}")
-
-# Then use with sidra-fetcher
-from sidra_fetcher import SidraClient
-client = SidraClient()
-data = client.fetch(table="1620", variable=116)
-```
-
-## Integration with sidra-fetcher
-
-Use results from **ibge-sidra-tabelas** to power **sidra-fetcher**:
-
-```python
-from ibge_sidra_tabelas import SidraTableBrowser
-from sidra_fetcher import SidraClient
-
-# Find inflation tables
-browser = SidraTableBrowser()
-tables = browser.search("inflation")
-
-# For each table, fetch main variable
-client = SidraClient()
-
-for table in tables[:3]:  # First 3 tables
-    # Get first variable
-    var_id = list(table.variables.keys())[0]
-    
-    # Fetch data
-    data = client.fetch(
-        table=table.id,
-        variable=var_id
-    )
-    
-    print(f"Downloaded {len(data)} rows from {table.name}")
-    
-    # Save
-    data.to_parquet(f"data/{table.id}.parquet")
-```
+| Dataset | Rows | Time | Throughput |
+|---------|------|------|-----------|
+| IPCA monthly | 3.2M | 8s | 400k rows/sec |
+| GDP quarterly | 50k | <1s | - |
+| RAIS annual | 60M | 2.5m | 400k rows/sec |
 
 ## Best Practices for Data Governance
 
@@ -966,49 +879,86 @@ Connect your PostgreSQL warehouse directly to:
 
 The normalized schema is optimized for BI tools' OLAP workloads.
 
-### 5. Schedule Regular Refreshes
-
-```python
-# Daily refresh script
-import schedule
-import time
-
-def refresh_warehouse():
-    run_pipeline(
-        config_file="pipelines/daily.toml",
-        db_url="postgresql://...",
-        parallel=True
-    )
-    print("✓ Warehouse updated")
-
-# Run daily at 2 AM (after IBGE publishes)
-schedule.every().day.at("02:00").do(refresh_warehouse)
-
-while True:
-    schedule.run_pending()
-    time.sleep(60)
-```
-
 ---
 
-## Performance & Scalability
+## Troubleshooting
 
-### Streaming Ingestion Benchmarks
+### Search Returns No Results
 
-Real-world performance on standard hardware (8-core, 16GB RAM):
+The catalog may use different terminology. Try:
 
-| Dataset | Rows | Time | Throughput |
-|---------|------|------|-----------|
-| IPCA monthly | 3.2M | 8s | 400k rows/sec |
-| GDP quarterly | 50k | <1s | - |
-| RAIS annual | 60M | 2.5m | 400k rows/sec |
+```python
+browser = SidraTableBrowser()
 
-### Scaling Considerations
+# If English search fails, try Portuguese
+tables = browser.search("GDP")      # English
+tables = browser.search("PIB")      # Portuguese
 
-- **PostgreSQL tuning**: `shared_buffers`, `work_mem`, `max_parallel_workers`
-- **Partitioning**: By `sidra_tabela` for very large warehouses
-- **Indexes**: Composite on `(sidra_tabela_fk, periodo_fk, localidade_fk)`
-- **Archival**: Move old versions to cold storage (AWS Glacier)
+# If searching for specific concept, try synonyms
+tables = browser.search("unemployment")
+tables = browser.search("desemprego")
+```
+
+### Table Not Found
+
+Table may have been removed or renamed:
+
+```python
+# Search for similar tables
+browser = SidraTableBrowser(refresh=True)  # Force update
+tables = browser.search("1620")  # Search by ID
+
+# Or search by keyword
+tables = browser.search("GDP")
+```
+
+### Variable ID Unknown
+
+Use the browser to list all variables:
+
+```python
+table = browser.get("1620")
+
+print("Available variables:")
+for var_id in sorted(table.variables.keys()):
+    print(f"  {var_id}")
+
+# Then use with sidra-fetcher
+from sidra_fetcher import SidraClient
+client = SidraClient()
+data = client.fetch(table="1620", variable=116)
+```
+
+## Integration with sidra-fetcher
+
+Use results from **sidra-sql** to discover tables, then power **sidra-fetcher** for extraction:
+
+```python
+from sidra_sql import SidraTableBrowser
+from sidra_fetcher import SidraClient
+
+# Find inflation tables
+browser = SidraTableBrowser()
+tables = browser.search("inflation")
+
+# For each table, fetch main variable
+client = SidraClient()
+
+for table in tables[:3]:  # First 3 tables
+    # Get first variable
+    var_id = list(table.variables.keys())[0]
+    
+    # Fetch data
+    data = client.fetch(
+        table=table.id,
+        variable=var_id
+    )
+    
+    print(f"Downloaded {len(data)} rows from {table.name}")
+    
+    # Save
+    data.to_parquet(f"data/{table.id}.parquet")
+```
 
 ---
 
@@ -1016,6 +966,7 @@ Real-world performance on standard hardware (8-core, 16GB RAM):
 
 - [IBGE Overview](index.md)
 - [sidra-fetcher](sidra-fetcher.md) — Data extraction tool
+- [sidra-pipelines](sidra-pipelines.md) — Standard pipeline catalog
 - [Architecture: Design Principles](../architecture/design-principles.md)
 - [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
