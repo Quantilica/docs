@@ -8,21 +8,10 @@ Data engineering is the **infrastructure for data work**.
 
 While data science answers "what does the data tell us?", data engineering answers "how do we reliably get, store, and manage data?"
 
-```
-Data Engineer's Job:
-┌────────────────────────────┐
-│ Unreliable data sources    │  ← Government APIs, FTP servers
-│ (slow, error-prone)        │
-└────────────────────────────┘
-            ↓ [data engineering]
-┌────────────────────────────┐
-│ Clean, reliable data       │  ← Parquet files, PostgreSQL
-│ (fast, predictable)        │
-└────────────────────────────┘
-            ↓ [data science]
-┌────────────────────────────┐
-│ Insights & predictions     │  ← Models, dashboards, reports
-└────────────────────────────┘
+```mermaid
+graph TD
+    A[Unreliable data sources <br/> Government APIs, FTP servers] -- data engineering --> B[Clean, reliable data <br/> Parquet files, PostgreSQL]
+    B -- data science --> C[Insights & predictions <br/> Models, dashboards, reports]
 ```
 
 ## Core Problems Data Engineering Solves
@@ -31,12 +20,12 @@ Data Engineer's Job:
 
 **Problem**: APIs are unreliable
 
-```
-Attempt 1: Timeout (30 seconds)
-Attempt 2: Timeout
-Attempt 3: 500 Internal Server Error
-Attempt 4: Partial response (rate limit)
-Attempt 5: Success ✓
+```mermaid
+graph TD
+    A["Attempt 1: Timeout<br/>30 seconds"] --> B["Attempt 2: Timeout"]
+    B --> C["Attempt 3: 500 Internal<br/>Server Error"]
+    C --> D["Attempt 4: Partial response<br/>rate limit"]
+    D --> E["Attempt 5: Success ✓"]
 ```
 
 **Solution**: Retries with exponential backoff, timeout handling, partial failure recovery
@@ -45,53 +34,44 @@ Attempt 5: Success ✓
 
 **Problem**: Data is large
 
-```
-RAIS: 60 million records, 850 MB
-↓
-Need to process, aggregate, store efficiently
-↓
-Solution: Columnar storage (Parquet), lazy evaluation, streaming
+```mermaid
+graph TD
+    A["RAIS: 60 million records<br/>850 MB"] --> B["Need to process,<br/>aggregate, store efficiently"]
+    B --> C["Solution:<br/>Columnar storage Parquet<br/>lazy evaluation, streaming"]
 ```
 
 ### 3. Consistency
 
 **Problem**: Data changes over time
 
-```
-Fetch on Monday: 1000 records
-Fetch on Friday: 1002 records (IBGE revised)
-↓
-Which version is "truth"? How do we track versions?
-↓
-Solution: Data lineage tracking, version control, audit logs
+```mermaid
+graph TD
+    A["Fetch on Monday<br/>1000 records"] --> B["Fetch on Friday<br/>1002 records<br/>IBGE revised"]
+    B --> C["Which version is truth?<br/>How to track versions?"]
+    C --> D["Solution:<br/>Data lineage tracking<br/>version control, audit logs"]
 ```
 
 ### 4. Integration
 
 **Problem**: Data comes from different sources
 
-```
-IBGE: dates as "2024-01-01", values as strings
-Treasury: dates as "01/01/2024", values as floats
-RAIS: dates as "2024-01-31 00:00:00", values as ints
-↓
-Need unified schema for analysis
-↓
-Solution: Schema normalization, type casting, quality checks
+```mermaid
+graph TD
+    A["IBGE: dates as 2024-01-01<br/>values as strings"] --> B["Treasury: dates as 01/01/2024<br/>values as floats"]
+    B --> C["RAIS: dates as 2024-01-31 00:00:00<br/>values as ints"]
+    C --> D["Need unified schema<br/>for analysis"]
+    D --> E["Solution:<br/>Schema normalization<br/>type casting, quality checks"]
 ```
 
 ## ETL vs ELT
 
 ### ETL: Extract → Transform → Load (traditional)
 
-```
-Raw Data
-    ↓
-[Transform] (clean, aggregate, join) ← Expensive!
-    ↓
-Processed Data (stored)
-    ↓
-[Load into] (append/overwrite)
+```mermaid
+graph TD
+    A[Raw Data] --> B[Transform <br/> clean, aggregate, join]
+    B --> C[Processed Data]
+    C --> D[Load into <br/> append/overwrite]
 ```
 
 **When to use**: Data is small, transformations are complex
@@ -108,14 +88,11 @@ Processed Data (stored)
 
 ### ELT: Extract → Load → Transform (modern)
 
-```
-Raw Data
-    ↓
-[Load] (store as-is) ← Fast!
-    ↓
-Raw Data (stored)
-    ↓
-[Transform on-demand] (clean, aggregate, join)
+```mermaid
+graph TD
+    A[Raw Data] --> B[Load <br/> store as-is]
+    B --> C[Raw Data stored]
+    C --> D[Transform on-demand <br/> clean, aggregate, join]
 ```
 
 **When to use**: Data is large, transformations evolve

@@ -42,12 +42,10 @@ For data scientists and analysts who need:
 - On-demand data fetching
 - Flexible output formats (Parquet, CSV, DataFrames)
 
-```
-IBGE SIDRA API
-    ↓
-sidra-fetcher (extraction + URL abstraction + retries)
-    ↓
-Your analysis (Python/Jupyter, Polars, pandas)
+```mermaid
+graph TD
+    A[IBGE SIDRA API] --> B[sidra-fetcher <br/> extraction + URL abstraction + retries]
+    B --> C[Your analysis <br/> Python/Jupyter, Polars, pandas]
 ```
 
 ### Stack 2: Enterprise ETL (For Production Pipelines)
@@ -61,16 +59,12 @@ For data engineers building:
 - Multi-user data warehouses
 - Declarative (no-code) definitions
 
-```
-IBGE SIDRA API
-    ↓
-sidra-sql (motor: download + normalize + load)
-    ↓
-PostgreSQL (fully normalized schema)
-    ↓
-SQL transformations → Analytics tables
-    ↓
-Power BI, Metabase, SQL queries
+```mermaid
+graph TD
+    A[IBGE SIDRA API] --> B[sidra-sql <br/> motor: download + normalize + load]
+    B --> C[PostgreSQL <br/> fully normalized schema]
+    C --> D[SQL transformations <br/> Analytics tables]
+    D --> E[Power BI, Metabase, SQL queries]
 ```
 
 ---
@@ -146,20 +140,20 @@ Pre-built catalog of production-ready pipelines:
 
 ### Decision Tree
 
-```
-Do you need:
-├─ Quick exploration in a notebook?
-│  └─ Use sidra-fetcher ✓
-├─ One-off data extraction?
-│  └─ Use sidra-fetcher ✓
-├─ Daily/hourly automated pipeline?
-│  └─ Use sidra-sql + sidra-pipelines ✓
-├─ Multi-user data warehouse?
-│  └─ Use sidra-sql + sidra-pipelines ✓
-├─ Fully normalized relational schema?
-│  └─ Use sidra-sql ✓
-└─ Custom transformation logic in Python?
-   └─ Use sidra-fetcher ✓
+```mermaid
+graph TD
+    Q[Do you need:] --> A[Quick exploration in a notebook?]
+    A -- Yes --> SF[Use sidra-fetcher]
+    Q --> B[One-off data extraction?]
+    B -- Yes --> SF
+    Q --> C[Daily/hourly automated pipeline?]
+    C -- Yes --> SS[Use sidra-sql + sidra-pipelines]
+    Q --> D[Multi-user data warehouse?]
+    D -- Yes --> SS
+    Q --> E[Fully normalized relational schema?]
+    E -- Yes --> SS2[Use sidra-sql]
+    Q --> F[Custom transformation logic in Python?]
+    F -- Yes --> SF
 ```
 
 ---

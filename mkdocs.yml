@@ -6,6 +6,8 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.ico
+  font:
+    code: Google Sans Code
   features:
     - navigation.tabs
     - navigation.sections
@@ -63,3 +65,10 @@ nav:
 
 plugins:
   - search
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

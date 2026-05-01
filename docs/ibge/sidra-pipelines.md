@@ -18,26 +18,23 @@ No code to write. No configuration to manage. Just data.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│     sidra-pipelines (This Repository)       │
-│  • manifest.toml (pipeline registry)        │
-│  • 14 directories (one per pipeline)        │
-│  • Each with: fetch.toml + transform.sql    │
-└────────────────┬────────────────────────────┘
-                 │
-                 │  sidra-sql plugin install <url> --alias std
-                 │
-┌────────────────▼────────────────────────────┐
-│         sidra-sql Motor                     │
-│  reads manifest → orchestrates fetch/load   │
-└────────────────┬────────────────────────────┘
-                 │
-        ┌────────┴─────────┐
-        ▼                  ▼
-    SIDRA API          PostgreSQL
-   (raw data)         (normalized
-                       + analytics)
+```mermaid
+graph TD
+    subgraph Repo [sidra-pipelines Repository]
+        R1[manifest.toml - registry]
+        R2[14 directories - pipelines]
+        R3[Each with: fetch.toml + transform.sql]
+    end
+
+    Repo -- sidra-sql plugin install --> Motor
+
+    subgraph Motor [sidra-sql Motor]
+        M1[reads manifest]
+        M2[orchestrates fetch/load]
+    end
+
+    Motor --> API[SIDRA API<br/>raw data]
+    Motor --> DB[PostgreSQL<br/>normalized + analytics]
 ```
 
 ## Included Pipelines

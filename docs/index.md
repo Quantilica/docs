@@ -63,25 +63,12 @@ DATASUS epidemiological data for disease surveillance, health economics, and pub
 
 ## Platform Architecture
 
-```
-Government Data Sources
-    ↓
-┌─────────────────────────────────────┐
-│  Specialized Extractors             │
-│  (API clients, validation logic)    │
-└─────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────┐
-│  Processing Pipelines               │
-│  (transformation, deduplication)    │
-└─────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────┐
-│  Structured Storage                 │
-│  (Parquet, PostgreSQL)              │
-└─────────────────────────────────────┘
-    ↓
-Analytics / BI / Research
+```mermaid
+graph TD
+    A[Government Data Sources] --> B[Specialized Extractors<br/>(API clients, validation logic)]
+    B --> C[Processing Pipelines<br/>(transformation, deduplication)]
+    C --> D[Structured Storage<br/>(Parquet, PostgreSQL)]
+    D --> E[Analytics / BI / Research]
 ```
 
 ## Key Components

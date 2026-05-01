@@ -32,27 +32,18 @@ Downloading all data (all states, all years, all subsystems) sequentially via sc
 
 ## Architecture: Industrial-Grade Concurrent Crawler
 
-```
-┌──────────────────────────────────────────┐
-│   DATASUS FTP (Legacy, Slow)             │
-│   ftp.datasus.gov.br (Synchronous)       │
-└──────────────────────────────────────────┘
-                  ↓
-┌──────────────────────────────────────────────────────────┐
-│  datasus-fetcher (Concurrent Crawler)                    │
-│  ──────────────────────────────────────────────────      │
-│  ✓ Multithreaded pool (Producer-Consumer)               │
-│  ✓ Recursive directory crawling (dynamic mapping)        │
-│  ✓ Smart resume (size-based idempotence)               │
-│  ✓ Semantic parsing (filename → metadata)               │
-│  ✓ Documentation extraction (layouts, tables)            │
-│  ✓ Returns: Typed, indexed Parquet datasets             │
-└──────────────────────────────────────────────────────────┘
-                  ↓
-┌──────────────────────────────────────────┐
-│     Your Epidemiology Layer              │
-│     (Disease surveillance, mortality)    │
-└──────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[DATASUS FTP <br/> Legacy, Slow] --> B[datasus-fetcher <br/> Concurrent Crawler]
+    
+    subgraph datasus-fetcher
+        B1[Multithreaded pool]
+        B2[Recursive crawling]
+        B3[Smart resume]
+        B4[Semantic parsing]
+    end
+    
+    B --> C[Your Epidemiology Layer <br/> Disease surveillance, mortality]
 ```
 
 ## Core Capabilities

@@ -4,48 +4,31 @@ How the Brazilian Public Data Suite is organized and how pieces connect.
 
 ## System Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Government Data Sources (unreliable, legacy infra) │
-├─────────────────────────────────────────────────────┤
-│  IBGE SIDRA  │ Treasury  │ RAIS/CAGED │ Siscomex   │
-│              │ Direct    │            │            │
-└─────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────┐
-│       Specialized Data Extractors (this suite)      │
-├─────────────────────────────────────────────────────┤
-│ sidra-fetcher │ tddata │ pdet-data │ comexdown    │
-│               │        │           │              │
-│ - Pagination  │ Clean  │ Large     │ HS codes     │
-│ - Retries     │ prices │ files     │ Country data │
-│ - Validation  │ Accrued│ Schema    │ Trade flows  │
-└─────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────┐
-│     Data Processing & Transformation Layer          │
-├─────────────────────────────────────────────────────┤
-│  Polars  │ Pandas  │  Custom Pipelines            │
-│                                                     │
-│  Validation → Cleaning → Aggregation → Export     │
-└─────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────┐
-│   Structured Storage (Parquet / PostgreSQL)        │
-├─────────────────────────────────────────────────────┤
-│  Parquet Files   │   PostgreSQL Database           │
-│  (analytical)    │   (operational)                 │
-│  - Compressed    │   - ACID transactions           │
-│  - Columnar      │   - Real-time queries           │
-│  - Fast reads    │   - Backups & replication       │
-└─────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────┐
-│        Analytics & Business Intelligence            │
-├─────────────────────────────────────────────────────┤
-│ Dashboards │ Statistical Analysis │ Machine Learning │
-│ BI Tools   │ Econometric Models   │ Forecasting      │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    Sources["Government Data Sources<br/>(IBGE, Treasury, Labor, Trade, Health)"]
+    
+    Sources -->|IBGE SIDRA| SF["sidra-fetcher"]
+    Sources -->|IBGE SIDRA| SQL["sidra-sql"]
+    Sources -->|Treasury| TD["tddata"]
+    Sources -->|RAIS/CAGED| PD["pdet-data"]
+    Sources -->|Siscomex| CX["comexdown"]
+    Sources -->|DATASUS| DS["datasus-fetcher"]
+    
+    SF --> Processing["Processing & Transformation<br/>(Polars Vectorial Processing)"]
+    SQL --> Processing
+    TD --> Processing
+    PD --> Processing
+    CX --> Processing
+    DS --> Processing
+    
+    Processing --> Storage["Structured Storage"]
+    
+    Storage --> PQ["Parquet Files<br/>(Analytical)"]
+    Storage --> PG["PostgreSQL<br/>(Operational)"]
+    
+    PQ --> Analytics["Analytics & BI<br/>(Dashboards, ML, Reports)"]
+    PG --> Analytics
 ```
 
 ## Design Principles
@@ -219,51 +202,52 @@ Use Pandas for:
 
 ### 1. Local Development
 
-```
-Your laptop
-    ↓
-[Extract] → [Transform] → [Parquet files]
-    ↓
-Jupyter notebook / Python script
+```mermaid
+graph TD
+    A["Your laptop"] --> B["Extract"]
+    B --> C["Transform"]
+    C --> D["Parquet files"]
+    D --> E["Jupyter notebook<br/>Python script"]
 ```
 
 **Best for**: Exploratory analysis, prototyping
 
 ### 2. Daily Batch Pipeline
 
-```
-Scheduled job (cron / orchestrator)
-    ↓
-[Extract latest data] → [Validate] → [Transform] → [Append to storage]
-    ↓
-PostgreSQL (for applications)
-Parquet (for analysis)
+```mermaid
+graph TD
+    A["Scheduled job<br/>(cron / orchestrator)"] --> B["Extract latest data"]
+    B --> C["Validate"]
+    C --> D["Transform"]
+    D --> E["Append to storage"]
+    E --> F["PostgreSQL<br/>(for applications)"]
+    E --> G["Parquet<br/>(for analysis)"]
 ```
 
 **Best for**: Operational data, reporting dashboards
 
 ### 3. Real-Time Streaming
 
-```
-Government API
-    ↓
-[Monitor new data] → [Validate] → [Transform] → [Stream to database]
-    ↓
-Real-time dashboard / alerts
+```mermaid
+graph TD
+    A["Government API"] --> B["Monitor new data"]
+    B --> C["Validate"]
+    C --> D["Transform"]
+    D --> E["Stream to database"]
+    E --> F["Real-time dashboard<br/>alerts"]
 ```
 
 **Best for**: Surveillance (epidemiology, trade monitoring)
 
 ### 4. Multi-Source Integration
 
-```
-Multiple APIs (IBGE, Treasury, Labor, Trade, Health)
-    ↓
-[Extract in parallel] → [Join on common keys] → [Unified dataset]
-    ↓
-Data warehouse (PostgreSQL / Data lake)
-    ↓
-Analytics, ML models, reports
+```mermaid
+graph TD
+    A["Multiple APIs<br/>(IBGE, Treasury, Labor, Trade, Health)"] --> B["Extract in parallel"]
+    B --> C["Join on common keys"]
+    C --> D["Unified dataset"]
+    D --> E["Data warehouse<br/>(PostgreSQL / Data lake)"]
+    E --> F["Analytics, ML models, reports"]
 ```
 
 **Best for**: Macroeconomic analysis, econometric modeling
@@ -309,52 +293,39 @@ Analytics, ML models, reports
 
 ### Academic Research
 
-```
-[Extract]
-    ↓
-[Clean & aggregate]
-    ↓
-[Statistical analysis]
-    ↓
-[Publication]
+```mermaid
+graph TD
+    A["Extract"] --> B["Clean & aggregate"]
+    B --> C["Statistical analysis"]
+    C --> D["Publication"]
 ```
 
 ### Business Intelligence
 
-```
-[Daily extraction]
-    ↓
-[PostgreSQL]
-    ↓
-[BI tool] (Tableau, Power BI, Metabase)
-    ↓
-[Dashboard]
+```mermaid
+graph TD
+    A["Daily extraction"] --> B["PostgreSQL"]
+    B --> C["BI tool<br/>(Tableau, Power BI, Metabase)"]
+    C --> D["Dashboard"]
 ```
 
 ### Econometric Forecasting
 
-```
-[Extract multiple sources]
-    ↓
-[Join & aggregate]
-    ↓
-[Time series modeling]
-    ↓
-[Forecast]
-    ↓
-[Real-time API]
+```mermaid
+graph TD
+    A["Extract multiple sources"] --> B["Join & aggregate"]
+    B --> C["Time series modeling"]
+    C --> D["Forecast"]
+    D --> E["Real-time API"]
 ```
 
 ### Risk Management
 
-```
-[Extract daily data]
-    ↓
-[Calculate risk metrics]
-    ↓
-[PostgreSQL (real-time)]
-    ↓
-[Alert system] (if thresholds exceeded)
+```mermaid
+graph TD
+    A["Extract daily data"] --> B["Calculate risk metrics"]
+    B --> C["PostgreSQL<br/>(real-time)"]
+    C --> D["Alert system<br/>(if thresholds exceeded)"]
 ```
 
 ## Integration with External Tools

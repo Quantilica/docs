@@ -192,24 +192,12 @@ df.write_parquet("gdp.parquet")
 
 ### Architecture
 
-```
-Build a Parametro:
-    Parametro(agregado="1620", variaveis=["116"], ...)
-         ↓
-Render URL:
-    parametro.url()
-    → /t/1620/n1/all/v/116/p/all/h/y/f/a/d/m
-         ↓
-HTTP Client (with @retry decorators):
-    client.get(url)
-    → tenacity retries on transient failures
-    → streams the response body
-         ↓
-JSON parsing:
-    Returns raw list[dict] (SIDRA /values format)
-         ↓
-User processes data:
-    Polars / pandas / database insert
+```mermaid
+graph TD
+    A[Build a Parametro] --> B[Render URL]
+    B --> C[HTTP Client <br/> @retry decorators]
+    C --> D[JSON parsing]
+    D --> E[User processes data <br/> Polars / pandas / DB]
 ```
 
 ### URL Abstraction: No More Magic Strings

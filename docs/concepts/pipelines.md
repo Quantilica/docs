@@ -105,28 +105,23 @@ Batch with real-time components.
 
 **Example**: Daily economic dashboard
 
-```
-Batch (Daily):
-  Fetch IBGE SIDRA, Treasury, RAIS
-  Aggregate and store
-  ↓
-Real-time (Every minute):
-  Stream latest data
-  Update dashboard
+```mermaid
+graph TD
+    A["Batch Daily<br/>Fetch IBGE SIDRA, Treasury, RAIS<br/>Aggregate and store"] --> B["Real-time Every minute<br/>Stream latest data<br/>Update dashboard"]
 ```
 
 ## Pipeline Patterns
 
 ### Pattern 1: Extract-Load-Transform
 
-```
-Raw Data (unchanged)
-    ↓ LOAD
-PostgreSQL (raw table)
-    ↓ TRANSFORM (on-demand)
-Views / Aggregations
-    ↓ EXPOSE
-Dashboards / Analysis
+```mermaid
+graph TD
+    A["Raw Data<br/>unchanged"] --> B["LOAD"]
+    B --> C["PostgreSQL<br/>raw table"]
+    C --> D["TRANSFORM<br/>on-demand"]
+    D --> E["Views / Aggregations"]
+    E --> F["EXPOSE"]
+    F --> G["Dashboards / Analysis"]
 ```
 
 **Pros**: Flexibility, preserves raw data, easy to re-process
@@ -135,14 +130,14 @@ Dashboards / Analysis
 
 ### Pattern 2: Extract-Transform-Load
 
-```
-Raw Data (API)
-    ↓ TRANSFORM
-Clean Data (memory)
-    ↓ LOAD
-PostgreSQL (processed table)
-    ↓ EXPOSE
-Dashboards / Analysis
+```mermaid
+graph TD
+    A["Raw Data<br/>API"] --> B["TRANSFORM"]
+    B --> C["Clean Data<br/>memory"]
+    C --> D["LOAD"]
+    D --> E["PostgreSQL<br/>processed table"]
+    E --> F["EXPOSE"]
+    F --> G["Dashboards / Analysis"]
 ```
 
 **Pros**: Optimized storage, predictable output
@@ -151,14 +146,14 @@ Dashboards / Analysis
 
 ### Pattern 3: Data Lake
 
-```
-Multiple Sources (APIs, databases)
-    ↓ INGEST
-Raw Layer (Parquet files in S3)
-    ↓ TRANSFORM
-Bronze/Silver/Gold layers
-    ↓ EXPOSE
-Dashboards, ML, Analytics
+```mermaid
+graph TD
+    A["Multiple Sources<br/>APIs, databases"] --> B["INGEST"]
+    B --> C["Raw Layer<br/>Parquet files in S3"]
+    C --> D["TRANSFORM"]
+    D --> E["Bronze/Silver/Gold<br/>layers"]
+    E --> F["EXPOSE"]
+    F --> G["Dashboards, ML, Analytics"]
 ```
 
 **Pros**: Scalable, flexible, audit trail

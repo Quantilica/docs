@@ -332,7 +332,9 @@ imports = data.filter(pl.col("transaction_type") == "import")
 ## Tools in This Section
 
 ### [comexdown](comexdown.md)
+
 Resilient data extraction agent for Siscomex:
+
 - **Temporal Idempotency** — Smart HEAD requests check Last-Modified; skip if unchanged (57x speedup)
 - **Streaming Chunks** — Download in 8KB blocks; zero memory overhead
 - **SSL Resilience** — Handles expired/misconfigured certificates
