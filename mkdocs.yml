@@ -25,7 +25,8 @@ nav:
   - IBGE (Macroeconomics):
       - Overview: ibge/index.md
       - sidra-fetcher: ibge/sidra-fetcher.md
-      - ibge-sidra-tabelas: ibge/ibge-sidra-tabelas.md
+      - sidra-sql: ibge/sidra-sql.md
+      - sidra-pipelines: ibge/sidra-pipelines.md
 
   - Treasury (Finance):
       - Overview: tesouro/index.md
