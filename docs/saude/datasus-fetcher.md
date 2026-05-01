@@ -187,14 +187,14 @@ Use lowercase two-letter codes with `--regions`. Common codes:
 | `rs` | Rio Grande do Sul | `sc` | Santa Catarina |
 | `ce` | Ceará | `pe` | Pernambuco |
 
-See the full list in the [README](https://github.com/dankkom/datasus-fetcher).
+See the full list in the [README](https://github.com/Quantilica/datasus-fetcher).
 
 ## Reading DBC Files
 
 datasus-fetcher downloads `.dbc` files, which is a compressed format used by DATASUS. To read these files in Python, you can use packages such as:
 
 - [PySUS](https://github.com/AlertaDengue/PySUS)
-- [read.dbc](https://github.com/dankkom/read.dbc) (R)
+- [read.dbc](https://github.com/Quantilica/read.dbc) (R)
 - [dbf2dbc](https://github.com/AlertaDengue/dbf2dbc) (conversion tool)
 
 ## Learn More

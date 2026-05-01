@@ -85,7 +85,7 @@ Downloaded files include:
 Install for development:
 
 ```bash
-git clone https://github.com/dankkom/comexdown.git
+git clone https://github.com/Quantilica/comexdown.git
 cd comexdown
 pip install -e .[dev]
 ```

@@ -128,7 +128,7 @@ for station in all_stations:
 Install for development:
 
 ```bash
-git clone https://github.com/dankkom/inmet-bdmep-data.git
+git clone https://github.com/Quantilica/inmet-bdmep-data.git
 cd inmet-bdmep-data
 pip install -e .
 ```
