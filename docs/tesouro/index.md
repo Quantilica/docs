@@ -16,26 +16,18 @@ Treasury Direct data analysis encounters critical obstacles:
 
 ## Architecture: How tddata Powers Treasury Analysis
 
-```
-┌─────────────────────────────────────────────────────┐
-│     Brazilian Treasury (CKAN API)                   │
-│     (Large daily files: prices, yields, volumes)    │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│  tddata (Smart Fetching + Analytics Layer)           │
-│  ────────────────────────────────────────────────    │
-│  ✓ Async downloads with idempotence checks          │
-│  ✓ Polars processing (10x faster than Pandas)       │
-│  ✓ FIFO inventory control (per-lot returns)         │
-│  ✓ Modified Dietz (GIPS-compliant portfolio returns)│
-│  ✓ Returns: Clean Polars DataFrames                 │
-└──────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│     Your Analysis (Portfolio, Risk, Curve)          │
-│     (Ready for BI, optimization, research)          │
-└──────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Brazilian Treasury CKAN API <br/> Large daily files: prices, yields, volumes] --> B[tddata <br/> Smart Fetching + Analytics Layer]
+    
+    subgraph tddata
+        B1[Async downloads]
+        B2[Polars processing]
+        B3[FIFO inventory control]
+        B4[Modified Dietz returns]
+    end
+    
+    B --> C[Your Analysis <br/> Portfolio, Risk, Curve]
 ```
 
 ## Core Capabilities

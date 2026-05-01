@@ -24,16 +24,16 @@ SIDRA organizes data in highly nested structures:
 
 SIDRA Structure (hierarchical):
 
-```
-  Table 1620 (GDP)
-    ├─ Variable 116 (Real GDP)
-    │   ├─ Territory: Brazil (level 1)
-    │   ├─ Territory: States (level 3, 27 values)
-    │   └─ Territory: Municipalities (level 5, 5570 values)
-    └─ Classification: By Activity (8 categories)
-        ├─ Agriculture
-        ├─ Industry
-        └─ Services
+```mermaid
+graph TD
+    T[Table 1620 - GDP] --> V[Variable 116 - Real GDP]
+    V --> L1[Territory: Brazil - Level 1]
+    V --> L3[Territory: States - Level 3]
+    V --> L5[Territory: Municipalities - Level 5]
+    T --> C[Classification: By Activity]
+    C --> C1[Agriculture]
+    C --> C2[Industry]
+    C --> C3[Services]
 ```
 
 Problem: How do you represent this in a flat CSV without duplication?
@@ -78,33 +78,38 @@ Strict relational modeling separates metadata from facts:
 - Composite unique constraint prevents duplicates
 - Optimized for analytical queries (OLAP workloads)
 
-```
-Traditional Approach (flattened):
-┌────────────────────────────────────────────────────────────┐
-│ date    │ territory │ variable │ class       │ value       │
-│ 2020-01 │ 35 (SP)   │ 116      │ Agriculture │ 123.45      │
-│ 2020-02 │ 35 (SP)   │ 116      │ Agriculture │ 124.12      │
-│ 2020-01 │ 35 (SP)   │ 116      │ Industry    │ 456.78      │
-│ ... (millions of rows, duplicated territory/variable data) │
-└────────────────────────────────────────────────────────────┘
+```mermaid
+erDiagram
+    localidade ||--o{ dados : localidade_id
+    dimensao ||--o{ dados : dimensao_id
+    periodo ||--o{ dados : periodo_id
+    sidra_tabela ||--o{ dados : sidra_tabela_id
 
-Star Schema (normalized):
-┌──────────────┐         ┌──────────────┐
-│  localidade  │         │   dimensao   │
-├──────────────┤         ├──────────────┤
-│ id  │ d1n    │         │ id  │ d2n    │
-│ 35  │ SP     │         │  1  │ Real   │
-└──────┬───────┘         │  2  │ Nom.   │
-       │                 └──────┬───────┘
-       └──────────┬─────────────┘
-                  │
-         ┌────────┴────────┐
-         │     dados       │
-         ├─────────────────┤
-         │ loc_id │ dim_id │
-         │   35   │    1   │
-         └────────────────-┘
-(compact, normalized, no duplication)
+    localidade {
+        bigint id PK
+        text nc
+        text nn
+        text d1c
+        text d1n
+    }
+    dimensao {
+        bigint id PK
+        text mc
+        text mn
+        text d2c
+        text d2n
+        text d4c
+    }
+    dados {
+        bigint id PK
+        text sidra_tabela_id FK
+        bigint localidade_id FK
+        bigint dimensao_id FK
+        integer periodo_id FK
+        date modificacao
+        boolean ativo
+        text v
+    }
 ```
 
 ### 3. Slowly Changing Dimensions (SCD Type II)
@@ -433,25 +438,31 @@ conn.commit()
 
 ### The Solution: Two-Pass Streaming
 
+```mermaid
+graph TD
+    subgraph P1 [Pass 1: Resolve Dimensions]
+        P1a[Load localidade into memory]
+        P1b[Load dimensao into memory]
+        P1c[Map string codes → numeric FK ids]
+    end
+
+    subgraph P2 [Pass 2: Bulk Stream to Staging]
+        P2a[Open PostgreSQL COPY tunnel]
+        P2b[Write binary rows to staging]
+        P2c[Atomic UPSERT: ON CONFLICT DO NOTHING]
+    end
+
+    subgraph P3 [Pass 3: Verify & Promote]
+        P3a[Referential integrity validation]
+        P3b[Swap staging → production atomic]
+    end
+
+    P1 --> P2
+    P2 --> P3
 ```
-Pass 1: Resolve Dimensions
-  ├─ Load localidade (territories) into memory
-  ├─ Load dimensao (classifications) into memory
-  └─ Map string codes → numeric FK ids
-
-Pass 2: Bulk Stream to Staging
-  ├─ Open PostgreSQL COPY FROM STDIN tunnel
-  ├─ Write binary rows to _staging_dados table
-  └─ Atomic UPSERT: ON CONFLICT DO NOTHING
-
-Pass 3: Verify & Promote
-  ├─ Referential integrity validation
-  └─ Swap staging → production (atomic)
-
 Time: Seconds for 10M rows
 RAM: Bounded (streaming, not all-in-memory)
 I/O: Optimal (single tunnel, binary protocol)
-```
 
 ### Usage Example
 

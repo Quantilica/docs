@@ -36,26 +36,18 @@ Monthly administrative record of job flows:
 
 ## Architecture: pdet-data Pipeline
 
-```
-┌─────────────────────────────────────────────────────┐
-│     Brazilian Ministry of Labor (Raw Data)          │
-│     RAIS: 8 GB/year CSV  |  CAGED: 200MB/mo CSV    │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│  pdet-data (Transformation Engine)                   │
-│  ────────────────────────────────────────────────    │
-│  ✓ Multithreaded Polars processing                  │
-│  ✓ Raw-to-Parquet conversion (95%+ compression)     │
-│  ✓ Intelligent memory management                    │
-│  ✓ Idempotent processing (cache unchanged files)    │
-│  ✓ Returns: Typed, indexed Parquet DataFrames       │
-└──────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────┐
-│     Your Analysis Layer                             │
-│     (Wage analysis, job creation, demographics)     │
-└──────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Brazilian Ministry of Labor Raw Data <br/> RAIS: 8 GB/year CSV | CAGED: 200MB/mo CSV] --> B[pdet-data <br/> Transformation Engine]
+    
+    subgraph pdet-data
+        B1[Multithreaded Polars processing]
+        B2[Raw-to-Parquet conversion]
+        B3[Intelligent memory management]
+        B4[Idempotent processing]
+    end
+    
+    B --> C[Your Analysis Layer <br/> Wage analysis, job creation, demographics]
 ```
 
 ## Capabilities
