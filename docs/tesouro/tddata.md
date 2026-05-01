@@ -16,12 +16,12 @@ This package is available via GitHub. You can install it using `pip`:
 
 **Download only (minimal dependencies):**
 ```shell
-pip install "git+https://github.com/dankkom/tddata#egg=tddata"
+pip install "git+https://github.com/Quantilica/tddata#egg=tddata"
 ```
 
 **Full installation with reading, analysis and plotting features:**
 ```shell
-pip install "git+https://github.com/dankkom/tddata#egg=tddata[analysis]"
+pip install "git+https://github.com/Quantilica/tddata#egg=tddata[analysis]"
 ```
 
 The minimal installation includes only `httpx` and `tqdm` for downloading data. The `[analysis]` extras add `Polars`, and `Altair` for reading CSV files and creating visualizations.
