@@ -17,14 +17,18 @@ Brazilian labor market microdata encounters severe infrastructure barriers:
 ## Data Sources
 
 ### RAIS (Relação Anual de Informações Sociais)
+
 Annual employment census of all formal employment relationships:
+
 - **Coverage**: ~60 million employment records per year
 - **Available**: 1985-present
 - **Content**: Demographics, wages, occupation, education, tenure, firm details
 - **Size**: 8-10 GB per year (uncompressed)
 
 ### CAGED (Cadastro Geral de Empregados e Desempregados)
+
 Monthly administrative record of job flows:
+
 - **Coverage**: New hires and separations by sector/region
 - **Available**: 1992-present (monthly)
 - **Frequency**: Released with 3-week lag

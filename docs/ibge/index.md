@@ -7,16 +7,19 @@ Brazilian Institute of Geography and Statistics (IBGE) is the official source fo
 SIDRA is Brazil's richest data source, but consuming it at scale encounters critical engineering challenges:
 
 ### Network Instability
+
 - Government servers suffer from overload and rate limiting
 - Transient errors (HTTP 429, 500+) interrupt pipelines
 - Timeouts are frequent; retries require backoff strategies
 
 ### Parametric Complexity
+
 - API uses cryptic positional URL structures: `/t/1620/n1/all/v/116/p/all/d/m`
 - Manual URL construction is error-prone and difficult to maintain
 - Missing a single parameter breaks the entire request
 
 ### Data Scale
+
 - **Massive catalog**: 30,000+ tables across dozens of themes
 - **Large files**: Some historical series span 50+ years with monthly/daily granularity
 - **Complex structure**: Tables contain nested classifications, categories, and dimensions
@@ -30,9 +33,10 @@ We provide **two complementary stacks** for different use cases:
 
 ### Stack 1: Flexible SDK (For Exploration & Custom Workflows)
 
-**Tools:** `sidra-fetcher` + `sidra-sql`
+**Tool:** `sidra-fetcher`
 
 For data scientists and analysts who need:
+
 - Quick notebook exploration
 - Custom extraction logic
 - On-demand data fetching
@@ -41,11 +45,9 @@ For data scientists and analysts who need:
 ```
 IBGE SIDRA API
     ↓
-sidra-fetcher (extraction + URL abstraction)
+sidra-fetcher (extraction + URL abstraction + retries)
     ↓
-sidra-sql (table browser + metadata)
-    ↓
-Your analysis (Python/Jupyter)
+Your analysis (Python/Jupyter, Polars, pandas)
 ```
 
 ### Stack 2: Enterprise ETL (For Production Pipelines)
@@ -53,6 +55,7 @@ Your analysis (Python/Jupyter)
 **Tools:** `sidra-sql` + `sidra-pipelines`
 
 For data engineers building:
+
 - Automated, reproducible pipelines
 - Normalized relational databases
 - Multi-user data warehouses
@@ -85,14 +88,6 @@ An advanced Python SDK for robust extraction:
 - **Strong typing:** Metadata as dataclasses, not dicts
 - **Multiple formats:** Parquet, CSV, PostgreSQL, Polars DataFrames
 
-**[sidra-sql](sidra-sql.md) — Table Browser**
-
-Programmatic catalog navigation:
-- Full-text search (English & Portuguese)
-- Filter by theme
-- Browse structure without leaving Python
-- Find the right table programmatically
-
 **Best for:**
 - Jupyter notebooks & quick exploration
 - One-off analysis
@@ -107,22 +102,25 @@ Programmatic catalog navigation:
 **[sidra-sql](sidra-sql.md) — ETL Motor**
 
 Industrial-strength pipeline orchestration:
+
 - **Plugin architecture:** Lightweight motor + separate data definitions
-- **Full normalization:** 5-table relational schema
-- **Bulk loading:** COPY protocol (100k+ rows/sec)
+- **Full normalization:** 5-table relational schema (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`)
+- **Bulk loading:** PostgreSQL COPY protocol (400k+ rows/sec)
 - **Idempotent operations:** Safe re-execution
 - **SQL transformations:** Generate analytics tables automatically
-- **Complete audit trail:** Track all data modifications
+- **SCD Type II audit trail:** `ativo` + `modificacao` columns preserve revision history
 
 **[sidra-pipelines](sidra-pipelines.md) — Standard Library**
 
-Pre-built catalog of 14 production-ready pipelines:
+Pre-built catalog of production-ready pipelines:
+
 - GDP, inflation, population, agriculture, etc.
 - One-command deployment: `sidra-sql run std pib_municipal`
 - Ready for Power BI, Metabase, analytics
 - Extensible for custom datasets
 
 **Best for:**
+
 - Production data pipelines (hourly/daily)
 - Enterprise data warehouses
 - Multi-user access via PostgreSQL
@@ -142,7 +140,7 @@ Pre-built catalog of 14 production-ready pipelines:
 | **Scalability** | Notebooks, personal use | Multi-user, enterprise |
 | **Dependencies** | Python only | Python + PostgreSQL |
 | **Data validation** | Manual | Automated (constraints, uniqueness) |
-| **Audit trail** | Basic logging | Full metadata persistence |
+| **Audit trail** | Basic logging | Full SCD Type II versioning |
 | **Transformation** | Python (Polars, pandas) | SQL (declarative) |
 | **Sharing results** | CSV/Parquet exports | SQL queries + BI tools |
 
@@ -185,11 +183,13 @@ Do you need:
 ### 📊 Economic Monitoring (→ Stack 2: Production ETL)
 
 Track Brazil's real-time economic performance with automated pipelines:
+
 - GDP growth (quarterly and annual)
 - Inflation (IPCA, INPC, IPCA-15)
 - Industrial production
 
 **Command:**
+
 ```bash
 sidra-sql run std pib_municipal
 sidra-sql run std ipca
@@ -198,6 +198,7 @@ sidra-sql run std ipca
 ### 📈 Macroeconomic Analysis (→ Either stack)
 
 **Ad-hoc analysis:** Use `sidra-fetcher` in Python
+
 ```python
 from sidra_fetcher import AsyncSidraClient
 client = AsyncSidraClient()
@@ -205,6 +206,7 @@ gdp = await client.fetch(table="1620", variable=116)
 ```
 
 **Recurring analysis:** Use `sidra-sql` + PostgreSQL
+
 ```sql
 SELECT * FROM analytics.pib_municipal
 WHERE ano >= 2020;
@@ -213,6 +215,7 @@ WHERE ano >= 2020;
 ### 👥 Demographics & Social Research (→ Stack 2: Production ETL)
 
 Population, household composition, census data:
+
 ```bash
 sidra-sql run std censo_populacao
 sidra-sql run std estimativa_populacao
@@ -221,6 +224,7 @@ sidra-sql run std estimativa_populacao
 ### 🌾 Agricultural Analysis (→ Stack 2: Production ETL)
 
 Crop production and livestock data:
+
 ```bash
 sidra-sql run std pam_lavouras_temporarias
 sidra-sql run std ppm_rebanhos
@@ -268,25 +272,27 @@ sidra-sql run std ipca
 
 #### Step 1: Discover the Right Table
 
-```python
-from sidra_sql import SidraTableBrowser
+Browse the [SIDRA catalog](https://sidra.ibge.gov.br/) directly to find table codes,
+variable codes, and classification IDs. Use the search bar (Portuguese) or navigate
+by theme. Each table page shows:
 
-browser = SidraTableBrowser()
+- Table code (e.g., `1620` for GDP)
+- Available variables and their codes
+- Territorial levels supported
+- Available classifications
 
-# Search (English or Portuguese)
-gdp_tables = browser.search("GDP")
-# or
-tabelas_pib = browser.search("PIB")
+You can also reverse-engineer URLs from the SIDRA website. Example URL:
 
-for table in gdp_tables:
-    print(f"{table.id}: {table.name}")
-    print(f"  Theme: {table.theme}")
-    print(f"  Available variables: {len(table.variables)}")
 ```
+https://sidra.ibge.gov.br/tabela/1620
+```
+
+Table code = `1620`. Click into the table to see variables and classifications.
 
 #### Step 2: Extract Data
 
 **Synchronous (single table):**
+
 ```python
 from sidra_fetcher import SidraClient
 
@@ -301,6 +307,7 @@ print(f"✓ Fetched {len(gdp)} observations")
 ```
 
 **Asynchronous (multiple tables, 3x faster):**
+
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
@@ -347,6 +354,9 @@ pip install -e .
 
 # 2. Configure database
 cat > config.ini << EOF
+[storage]
+data_dir = data
+
 [database]
 user = postgres
 password = your_password
@@ -354,6 +364,8 @@ host = localhost
 port = 5432
 dbname = dados
 schema = ibge_sidra
+tablespace = pg_default
+readonly_role = readonly_role
 EOF
 
 # 3. Install official pipelines
@@ -382,8 +394,9 @@ EOF
 ### 2. Use Async for Multi-Table Extraction
 
 Concurrent fetching is 3x faster than sequential:
+
 ```python
-# 30 seconds
+# 30 seconds (sync)
 client = SidraClient()
 gdp = client.fetch(table="1620", variable=116)
 gva = client.fetch(table="1612", variable=117)
@@ -398,12 +411,13 @@ results = await asyncio.gather(
 ### 3. Filter Data on Fetch
 
 Reduce data volume before loading:
+
 ```python
 # Good: Filter by date on fetch
 recent = client.fetch(
     table="1620",
     variable=116,
-    initial_date="2020-01-01"  # Only recent
+    initial_date="2020-01-01"
 )
 
 # Less efficient: Fetch all, filter locally
@@ -414,6 +428,7 @@ recent = all_data.filter(pl.col("date") >= "2020-01-01")
 ### 4. Store to Parquet, Not CSV
 
 Parquet is 80%+ smaller and faster to read:
+
 ```python
 # Good
 df.write_parquet("data.parquet")
@@ -425,11 +440,12 @@ df.write_csv("data.csv")
 ### 5. Leverage Production Features in sidra-sql
 
 Use idempotent operations for safe re-execution:
+
 ```bash
 # Safe to run multiple times
 sidra-sql run std pib_municipal
 
-# Same data → cache hit → instant completion
+# Cached files skipped on re-run → near-instant completion
 sidra-sql run std pib_municipal
 ```
 
@@ -439,14 +455,13 @@ sidra-sql run std pib_municipal
 
 ### "Table not found"
 
-SIDRA table IDs can change. Verify:
+SIDRA table codes must be strings, not integers. Verify the table still exists at
+[sidra.ibge.gov.br/tabela/{id}](https://sidra.ibge.gov.br/) — IBGE occasionally
+deprecates or replaces tables.
+
 ```python
-browser = SidraTableBrowser()
-try:
-    table = browser.get("1620")
-except ValueError:
-    # Search for alternatives
-    results = browser.search("GDP")
+gdp = client.fetch(table="1620", variable=116)   # ✅ string
+gdp = client.fetch(table=1620, variable=116)     # ❌ may fail
 ```
 
 ### Timeout errors
@@ -463,22 +478,40 @@ client = SidraClient(
 ### PostgreSQL connection error (sidra-sql)
 
 Verify `config.ini`:
+
 - Database exists: `createdb dados`
 - User has permissions: `ALTER USER postgres WITH PASSWORD 'password';`
+- Schema exists or user can create it: `CREATE SCHEMA ibge_sidra;`
 - Test connection: `psql -U postgres -h localhost -d dados`
+
+### sidra-sql plugin not found
+
+Verify installation:
+
+```bash
+sidra-sql plugin list
+```
+
+If empty, install the standard catalog:
+
+```bash
+sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
+```
 
 ---
 
 ## Learn More
 
 ### Stack 1 (SDK):
+
 - [sidra-fetcher Documentation](sidra-fetcher.md)
-- [sidra-sql Guide](sidra-sql.md)
 
 ### Stack 2 (Production ETL):
+
 - [sidra-sql Documentation](sidra-sql.md)
 - [sidra-pipelines Catalog](sidra-pipelines.md)
 
 ### External Resources:
+
 - [IBGE Official Website (Portuguese)](https://www.ibge.gov.br/)
 - [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)

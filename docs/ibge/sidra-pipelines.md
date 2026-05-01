@@ -87,16 +87,21 @@ pip install -e .
 
 ### 2. Configure Database
 
-Create `config.ini` in the sidra-sql root:
+Create `config.ini` in the working directory:
 
 ```ini
+[storage]
+data_dir = data
+
 [database]
-user     = postgres
-password = your_password
-host     = localhost
-port     = 5432
-dbname   = dados
-schema   = ibge_sidra
+user          = postgres
+password      = your_password
+host          = localhost
+port          = 5432
+dbname        = dados
+schema        = ibge_sidra
+tablespace    = pg_default
+readonly_role = readonly_role
 ```
 
 ### 3. Install This Catalog
@@ -131,14 +136,15 @@ sidra-sql run std pib_municipal
 
 ```sql
 -- Analytics table is ready for Power BI, Metabase, SQL queries
-SELECT 
-    periodo, 
-    localidade, 
-    variavel, 
+SELECT
+    ano,
+    id_municipio,
+    variavel,
+    unidade,
     valor
 FROM analytics.pib_municipal
 WHERE ano >= 2020
-ORDER BY localidade, periodo DESC;
+ORDER BY id_municipio, ano DESC;
 ```
 
 ### Run All Pipelines
@@ -175,7 +181,7 @@ name        = "pib_municipal"
 schema      = "analytics"
 strategy    = "replace"
 description = "GDP at current prices, annual by municipality"
-primary_key = ["periodo", "localidade_id"]
+primary_key = ["ano", "id_municipio"]
 ```
 
 ### transform.sql
@@ -184,14 +190,17 @@ SQL SELECT that denormalizes the raw data:
 
 ```sql
 SELECT
-    p.codigo AS periodo,
-    l.d1c AS localidade_id,
-    l.d1n AS localidade,
-    CASE WHEN d.v ~ '^-?[0-9]' THEN d.v::numeric END AS valor
+    p.ano                                              AS ano,
+    l.d1c                                              AS id_municipio,
+    dim.d2n                                            AS variavel,
+    dim.mn                                             AS unidade,
+    CASE WHEN d.v ~ '^-?[0-9]' THEN d.v::numeric END   AS valor
 FROM dados d
-JOIN periodo p ON d.periodo_id = p.id
-JOIN localidade l ON d.localidade_id = l.id
-WHERE d.ativo = true;
+JOIN periodo    p   ON d.periodo_id    = p.id
+JOIN dimensao   dim ON d.dimensao_id   = dim.id
+JOIN localidade l   ON d.localidade_id = l.id
+WHERE d.sidra_tabela_id = '5938'
+  AND d.ativo = true;
 ```
 
 ## Extending: Add Your Own Pipeline
@@ -235,9 +244,11 @@ SELECT /* your denormalization query */
 At the repository root:
 
 ```toml
-[[pipelines]]
-id   = "meu_novo_indicador"
-path = "meu-novo-indicador"
+[[pipeline]]
+id          = "meu_novo_indicador"
+description = "My custom indicator"
+fetch       = "meu-novo-indicador/fetch.toml"
+transform   = "meu-novo-indicador/transform.toml"
 ```
 
 ### 6. Test & Push
@@ -278,8 +289,9 @@ Cache hit for unchanged data = near-instant completion.
 Track Brazil's macroeconomic performance in real time:
 
 ```sql
-SELECT * FROM analytics.ipca
-WHERE periodo >= date_trunc('year', current_date)
+SELECT periodo, variavel, valor
+FROM analytics.ipca
+WHERE periodo >= '202401'
 ORDER BY periodo DESC;
 ```
 
@@ -311,12 +323,12 @@ WHERE ano IN (1991, 2000, 2010, 2020);
 Analyze crop production and livestock:
 
 ```sql
-SELECT 
-    localidade,
-    produto,
-    SUM(valor) as total_producao
+SELECT
+    id_municipio,
+    variavel,
+    SUM(valor) AS total_producao
 FROM analytics.pam_lavouras_temporarias
-GROUP BY localidade, produto
+GROUP BY id_municipio, variavel
 ORDER BY total_producao DESC;
 ```
 
@@ -335,6 +347,7 @@ sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --ali
 ### "Table not found" (404)
 
 SIDRA table IDs change occasionally. Check the official portal:
+
 - [SIDRA Database](https://sidra.ibge.gov.br/)
 - Update the `fetch.toml` with the correct table ID
 
@@ -347,6 +360,7 @@ SIDRA table IDs change occasionally. Check the official portal:
 ### PostgreSQL connection error
 
 Verify `config.ini`:
+
 - Database exists: `createdb dados`
 - User has permissions: `ALTER USER postgres WITH PASSWORD 'password';`
 - Connection: `psql -U postgres -h localhost -d dados`

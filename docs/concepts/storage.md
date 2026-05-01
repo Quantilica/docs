@@ -9,6 +9,7 @@ Choosing the right storage for your data.
 **What**: Columnar storage format, compressed
 
 **Pros**:
+
 - ✅ Highly compressed (80%+ savings vs CSV)
 - ✅ Fast reads (columnar: only read needed columns)
 - ✅ No database needed (just files)
@@ -17,11 +18,13 @@ Choosing the right storage for your data.
 - ✅ Cloud-native (works with S3, GCS, Azure)
 
 **Cons**:
+
 - ❌ Not human-readable
 - ❌ No concurrent writes
 - ❌ No transactions
 
 **Best for**:
+
 - Historical data (archive)
 - Analytical queries (dashboards, reports)
 - Data exchange between systems

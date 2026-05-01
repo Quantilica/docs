@@ -27,24 +27,23 @@ Each tool solves its specific infrastructure challenge. Mixing them into a monol
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
-from pdet_data import RAISProcessor
-from tddata import PortfolioAnalytics
+from pdet_data.fetch import connect, fetch_rais
+from tddata.analytics import calculate_portfolio_monthly_returns
 
 # Three independent tools, zero coupling
 async def multi_source_analysis():
-    # Concurrent fetch from IBGE
-    sidra = AsyncSidraClient()
-    gdp = await sidra.fetch(table="1620", variable=116)
-    
-    # Transform RAIS labor data
-    processor = RAISProcessor()
-    rais = processor.process_year(2023, force_refresh=False)
-    
-    # Calculate portfolio returns
-    analytics = PortfolioAnalytics()
-    returns = analytics.calculate_monthly_returns(my_transactions)
-    
-    return gdp, rais, returns
+    # 1. SIDRA metadata via async client
+    async with AsyncSidraClient(timeout=60) as sidra:
+        agregado = await sidra.get_agregado(1620)
+
+    # 2. RAIS labor data via FTP
+    ftp = connect()
+    rais = fetch_rais(ftp, dest_dir="raw/rais")
+
+    # 3. Treasury portfolio returns
+    returns = calculate_portfolio_monthly_returns(my_transactions)
+
+    return agregado, rais, returns
 ```
 
 ## 2. Performance
@@ -52,7 +51,7 @@ async def multi_source_analysis():
 **Speed matters**. All tools are engineered for speed at scale:
 
 - Multithreaded concurrency where applicable (datasus-fetcher: 6-10x speedup)
-- Async/await where applicable (sidra-fetcher: 4x speedup)
+- Async/await where applicable (sidra-fetcher: 3x speedup on metadata harvest)
 - Vectorial processing where applicable (pdet-data: 10x speedup)
 - Smart caching and idempotence checks (comexdown: 57x speedup on re-runs)
 - Streaming/chunked processing for large files (comexdown: constant memory overhead)

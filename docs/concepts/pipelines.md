@@ -13,26 +13,36 @@ Pipeline = Extract → Validate → Transform → Load → Expose
 ### Simple Pipeline Example
 
 ```python
-# EXTRACT: Get data
+import polars as pl
 from sidra_fetcher import SidraClient
-client = SidraClient()
-gdp = client.fetch(table="1620", variable=116)
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+# EXTRACT: Build a Parametro and fetch raw rows
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+
+with SidraClient(timeout=60) as client:
+    rows = client.get(param.url())  # list[dict]
 
 # VALIDATE: Check quality
-assert len(gdp) > 0, "No data returned"
-assert "value" in gdp.columns, "Missing value column"
+assert len(rows) > 0, "No data returned"
+gdp = pl.DataFrame(rows)
+assert "V" in gdp.columns, "Missing value column"
 
 # TRANSFORM: Process
-import polars as pl
 gdp = gdp.with_columns([
-    pl.col("value").pct_change().alias("growth")
+    pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("growth")
 ])
 
 # LOAD: Store result
 gdp.write_parquet("gdp_analysis.parquet")
-
-# EXPOSE: Make available
-print("GDP analysis available at gdp_analysis.parquet")
 ```
 
 ## Pipeline Types
@@ -53,11 +63,13 @@ Run at scheduled intervals (daily, weekly, monthly).
 **Tools**: cron, Airflow, Lambda, Cloud Scheduler
 
 **Pros**:
+
 - Simple to implement
 - Easy to debug (predictable schedule)
 - Cost-effective (run only when needed)
 
 **Cons**:
+
 - Stale data between runs
 - May be overkill for small datasets
 
@@ -77,10 +89,12 @@ Process data in real-time as it arrives.
 **Tools**: Kafka, Spark Streaming, Kinesis, Pub/Sub
 
 **Pros**:
+
 - Real-time alerts possible
 - Current view of world
 
 **Cons**:
+
 - Complex infrastructure
 - Higher operational cost
 - Brazilian government data rarely updates real-time
@@ -169,30 +183,42 @@ SLA: Data available within 2 hours of publication
 ### Step 2: Error Handling
 
 ```python
-from sidra_fetcher import SidraClient, SidraTimeoutError
 import logging
+import httpx
+import polars as pl
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 logger = logging.getLogger(__name__)
 
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+
 try:
-    client = SidraClient(max_retries=5, timeout=60)
-    gdp = client.fetch(table="1620", variable=116)
-    
-    # Validate
-    if len(gdp) == 0:
+    with SidraClient(timeout=60) as client:
+        rows = client.get(param.url())
+
+    if not rows:
         raise ValueError("Empty result from IBGE")
-    
-    # Process
-    gdp.write_parquet("gdp.parquet")
-    logger.info(f"Successfully fetched {len(gdp)} rows")
-    
-except SidraTimeoutError:
+
+    pl.DataFrame(rows).write_parquet("gdp.parquet")
+    logger.info(f"Successfully fetched {len(rows)} rows")
+
+except httpx.TimeoutException:
     logger.error("IBGE API timeout - will retry tomorrow")
-    # Alert on-call team
-    
+
+except httpx.HTTPStatusError as e:
+    logger.error(f"HTTP error {e.response.status_code}: {e}")
+
 except Exception as e:
-    logger.error(f"Unexpected error: {e}")
-    # Alert on-call team
+    logger.exception(f"Unexpected error: {e}")
     raise
 ```
 
@@ -258,10 +284,22 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 
 def fetch_gdp():
+    import polars as pl
     from sidra_fetcher import SidraClient
-    client = SidraClient()
-    gdp = client.fetch(table="1620", variable=116)
-    gdp.write_parquet("gdp.parquet")
+    from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+    param = Parametro(
+        agregado="1620",
+        territorios={"1": ["all"]},
+        variaveis=["116"],
+        periodos=[],
+        classificacoes={},
+        formato=Formato.A,
+        decimais={"": Precisao.M},
+    )
+    with SidraClient(timeout=60) as client:
+        rows = client.get(param.url())
+    pl.DataFrame(rows).write_parquet("gdp.parquet")
 
 with DAG(
     "gdp_pipeline",
@@ -290,52 +328,50 @@ with DAG(
 
 ## Multi-Source Pipeline
 
-Combining data from multiple Brazilian sources:
+Combining data from multiple Brazilian sources. Each tool has its own access pattern — use them as building blocks:
 
 ```python
 import polars as pl
+import sqlalchemy as sa
 from sidra_fetcher import SidraClient
-from tddata import TreasuryClient
-from pdet_data import RAISClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# Extract from multiple sources
-sidra = SidraClient()
-gdp = sidra.fetch(table="1620", variable=116)
+# 1. SIDRA (IBGE): build Parametro → client.get(url) → list[dict]
+gdp_param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+with SidraClient(timeout=60) as client:
+    gdp = pl.DataFrame(client.get(gdp_param.url()))
 
-treasury = TreasuryClient()
-bonds = treasury.fetch(bond_type="NTN-F")
+# 2. Treasury Direct (tddata): converter + analytics on raw CSV files
+from tddata.converter import convert_to_parquet
+convert_to_parquet(
+    src_dir="raw/tesouro",
+    dest_dir="data/tesouro",
+    dataset_type="precos",
+)
+bonds = pl.read_parquet("data/tesouro/precos.parquet")
 
-rais = RAISClient()
-employment = rais.aggregate(year=2023, group_by="sector")
+# 3. RAIS (pdet-data): FTP fetch + Polars conversion
+from pdet_data.fetch import connect, fetch_rais
+from pdet_data.reader import convert_columns_dtypes
+ftp = connect()
+fetch_rais(ftp, dest_dir="raw/rais")  # downloads compressed CSVs
 
-# Store each source
+# Persist each source
 gdp.write_parquet("data/gdp.parquet")
 bonds.write_parquet("data/bonds.parquet")
-employment.write_parquet("data/employment.parquet")
 
-# Load into PostgreSQL
-import sqlalchemy as sa
-
+# Load into PostgreSQL for cross-source joins
 engine = sa.create_engine("postgresql://user:pass@localhost/analytics")
-
-gdp.write_database("gdp", engine, if_exists="replace")
-bonds.write_database("bonds", engine, if_exists="replace")
-employment.write_database("employment", engine, if_exists="replace")
-
-# Create unified view
-with engine.connect() as conn:
-    conn.execute("""
-    CREATE TABLE macro_data AS
-    SELECT 
-        g.date,
-        g.value as gdp,
-        b.yield as bond_yield,
-        e.avg_salary
-    FROM gdp g
-    LEFT JOIN bonds b ON DATE_TRUNC('quarter', g.date) = DATE_TRUNC('quarter', b.date)
-    LEFT JOIN employment e ON EXTRACT(YEAR FROM g.date) = e.year
-    """)
-    conn.commit()
+gdp.write_database("gdp", engine, if_table_exists="replace")
+bonds.write_database("bonds", engine, if_table_exists="replace")
 ```
 
 ## Testing Pipelines
@@ -349,13 +385,23 @@ import polars as pl
 def test_fetch_gdp():
     """Test data extraction"""
     from sidra_fetcher import SidraClient
-    client = SidraClient()
-    
-    gdp = client.fetch(table="1620", variable=116)
-    
-    assert len(gdp) > 0, "Empty result"
-    assert "value" in gdp.columns, "Missing value column"
-    assert "date" in gdp.columns, "Missing date column"
+    from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+    param = Parametro(
+        agregado="1620",
+        territorios={"1": ["all"]},
+        variaveis=["116"],
+        periodos=[],
+        classificacoes={},
+        formato=Formato.A,
+        decimais={"": Precisao.M},
+    )
+    with SidraClient(timeout=60) as client:
+        rows = client.get(param.url())
+
+    assert len(rows) > 0, "Empty result"
+    assert "V" in rows[0], "Missing V (value) field"
+    assert "D3C" in rows[0] or "D2C" in rows[0], "Missing dimension field"
 
 def test_validate_gdp(gdp_data):
     """Test validation logic"""
