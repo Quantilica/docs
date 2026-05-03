@@ -37,10 +37,12 @@ graph TD
 
 Each tool is **independent and reusable**:
 
-- **sidra-fetcher**: Only needs `requests` and `polars`
-- **tddata**: Standalone Treasury data client
-- **pdet-data**: Self-contained labor market module
-- **comexdown**: Isolated trade data tool
+- **sidra-fetcher**: `httpx` + `tenacity` only (no DataFrame deps; you bring Polars/Pandas)
+- **tddata**: Async `httpx` + `tqdm`; optional `polars` + `altair` via `[analysis]` extra
+- **pdet-data**: stdlib FTP + `polars` + `tqdm` (`7z` binary on PATH for extraction)
+- **comexdown**: pure standard library — no third-party deps
+- **datasus-fetcher**: pure standard library FTP client
+- **inmet-bdmep-data**: `httpx` + `pandas` + `pyarrow` (+ optional `polars`)
 
 No tool depends on another tool. Mix and match based on your needs.
 
@@ -138,6 +140,7 @@ combined.write_parquet("gdp_bonds_analysis.parquet")
 combined.write_database(
     "gdp_bonds",
     connection="postgresql://user:pass@host/db",
+    if_table_exists="replace",
 )
 
 # 4. ANALYZE

@@ -73,26 +73,26 @@ df = pl.read_parquet(
 
 ```python
 import polars as pl
-import sqlalchemy as sa
 
-# Write data
+# Write data via Polars (uses ConnectorX / SQLAlchemy under the hood)
 df = pl.read_parquet("gdp.parquet")
-engine = sa.create_engine("postgresql://user:pass@localhost/db")
-df.write_database("gdp", engine, if_exists="replace")
+db_uri = "postgresql://user:pass@localhost/db"
+df.write_database("gdp", connection=db_uri, if_table_exists="replace")
 
-# Read with SQL
-import pandas as pd
-
-result = pd.read_sql("""
-    SELECT 
-        date, 
+# Read with SQL — Polars
+result = pl.read_database_uri(
+    """
+    SELECT
+        date,
         value,
-        LAG(value) OVER (ORDER BY date) as prev_value,
-        (value - LAG(value) OVER (ORDER BY date)) / LAG(value) as growth
+        LAG(value) OVER (ORDER BY date) AS prev_value,
+        (value - LAG(value) OVER (ORDER BY date)) / LAG(value) AS growth
     FROM gdp
     WHERE date >= '2020-01-01'
     ORDER BY date
-""", engine)
+    """,
+    uri=db_uri,
+)
 ```
 
 ### CSV (Simple, Human-Readable)
@@ -118,18 +118,17 @@ result = pd.read_sql("""
 **Example**:
 
 ```python
-import pandas as pd
+import polars as pl
 
 # Write
-df.to_csv("data.csv", index=False)
+df.write_csv("data.csv")
 
 # Read
-df = pd.read_csv("data.csv")
+df = pl.read_csv("data.csv")
 
-# Reading fails silently on type mismatch
-df = pd.read_csv("data.csv")
-# Salary column is string!
-df["salary"] + 100  # Error: can't add string + int
+# Without an explicit schema, Polars infers types per column —
+# rows that disagree with the inferred type become null silently.
+# For trustworthy CSV ingestion, always pass `schema=` or `dtypes=`.
 ```
 
 ### SQLite (Local, File-Based Database)
@@ -156,17 +155,17 @@ df["salary"] + 100  # Error: can't add string + int
 
 ```python
 import polars as pl
-import sqlite3
 
-# Write
+# Polars `write_database` / `read_database_uri` accept a SQLAlchemy URI;
+# SQLite uses sqlite:///<path>
+db_uri = "sqlite:///data.db"
+
 df = pl.read_parquet("data.parquet")
-conn = sqlite3.connect("data.db")
-df.write_database("gdp", conn)
+df.write_database("gdp", connection=db_uri, if_table_exists="replace")
 
-# Read
-result = pl.read_database(
+result = pl.read_database_uri(
     "SELECT * FROM gdp WHERE year >= 2020",
-    conn
+    uri=db_uri,
 )
 ```
 
@@ -319,13 +318,17 @@ With index:    2 ms
 
 ```python
 # Development: CSV (human-readable)
-df.to_csv("output.csv")
+df.write_csv("output.csv")
 
 # Storage: Parquet (efficient)
-df.to_parquet("archive.parquet")
+df.write_parquet("archive.parquet")
 
 # Operations: PostgreSQL (live access)
-df.to_postgres("live_table", engine)
+df.write_database(
+    "live_table",
+    connection="postgresql://user:pass@host/db",
+    if_table_exists="replace",
+)
 ```
 
 ### 2. Version Your Data
@@ -372,7 +375,11 @@ df = pl.read_parquet("data.parquet")
 cutoff = datetime.now() - timedelta(days=730)
 
 current = df.filter(pl.col("date") >= cutoff)
-current.write_database("data_live", engine, if_exists="replace")
+current.write_database(
+    "data_live",
+    connection="postgresql://user:pass@host/db",
+    if_table_exists="replace",
+)
 
 # Archive everything
 df.write_parquet(f"archive_{datetime.now():%Y_%m_%d}.parquet")

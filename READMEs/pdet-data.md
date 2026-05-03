@@ -2,16 +2,16 @@
 
 > Ferramenta para coletar, processar e analisar microdados de emprego e trabalho do Brasil diretamente da **PDET** (Plataforma de Disseminação de Estatísticas do Trabalho).
 
-Acesse dados do **RAIS** e **CAGED** de forma programática, com conversão automática de tipos, tratamento de anomalias e exportação para formatos modernos como Parquet.
+Acesse dados do **RAIS** e **CAGED** de forma programática, com conversão automática de tipos, tratamento de anomalias e exportação para Parquet.
 
 ---
 
 ## ⚡ O que é a PDET?
 
-A **PDET** é a plataforma oficial do Ministério do Trabalho e Previdência Social (MTPS) que disponibiliza os microdados de trabalho do Brasil. Ela mantém as bases:
+A **PDET** é a plataforma oficial do Ministério do Trabalho e Previdência Social (MTPS) que disponibiliza os microdados de trabalho do Brasil:
 
-- 📋 **RAIS** (Relação Anual de Informações Sociais): Dados de todos os vínculos de emprego formal registrados anualmente
-- 💼 **CAGED** (Cadastro Geral de Empregados e Desempregados): Movimentações mensais de emprego (admissões, demissões, etc.)
+- 📋 **RAIS** (Relação Anual de Informações Sociais): vínculos de emprego formal e estabelecimentos, por ano
+- 💼 **CAGED** (Cadastro Geral de Empregados e Desempregados): movimentações mensais (admissões, demissões)
 
 Esses microdados são essenciais para análises de mercado de trabalho, pesquisa acadêmica e inteligência de negócios.
 
@@ -21,21 +21,23 @@ Esses microdados são essenciais para análises de mercado de trabalho, pesquisa
 
 ### Desafios com os dados brutos
 
-Os microdados da PDET vêm em formatos legados (7z, ZIP) com características específicas:
+Os microdados da PDET vêm em formatos legados (`.7z`, `.zip`) com características específicas:
 
-- Colunas com tipos de dados mal definidos (números com espaços e pontos)
-- Arquivos CSV "ragged" com número inconsistente de colunas
-- Codificações de caracteres variáveis
-- Nomes e estruturas de colunas diferentes por ano e dataset
+- Colunas com tipos mal definidos (números com espaços e pontos)
+- CSVs "ragged" com número inconsistente de colunas
+- Codificações `latin-1` (RAIS, CAGED clássico) e `utf-8` (CAGED 2020)
+- Estruturas de colunas que mudam entre anos
 
 ### O que essa ferramenta oferece
 
-✅ **Acesso direto via FTP**: Conecta automaticamente ao servidor da PDET e baixa todos os arquivos  
-✅ **Leitura inteligente**: Detecta formato, codificação e estrutura automaticamente  
-✅ **Conversão de tipos**: Transforma strings em números, booleanos e categóricas  
-✅ **Correção de dados**: Fixa CSVs ragged, trata valores faltantes  
-✅ **Performance**: Usa [Polars](https://pola.rs/) para processamento rápido  
-✅ **Sem dependências pesadas**: Apenas `polars` e `tqdm`
+✅ **Acesso direto via FTP**: conecta a `ftp.mtps.gov.br` e baixa todos os arquivos
+✅ **Detecção automática**: separador, codificação, esquema por ano
+✅ **Conversão de tipos**: strings → INT64/FLOAT64/BOOLEAN/Categorical
+✅ **Correção de ragged CSVs**: trunca linhas longas para o tamanho do header
+✅ **Conversão para Parquet** via `convert_rais` / `convert_caged`
+✅ **Extração de schema** via `extract_columns_for_dataset`
+✅ **Performance**: processamento Polars
+✅ **Dependências mínimas**: apenas `polars` e `tqdm` (binário externo `7z` para descompactar)
 
 ---
 
@@ -45,18 +47,34 @@ Os microdados da PDET vêm em formatos legados (7z, ZIP) com características es
 pip install pdet-data
 ```
 
-Ou para desenvolvimento:
+Em modo editável:
 
 ```bash
-# Clone o repositório
 git clone https://github.com/Quantilica/pdet-data.git
 cd pdet-data
-
-# Instale em modo editável
 pip install -e .
 ```
 
-**Requisitos**: Python 3.10+
+**Requisitos**: Python 3.10+ e `7z` no PATH (para descompactar os arquivos baixados).
+
+---
+
+## 🛠️ CLI
+
+O pacote instala o comando `pdet-data` (também acessível via `python -m pdet_data`) com quatro subcomandos:
+
+```text
+pdet-data <subcommand> [args]
+
+Subcommands:
+  fetch    DEST_DIR              Baixa todo o RAIS e CAGED (dados + docs) para DEST_DIR
+  list     DEST_DIR              Lista no FTP o que ainda falta baixar em DEST_DIR
+  convert  DATA_DIR DEST_DIR     Descompacta e converte CSVs em Parquet
+  columns  DATA_DIR DATASET [-o OUT_DIR]
+                                 Extrai os nomes de colunas de cada arquivo do dataset
+```
+
+`DATASET` em `columns` aceita: `rais-vinculos`, `rais-estabelecimentos`, `caged`, `caged-ajustes`, `caged-2020`.
 
 ---
 
@@ -64,102 +82,132 @@ pip install -e .
 
 ### 1️⃣ Baixar todos os microdados
 
+```bash
+pdet-data fetch ./dados
+```
+
+Equivalente em Python:
+
 ```python
 from pathlib import Path
-from pdet_data import fetch
+from pdet_data import (
+    connect,
+    fetch_rais, fetch_rais_docs,
+    fetch_caged, fetch_caged_docs,
+    fetch_caged_2020, fetch_caged_2020_docs,
+)
 
-# Conecta ao FTP do MTPS
-ftp = fetch.connect()
-
-# Baixa RAIS, CAGED e documentação
-fetch.fetch_rais(ftp=ftp, dest_dir=Path("./dados"))
-fetch.fetch_caged(ftp=ftp, dest_dir=Path("./dados"))
-fetch.fetch_caged_2020(ftp=ftp, dest_dir=Path("./dados"))
-
-ftp.close()
+ftp = connect()
+try:
+    fetch_rais(ftp=ftp, dest_dir=Path("./dados"))
+    fetch_rais_docs(ftp=ftp, dest_dir=Path("./dados"))
+    fetch_caged(ftp=ftp, dest_dir=Path("./dados"))
+    fetch_caged_docs(ftp=ftp, dest_dir=Path("./dados"))
+    fetch_caged_2020(ftp=ftp, dest_dir=Path("./dados"))
+    fetch_caged_2020_docs(ftp=ftp, dest_dir=Path("./dados"))
+finally:
+    ftp.close()
 ```
 
-Ou pela linha de comando:
+### 2️⃣ Converter os arquivos brutos para Parquet
 
 ```bash
-python -m pdet_data run -data-dir ./dados
+pdet-data convert ./dados ./parquet
 ```
 
-### 2️⃣ Ler dados RAIS
+Equivalente em Python:
+
+```python
+from pathlib import Path
+from pdet_data import convert_rais, convert_caged
+
+convert_rais(Path("./dados"), Path("./parquet"))
+convert_caged(Path("./dados"), Path("./parquet"))
+```
+
+### 3️⃣ Ler dados RAIS (baixo nível)
 
 ```python
 from pathlib import Path
 import polars as pl
 from pdet_data.reader import read_rais
 
-# Ler vínculos de emprego (ano 2023)
+# Vínculos de emprego de 2023
 df = read_rais(
     filepath=Path("dados/rais_2023_vinculos.csv"),
     year=2023,
-    dataset="vinculos"
+    dataset="vinculos",   # ou "estabelecimentos"
 )
 
-print(df.schema)
-print(df.head())
-
-# Explorar: Qual é o setor com mais empregados?
-top_setores = df.group_by("cnae_setor").agg(
-    pl.col("id_vinculo").count().alias("n_vinculos")
-).sort("n_vinculos", descending=True).head(10)
-
+top_setores = (
+    df.group_by("cnae_setor")
+      .agg(pl.col("id_vinculo").count().alias("n_vinculos"))
+      .sort("n_vinculos", descending=True)
+      .head(10)
+)
 print(top_setores)
 ```
 
-### 3️⃣ Ler dados CAGED
+### 4️⃣ Ler dados CAGED (clássico ou 2020+)
+
+`read_caged` lê todas as variantes através do parâmetro `dataset`:
+
+| `dataset` | Origem | Período |
+|---|---|---|
+| `caged` | CAGED clássico | até 2019 |
+| `caged-ajustes` | CAGED clássico — declarações fora do prazo | até 2019 |
+| `caged-2020-mov` | Novo CAGED — movimentações no prazo | 2020+ |
+| `caged-2020-for` | Novo CAGED — fora do prazo | 2020+ |
+| `caged-2020-exc` | Novo CAGED — exclusões | 2020+ |
 
 ```python
 from pathlib import Path
 import polars as pl
-from pdet_data.reader import read_caged, read_caged_2020
+from pdet_data.reader import read_caged
 
-# CAGED clássico (até 2019)
-df_caged = read_caged(Path("dados/caged_202012.csv"))
+# CAGED clássico de dezembro/2018
+df_caged = read_caged(
+    Path("dados/caged_201812.csv"),
+    date=201812,
+    dataset="caged",
+)
 
-# CAGED 2020+ (novo formato)
-df_mov = read_caged_2020(Path("dados/caged_mov_202401.csv"))
+# Novo CAGED — movimentações de janeiro/2024
+df_mov = read_caged(
+    Path("dados/cagedmov_202401.csv"),
+    date=202401,
+    dataset="caged-2020-mov",
+)
 
-# Analisar: saldo de emprego por UF
-saldo = df_mov.with_columns(
-    saldo = pl.col("admissoes") - pl.col("demissoes")
-).group_by("uf").agg(
-    pl.col("saldo").sum()
-).sort("saldo", descending=True)
-
+# Saldo por UF
+saldo = (
+    df_mov.with_columns(saldo=pl.col("admissoes") - pl.col("demissoes"))
+          .group_by("uf")
+          .agg(pl.col("saldo").sum())
+          .sort("saldo", descending=True)
+)
 print(saldo)
 ```
 
-### 4️⃣ Processar em lote
+### 5️⃣ Extrair o esquema de colunas de um dataset
+
+```bash
+pdet-data columns ./dados rais-vinculos -o ./schemas
+```
+
+Equivalente em Python:
 
 ```python
 from pathlib import Path
-from pdet_data.reader import read_rais
-import polars as pl
+from pdet_data import extract_columns_for_dataset
 
-# Ler múltiplos anos de RAIS
-anos = [2020, 2021, 2022, 2023]
-dfs = []
-
-for ano in anos:
-    df = read_rais(
-        filepath=Path(f"dados/rais_{ano}_vinculos.csv"),
-        year=ano,
-        dataset="vinculos"
-    )
-    dfs.append(df)
-
-# Concatenar e analisar série temporal
-df_completo = pl.concat(dfs)
-
-evolucao = df_completo.group_by("ano").agg(
-    total_vinculos=pl.col("id_vinculo").count()
-).sort("ano")
-
-print(evolucao)
+extract_columns_for_dataset(
+    data_dir=Path("./dados"),
+    glob_pattern="rais-*.*",
+    output_file=Path("./schemas/rais-vinculos-columns.csv"),
+    encoding="latin-1",
+    has_uf=True,
+)
 ```
 
 ---
@@ -168,226 +216,173 @@ print(evolucao)
 
 ### RAIS (Relação Anual de Informações Sociais)
 
-**O que é**: Base de referência com todos os vínculos de emprego formal do Brasil, declarados anualmente pelos empregadores.
+**O que é**: base de referência com todos os vínculos de emprego formal do Brasil, declarados anualmente pelos empregadores.
 
-**Frequência**: Anual (dezembro de cada ano)
-
-**Datasets**:
-
-- **Vínculos**: Informações sobre cada relação de emprego (salário, ocupação, setor, etc.)
-- **Estabelecimentos**: Dados das empresas/órgãos (CNPJ, endereço, setor econômico)
-
-**Períodos**: 1985 até o presente
-
-**Casos de uso**:
-
-- Análise de renda por região, setor e ocupação
-- Estudos de empregabilidade
-- Pesquisa sobre desigualdade de gênero/raça no trabalho formal
-- Análise de dinâmica de empresas
-
----
-
-### CAGED (Cadastro Geral de Empregados e Desempregados)
-
-**O que é**: Registro de fluxo mensal de emprego, com informações sobre admissões e demissões declaradas pelos empregadores.
-
-**Frequência**: Mensal
-
-**Datasets** (versão clássica, até dezembro/2019):
-
-- **Ajustes**: Correções de dados fora do prazo
-- **Movimentações**: Admissões, demissões e outras movimentações
-
-**Períodos**: 1985 até dezembro de 2019
-
-**Caso de uso**:
-- Indicadores conjunturais de emprego (saldo de vagas)
-- Análise de flutuações cíclicas do mercado de trabalho
-- Monitoramento em tempo real da economia
-
----
-
-### CAGED 2020 (Novo CAGED)
-
-**O que é**: Nova versão do CAGED com estrutura de dados modernizada, implementada a partir de janeiro/2020.
-
-**Frequência**: Mensal
+**Frequência**: anual
 
 **Datasets**:
 
-- **Movimentações**: Admissões, demissões, movimentações declaradas dentro do prazo
-- **Fora do Prazo**: Movimentações declaradas depois do período de referência
-- **Exclusões**: Cancelamento de movimentações (correções feitas retroativamente)
+- `rais-vinculos` — informações sobre cada relação de emprego (salário, ocupação, setor)
+- `rais-estabelecimentos` — dados das empresas/órgãos (CNPJ, endereço, setor econômico)
 
-**Períodos**: Janeiro de 2020 até o presente
+**Casos de uso**: análise de renda por região/setor/ocupação, estudos de empregabilidade, desigualdade de gênero/raça, dinâmica de empresas.
 
-**Melhorias em relação ao CAGED clássico**:
+### CAGED clássico
 
-- Estrutura de dados mais consistente
-- Melhor tratamento de correções (exclusões separadas)
-- Informações mais detalhadas sobre ocupações
+**O que é**: registro de fluxo mensal de emprego.
 
-**Caso de uso**:
+**Frequência**: mensal
 
-- Mesmas análises conjunturais da versão anterior
-- Análises mais granulares com a nova estrutura
+**Datasets**: `caged`, `caged-ajustes`
+
+**Período**: até dezembro de 2019
+
+### Novo CAGED (CAGED 2020)
+
+**O que é**: nova versão do CAGED, a partir de janeiro/2020, com três variantes:
+
+- `caged-2020-mov` — movimentações declaradas no prazo
+- `caged-2020-for` — declaradas fora do prazo
+- `caged-2020-exc` — exclusões (cancelamentos retroativos)
 
 ---
 
 ## 🏗️ Arquitetura
 
 ```
-pdet_data/
-├── fetch.py           # Conexão FTP e download de arquivos
-├── reader.py          # Leitura e processamento de CSVs
-├── storage.py         # Gerenciamento de paths e locais de armazenamento
-├── constants.py       # Nomes de colunas, valores faltantes, tipos por ano
-├── meta.py            # Metadados dos datasets
-└── __init__.py
+src/pdet_data/
+├── __init__.py        # Re-exports da API pública
+├── __main__.py        # CLI (fetch / list / convert / columns)
+├── fetch.py           # Conexão FTP, listagem e download
+├── reader.py          # Leitura e tipagem dos CSVs
+├── wrangling.py       # convert_rais, convert_caged, extract_columns_for_dataset
+├── storage.py         # Convenções de caminhos no destino
+├── constants.py       # Schemas de colunas, NA values, ragged files
+└── meta.py            # Metadados (caminhos no FTP, padrões de filename)
 ```
 
 ### Fluxo de dados
 
 ```
-FTP (PDET)
-    ↓
-download (.7z, .zip)
-    ↓
-extração (.csv)
-    ↓
-detecção automática (ano, dataset, encoding)
-    ↓
-leitura com Polars (com fallback para CSV ragged)
-    ↓
-conversão de tipos (INT, FLOAT, BOOL, CATEGORICAL)
-    ↓
-DataFrame pronto para análise
+FTP (ftp.mtps.gov.br)
+    ↓  fetch_*
+arquivos compactados (.7z, .zip)
+    ↓  convert_* (chama 7z para extrair)
+CSVs (latin-1 ou utf-8, separador detectado)
+    ↓  read_rais / read_caged
+DataFrame Polars com tipos corretos
+    ↓  write_parquet
+Parquet
 ```
 
 ---
 
-## 🔧 API de Funções Principais
+## 🔧 API pública
 
-### `fetch.connect()`
+Todas estas funções são importáveis diretamente de `pdet_data`:
 
-Conecta ao servidor FTP da PDET.
+| Função | Descrição |
+|---|---|
+| `connect()` | Conecta ao FTP da PDET (`ftp.mtps.gov.br`). |
+| `list_rais(ftp)` / `list_rais_docs(ftp)` | Lista arquivos RAIS / documentação. |
+| `list_caged(ftp)` / `list_caged_docs(ftp)` | Lista CAGED clássico / docs. |
+| `list_caged_2020(ftp)` / `list_caged_2020_docs(ftp)` | Lista Novo CAGED / docs. |
+| `fetch_rais(ftp, dest_dir)` / `fetch_rais_docs(...)` | Baixa RAIS / documentação. |
+| `fetch_caged(ftp, dest_dir)` / `fetch_caged_docs(...)` | Baixa CAGED clássico / docs. |
+| `fetch_caged_2020(ftp, dest_dir)` / `fetch_caged_2020_docs(...)` | Baixa Novo CAGED / docs. |
+| `convert_rais(data_dir, dest_dir)` | Descompacta e grava RAIS em Parquet. |
+| `convert_caged(data_dir, dest_dir)` | Descompacta e grava CAGED em Parquet. |
+| `extract_columns_for_dataset(...)` | Extrai os nomes de coluna de cada arquivo do dataset. |
 
-```python
-ftp = fetch.connect()
-```
+Funções de leitura de baixo nível em `pdet_data.reader`:
 
-### `fetch.fetch_rais(ftp, dest_dir)`
-
-Baixa todos os arquivos RAIS disponíveis.
-
-**Parâmetros**:
-
-- `ftp`: Conexão FTP
-- `dest_dir`: Diretório de destino
-
-### `fetch.fetch_caged(ftp, dest_dir)` 
-
-Baixa CAGED clássico (até dez/2019).
-
-### `fetch.fetch_caged_2020(ftp, dest_dir)`
-
-Baixa CAGED 2020+ (jan/2020 em diante).
-
-### `read_rais(filepath, year, dataset, **kwargs)`
-
-Lê arquivo RAIS e retorna DataFrame Polars.
-
-**Parâmetros**:
-
-- `filepath`: Path para arquivo CSV
-- `year`: Ano dos dados
-- `dataset`: `"vinculos"` ou `"estabelecimentos"`
-
-### `read_caged(filepath, **kwargs)`
-
-Lê CAGED clássico.
-
-### `read_caged_2020(filepath, **kwargs)`
-
-Lê CAGED 2020 (movimentações, fora do prazo ou exclusões).
+- `read_rais(filepath, year, dataset, **read_csv_args)` — `dataset` ∈ `{"vinculos", "estabelecimentos"}`
+- `read_caged(filepath, date, dataset, **read_csv_args)` — `dataset` ∈ `{"caged", "caged-ajustes", "caged-2020-mov", "caged-2020-for", "caged-2020-exc"}`
+- `write_parquet(df, filepath)`
+- `decompress(file_metadata)` — invoca o binário `7z` para extrair
 
 ---
 
 ## 📊 Exemplos de Análise
 
-### 1. Qual setor criou mais empregos em 2023?
+### 1. Setores que mais empregam (RAIS 2023)
 
 ```python
 import polars as pl
+from pathlib import Path
 from pdet_data.reader import read_rais
 
-df = read_rais(Path("rais_2023.csv"), year=2023, dataset="vinculos")
-
-top_setores = df.group_by("cnae_secao").agg(
-    pl.col("id_vinculo").count().alias("empregos")
-).sort("empregos", descending=True)
-
-print(top_setores)
+df = read_rais(Path("rais_2023_vinculos.csv"), year=2023, dataset="vinculos")
+print(
+    df.group_by("cnae_secao")
+      .agg(pl.col("id_vinculo").count().alias("empregos"))
+      .sort("empregos", descending=True)
+)
 ```
 
-### 2. Evolução do emprego nos últimos 5 anos
+### 2. Evolução do emprego ao longo dos anos
 
 ```python
 import polars as pl
-from pdet_data.reader import read_rais
 from pathlib import Path
+from pdet_data.reader import read_rais
 
 df = pl.concat([
-    read_rais(Path(f"rais_{y}.csv"), year=y, dataset="vinculos").with_columns(
-        ano=pl.lit(y)
-    )
+    read_rais(Path(f"rais_{y}_vinculos.csv"), year=y, dataset="vinculos")
+        .with_columns(ano=pl.lit(y))
     for y in range(2019, 2024)
 ])
 
-evolucao = df.group_by("ano").agg(
-    empregos=pl.col("id_vinculo").count(),
-    salario_medio=pl.col("vl_remun_medio_nominal").mean()
+evolucao = (
+    df.group_by("ano")
+      .agg(
+          empregos=pl.col("id_vinculo").count(),
+          salario_medio=pl.col("vl_remun_medio_nominal").mean(),
+      )
+      .sort("ano")
 )
-
-print(evolucao.sort("ano"))
+print(evolucao)
 ```
 
-### 3. Desempenho de mercado em tempo real (CAGED 2020)
+### 3. Saldo conjuntural (Novo CAGED, últimos 12 meses)
 
 ```python
 import polars as pl
-from pdet_data.reader import read_caged_2020
 from pathlib import Path
-from datetime import datetime
+from pdet_data.reader import read_caged
 
-# Ler últimos 12 meses
-arquivos = sorted(Path("dados").glob("caged_mov_*.csv"))[-12:]
+arquivos = sorted(Path("dados").glob("cagedmov_*.csv"))[-12:]
 
-df = pl.concat([read_caged_2020(f) for f in arquivos])
+df = pl.concat([
+    read_caged(f, date=int(f.stem.split("_")[-1]), dataset="caged-2020-mov")
+    for f in arquivos
+])
 
-saldo_mensal = df.with_columns(
-    saldo=(pl.col("admissoes") - pl.col("demissoes"))
-).group_by("competencia").agg(
-    saldo_total=pl.col("saldo").sum()
-).sort("competencia")
-
-print(saldo_mensal)
+saldo = (
+    df.with_columns(saldo=pl.col("admissoes") - pl.col("demissoes"))
+      .group_by("competencia")
+      .agg(saldo_total=pl.col("saldo").sum())
+      .sort("competencia")
+)
+print(saldo)
 ```
 
-### 4. Diferenças salariais por gênero e setor
+### 4. Diferenças salariais por gênero e setor (RAIS 2023)
 
 ```python
 import polars as pl
+from pathlib import Path
 from pdet_data.reader import read_rais
 
-df = read_rais(Path("rais_2023.csv"), year=2023, dataset="vinculos")
-
-diferenca = df.group_by(["cnae_secao", "ind_sexo_trabalhador"]).agg(
-    salario_medio=pl.col("vl_remun_medio_nominal").mean(),
-    qtd_pessoas=pl.col("id_vinculo").count()
-).sort(["cnae_secao", "ind_sexo_trabalhador"])
-
+df = read_rais(Path("rais_2023_vinculos.csv"), year=2023, dataset="vinculos")
+diferenca = (
+    df.group_by(["cnae_secao", "ind_sexo_trabalhador"])
+      .agg(
+          salario_medio=pl.col("vl_remun_medio_nominal").mean(),
+          qtd_pessoas=pl.col("id_vinculo").count(),
+      )
+      .sort(["cnae_secao", "ind_sexo_trabalhador"])
+)
 print(diferenca)
 ```
 
@@ -397,38 +392,27 @@ print(diferenca)
 
 A ferramenta detecta e corrige automaticamente:
 
-- ✅ **Valores faltantes**: Diferentes representações (espaços, pontos, valores nulos)
-- ✅ **Formato de números**: Remove espaçamento e converte separadores decimais
-- ✅ **Problemas de encoding**: Suporta latin-1 e utf-8
-- ✅ **CSVs ragged**: Fixa linhas com número inconsistente de colunas
-- ✅ **Tipos de dados**: Converte strings em INT64, FLOAT64, BOOLEAN conforme necessário
+- ✅ **Valores faltantes**: representações listadas em `constants.NA_VALUES`
+- ✅ **Formato de números**: remove espaços, ponto separador de milhar, troca vírgula por ponto decimal
+- ✅ **Encoding**: `latin-1` (RAIS, CAGED clássico) e `utf-8` (Novo CAGED)
+- ✅ **Separador**: detecção automática entre `;`, `\t` e `,`
+- ✅ **CSVs ragged**: arquivos listados em `constants.RAGGED_CSV_FILES` são re-escritos truncando linhas para o tamanho do header
+- ✅ **Tipos de dados**: INT64, FLOAT64, BOOLEAN, Categorical conforme `INTEGER_COLUMNS`, `NUMERIC_COLUMNS`, `BOOLEAN_COLUMNS`
 
 ---
 
 ## 📈 Performance
 
-Para arquivos RAIS completos (>10GB com múltiplos anos):
+Para arquivos RAIS de um ano (~10 GB descompactado):
 
-| Operação | Tempo | Memória |
-|----------|-------|---------|
-| Download | ~5-15 min | - |
-| Leitura (1 arquivo) | ~10s | ~2GB |
-| Agregação simples | <1s | - |
+| Operação | Tempo aproximado | Memória |
+|----------|------------------|---------|
+| Download (FTP) | 5–15 min | – |
+| Descompactação (7z) | 1–3 min | – |
+| Leitura + tipagem | ~10 s | ~2 GB |
+| Agregação simples | < 1 s | – |
 
-*Especificações: processador moderno, 16GB RAM*
-
----
-
-## 🤝 Contribuindo
-
-Encontrou um bug? Quer adicionar suporte para novos datasets? Abra uma [issue](https://github.com/Quantilica/pdet-data/issues) ou envie um PR!
-
-**Áreas para contribuição**:
-
-- Suporte para novos datasets da PDET
-- Otimizações de performance
-- Documentação e exemplos de análise
-- Tratamento de casos extremos nos dados
+*Especificações: processador moderno, 16 GB RAM, SSD.*
 
 ---
 
@@ -450,7 +434,3 @@ MIT
 ## 👤 Autor
 
 Daniel Komesu ([github](https://github.com/dankkom))
-
----
-
-**Última atualização**: Abril de 2026

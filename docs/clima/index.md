@@ -8,9 +8,9 @@ Brazilian meteorological and environmental data from INMET (National Institute o
 
 INMET's BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa — Meteorological Database for Teaching and Research) offers:
 
-- **573+ weather stations** across the country
-- **Hourly observations** dating back decades
-- **30+ meteorological variables**: precipitation, temperature, pressure, humidity, wind, solar radiation, and more
+- **National coverage** of automatic weather stations (~570+ stations in recent years)
+- **Hourly observations** going back to 2000
+- **17 core meteorological variables**: precipitation, temperature, pressure, humidity, wind, solar radiation
 - **Long-term climate trends** for research and planning
 
 ## Tools
@@ -19,10 +19,10 @@ INMET's BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa — Meteoro
 
 Download and analyze historical weather data from Brazil's official meteorological network:
 
-- **573+ Weather Stations** — National coverage with geographic and altitude metadata
-- **Hourly Observations** — Multi-decade historical records
-- **30+ Variables** — Precipitation, temperature, pressure, humidity, wind, radiation
-- **Easy Integration** — Polars DataFrames for seamless analysis
+- **Weather Station Network** — National coverage with geographic and altitude metadata per row
+- **Hourly Observations** — Records from 2000 onward, refreshed yearly by INMET
+- **17 Core Variables** — Precipitation, temperature, pressure, humidity, wind, radiation
+- **Easy Integration** — pandas (default) or polars DataFrames
 - **Official Source** — Data directly from INMET's public portal
 
 ## Use Cases
@@ -49,15 +49,14 @@ Monitor long-term environmental changes, air quality correlations, and climate v
 
 ## Available Variables
 
-Each observation includes 30+ meteorological variables:
+Each observation row includes:
 
-- **Temperature**: Air, maximum, minimum, dew point
-- **Precipitation**: Total rainfall
-- **Pressure**: Atmospheric, maximum, minimum
-- **Humidity**: Relative, maximum, minimum
-- **Wind**: Speed, direction, maximum gusts
-- **Radiation**: Solar radiation (kJ/m²)
-- **And more**: Evapotranspiration, visibility, cloud cover, etc.
+- **Temperature**: Air (dry-bulb), max, min, dew point (max/min)
+- **Precipitation**: Total rainfall (mm)
+- **Pressure**: Atmospheric at station level, max, min (mB)
+- **Humidity**: Relative, max, min (%)
+- **Wind**: Speed (m/s), direction (°), max gust (m/s)
+- **Radiation**: Global solar radiation (kJ/m²)
 
 ## Station Coverage
 

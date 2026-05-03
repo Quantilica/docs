@@ -65,10 +65,47 @@ DATASUS epidemiological data for disease surveillance, health economics, and pub
 
 ```mermaid
 graph TD
-    A[Government Data Sources] --> B[Specialized Extractors<br/>(API clients, validation logic)]
-    B --> C[Processing Pipelines<br/>(transformation, deduplication)]
-    C --> D[Structured Storage<br/>(Parquet, PostgreSQL)]
-    D --> E[Analytics / BI / Research]
+    %% Styling
+    classDef source fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef extractor fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef pipeline fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef storage fill:#f1f8e9,stroke:#33691e,stroke-width:2px;
+    classDef research fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+
+    subgraph Sources [Public Data Sources]
+        direction LR
+        S1[IBGE]:::source
+        S2[Treasury]:::source
+        S3[Labor]:::source
+        S4[Trade]:::source
+    end
+
+    subgraph Acquisition [Specialized Extractors]
+        direction LR
+        A1[sidra-fetcher]:::extractor
+        A2[tddata]:::extractor
+        A3[pdet-data]:::extractor
+        A4[comexdown]:::extractor
+    end
+
+    subgraph Processing [Data Pipelines]
+        P1[sidra-pipelines]:::pipeline
+        P2[sidra-sql]:::pipeline
+    end
+
+    subgraph Storage [Structured Storage]
+        direction LR
+        ST1[(PostgreSQL)]:::storage
+        ST2[Parquet Lake]:::storage
+    end
+
+    R[Research & Analytics]:::research
+
+    %% Connections
+    Sources --> Acquisition
+    Acquisition --> Processing
+    Processing --> Storage
+    Storage --> R
 ```
 
 ## Key Components
@@ -141,82 +178,111 @@ graph TD
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+
+def _param(agregado: str, variavel: str) -> Parametro:
+    return Parametro(
+        agregado=agregado,
+        territorios={"1": ["all"]},
+        variaveis=[variavel],
+        periodos=[],
+        classificacoes={},
+        formato=Formato.A,
+        decimais={"": Precisao.M},
+    )
 
 async def fetch_economic_indicators():
-    client = AsyncSidraClient()
-    
-    # Concurrent fetch: GDP + Inflation + Unemployment
-    results = await asyncio.gather(
-        client.fetch(table="1620", variable=116),  # GDP
-        client.fetch(table="1419", variable=11),   # Inflation
-        client.fetch(table="6381", variable=4099)  # Unemployment
-    )
-    
-    return results
+    async with AsyncSidraClient(timeout=60) as client:
+        # Concurrent fetch: GDP + Inflation + Unemployment
+        return await asyncio.gather(
+            client.get(_param("1620", "116").url()),   # GDP
+            client.get(_param("1419", "63").url()),    # IPCA inflation
+            client.get(_param("6381", "4099").url()),  # Unemployment
+        )
 
 results = asyncio.run(fetch_economic_indicators())
-# 4x faster than sequential fetches
+# Concurrent gathers complete in ~max(latency) instead of sum(latencies).
 ```
 
 ### Labor Market: Big Data Processing with Polars
 
+```bash
+# Bulk-convert every RAIS / CAGED archive to Parquet
+pdet-data convert ./raw ./parquet
+```
+
 ```python
 import polars as pl
-from pdet_data import RAISProcessor
-
-processor = RAISProcessor()
-
-# Transform 8GB RAIS CSV → 0.4GB Parquet (idempotent)
-result = processor.process_year(2023, force_refresh=False)
 
 # Analyze 100M+ employment records efficiently
-df = pl.read_parquet(result.path)
-wage_by_sector = df.group_by("sector").agg([
-    pl.col("salary").mean(),
-    pl.col("employee_id").count()
-])
+df = pl.scan_parquet("parquet/rais-vinculos/2023.parquet")
+wage_by_sector = (
+    df.group_by("cnae_secao")
+      .agg([
+          pl.col("vl_remun_medio_nominal").mean().alias("salario_medio"),
+          pl.col("id_vinculo").count().alias("n_vinculos"),
+      ])
+      .collect()
+)
 ```
 
 ### Fixed-Income: Financial Engineering with FIFO Lot Matching
 
 ```python
-from tddata import PortfolioAnalytics
-
-analytics = PortfolioAnalytics()
-
-# Calculate GIPS-compliant returns with FIFO lot matching
-returns = analytics.calculate_monthly_returns(
-    transactions=my_transactions,
-    method="modified_dietz"  # Weighted cash flow returns
+from tddata import reader
+from tddata.analytics import (
+    calculate_operations_returns,
+    calculate_portfolio_monthly_returns,
 )
+
+operations = reader.read_operations("operacoes-do-tesouro-direto.csv")
+prices     = reader.read_prices("taxas-dos-titulos-ofertados-pelo-tesouro-direto.csv")
+
+# Per-lot returns with FIFO matching (sells matched against oldest buys)
+lots = calculate_operations_returns(operations, prices)
+
+# Monthly portfolio returns using Modified Dietz (GIPS-compliant)
+monthly = calculate_portfolio_monthly_returns(operations, prices)
 ```
 
 ### Trade Analysis: Resilient Extraction with Smart Caching
 
 ```python
-from comexdown import SiscomexDownloader
+from pathlib import Path
+import comexdown
 
-downloader = SiscomexDownloader(verify_ssl=False)
+# Streams in 8 KiB chunks, atomic *.tmp -> rename, retries 3× with backoff.
+# HEAD + Last-Modified makes re-runs effectively free.
+comexdown.get_year(Path("./DATA"), year=2023)
+```
 
-# Idempotent: checks Last-Modified; skips unchanged files
-result = downloader.download_exports(2023, force_refresh=False)
-# First run: 45s | Cached run: 0.8s (57x speedup)
+```bash
+# Or via the CLI for a multi-year batch
+comexdown trade 2014:2023 -o ./DATA
 ```
 
 ### Public Health: Concurrent Crawler for FTP Infrastructure
 
-```python
-from datasus_fetcher import DATASUSCrawler
-
-crawler = DATASUSCrawler(num_workers=5, smart_resume=True)
-
+```sh
 # Multithreaded FTP crawling (6x speedup)
-result = crawler.fetch_subsystem(
-    subsystem="SIM",
-    year_range=(2018, 2023),
-    states="all"
-)
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2018 --end 2023 \
+    --threads 5
 # Sequential: 300 min | Concurrent: 50 min
+```
+
+```python
+# Equivalent Python entrypoint used by the CLI
+from pathlib import Path
+from datasus_fetcher import fetcher
+from datasus_fetcher.slicer import Slicer
+
+fetcher.download_data(
+    datasets=["sim-do-cid10"],
+    destdir=Path("./data"),
+    threads=5,
+    slicer=Slicer(start_time="2018", end_time="2023", regions=None),
+)
 ```
 
 ## Use Cases

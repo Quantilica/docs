@@ -99,125 +99,135 @@ For each bond and date:
 
 ## Workflow: Fetch → Process → Analyze
 
-### Step 1: Fetch Treasury Data (Smart Async with Idempotence)
+### Step 1: Fetch Treasury Data (Async, Last-Modified idempotent)
+
+`tddata.downloader.download` is async and uses CKAN's `last_modified` plus the local filename timestamp to skip already-current files. Up to `max_concurrency` resources are fetched in parallel.
+
+```bash
+# Pull every Treasury Direct dataset once
+tddata download --dataset all -o ./data
+```
 
 ```python
 import asyncio
-from tddata import TreasuryFetcher
+from pathlib import Path
+from tddata import downloader
 
-async def fetch_data():
-    # 5 concurrent connections, skip if files unchanged
-    fetcher = TreasuryFetcher(concurrent_downloads=5, check_etag=True)
-    
-    data = await fetcher.fetch_all(
-        bond_types=["LTN", "NTN-B", "NTN-F", "LFT"],
-        force_refresh=False  # Uses cache if available
-    )
-    
-    await fetcher.aclose()
-    return data
+DATASETS = [
+    "taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+    "operacoes-do-tesouro-direto",
+    "estoque-do-tesouro-direto",
+    "investidores-do-tesouro-direto",
+    "vendas-do-tesouro-direto",
+    "recompras-do-tesouro-direto",
+]
 
-result = asyncio.run(fetch_data())
-print(f"✓ Data ready: {len(result)} bond types")
+async def fetch_all(dest_dir: Path):
+    for ds in DATASETS:
+        await downloader.download(dest_dir, dataset_id=ds, max_concurrency=3)
+
+asyncio.run(fetch_all(Path("./data")))
 ```
 
-### Step 2: Calculate Per-Lot Returns (FIFO Matching)
+### Step 2: Read CSVs into typed Polars DataFrames
 
 ```python
-from tddata import PortfolioAnalytics
-import polars as pl
+from pathlib import Path
+from tddata import reader
 
-# Your transaction history
-transactions = pl.read_parquet("transactions.parquet")
+data_dir = Path("./data")
 
-analytics = PortfolioAnalytics()
-
-# FIFO: automatically matches sales to oldest purchases
-lots = analytics.calculate_operations_returns(
-    transactions=transactions,
-    method="fifo",
-    include_coupons=True  # Add coupon income
-)
-
-print(lots.select(["purchase_date", "sale_date", "annualized_return"]))
+prices     = reader.read_prices(next(data_dir.glob("taxas-dos-titulos*.csv")))
+operations = reader.read_operations(next(data_dir.glob("operacoes-do-tesouro-direto*.csv")))
+stock      = reader.read_stock(next(data_dir.glob("estoque-do-tesouro-direto*.csv")))
+investors  = reader.read_investors(next(data_dir.glob("investidores-do-tesouro-direto*.csv")))
 ```
 
-### Step 3: Calculate Monthly Portfolio Returns (Modified Dietz)
+### Step 3: Per-Lot Returns with FIFO Matching
 
 ```python
-# Your holdings and cash flows
-holdings = pl.read_parquet("holdings.parquet")
-prices = pl.read_parquet("prices.parquet")
-cash_flows = pl.read_parquet("cash_flows.parquet")  # Deposits, withdrawals, coupons
+from tddata.analytics import calculate_operations_returns
 
-# GIPS-compliant portfolio performance
-monthly_returns = analytics.calculate_portfolio_monthly_returns(
-    holdings=holdings,
+lots = calculate_operations_returns(
+    operations=operations,
     prices=prices,
-    cash_flows=cash_flows,
-    method="modified_dietz"
+    coupons=None,  # optional coupons DataFrame
 )
+# One row per lot (closed or still open). FIFO matches sells against oldest buys
+# and splits partial sells into closed + open positions automatically.
+```
 
-print(monthly_returns.select(["year_month", "return_pct"]))
+### Step 4: Monthly Portfolio Returns (Modified Dietz, GIPS-compliant)
+
+```python
+from tddata.analytics import calculate_portfolio_monthly_returns
+
+monthly = calculate_portfolio_monthly_returns(
+    operations=operations,
+    prices=prices,
+    coupons=None,
+)
+# Columns: month, monthly_return, cumulative_return, portfolio_value, net_cash_flow
+print(monthly.select(["month", "monthly_return", "cumulative_return"]))
 ```
 
 ## Best Practices
 
-### 1. Always Use Async for Data Fetching
-
-Concurrent downloads are dramatically faster:
+### 1. Use the async downloader; let `max_concurrency` do the work
 
 ```python
 import asyncio
-from tddata import TreasuryFetcher
+from pathlib import Path
+from tddata import downloader
 
-# ❌ Slow: Sequential (30s)
-fetcher = TreasuryFetcher(concurrent_downloads=1)
-
-# ✅ Fast: Concurrent (5-10s)
-fetcher = TreasuryFetcher(concurrent_downloads=5)
-
-async def main():
-    data = await fetcher.fetch_all(force_refresh=False)
-    await fetcher.aclose()
-    return data
-
-asyncio.run(main())
+# `download` overlaps up to `max_concurrency` resource downloads inside one
+# dataset. It also HEAD-checks CKAN's last_modified, so re-runs only fetch
+# what changed.
+asyncio.run(
+    downloader.download(
+        Path("./data"),
+        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+        max_concurrency=5,
+    )
+)
 ```
 
 ### 2. Use Modified Dietz for Portfolio Returns
 
-Never use simple returns when cash flows occur:
+`calculate_portfolio_monthly_returns` already implements Modified Dietz, weighting cash flows by timing within each month — never roll your own simple-return formula when buys/sells happen mid-period.
 
 ```python
-# ❌ Wrong: Ignores timing of deposits
-simple = (ending_value - beginning_value) / beginning_value
+from tddata.analytics import calculate_portfolio_monthly_returns
 
-# ✅ Correct: GIPS-compliant (Modified Dietz)
-monthly_returns = analytics.calculate_portfolio_monthly_returns(
-    holdings=holdings,
+# ❌ Wrong: ignores the timing of buys/sells within each month
+# simple = (ending_value - beginning_value) / beginning_value
+
+# ✅ GIPS-compliant: Modified Dietz weights cash flows by their day-of-month
+monthly_returns = calculate_portfolio_monthly_returns(
+    operations=operations,
     prices=prices,
-    cash_flows=cash_flows,
-    method="modified_dietz"  # Weights deposits by timing
 )
 ```
 
 ### 3. Include Coupons in FIFO Returns
 
-Always inject coupon income for accurate per-lot returns:
+Pass a coupons DataFrame to `calculate_operations_returns` / `calculate_portfolio_monthly_returns` so coupon income is injected as positive cash flow on the payment dates:
 
 ```python
-# ✅ Correct: Includes coupon payments
-lots = analytics.calculate_operations_returns(
-    transactions=transactions,
-    include_coupons=True  # Coupon income added
+from tddata import reader
+from tddata.analytics import calculate_operations_returns
+
+coupons = reader.read_interest_coupons(coupons_csv)
+
+# ✅ Includes coupon payments
+lots_with_coupons = calculate_operations_returns(
+    operations=operations,
+    prices=prices,
+    coupons=coupons,
 )
 
-# ❌ Incomplete: Misses coupons
-lots = analytics.calculate_operations_returns(
-    transactions=transactions,
-    include_coupons=False  # Only price appreciation
-)
+# ❌ Misses coupon income for NTN-B / NTN-F lots
+lots_no_coupons = calculate_operations_returns(operations, prices)
 ```
 
 ### 4. Use Polars, Not Pandas

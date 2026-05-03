@@ -16,82 +16,54 @@ This guide covers practical patterns used across all tools in the Brazilian Publ
 ### Pattern: Check Before Downloading
 
 ```python
-# ✅ Idempotent: Check Last-Modified before downloading
-downloader = SiscomexDownloader(verify_ssl=False)
-result = downloader.download_exports(2023, force_refresh=False)
-# HEAD request checks Last-Modified
-# Downloads only if remote file is newer than local file
-# Speedup: 45s first run → 0.8s cached run (57x faster)
+# ✅ Idempotent: comexdown HEAD-checks Last-Modified before every GET
+from pathlib import Path
+import comexdown
 
-# ❌ Not idempotent: Always re-download
-result = downloader.download_exports(2023, force_refresh=True)
-# Wastes bandwidth and time
+comexdown.get_year(Path("./DATA"), year=2023)
+# First run: streams the CSV in 8 KiB chunks
+# Re-runs: HEAD shows Last-Modified == local mtime, GET is skipped entirely
 ```
+
+There is no `force_refresh` flag — to re-fetch, delete the local file first.
 
 ### Pattern: Smart Resume
 
-```python
-# ✅ Resume interrupted downloads
-crawler = DATASUSCrawler(
-    num_workers=5,
-    smart_resume=True  # Enable size-based idempotence
-)
+```sh
+# ✅ datasus-fetcher always compares remote vs. local size and skips matches
+# First attempt: interrupted partway
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2023 --end 2023 --threads 5
 
-# First attempt: interrupted at 70%
-result = crawler.fetch_subsystem("SIM", year=2023, force_refresh=True)
-# Downloads 70%, then connection drops
-
-# Second attempt: automatically resumes
-result = crawler.fetch_subsystem("SIM", year=2023, force_refresh=False)
-# Compares remote file size with local file
-# Skips complete files, downloads only remaining 30%
+# Second attempt: re-run the same command
+# Already-complete files are skipped, only missing/mismatched ones re-download
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2023 --end 2023 --threads 5
 ```
 
-### Pattern: Modification Time Hashing
+### Pattern: Skip Already-Downloaded Archives
 
 ```python
-# ✅ Skip re-processing unchanged input files
-processor = RAISProcessor()
+# ✅ pdet-data fetchers check if dest_filepath already exists and skip it.
+# Re-running `pdet-data fetch ./raw` only downloads new RAIS / CAGED archives.
+from pathlib import Path
+from pdet_data import connect, fetch_rais
 
-# First run: processes RAIS_2023.zip (62 seconds)
-result = processor.process_year(2023, force_refresh=False)
-
-# Second run: checks modification time of input file
-# If unchanged, skips processing entirely (0.08 seconds)
-result = processor.process_year(2023, force_refresh=False)
-# 778x speedup on re-runs
+ftp = connect()
+try:
+    fetch_rais(ftp=ftp, dest_dir=Path("./raw"))  # idempotent
+finally:
+    ftp.close()
 ```
 
-### Pattern: Application-Level Caching
+### Pattern: Dry-Run Before Bulk Downloads
 
-```python
-import hashlib
-import json
-
-# Store metadata about downloaded files
-def cache_key(subsystem, year, state):
-    return f"{subsystem}_{year}_{state}"
-
-def is_cached(subsystem, year, state):
-    cache_file = f"cache/{cache_key(subsystem, year, state)}.json"
-    if not os.path.exists(cache_file):
-        return False
-    
-    with open(cache_file) as f:
-        cached = json.load(f)
-    
-    # Check if remote file has changed
-    remote_size = get_remote_file_size(subsystem, year, state)
-    return cached["file_size"] == remote_size
-
-# Use cache to skip unnecessary downloads
-if not is_cached("SIM", 2023, "SP"):
-    result = crawler.fetch_sliced(
-        subsystem="SIM",
-        state="SP",
-        year=2023
-    )
-    # Update cache with file metadata
+```sh
+# ✅ Preview what `datasus-fetcher` would download before committing
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2018 --end 2023 --regions sp \
+    --dry-run
+# Prints filenames + sizes + grand total, no bytes transferred
 ```
 
 ## 2. Use Concurrency for I/O-Bound Operations
@@ -126,64 +98,52 @@ agregados = asyncio.run(fetch_multiple_metadata())
 
 ### Pattern: Multithreaded FTP Crawling
 
-```python
-from datasus_fetcher import DATASUSCrawler
+```sh
+# ✅ Multithreaded: 5 concurrent FTP fetchers
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2018 --end 2023 \
+    --threads 5
 
-# ✅ Multithreaded: 5 concurrent FTP connections
-crawler = DATASUSCrawler(
-    num_workers=5,
-    max_recursive_depth=3,
-    smart_resume=True
+# Sequential (--threads 1): 300 minutes
+# Concurrent (--threads 5):   50 minutes (~6x faster)
+```
+
+Equivalent Python entrypoint:
+
+```python
+from pathlib import Path
+from datasus_fetcher import fetcher
+from datasus_fetcher.slicer import Slicer
+
+fetcher.download_data(
+    datasets=["sim-do-cid10"],
+    destdir=Path("./data"),
+    threads=5,
+    slicer=Slicer(start_time="2018", end_time="2023", regions=None),
 )
-
-result = crawler.fetch_subsystem(
-    subsystem="SIM",
-    year_range=(2018, 2023),
-    states="all"
-)
-
-# Sequential: 300 minutes
-# Concurrent (5 workers): 50 minutes (6x faster)
 ```
 
-### Pattern: Concurrent Multi-Year Downloads
+### Pattern: Multi-Year Batches with Idempotent Re-runs
+
+`comexdown` is sequential by design — it leans on temporal idempotency instead of parallelism. Pass a year range and let the HEAD/`Last-Modified` check make re-runs cheap:
+
+```bash
+# First run downloads everything; later runs only fetch what changed.
+comexdown trade 2014:2023 -o ./DATA
+```
 
 ```python
-from comexdown import SiscomexDownloader
-import concurrent.futures
+from pathlib import Path
+import comexdown
 
-downloader = SiscomexDownloader(verify_ssl=False)
-
-# ✅ Download 10 years concurrently
-def download_year(year):
-    return downloader.download_exports(year, force_refresh=False)
-
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    results = executor.map(download_year, range(2014, 2024))
-    results = list(results)
-
-# Sequential: 10 years × 45s = 450 seconds
-# Concurrent (5 workers): ~90 seconds (5x faster)
+for year in range(2014, 2024):
+    comexdown.get_year(Path("./DATA"), year=year)  # HEAD-cached
 ```
 
-### Anti-Pattern: Nested Concurrency
-
-```python
-# ❌ WRONG: Concurrent fetches inside concurrent downloads
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    def download_and_fetch(year):
-        export_data = downloader.download_exports(year)
-        
-        # Starting 3 more concurrent operations inside
-        results = asyncio.run(fetch_economic_indicators())
-        
-        return export_data, results
-    
-    # This creates 5 × N threads, causing excessive context switching
-
-# ✅ RIGHT: Keep concurrency at one level
-# Either concurrent downloads OR concurrent API fetches, not both
-```
+If you genuinely want to overlap unrelated work (e.g. a SECEX download
+alongside a SIDRA fetch), do it at the orchestration layer with `asyncio` or
+`concurrent.futures` — but keep concurrency at a single level to avoid thread
+explosion.
 
 ## 3. Store Results in Parquet, Not CSV
 
@@ -226,20 +186,19 @@ df = pl.read_parquet(
 df = pl.read_csv("large_file.csv")  # Must read all 50 columns
 ```
 
-### Pattern: Automatic Tool Output
+### Pattern: Bulk Convert to Parquet
+
+```bash
+# pdet-data ships convert_rais / convert_caged behind a CLI subcommand.
+# It decompresses each .7z, parses with the per-year schema, and writes Parquet.
+pdet-data convert ./raw ./parquet
+```
 
 ```python
 import polars as pl
 
-# Most tools already output Parquet
-processor = RAISProcessor()
-result = processor.process_year(2023)
-# Automatically saves as RAIS_2023.parquet
-
-# Never convert back to CSV for analysis
-df = pl.read_parquet(result.path)  # Efficient reading
-
-# Even if you export results, keep intermediate data in Parquet
+# Read once, then keep everything in Parquet for analysis
+df = pl.read_parquet("parquet/rais-vinculos/2023.parquet")
 # CSV is only for sharing with non-technical stakeholders
 ```
 
@@ -318,70 +277,38 @@ by_sector = (
 - **Exponential backoff**: Prevents overwhelming the server with retry storms
 - **Transparent**: You don't need to manually implement retry logic
 
-### Pattern: Configure Retries
+### Pattern: Built-in Retries
 
-```python
-from datasus_fetcher import DATASUSCrawler
+`datasus-fetcher` retries each FTP transfer up to 3 times on transient errors before giving up on that file — other threads keep going. To make a long-running batch survive intermittent failures, just re-run the command; the size-based idempotence check picks up where it left off.
 
-# ✅ Production-ready: Configure retries
-crawler = DATASUSCrawler(
-    num_workers=5,
-    timeout=60,         # 60-second timeout per request
-    max_retries=5,      # Retry up to 5 times on failure
-    backoff_factor=2    # Exponential backoff: 1s, 2s, 4s, 8s, 16s
-)
-
-result = crawler.fetch_subsystem("SIM", year=2023)
-# Transient failures are handled automatically
-# Retries use exponential backoff: waits before retrying
-
-# ❌ Not production-ready: No retry configuration
-crawler = DATASUSCrawler(num_workers=1)
-# Fails on first transient error; no automatic retry
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2023 --end 2023 --threads 5
 ```
 
 ### Pattern: Wrapping Retries in Your Code
 
 ```python
 import time
-from datetime import datetime
 
-def fetch_with_retry(func, max_retries=3, backoff_factor=2):
-    """
-    Retry a function with exponential backoff.
-    
-    Args:
-        func: Function to call
-        max_retries: Maximum number of retries
-        backoff_factor: Multiplier for backoff delay
-    
-    Returns:
-        Result of successful function call
-    """
+def with_retry(func, max_retries=3, backoff_factor=2):
+    """Retry a function with exponential backoff."""
     last_exception = None
-    
     for attempt in range(max_retries):
         try:
             return func()
         except Exception as e:
             last_exception = e
-            
             if attempt < max_retries - 1:
                 delay = backoff_factor ** attempt
-                print(f"Attempt {attempt + 1} failed: {e}")
-                print(f"Retrying in {delay} seconds...")
+                print(f"Attempt {attempt + 1} failed: {e}; retrying in {delay}s")
                 time.sleep(delay)
-            else:
-                print(f"All {max_retries} attempts failed")
-    
     raise last_exception
 
-# Use it
-def fetch_data():
-    crawler = DATASUSCrawler(num_workers=5)
-    return crawler.fetch_subsystem("SIM", year=2023)
-
-result = fetch_with_retry(fetch_data, max_retries=5, backoff_factor=2)
+# Example: wrap a SIDRA call (datasus-fetcher already retries internally)
+from sidra_fetcher import SidraClient
+client = SidraClient()
+result = with_retry(lambda: client.get_agregado(1620), max_retries=5)
 ```
 
 ## 6. Validate Data at the Source
@@ -397,25 +324,21 @@ result = fetch_with_retry(fetch_data, max_retries=5, backoff_factor=2)
 ### Pattern: Size-Based Validation
 
 ```python
+import os
+from pathlib import Path
+
 # ✅ Validate file size to detect truncation
-def validate_downloaded_file(expected_size_bytes, actual_path):
-    actual_size = os.path.getsize(actual_path)
-    
-    if actual_size < expected_size_bytes * 0.95:
-        # Downloaded file is less than 95% of expected size
-        # Probably truncated due to connection drop
+def validate_downloaded_file(expected_size_bytes: int, path: Path) -> None:
+    actual = path.stat().st_size
+    if actual < expected_size_bytes * 0.95:
         raise ValueError(
             f"Downloaded file appears truncated:\n"
             f"  Expected: {expected_size_bytes} bytes\n"
-            f"  Actual: {actual_size} bytes\n"
-            f"  Please retry download"
+            f"  Actual:   {actual} bytes"
         )
-    
-    return True
 
-# After downloading
-result = crawler.fetch_subsystem("SIM", year=2023)
-validate_downloaded_file(expected_size=1000000000, actual_path=result.path)
+# datasus-fetcher already does this for you on every run — re-run to heal a
+# truncated download. For your own pipelines, apply the same pattern after fetch.
 ```
 
 ### Pattern: Schema Validation
@@ -487,13 +410,12 @@ validate_rais_row_count(df, year=2023)
 ### Pattern: Streaming Chunks
 
 ```python
-# ✅ Streaming download (8KB chunks): constant memory overhead
-from comexdown import SiscomexDownloader
+# ✅ comexdown streams every download in 8 KiB chunks via urllib —
+#    constant memory regardless of file size, atomic *.tmp -> rename on success.
+from pathlib import Path
+import comexdown
 
-downloader = SiscomexDownloader(verify_ssl=False)
-result = downloader.download_exports(2023)
-# Streams in 8KB chunks regardless of file size
-# Memory usage: ~8 MB (constant)
+comexdown.get_year(Path("./DATA"), year=2023)
 ```
 
 ### Pattern: Lazy Polars Processing
@@ -545,53 +467,42 @@ combined = pl.concat(all_results)
 ### Pattern: Store Metadata with Parquet
 
 ```python
-import polars as pl
 import json
+import polars as pl
 from datetime import datetime
+from pathlib import Path
 
 # ✅ Save metadata alongside data
-processor = RAISProcessor()
-result = processor.process_year(2023, force_refresh=False)
+parquet_path = Path("parquet/rais-vinculos/2023.parquet")
+df = pl.read_parquet(parquet_path)
 
 metadata = {
-    "source": "RAIS 2023",
+    "source": "RAIS 2023 (vinculos)",
     "download_timestamp": datetime.now().isoformat(),
-    "fetch_method": "pdet_data.RAISProcessor",
-    "row_count": len(pl.read_parquet(result.path)),
-    "columns": pl.read_parquet(result.path).columns,
+    "fetch_method": "pdet_data.convert_rais",
+    "row_count": df.height,
+    "columns": df.columns,
     "transformations": [
-        "Converted to Parquet",
-        "Removed invalid salary values (salary <= 0)",
-        "Deduplicated records by employee_id"
-    ]
+        "Decompressed via 7z",
+        "Parsed CSV with per-year schema (pdet_data.reader.read_rais)",
+        "Cast INTEGER_COLUMNS / NUMERIC_COLUMNS / BOOLEAN_COLUMNS",
+        "Wrote Parquet via polars.DataFrame.write_parquet",
+    ],
 }
 
-with open("rais_2023_metadata.json", "w") as f:
-    json.dump(metadata, f, indent=2)
+parquet_path.with_suffix(".metadata.json").write_text(json.dumps(metadata, indent=2))
 ```
 
 ### Pattern: Documentation Extraction
 
-```python
-# ✅ Download documentation alongside data
-crawler = DATASUSCrawler(num_workers=3, smart_resume=True)
-
-result = crawler.fetch_subsystem_with_docs(
-    subsystem="SIM",
-    year=2023,
-    include_layouts=True,        # Schema files
-    include_documentation=True,  # PDFs
-    include_lookup_tables=True   # Code mappings
-)
-
-# Now you have:
-# - SIM_2023.parquet (data)
-# - SIM_2023_layout_@2024-04-10T14:32:15Z.pdf (schema)
-# - SIM_2023_docs_@2024-04-10T14:32:15Z.pdf (documentation)
-# - SIM_2023_codebook_@2024-04-10T14:32:15Z.csv (ICD-10 codes)
-
-# Later, readers know exactly which layout/docs apply to this dataset
+```sh
+# ✅ Download data + codebooks + auxiliary tables together
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
+datasus-fetcher docs --data-dir ./docs sim
+datasus-fetcher aux  --data-dir ./aux  sim
 ```
+
+`.dbc` filenames already encode `dataset_uf_period_YYYYMMDD`, so multiple DATASUS revisions of the same period coexist on disk. Use `datasus-fetcher archive --archive-data-dir ./archive` to rotate non-latest versions out of the active tree without losing them.
 
 ### Pattern: Transformation Log
 

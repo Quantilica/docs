@@ -78,77 +78,66 @@ Quantify disease burden using complete SINASC (birth registrations) and SIM (mor
 
 ### Step 1: Fetch Subsystem Data (Multithreaded)
 
-```python
-from datasus_fetcher import DATASUSCrawler
-import polars as pl
+The primary entrypoint is the `datasus-fetcher` CLI. To download SIM (mortality, ICD-10) for all states 2018–2023:
 
-# Initialize crawler with thread pool
-crawler = DATASUSCrawler(
-    num_workers=5,          # 5 concurrent FTP connections
-    max_recursive_depth=3,  # Nested directory depth
-    smart_resume=True       # Skip complete files
-)
-
-# Concurrently download SIM mortality data (2018-2023, all states)
-result = crawler.fetch_subsystem(
-    subsystem="SIM",        # Mortality (SIM = Sistema de Informações de Mortalidade)
-    year_range=(2018, 2023),
-    states="all",
-    force_refresh=False     # Use cache if complete
-)
-
-print(f"✓ Downloaded {len(result.files)} files in {result.elapsed:.1f}s")
-print(f"  Speedup vs sequential: {result.sequential_time / result.elapsed:.1f}x")
-
-# Load data
-df = pl.read_parquet(result.consolidated_path)
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2018 --end 2023 \
+    --threads 5
 ```
+
+Equivalent Python entrypoint (used internally by the CLI):
+
+```python
+from pathlib import Path
+from datasus_fetcher import fetcher
+from datasus_fetcher.slicer import Slicer
+
+slicer = Slicer(start_time="2018", end_time="2023", regions=None)
+
+fetcher.download_data(
+    datasets=["sim-do-cid10"],
+    destdir=Path("./data"),
+    threads=5,
+    slicer=slicer,
+)
+```
+
+Subsequent runs are idempotent: files whose remote size matches the local copy are skipped automatically.
 
 ### Step 2: Semantic Slicing (Smart Subset Selection)
 
-```python
-from datasus_fetcher import DATASUSCrawler
-import polars as pl
+`--start`, `--end`, and `--regions` slice the download surgically. Example: SIM mortality for São Paulo only, 2020–2022:
 
-crawler = DATASUSCrawler(num_workers=5, smart_resume=True)
-
-# Example: "Fetch SIM mortality data for São Paulo, 2020-2022"
-result = crawler.fetch_subsystem_sliced(
-    subsystem="SIM",
-    state="SP",
-    year_range=(2020, 2022),
-    force_refresh=False
-)
-
-print(f"Downloaded {result.files_count} files (surgical slice)")
-print(f"  Storage saved: {result.full_size_gb - result.sliced_size_gb:.1f}GB")
-
-# Load and analyze
-df = pl.read_parquet(result.path)
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2020 --end 2022 \
+    --regions sp
 ```
 
-### Step 3: Extract Documentation & Metadata
+Use `--dry-run` to preview the file list (sizes, totals) without downloading anything:
 
-```python
-from datasus_fetcher import DATASUSCrawler
-
-crawler = DATASUSCrawler(num_workers=3, smart_resume=True)
-
-# Download layouts, PDFs, and lookup tables alongside data
-result = crawler.fetch_subsystem_with_docs(
-    subsystem="SIM",
-    year=2023,
-    include_layouts=True,        # Download schema files
-    include_documentation=True,  # Download PDFs
-    include_lookup_tables=True   # Download code mappings
-)
-
-print(f"Data files: {result.data_files_count}")
-print(f"Layout files: {result.layout_files_count}")
-print(f"Documentation: {result.doc_files_count}")
-
-# Layouts and docs versioned with @timestamp for reproducibility
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2020 --end 2022 --regions sp \
+    --dry-run
 ```
+
+### Step 3: Extract Documentation & Auxiliary Tables
+
+Codebooks, layout PDFs, and reference tables live in separate subcommands:
+
+```sh
+# Documentation (data dictionaries, layouts) for SIM, SIH, CNES
+datasus-fetcher docs --data-dir ./docs sim sih cnes
+
+# Auxiliary lookup tables (ICD codes, municipalities, procedures, ...)
+datasus-fetcher aux --data-dir ./aux sim sih cnes
+```
+
+### Step 4: Reading the `.dbc` files
+
+`datasus-fetcher` is a pure downloader — it does not parse `.dbc`. To load the files in Python use [PySUS](https://github.com/AlertaDengue/PySUS), or convert them to `.dbf`/`.csv` first with [dbf2dbc](https://github.com/AlertaDengue/dbf2dbc); R users can read them directly with [read.dbc](https://github.com/dankkom/read.dbc).
 
 ## Tools
 
@@ -231,156 +220,96 @@ Effectiveness: 99% of files unchanged month-to-month
 
 ## Best Practices
 
-### 1. Use Multithreading for Large Subsystems
+### 1. Use Multiple Threads for Large Subsystems
 
-Always enable concurrent workers:
+Big subsystems (SIA-PA, CNES-PF) ship gigabytes of microdata. Bump `--threads`:
 
-```python
-# ❌ Slow: Single-threaded (hours)
-crawler = DATASUSCrawler(num_workers=1)
+```sh
+# Slow: single-threaded
+datasus-fetcher data --data-dir ./data sia-pa
 
-# ✅ Fast: Multiple workers (minutes)
-crawler = DATASUSCrawler(num_workers=5)
+# Faster: 6 concurrent FTP connections
+datasus-fetcher data --data-dir ./data sia-pa --threads 6
 ```
 
-### 2. Use Slicing for Specific Subsets
+### 2. Slice with `--start` / `--end` / `--regions`
 
-Download only what you need:
+Don't pull the whole archive when you only need a slice:
 
-```python
-# ❌ Inefficient: Download entire SIM 1990-2023
-crawler.fetch_subsystem("SIM", year_range=(1990, 2023))
+```sh
+# Wasteful: full SIM history, all states
+datasus-fetcher data --data-dir ./data sim-do-cid10
 
-# ✅ Efficient: Download only SP mortality 2018-2022
-crawler.fetch_sliced(
-    subsystem="SIM",
-    filters={"state": "SP", "year_range": (2018, 2022)}
-)
+# Targeted: SP mortality 2018–2022 only
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2018 --end 2022 --regions sp
 ```
 
-### 3. Enable Smart Resume
+### 3. Re-run for Incremental Updates
 
-Skip unnecessary re-downloads:
+datasus-fetcher compares remote size against local size and skips identical files automatically. Re-running the same command monthly only downloads what actually changed.
 
-```python
-# ✅ Correct: Skip files unchanged since last run
-crawler = DATASUSCrawler(smart_resume=True)
-result = crawler.fetch_subsystem("SIM", year=2023, force_refresh=False)
+### 4. Archive Old Versions
 
-# Compares remote file size with local; skips if identical
+DATASUS reissues files with new dates. Use `archive` to move non-latest versions out of the active tree:
+
+```sh
+datasus-fetcher archive \
+    --data-dir ./data \
+    --archive-data-dir ./data-archive
 ```
 
-### 4. Extract Documentation Alongside Data
+### 5. Pair `data` + `docs` + `aux` for Reproducibility
 
-Ensure reproducibility:
+Download the data, the codebooks, and the lookup tables together so analyses remain reproducible across DATASUS revisions:
 
-```python
-# ✅ Download data + layouts + docs (versioned with timestamp)
-result = crawler.fetch_subsystem_with_docs(
-    subsystem="SIM",
-    year=2023,
-    include_layouts=True,
-    include_documentation=True,
-    include_lookup_tables=True
-)
-
-# Later: Use exact documentation version from download time
-```
-
-### 5. Handle ICD-10 Code Lookups
-
-Medical codes require lookup tables:
-
-```python
-from datasus_fetcher import ICD10Lookup
-
-lookup = ICD10Lookup()
-
-# Decode ICD-10 code
-cause_name = lookup.get_description("I10")  # "Essential (primary) hypertension"
-
-# Find codes by keyword
-respiratory = lookup.search("respiratory")
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2018
+datasus-fetcher docs --data-dir ./docs sim
+datasus-fetcher aux  --data-dir ./aux  sim
 ```
 
 ## Common Analyses
 
-### Temporal Trends
+After downloading, parse `.dbc` to a DataFrame (here via [PySUS](https://github.com/AlertaDengue/PySUS)) and analyze with pandas/polars.
+
+### Temporal Trends — Dengue Notifications
+
+```sh
+datasus-fetcher data --data-dir ./data sinan-deng --start 2020 --end 2024
+```
 
 ```python
+from pathlib import Path
 import polars as pl
+from pysus.utilities.readdbc import read_dbc
 
-# Multi-year dengue trend
-years = [2020, 2021, 2022, 2023, 2024]
+frames = []
+for path in Path("./data/sinan-deng").rglob("*.dbc"):
+    df = pl.from_pandas(read_dbc(str(path), encoding="latin-1"))
+    frames.append(df)
 
-dengue_data = []
-for year in years:
-    data = client.fetch_disease(disease="dengue", year=year)
-    dengue_data.append(data)
-
-combined = pl.concat(dengue_data)
-
-# Plot trend
-total_by_year = combined.group_by("year").agg(
-    pl.col("cases").sum()
-).sort("year")
-
-print(total_by_year)
+cases = pl.concat(frames, how="diagonal_relaxed")
+yearly = cases.group_by("NU_ANO").len().sort("NU_ANO")
+print(yearly)
 ```
 
-### Geographic Variation
+### Geographic Variation — SIM Mortality by State
+
+```sh
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2022 --end 2022
+```
 
 ```python
-# Dengue incidence by state (per 100k)
-dengue = client.fetch_disease(
-    disease="dengue",
-    year=2024,
-    group_by="state"
+deaths_by_uf = (
+    cases
+    .group_by("CODMUNRES")           # municipality of residence
+    .len()
+    .sort("len", descending=True)
 )
-
-# Normalize by population
-population_2024 = ...  # Get from external source
-dengue = dengue.join(population_2024, on="state")
-
-dengue = dengue.with_columns([
-    (pl.col("cases") / pl.col("population") * 100000).alias("incidence_per_100k")
-])
-
-# Find hotspots
-hotspots = dengue.sort("incidence_per_100k", descending=True).head(10)
 ```
 
-### Mortality Trends
-
-```python
-import polars as pl
-
-# Top causes of death over time
-years = [2018, 2019, 2020, 2021, 2022, 2023]
-
-mortality_data = []
-for year in years:
-    data = client.fetch_mortality(year=year, group_by="cause")
-    data = data.with_columns(pl.lit(year).alias("year"))
-    mortality_data.append(data)
-
-combined = pl.concat(mortality_data)
-
-# Top 5 causes
-top_causes = (
-    combined
-    .group_by("cause")
-    .agg(pl.col("deaths").sum().alias("total_deaths"))
-    .sort("total_deaths", descending=True)
-    .head(5)
-)
-
-# Get trend for each
-for cause in top_causes["cause"]:
-    trend = combined.filter(pl.col("cause") == cause).sort("year")
-    print(f"\n{cause}:")
-    print(trend)
-```
+(Join `CODMUNRES` against the IBGE municipality table downloaded via `datasus-fetcher aux` to roll up by state.)
 
 ## Learn More
 

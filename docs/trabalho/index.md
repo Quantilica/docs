@@ -121,40 +121,44 @@ Guide to working with large labor datasets using Polars and Parquet.
 
 ### Step 1: Transform Raw RAIS to Parquet (Idempotent)
 
+Download once with the CLI, then convert every archive in bulk. `convert_rais` decompresses each `.7z`, parses the CSV with the right schema for that year, and writes a Parquet alongside.
+
+```bash
+# Download every RAIS / CAGED archive (idempotent: skips files already present)
+pdet-data fetch ./raw
+
+# Decompress + parse + write Parquet for every archive in ./raw
+pdet-data convert ./raw ./parquet
+```
+
+Equivalent Python:
+
 ```python
-from pdet_data import RAISProcessor
-import polars as pl
+from pathlib import Path
+from pdet_data import connect, fetch_rais, convert_rais
 
-processor = RAISProcessor()
+ftp = connect()
+try:
+    fetch_rais(ftp=ftp, dest_dir=Path("./raw"))
+finally:
+    ftp.close()
 
-# Idempotent: checks modification time, skips if unchanged
-result = processor.process_year(
-    year=2023,
-    force_refresh=False,  # Use cache if available
-    output_format="parquet"
-)
-
-print(f"✓ Processed {result.row_count:,} records")
-print(f"  Compression: {result.input_size_gb:.1f}GB → {result.output_size_mb:.0f}MB")
-
-# Load processed data
-df = pl.read_parquet(result.path)
+convert_rais(Path("./raw"), Path("./parquet"))
 ```
 
 ### Step 2: Multi-Year Analysis with Polars
 
 ```python
 import polars as pl
-from pdet_data import RAISProcessor
+from pathlib import Path
 
-processor = RAISProcessor()
-
-# Process 30 years (idempotent—cached runs are instant)
+# Lazy scan — Polars only reads the columns/rows you actually use
 all_data = []
 for year in range(1994, 2024):
-    result = processor.process_year(year, force_refresh=False)
-    df = pl.read_parquet(result.path).with_columns(
-        pl.lit(year).alias("year")
+    df = (
+        pl.scan_parquet(Path(f"parquet/rais-vinculos/{year}.parquet"))
+          .with_columns(pl.lit(year).alias("year"))
+          .collect()
     )
     all_data.append(df)
 
