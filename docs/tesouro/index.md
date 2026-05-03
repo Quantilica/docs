@@ -1,6 +1,10 @@
-# Treasury Direct (Tesouro Direto)
+# Treasury (Finance)
 
-Brazilian government fixed-income securities platform. Treasury Direct offers direct investment in federal government bonds for individuals and institutions.
+Brazil's Federal Treasury (Tesouro Nacional) publishes two very different kinds of data: **fixed-income securities microdata** through the Treasury Direct (Tesouro Direto) program, and **fiscal aggregates** through reports such as the *Resultado do Tesouro Nacional* (RTN) — revenues, expenses, and primary results of the Federal Government.
+
+This section covers two packages: **[tddata](tddata.md)** for Treasury Direct microdata and portfolio analytics, and **[rtnpy](rtnpy.md)** for the RTN fiscal-results spreadsheet.
+
+## tddata: Treasury Direct Analytics
 
 **tddata** is an industrial-grade financial engineering suite for Treasury Direct microdata—far more than a data client, it abstracts government communication and natively implements sophisticated financial mathematics for portfolio analytics.
 
@@ -59,6 +63,7 @@ Build and optimize Brazilian government bond portfolios:
 - Asset allocation and duration management
 
 ### Quantitative Analysis
+
 Model term structure and price dynamics:
 
 - Yield curve modeling
@@ -66,10 +71,13 @@ Model term structure and price dynamics:
 - Market microstructure
 
 ### Academic Research
+
 Study emerging market fixed-income dynamics with 20+ years of historical data.
 
 ### Risk Management
+
 Calculate bond-level and portfolio-level risks:
+
 - Interest rate risk (duration)
 - Liquidity risk (bid-ask spreads)
 - Credit risk (government solvency)
@@ -264,32 +272,51 @@ df = pl.read_parquet("treasury_processed.parquet")
 ## Key Concepts
 
 ### Prefixed Bonds (LTN, NTN-F)
+
 You know the exact return when you buy. Fixed interest rate, paid at maturity (LTN) or semi-annually (NTN-F).
 
 ### IPCA-Indexed Bonds (NTN-B)
+
 Principal adjusts by IPCA inflation. Coupon rate is typically 4-6% above inflation—the real return.
 
 ### Selic-Linked Bonds (LFT)
+
 Interest rate tracks the Selic overnight rate. Minimal interest rate risk, but subject to inflation.
 
 ### Duration
+
 Measures bond price sensitivity to interest rate changes. Higher duration = greater price volatility.
 
 ### Yield Curve
+
 Relationship between yield and time-to-maturity. Steep curve suggests rate increases expected; flat suggests uncertainty.
 
 ## Tools in This Section
 
 ### [tddata](tddata.md)
+
 Industrial-grade financial engineering suite for Treasury Direct. Master:
+
 - **Smart async fetching** with idempotence (skip unchanged files)
 - **FIFO lot matching** (per-lot returns with coupon injection)
 - **Modified Dietz** (GIPS-compliant portfolio performance)
 - **Polars processing** (10x faster than Pandas)
 - **High-performance analytics** (10M+ rows in seconds)
 
+### [rtnpy](rtnpy.md)
+
+Downloader and normalizer for the *Resultado do Tesouro Nacional* (RTN) fiscal-results spreadsheet:
+
+- **Auto-download** of the latest RTN workbook with timestamp dedup
+- **24 supported sheets** (monthly / quarterly / annual; current / constant; % of GDP)
+- **Long-format normalization** with year/month or year/quarter split
+- **Account hierarchy expansion** as a separate dimension table
+- **CLI export** to formatted Excel or SQLite
+
 ### [Portfolio Returns Guide](calculo-retornos.md)
+
 Deep dive into fixed-income mathematics:
+
 - YTM and duration calculations
 - Modified Dietz methodology
 - Real returns for inflation-indexed bonds
@@ -303,6 +330,7 @@ Deep dive into fixed-income mathematics:
 ## When to Use tddata
 
 **Use tddata when:**
+
 - Building production Treasury Direct pipelines
 - Calculating GIPS-compliant portfolio returns
 - Analyzing millions of historical transactions
@@ -310,6 +338,7 @@ Deep dive into fixed-income mathematics:
 - Combining Treasury data with other data sources
 
 **Use simple scripts when:**
+
 - Quick one-off analysis
 - Small datasets (<100MB)
 - Academic exploration
