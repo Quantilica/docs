@@ -7,14 +7,15 @@ Calculate returns, YTM, and interest rate sensitivity for fixed-income portfolio
 ### Yield to Maturity (YTM)
 
 Annual return if bond is held to maturity. Accounts for:
+
 - Current market price
 - Coupon payments
 - Principal repayment at maturity
 - Reinvestment at same yield
 
-```
-Price = Σ(Coupon / (1 + YTM)^t) + Principal / (1 + YTM)^T
-```
+$$
+\text{Price} = \sum_{t=1}^{T} \frac{\text{Coupon}}{(1 + \text{YTM})^t} + \frac{\text{Principal}}{(1 + \text{YTM})^T}
+$$
 
 For Brazilian bonds, YTM is already provided by **tddata**.
 
@@ -22,13 +23,14 @@ For Brazilian bonds, YTM is already provided by **tddata**.
 
 Measure of bond price sensitivity to interest rate changes:
 
-```
-Duration_modified = Duration_macaulay / (1 + YTM)
-```
+$$
+D_{\text{modified}} = \frac{D_{\text{macaulay}}}{1 + \text{YTM}}
+$$
 
-**Rule of thumb:** 1% yield increase → Duration% price decrease
+**Rule of thumb:** 1% yield increase → $D_{\text{modified}}$% price decrease
 
 Example: 5-year bond with 5 years duration:
+
 - Yield rises 1% → Price falls ~5%
 - Yield falls 1% → Price rises ~5%
 
@@ -36,22 +38,24 @@ Example: 5-year bond with 5 years duration:
 
 Interest earned since last coupon date but not yet paid:
 
-```
-Accrued = Coupon × (Days since last coupon) / (Days in coupon period)
-```
+$$
+\text{Accrued} = \text{Coupon} \times \frac{\text{Days since last coupon}}{\text{Days in coupon period}}
+$$
 
 **Clean price**: Quoted bond price (ex-accrued)
+
 **Dirty price**: Clean price + accrued interest = what you actually pay
 
 ### Real Return (IPCA-Indexed)
 
 For NTN-B bonds, separate nominal yield into components:
 
-```
-Nominal Yield = Real Yield + Inflation Expectation
-```
+$$
+\text{Nominal Yield} = \text{Real Yield} + \text{Inflation Expectation}
+$$
 
 Example:
+
 - NTN-B yield: 5.0%
 - Expected IPCA: 3.5%
 - Implied real yield: 1.5%
