@@ -338,22 +338,22 @@ Explicit is better than implicit. Know what data is being fetched, transformed, 
 - Real-time GDP, inflation, employment statistics
 - Async fetching for ad-hoc analysis; declarative TOML pipelines for production warehousing
 
-**Fixed-Income Analysis?** → [Treasury Direct (tddata)](tesouro/index.md)
+**Fixed-Income Analysis?** → [Treasury Direct (tddata)](tesouro/tddata.md)
 
 - GIPS-compliant portfolio returns with Modified Dietz
 - FIFO inventory control for per-lot attribution
 
-**Employment & Wages?** → [Labor Market (pdet-data)](trabalho/index.md)
+**Employment & Wages?** → [Labor Market (pdet-data)](trabalho/pdet-data.md)
 
 - 50M+ row RAIS microdata processed in seconds with Polars
 - Monthly job flows from CAGED
 
-**Trade Patterns?** → [Foreign Trade (comexdown)](comex/index.md)
+**Trade Patterns?** → [Foreign Trade (comexdown)](comex/comexdown.md)
 
 - Complete Siscomex datasets with temporal idempotency
 - 57x speedup via smart caching
 
-**Disease Surveillance?** → [Public Health (datasus-fetcher)](saude/index.md)
+**Disease Surveillance?** → [Public Health (datasus-fetcher)](saude/datasus-fetcher.md)
 
 - Multithreaded FTP crawling (6-10x faster than sequential)
 - Complete microdata from DATASUS epidemiological systems
@@ -369,5 +369,5 @@ Explicit is better than implicit. Know what data is being fetched, transformed, 
 
 - **Quick win**: Fetch macroeconomic data with [sidra-fetcher (async)](ibge/index.md)
 - **Production pipeline**: Build a Treasury Direct analytics engine with [tddata](tesouro/index.md)
-- **Big data**: Process RAIS with [pdet-data](trabalho/index.md) and Polars
-- **Complete ecosystem**: Download DATASUS with [datasus-fetcher concurrent crawler](saude/index.md)
+- **Big data**: Process RAIS with [pdet-data](trabalho/pdet-data.md) and Polars
+- **Complete ecosystem**: Download DATASUS with [datasus-fetcher concurrent crawler](saude/datasus-fetcher.md)

@@ -245,7 +245,6 @@ For one full RAIS year (~10 GB uncompressed):
 
 ## Learn More
 
-- **[Labor Market Overview](index.md)** — All labor data tools
-- **[Foreign Trade Data](../comex/index.md)** — Trade statistics
+- **[Foreign Trade Data](../comex/comexdown.md)** — Trade statistics
 - **[Architecture](../architecture/overview.md)** — System design
 - **[PDET Official](http://pdet.mte.gov.br/microdados-rais-e-caged)** — Government source

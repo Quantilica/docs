@@ -76,6 +76,7 @@ graph TD
 **[sidra-fetcher](sidra-fetcher.md) — Industrial-Grade SDK**
 
 An advanced Python SDK for robust extraction:
+
 - **Dual clients:** `SidraClient` (sync) vs `AsyncSidraClient` (async, 3x faster)
 - **Smart resilience:** Exponential backoff, automatic retries
 - **URL abstraction:** No magic strings; `Parametro` class
@@ -83,6 +84,7 @@ An advanced Python SDK for robust extraction:
 - **Multiple formats:** Parquet, CSV, PostgreSQL, Polars DataFrames
 
 **Best for:**
+
 - Jupyter notebooks & quick exploration
 - One-off analysis
 - Small datasets (<100 MB)

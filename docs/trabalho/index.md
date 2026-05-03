@@ -38,7 +38,7 @@ Monthly administrative record of job flows:
 
 ```mermaid
 graph TD
-    A[Brazilian Ministry of Labor Raw Data <br/> RAIS: 8 GB/year CSV | CAGED: 200MB/mo CSV] --> B[pdet-data <br/> Transformation Engine]
+    A[Brazilian Ministry of Labor Raw Data <br/> RAIS: 8 GB/year CSV CAGED: 200MB/mo CSV] --> B[pdet-data <br/> Transformation Engine]
     
     subgraph pdet-data
         B1[Multithreaded Polars processing]

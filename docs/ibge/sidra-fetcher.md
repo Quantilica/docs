@@ -63,6 +63,7 @@ The library exposes two HTTP clients based on `httpx`:
 ### Industrial-Grade Resilience (Smart Retries)
 
 Tolerance policies via `tenacity`:
+
 - ✅ Retries up to 3 attempts on each metadata method
 - ✅ Exponential backoff for periodos requests (`min=3`, `max=30` seconds)
 - ✅ Handles transient `httpx` failures (timeouts, network errors)
@@ -70,6 +71,7 @@ Tolerance policies via `tenacity`:
 ### URL Abstraction Engine (`Parametro`)
 
 The `sidra_fetcher.sidra` module eliminates magic strings:
+
 - ✅ Transforms Python dicts/lists → valid SIDRA URLs transparently
 - ✅ Native enums for output `Formato` (`A`, `C`, `N`, `U`) and `Precisao` (`S`, `M`, `D0`–`D20`)
 - ✅ Reverse engineering: `parameter_from_url()` parses any SIDRA URL → `Parametro` object
@@ -77,12 +79,14 @@ The `sidra_fetcher.sidra` module eliminates magic strings:
 ### Strict Domain Modeling (Strong Typing)
 
 Metadata responses are parsed into rich dataclasses:
+
 - ✅ `Agregado` (root) → `Variavel`, `Classificacao`, `Categoria`, `Periodicidade`, `AgregadoNivelTerritorial`
 - ✅ `Periodo`, `Localidade`, `NivelTerritorial`
 - ✅ `IndicePesquisaAgregados`, `IndiceAgregado` for catalog navigation
 - ✅ IDE autocompletion + linter integration
 
 ### Additional Features
+
 - ✅ Streaming HTTP responses (low memory footprint)
 - ✅ JSON parsing of all responses
 - ✅ Reader helpers (`read_metadados`, `read_periodos`, `read_localidades`)
@@ -91,19 +95,19 @@ Metadata responses are parsed into rich dataclasses:
 
 ## Installation
 
-=== "pip"
+### "pip"
 
 ```bash
 pip install sidra-fetcher
 ```
 
-=== "uv"
+### "uv"
 
 ```bash
 uv pip install sidra-fetcher
 ```
 
-=== "from source"
+### "from source"
 
 ```bash
 pip install git+https://github.com/Quantilica/sidra-fetcher.git
