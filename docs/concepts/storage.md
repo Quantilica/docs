@@ -51,6 +51,7 @@ df = pl.read_parquet(
 **What**: Relational database, SQL interface
 
 **Pros**:
+
 - ✅ ACID transactions (consistency)
 - ✅ Concurrent access (multiple users)
 - ✅ Real-time updates
@@ -59,11 +60,13 @@ df = pl.read_parquet(
 - ✅ Foreign keys & referential integrity
 
 **Cons**:
+
 - ❌ Requires infrastructure (server, maintenance)
 - ❌ Slower for very large analytical queries
 - ❌ Row-oriented (not columnar)
 
 **Best for**:
+
 - Live data (constantly updated)
 - Applications (need consistency)
 - Multi-user environments
@@ -100,17 +103,20 @@ result = pl.read_database_uri(
 **What**: Plain text, comma-separated values
 
 **Pros**:
+
 - ✅ Human-readable
 - ✅ Works everywhere
 - ✅ No special tools needed
 
 **Cons**:
+
 - ❌ Slow to read large files (must parse text)
 - ❌ Large file size (no compression)
 - ❌ No type information (everything is string)
 - ❌ Type ambiguity (is "1.5" a number or string?)
 
 **Best for**:
+
 - Small datasets (<100 MB)
 - Data exchange with non-technical users
 - One-time analysis
@@ -136,16 +142,19 @@ df = pl.read_csv("data.csv")
 **What**: Lightweight SQL database in a single file
 
 **Pros**:
+
 - ✅ SQL interface
 - ✅ No server needed (just a file)
 - ✅ ACID transactions
 - ✅ Good for small teams
 
 **Cons**:
+
 - ❌ Limited concurrent writes
 - ❌ Not suitable for web-scale
 
 **Best for**:
+
 - Small projects (< 100 GB)
 - Desktop applications
 - Single-server deployments

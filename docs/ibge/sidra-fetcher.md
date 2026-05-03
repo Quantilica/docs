@@ -93,21 +93,21 @@ Metadata responses are parsed into rich dataclasses:
 
 === "pip"
 
-    ```bash
-    pip install sidra-fetcher
-    ```
+```bash
+pip install sidra-fetcher
+```
 
 === "uv"
 
-    ```bash
-    uv pip install sidra-fetcher
-    ```
+```bash
+uv pip install sidra-fetcher
+```
 
 === "from source"
 
-    ```bash
-    pip install git+https://github.com/Quantilica/sidra-fetcher.git
-    ```
+```bash
+pip install git+https://github.com/Quantilica/sidra-fetcher.git
+```
 
 ## Async/Await: High-Throughput Metadata Extraction
 
