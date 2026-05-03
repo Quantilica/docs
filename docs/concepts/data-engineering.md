@@ -391,6 +391,5 @@ if change > 0.50:
 
 ## See Also
 
-- [Pipelines](pipelines.md)
-- [Storage](storage.md)
+- [Pipelines & Storage](pipelines.md)
 - [Architecture Overview](../architecture/overview.md)

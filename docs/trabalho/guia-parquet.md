@@ -470,6 +470,5 @@ df.write_parquet("rais_fixed.parquet")
 
 ## See Also
 
-- [Labor Market Overview](index.md)
 - [pdet-data Tool](pdet-data.md)
 - [Polars Documentation](https://pola-rs.github.io/)

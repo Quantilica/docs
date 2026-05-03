@@ -1,8 +1,41 @@
-# inmet-bdmep-data: Historical Weather Station Data from Brazil's INMET
+# Climate & Environment
 
-**inmet-bdmep-data** is a Python package to download and process historical meteorological data from INMET's BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa — Meteorological Database for Teaching and Research).
+Brazilian meteorological and environmental data from INMET (National Institute of Meteorology).
+
+**inmet-bdmep-data** provides access to Brazil's comprehensive historical weather station network, enabling climate research, agricultural analysis, hydrology studies, and environmental monitoring.
 
 ## Overview
+
+INMET's BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa — Meteorological Database for Teaching and Research) offers:
+
+- **National coverage** of automatic weather stations (~570+ stations in recent years)
+- **Hourly observations** going back to 2000
+- **17 core meteorological variables**: precipitation, temperature, pressure, humidity, wind, solar radiation
+- **Long-term climate trends** for research and planning
+
+## Use Cases
+
+### Climate Research
+
+Analyze long-term climate patterns, temperature trends, and seasonal variations across Brazil.
+
+### Agricultural Planning & Modeling
+
+Use precipitation and temperature data to inform crop selection, irrigation scheduling, and agricultural risk assessment.
+
+### Hydrology & Water Resources
+
+Analyze rainfall patterns and runoff to inform water resource management, drought planning, and flood prediction.
+
+### Energy Planning
+
+Solar radiation and wind data for renewable energy assessment and grid planning.
+
+### Environmental Impact Assessment
+
+Monitor long-term environmental changes, air quality correlations, and climate variability.
+
+## Access
 
 Access Brazil's official historical weather data with:
 
@@ -138,6 +171,5 @@ pytest
 
 ## Learn More
 
-- **[Climate & Environment Overview](index.md)** — All climate data tools
-- **[Public Health Data](../saude/index.md)** — Health surveillance systems
+- **[Public Health Data](../saude/datasus-fetcher.md)** — Health surveillance systems
 - **[Architecture](../architecture/overview.md)** — System design

@@ -1,6 +1,35 @@
-# comexdown: Brazil's Foreign Trade Data Downloader
+# Foreign Trade (Comex)
 
-**comexdown** is a Python package and CLI to download Brazilian foreign trade microdata published by SECEX/COMEX (Secretaria de Comércio Exterior, Ministério da Economia).
+Brazilian import/export data from Siscomex (Integrated Foreign Trade System).
+
+**comexdown** is a network-resilient extraction agent for Siscomex data — engineered to handle legacy government infrastructure with idempotent downloads and streaming efficiency.
+
+## The Challenge
+
+Programmatically extracting Brazilian trade data hits real infrastructure obstacles:
+
+- **Colossal volume**: Gigabyte-scale CSV files exhaust naive in-memory downloads
+- **Unstable servers**: Bandwidth throttling, SSL certificate issues, occasional drops
+- **Redundant downloads**: Without modern APIs, re-running pipelines re-fetches files that have not changed
+
+**comexdown** solves these through idempotent downloads, streaming chunks, SSL resilience, and auto-retry.
+
+## Use Cases
+
+### Trade Analysis
+Understand Brazil's export patterns, specialization, and comparative advantage by commodity and destination.
+
+### Competitiveness Studies
+Analyze export growth, product diversification, market penetration, and competitive position.
+
+### Economic Indicators
+Trade balance and flows as leading indicators of economic activity and currency movements.
+
+### Supply Chain Research
+Track imports of intermediate goods, inputs, and capital equipment by sector.
+
+### Market Intelligence
+Monitor competitor countries and market access trends.
 
 ## Features
 
@@ -144,6 +173,5 @@ Every download starts with a HEAD request. `remote_is_more_recent` compares `Las
 
 ## Learn More
 
-- **[Foreign Trade Overview](index.md)** — All trade data tools
-- **[IBGE Macro Data](../ibge/index.md)** — Aggregate trade statistics
+- **[IBGE Macroeconomics](../ibge/index.md)** — GDP and economic data
 - **[Architecture](../architecture/overview.md)** — System design

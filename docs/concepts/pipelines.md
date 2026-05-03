@@ -504,8 +504,90 @@ if gdp["value"].is_null().sum() > 0.5 * len(gdp):
 gdp.write_parquet("gdp.parquet")
 ```
 
+## Storage & Formats
+
+After extracting and transforming data, choosing the right storage format is critical. Here's how to decide:
+
+### Parquet (Recommended for Analysis)
+
+**What**: Columnar storage format, compressed
+
+**Pros**:
+
+- ✅ Highly compressed (80%+ savings vs CSV)
+- ✅ Fast reads (columnar: only read needed columns)
+- ✅ No database needed (just files)
+- ✅ Language-agnostic (Python, R, Rust, etc.)
+- ✅ Schema preserved
+- ✅ Cloud-native (works with S3, GCS, Azure)
+
+**Best for**: Historical data (archive), analytical queries (dashboards, reports), large datasets
+
+### PostgreSQL (Recommended for Operations)
+
+**What**: Relational database, SQL interface
+
+**Pros**:
+
+- ✅ ACID transactions (consistency)
+- ✅ Concurrent access (multiple users)
+- ✅ Real-time updates
+- ✅ SQL interface (powerful queries)
+- ✅ Backups & replication built-in
+
+**Best for**: Live data (constantly updated), applications (need consistency), multi-user environments
+
+### CSV (Simple, Human-Readable)
+
+**Pros**:
+
+- ✅ Human-readable
+- ✅ Works everywhere
+- ✅ No special tools needed
+
+**Cons**:
+
+- ❌ Slow to read large files
+- ❌ Large file size (no compression)
+- ❌ No type information
+
+**Best for**: Small datasets (<100 MB), data exchange with non-technical users
+
+### Format Comparison
+
+| Format | Size | Speed | Schema | Type Safety | Concurrent |
+|--------|------|-------|--------|-------------|------------|
+| CSV | ⭐⭐⭐ (large) | ⭐ (slow) | ❌ | ❌ | ✅ (read-only) |
+| Parquet | ⭐ (tiny) | ⭐⭐⭐ (fast) | ✅ | ✅ | ❌ (read-only) |
+| PostgreSQL | ⭐⭐ (medium) | ⭐⭐ (fast) | ✅ | ✅ | ✅ |
+
+### Strategy: Parquet Archive + PostgreSQL Live
+
+```
+Parquet (long-term storage)
+    ↓ [yearly archive]
+    gdp_2015.parquet
+    gdp_2024.parquet
+
+PostgreSQL (live data)
+    ↓ [latest months only]
+    Last 12 months of data
+    Updated daily
+    
+Benefits:
+  - Efficient archival (cheap storage)
+  - Fast live queries (current data in DB)
+  - Recovery from archives if needed
+```
+
+### Best Practices
+
+1. **Use appropriate formats**: CSV for development, Parquet for storage, PostgreSQL for operations
+2. **Version your data**: `gdp_2024_01_10.parquet`, `gdp_2024_01_15.parquet` (corrections), etc.
+3. **Archive old data**: Keep last 2 years in PostgreSQL, archive older data to Parquet
+4. **Index critical columns**: Speed up common queries in PostgreSQL
+
 ## See Also
 
 - [Data Engineering](data-engineering.md)
-- [Storage](storage.md)
 - [Architecture Overview](../architecture/overview.md)

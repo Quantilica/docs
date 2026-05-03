@@ -1,6 +1,6 @@
 site_name: Brazilian Public Data Suite
 site_description: Tools for extracting, processing and analyzing Brazilian public datasets.
-site_author: D.K. Komesu
+site_author: Komesu, D.K.
 
 theme:
   name: material
@@ -11,6 +11,7 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.indexes
     - content.code.copy
     - content.code.annotate
     - search.highlight
@@ -26,42 +27,29 @@ nav:
       - Design Philosophy: design-philosophy.md
       - Best Practices: best-practices.md
 
-  - IBGE (Macroeconomics):
-      - Overview: ibge/index.md
-      - sidra-fetcher: ibge/sidra-fetcher.md
-      - sidra-sql: ibge/sidra-sql.md
-      - sidra-pipelines: ibge/sidra-pipelines.md
+  - Data Tools & Sources:
+      - IBGE (Macroeconomics):
+          - ibge/index.md
+          - sidra-fetcher: ibge/sidra-fetcher.md
+          - sidra-sql: ibge/sidra-sql.md
+          - sidra-pipelines: ibge/sidra-pipelines.md
+      - Treasury (Finance):
+          - tesouro/index.md
+          - tddata: tesouro/tddata.md
+          - Portfolio Returns Guide: tesouro/calculo-retornos.md
+      - Labor Market:
+          - trabalho/index.md
+          - pdet-data: trabalho/pdet-data.md
+          - Parquet + Polars Guide: trabalho/guia-parquet.md
+      - Foreign Trade: comex/comexdown.md
+      - Public Health: saude/datasus-fetcher.md
+      - Climate & Environment: clima/inmet-bdmep-data.md
 
-  - Treasury (Finance):
-      - Overview: tesouro/index.md
-      - tddata: tesouro/tddata.md
-      - Portfolio Returns Guide: tesouro/calculo-retornos.md
-
-  - Labor Market:
-      - Overview: trabalho/index.md
-      - pdet-data: trabalho/pdet-data.md
-      - Parquet + Polars Guide: trabalho/guia-parquet.md
-
-  - Foreign Trade:
-      - Overview: comex/index.md
-      - comexdown: comex/comexdown.md
-
-  - Public Health:
-      - Overview: saude/index.md
-      - datasus-fetcher: saude/datasus-fetcher.md
-
-  - Climate & Environment:
-      - Overview: clima/index.md
-      - inmet-bdmep-data: clima/inmet-bdmep-data.md
-
-  - Architecture:
-      - Overview: architecture/overview.md
+  - Architecture & Concepts:
+      - Platform Architecture: architecture/overview.md
       - Design Principles: architecture/design-principles.md
-
-  - Concepts:
       - Data Engineering: concepts/data-engineering.md
-      - Pipelines: concepts/pipelines.md
-      - Storage: concepts/storage.md
+      - Pipelines & Storage: concepts/pipelines.md
 
 plugins:
   - search

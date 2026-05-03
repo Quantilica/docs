@@ -1,6 +1,51 @@
-# datasus-fetcher
+# Public Health (Saúde)
 
-**datasus-fetcher** is a Python package and command-line tool to bulk-download raw microdata files (`.dbc`) from [DATASUS](https://datasus.saude.gov.br)'s public FTP server (`ftp.datasus.gov.br`). It's a pure, reliable downloader that gives you organized local copies of Brazil's largest public health database.
+Brazilian health surveillance data from DATASUS (Health Data Department).
+
+**datasus-fetcher** is a multithreaded concurrent crawler engineered specifically for the massive microdata of Brazil's Unified Health System (SUS) hosted on legacy FTP servers.
+
+Far more than a simple data client, it understands the complex taxonomy of Brazilian health systems (SIHSUS, SIM, SINASC, SIA, etc.) and abstracts the inefficiency of legacy FTP infrastructure into a high-performance, fault-tolerant network pipeline.
+
+## The Challenge
+
+Obtaining complete Brazilian public health microdata encounters severe infrastructure barriers:
+
+### 1. FTP Protocol Limitations
+
+DATASUS primarily hosts data on public FTP (`ftp.datasus.gov.br`). The FTP protocol is inherently:
+- Synchronous (one file at a time)
+- Prone to silent transfer failures
+- Subject to connection timeouts and bandwidth throttling
+- Severely limited per-thread bandwidth
+
+### 2. Labyrinth of Directories & Cryptic Nomenclature
+
+Files (often in proprietary `.dbc` format) are scattered across dozens of nested directories. Filenames encode complex business logic positionally:
+- `RDSP2001.dbc` = AIH Reduced, SP state, Year 2020, Month 01
+- Manual parsing is error-prone and brittle
+
+### 3. Infeasible Sequential Downloads
+
+Downloading all data (all states, all years, all subsystems) sequentially via scripts can take weeks. Network failures mid-transfer mean total loss of progress.
+
+**datasus-fetcher** solves these through multithreaded concurrency, semantic file parsing, and intelligent resumption.
+
+## Use Cases
+
+### Epidemiological Surveillance
+Track disease outbreaks, geographic spread, seasonal patterns, and incidence trends in real-time.
+
+### Mortality Analysis
+Study causes of death, health disparities by region/demographic, and mortality trends over time using complete microdata.
+
+### Health Economics & Resource Allocation
+Analyze hospital utilization patterns, procedure volumes, cost-effectiveness, and resource allocation efficiency.
+
+### Health Inequities Research
+Examine disparities in health outcomes, access to care, and mortality differences across socioeconomic and demographic groups.
+
+### Disease Burden Studies
+Quantify disease burden using complete SINASC (birth registrations) and SIM (mortality) datasets for population-level epidemiology.
 
 ## Key Features
 
@@ -200,7 +245,6 @@ datasus-fetcher downloads `.dbc` files, which is a compressed format used by DAT
 
 ## Learn More
 
-- **[Public Health Overview](index.md)** — All health data tools
-- **[IBGE Labor Statistics](../ibge/index.md)** — Employment and demographics
+- **[IBGE Health Surveys](../ibge/index.md)** — Population health statistics
 - **[Architecture](../architecture/overview.md)** — System design
 - **[DATASUS Official (Portuguese)](https://datasus.saude.gov.br/)** — Government source
