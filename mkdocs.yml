@@ -36,6 +36,7 @@ nav:
       - Treasury (Finance):
           - tesouro/index.md
           - tddata: tesouro/tddata.md
+          - rtnpy: tesouro/rtnpy.md
           - Portfolio Returns Guide: tesouro/calculo-retornos.md
       - Labor Market:
           - trabalho/index.md
