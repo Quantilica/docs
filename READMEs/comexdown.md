@@ -2,51 +2,86 @@
 
 ![GitHub](https://img.shields.io/github/license/Quantilica/comexdown?style=flat-square) ![PyPI](https://img.shields.io/pypi/v/comexdown?style=flat-square)
 
-This package contains functions to download brazilian foreign trade data
-published by [Ministerio da Economia(ME)/Secretaria de Comercio Exterior (SCE)][1].
+Python package and CLI to download Brazilian foreign trade microdata published by [Ministério da Economia / Secretaria de Comércio Exterior (SECEX/COMEX)][1].
 
 ## Installation
-
-`comexdown` package is available on PyPI, so just use `pip`!
 
 ```shell
 pip install comexdown
 ```
 
-## Usage
+## Python usage
 
 ```python
+from pathlib import Path
 import comexdown
 
-# Download main NCM table in the directory ./DATA
-comexdown.ncm(table="ncm", path="./DATA")
+data_dir = Path("./DATA")
 
-# Download 2019 exports data file in the directory ./DATA
-comexdown.exp(year=2019, path="./DATA")
+# Auxiliary code table (NCM)
+comexdown.get_table(data_dir, table="ncm")
+
+# Trade transactions for 2023 (exports + imports, NCM-based)
+comexdown.get_year(data_dir, year=2023)
+
+# Imports only, 2023, with municipality breakdown
+comexdown.get_year(data_dir, year=2023, imp=True, mun=True)
+
+# Everything (long-running, multi-GB)
+comexdown.download_all(data_dir)
 ```
+
+Other entrypoints: `get_year_nbm(data_dir, year)` for legacy NBM data (1989–1996) and `get_complete(data_dir, exp=..., imp=..., mun=...)` for the bundled all-years files.
 
 ## Command line tool
 
-Download data on Brazilian foreign trade transactions (Exports / Imports).
+```text
+comexdown <command> [args]
 
-You can specify a range of years to download at once.
-
+Commands:
+  trade YEARS [-exp] [-imp] [-mun] [-o PATH]
+        Download trade transactions for one year, a range (2018:2023), or 'complete'.
+  table [TABLES...] [-o PATH]
+        Download auxiliary code tables; 'all' downloads every table.
+        Run with no arguments to list available tables.
+  all   [-y] [-o PATH]
+        Download EVERYTHING (years, tables, complete files, REPETRO, validacao).
 ```
-comexdown trade 2008:2019 -o "./DATA"
-```
 
-Download code tables.
+`PATH` defaults to `data/secex-comex`.
 
 ```shell
-comexdown table all       # Download all related code files
-comexdown table uf        # Download only the UF.csv file
-comexdown table ncm_cgce  # Download only the NCM_CGCE.csv file
-comexdown table nbm_ncm   # Download only the NBM_NCM.csv file
+comexdown trade 2008:2019 -o ./DATA
+comexdown trade 2023 -exp -mun -o ./DATA
+comexdown trade complete -o ./DATA
+
+comexdown table all       # download all tables
+comexdown table ncm pais  # specific tables
+comexdown table           # list available tables
+
+comexdown all -y -o ./DATA
 ```
 
-## Development
+## Datasets
 
-To setup a development environment clone this repository and install the required packages:
+- Trade data: `exp`, `imp`, `exp-mun`, `imp-mun`, `exp-nbm`, `imp-nbm`
+- Bundled history: `exp-completa`, `imp-completa`, `exp-mun-completa`, `imp-mun-completa`
+- Validation totals: `exp-validacao`, `imp-validacao`, `exp-mun-validacao`, `imp-mun-validacao`
+- REPETRO (oil & gas regime): `exp-repetro`, `imp-repetro`
+- Auxiliary tables: `ncm`, `sh`, `cuci`, `cgce`, `isic`, `siit`, `fat-agreg`, `unidade`, `ppi`, `ppe`, `grupo`, `pais`, `pais-bloco`, `uf`, `uf-mun`, `via`, `urf`, `isic-cuci`, `nbm`, `ncm-nbm`
+
+Data source: [Ministério da Economia / Secretaria de Comércio Exterior][1].
+
+## Behavior
+
+- **HEAD + Last-Modified** check on every URL — files already up to date are skipped.
+- **Streaming** in 8 KiB chunks via `urllib`; constant memory regardless of file size.
+- **Atomic writes** to `*.tmp` then rename; partial files never appear in the output tree.
+- **Retries**: up to 3 attempts with exponential backoff (1 s → 2 s → 4 s).
+- **SSL**: uses an unverified context for SECEX servers with expired/misconfigured certs.
+- **No third-party dependencies** — pure standard library.
+
+## Development
 
 ```shell
 git clone https://github.com/Quantilica/comexdown.git
@@ -56,11 +91,9 @@ pip install -e .[dev]
 
 ### Run tests
 
-To run the tests suite, use the following command:
-
 ```shell
- pip install -e .[dev]
- pytest tests/
+pip install -e .[dev]
+pytest tests/
 ```
 
 [1]: https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta

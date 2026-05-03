@@ -70,21 +70,19 @@ Every tool is benchmarked. Performance metrics are documented. When a faster app
 - **Treasury bonds (100k+ transactions)**: Async concurrent fetches, not sync requests
 - **Siscomex (gigabyte files)**: Streaming chunks, not in-memory buffering
 
-### Example: Idempotent Processing with 57x Speedup
+### Example: Idempotent Processing with HEAD + `Last-Modified`
 
 ```python
-from comexdown import SiscomexDownloader
+from pathlib import Path
+import comexdown
 
-downloader = SiscomexDownloader(verify_ssl=False)
+# First run: streams the SECEX CSVs in 8 KiB chunks
+comexdown.get_year(Path("./DATA"), year=2023)
 
-# First run: downloads full dataset (45 seconds)
-result = downloader.download_exports(2023, force_refresh=False)
+# Second run: HEAD shows Last-Modified == local mtime, GET is skipped entirely
+comexdown.get_year(Path("./DATA"), year=2023)
 
-# Second run: checks Last-Modified via HEAD request (0.8 seconds)
-# If unchanged, skips re-download entirely
-result = downloader.download_exports(2023, force_refresh=False)
-
-# 57x faster on re-runs because we check before downloading
+# Re-runs cost a single HEAD round-trip per file when nothing has changed.
 ```
 
 ## 3. Resilience
@@ -103,35 +101,26 @@ Government APIs go down. FTP servers time out. SSL certificates expire. Network 
 - **Size-based idempotence**: Compare remote file size with local file; skip if identical (datasus-fetcher)
 - **Validation at source**: Detect corruption/truncation immediately, not after expensive transformation
 
-### Example: Auto-Retry with Exponential Backoff
+### Example: Auto-Retry on Transient FTP Failures
 
-```python
-from datasus_fetcher import DATASUSCrawler
-
-crawler = DATASUSCrawler(
-    num_workers=5,
-    timeout=60,
-    max_retries=5,      # Retry up to 5 times
-    backoff_factor=2    # Wait 1s, 2s, 4s, 8s, 16s between retries
-)
-
-# Transient failures are handled automatically
-result = crawler.fetch_subsystem("SIM", year=2023)
-# If a single FTP connection drops, others continue
-# Failed downloads are retried automatically
+```sh
+# datasus-fetcher retries each file up to 3 times on FTP errors
+# If one connection drops, the other threads continue downloading.
+datasus-fetcher data --data-dir ./data sim-do-cid10 \
+    --start 2023 --end 2023 --threads 5
 ```
 
-### Example: Smart Resume
+Internally, each `Fetcher` thread reconnects and retries failed transfers without aborting the batch.
 
-```python
-# First attempt: interrupted at 70%
-result1 = crawler.fetch_subsystem("SIM", year=2023, force_refresh=True)
-# Downloads 70%, then connection drops
+### Example: Size-Based Idempotence
 
-# Second attempt: resumes from checkpoint
-result2 = crawler.fetch_subsystem("SIM", year=2023, force_refresh=False)
-# Detects 70% complete locally; downloads only remaining 30%
-# Total time: not 2x the first attempt, but 1.3x
+```sh
+# First run: downloads everything
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
+
+# Re-run after a partial failure: remote size is compared to local size,
+# and only missing or mismatched files are re-fetched.
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
 ```
 
 ## 4. Reproducibility
@@ -152,51 +141,43 @@ In research, finance, and public health, reproducibility is non-negotiable. If y
 
 ### Example: Versioned Outputs with Metadata
 
-```python
-from datasus_fetcher import DATASUSCrawler
-
-crawler = DATASUSCrawler(num_workers=5, smart_resume=True)
-
-result = crawler.fetch_subsystem_with_docs(
-    subsystem="SIM",
-    year=2023,
-    include_layouts=True,
-    include_documentation=True,
-    include_lookup_tables=True
-)
-
-# Result includes:
-# - data files (SIM_2023.parquet)
-# - layouts (SIM_2023_layout_@timestamp.pdf)
-# - documentation (SIM_2023_docs_@timestamp.pdf)
-# - lookup tables (SIM_2023_codebook_@timestamp.csv)
-# - metadata.json with download timestamp, source URL, checksums
-
-# Later: you can use the exact documentation version from download time
-# Reproducible: same input + same documentation version = same results
+```sh
+# Microdata + codebooks + reference tables, each with date-stamped filenames
+datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
+datasus-fetcher docs --data-dir ./docs sim
+datasus-fetcher aux  --data-dir ./aux  sim
 ```
+
+Each downloaded `.dbc` is named `dataset_uf_period_YYYYMMDD.dbc`, so multiple DATASUS revisions of the same period coexist on disk. Use `datasus-fetcher archive` to move non-latest versions out of the active tree while preserving them for audit.
 
 ### Example: Complete Lineage
 
+```bash
+# Raw RAIS .7z → typed Parquet
+pdet-data fetch ./raw          # idempotent: skips files already on disk
+pdet-data convert ./raw ./parquet
+```
+
 ```python
-# Raw RAIS CSV → Parquet transformation
-processor = RAISProcessor()
-result = processor.process_year(2023, force_refresh=False)
+# Capture lineage alongside the converted Parquet
+import json, hashlib, polars as pl
+from datetime import datetime, timezone
+from pathlib import Path
 
-# Result includes metadata:
-# {
-#   "input_file": "RAIS_2023.zip",
-#   "input_size_bytes": 8589934592,
-#   "input_checksum": "sha256:...",
-#   "output_file": "RAIS_2023.parquet",
-#   "output_size_bytes": 402653184,
-#   "schema_version": "2023-04-01",
-#   "processing_timestamp": "2024-04-10T14:32:15Z",
-#   "row_count": 58234521,
-#   "processing_duration_seconds": 62.4
-# }
+raw  = Path("raw/rais-vinculos/rais-vinculos_2023@20240410.7z")
+out  = Path("parquet/rais-vinculos/2023.parquet")
 
-# You can audit exactly what was transformed and when
+lineage = {
+    "input_file":  str(raw),
+    "input_size":  raw.stat().st_size,
+    "input_sha256": hashlib.sha256(raw.read_bytes()).hexdigest(),
+    "output_file": str(out),
+    "output_size": out.stat().st_size,
+    "row_count":   pl.scan_parquet(out).select(pl.len()).collect().item(),
+    "processed_at": datetime.now(timezone.utc).isoformat(),
+    "tool": "pdet_data.convert_rais",
+}
+out.with_suffix(".lineage.json").write_text(json.dumps(lineage, indent=2))
 ```
 
 ## 5. No Magic
@@ -223,17 +204,16 @@ In data engineering, transparency is critical. You need to know:
 
 ### Example: Explicit Configuration
 
-```python
-# ✅ Clear: Explicit num_workers tells you exactly what's happening
-crawler = DATASUSCrawler(
-    num_workers=5,          # 5 concurrent FTP connections
-    timeout=60,             # 60-second timeout per request
-    max_retries=3,          # Retry up to 3 times on failure
-    smart_resume=True       # Skip files unchanged since last run
-)
+```sh
+# ✅ Clear: every flag is explicit
+datasus-fetcher data \
+    --data-dir ./data sim-do-cid10 \
+    --start 2023 --end 2023 \
+    --regions sp rj mg \
+    --threads 5
 
-# ❌ Unclear: Magic auto-detection hides what's actually happening
-crawler = DATASUSCrawler()  # What concurrency level? What timeout?
+# ❌ Implicit: defaults hide what is actually being fetched
+datasus-fetcher data --data-dir ./data    # all 113 datasets, ~320 GB
 ```
 
 ### Example: Explicit Transformations

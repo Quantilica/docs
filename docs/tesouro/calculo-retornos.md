@@ -62,30 +62,26 @@ Example:
 
 ```python
 import polars as pl
-from tddata import TreasuryClient
+from datetime import date
+from pathlib import Path
+from tddata import reader
+from tddata.constants import Column as C, BondType
 
-# Get bond
-client = TreasuryClient()
-bonds = client.fetch(bond_type="NTN-B", maturity_date="2027-05-15")
-latest = bonds.filter(pl.col("date") == bonds["date"].max()).row(0)
+# Read the prices CSV downloaded with `tddata download --dataset prices`
+prices = reader.read_prices(next(Path("./data").glob("taxas-dos-titulos*.csv")))
 
-# Calculate purchase cost and future value
-face_value = 1000  # Reais
-purchase_price = face_value * latest["dirty_price"] / 100
-ytm = latest["yield"] / 100
-years_to_maturity = 4.0  # Example
+# Pick one bond: NTN-B (Tesouro IPCA+ com Juros Semestrais) maturing 2027-05-15
+bond = prices.filter(
+    (pl.col(C.BOND_TYPE.value) == BondType.NTNB.value)
+    & (pl.col(C.MATURITY_DATE.value) == date(2027, 5, 15))
+).sort(C.REFERENCE_DATE.value).tail(1).row(0, named=True)
 
-# Annual coupon payment (NTN-B with ~5.5% coupon)
-coupon_rate = 0.055
-annual_coupon = face_value * coupon_rate
+face_value = 1000.0
+purchase_price = bond[C.BUY_PRICE.value]   # current ask, in BRL
+ytm_pct        = bond[C.BUY_YIELD.value]   # already in percent in the CSV
 
-# Simple return = (Future value - Purchase price) / Purchase price
-# Or more precisely: YTM
-annual_return = ytm * 100
-
-print(f"Purchase price: R${purchase_price:.2f}")
-print(f"Annual YTM: {annual_return:.2f}%")
-print(f"Duration risk: {latest['duration']:.2f} years")
+print(f"Purchase price: R${purchase_price:,.2f}")
+print(f"Annual YTM:     {ytm_pct:.2f}%")
 ```
 
 ### Portfolio Weighted Average Yield
@@ -269,50 +265,55 @@ print(f"Market expects inflation: {breakeven*100:.1f}%")
 ### Daily Update Script
 
 ```python
+import asyncio
 import polars as pl
-from tddata import TreasuryClient
 from pathlib import Path
+from tddata import downloader, reader
+from tddata.constants import Column as C
 
-# Data directory
 data_dir = Path("data/treasury")
 data_dir.mkdir(parents=True, exist_ok=True)
 
-# Fetch all bonds
-client = TreasuryClient()
-all_bonds = client.fetch_all()
+# 1. Fetch latest prices CSV (idempotent on Last-Modified)
+asyncio.run(
+    downloader.download(
+        data_dir,
+        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+        max_concurrency=3,
+    )
+)
 
-# Save full history (append new data)
-history_file = data_dir / "all_bonds.parquet"
+# 2. Read newest CSV
+latest_csv = max(data_dir.glob("taxas-dos-titulos*.csv"), key=lambda p: p.stat().st_mtime)
+prices = reader.read_prices(latest_csv)
 
+# 3. Append to running history (dedup by reference_date + bond_type + maturity)
+history_file = data_dir / "prices_history.parquet"
 if history_file.exists():
     existing = pl.read_parquet(history_file)
-    all_bonds = pl.concat([existing, all_bonds]).unique(subset=["date", "bond_id"])
+    prices = pl.concat([existing, prices]).unique(
+        subset=[C.REFERENCE_DATE.value, C.BOND_TYPE.value, C.MATURITY_DATE.value]
+    )
 
-all_bonds.to_parquet(history_file)
+prices.write_parquet(history_file)
 
-# Also save latest snapshot (for quick access)
-latest_date = all_bonds["date"].max()
-latest = all_bonds.filter(pl.col("date") == latest_date)
-latest.to_parquet(data_dir / "latest_snapshot.parquet")
+# 4. Snapshot the latest reference date
+latest_date = prices[C.REFERENCE_DATE.value].max()
+latest = prices.filter(pl.col(C.REFERENCE_DATE.value) == latest_date)
+latest.write_parquet(data_dir / "latest_snapshot.parquet")
 
-print(f"Updated {len(all_bonds)} bonds as of {latest_date}")
+print(f"Updated {prices.height:,} rows; latest reference date {latest_date}")
 
-# Calculate portfolio metrics
-portfolio_file = data_dir / "portfolio_metrics.parquet"
-
-metrics = latest.select([
-    "date",
-    "bond_type",
-    "yield",
-    "duration",
-    "clean_price"
-]).group_by("bond_type").agg([
-    pl.col("yield").mean().alias("avg_yield"),
-    pl.col("duration").mean().alias("avg_duration"),
-    pl.col("clean_price").mean().alias("avg_price")
-])
-
-metrics.to_parquet(portfolio_file)
+# 5. Per-bond-type aggregates
+metrics = (
+    latest.group_by(C.BOND_TYPE.value)
+    .agg(
+        avg_buy_yield=pl.col(C.BUY_YIELD.value).mean(),
+        avg_buy_price=pl.col(C.BUY_PRICE.value).mean(),
+        n_maturities=pl.col(C.MATURITY_DATE.value).n_unique(),
+    )
+)
+metrics.write_parquet(data_dir / "portfolio_metrics.parquet")
 ```
 
 ### Monitoring Dashboard Metrics

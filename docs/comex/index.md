@@ -2,80 +2,85 @@
 
 Brazilian import/export data from Siscomex (Integrated Foreign Trade System).
 
-**comexdown** is a network-resilient extraction agent for Siscomex data—engineered to handle legacy government infrastructure instability while providing intelligent, idempotent downloads with streaming efficiency.
+**comexdown** is a network-resilient extraction agent for Siscomex data — engineered to handle legacy government infrastructure with idempotent downloads and streaming efficiency.
 
 ## The Challenge
 
-Programmatically extracting Brazilian trade data encounters critical infrastructure obstacles:
+Programmatically extracting Brazilian trade data hits real infrastructure obstacles:
 
-- **Colossal Volume**: Gigabyte-scale files cause OOM crashes in naive downloads
-- **Unstable Servers**: Abrupt connections drops, bandwidth throttling, SSL certificate issues
-- **Redundant Downloads**: Without modern APIs, researchers download entire datasets daily wasting bandwidth
+- **Colossal volume**: Gigabyte-scale CSV files exhaust naive in-memory downloads
+- **Unstable servers**: Bandwidth throttling, SSL certificate issues, occasional drops
+- **Redundant downloads**: Without modern APIs, re-running pipelines re-fetches files that have not changed
 
 **comexdown** solves these through:
-- **Temporal Idempotency**: HEAD requests check Last-Modified; skip if unchanged (57x speedup)
-- **Streaming Chunks**: 8KB blocks; zero memory overhead regardless of file size
-- **SSL Resilience**: Handles legacy certificates; automatic User-Agent spoofing
-- **Auto-Retry**: Exponential backoff on transient failures
-- **Concurrent Downloads**: 5-10x speedup with parallel workers
+
+- **Temporal idempotency**: HEAD request checks `Last-Modified`; skips files already up to date
+- **Streaming chunks**: 8 KiB blocks; constant memory regardless of file size
+- **SSL resilience**: unverified SSL context for SECEX servers with bad certs; browser User-Agent
+- **Auto-retry**: up to 3 attempts with exponential backoff (1 s → 2 s → 4 s)
+- **Atomic writes**: download to `*.tmp` then rename, so partial files never appear
 
 ## Data Source: Siscomex
 
 The Integrated Foreign Trade System provides:
 
-- **Detailed transactions**: Every import and export shipment
-- **Commodity classification**: HS codes (Harmonized System) for products
-- **Trade flows**: By country of origin/destination
-- **Granular metrics**: Value (USD), quantity, weights
+- **Detailed transactions**: every import and export shipment
+- **Commodity classification**: NCM (Nomenclatura Comum do Mercosul, ≈ HS) codes
+- **Trade flows**: by country of origin / destination, optionally by Brazilian municipality
+- **Granular metrics**: USD value, quantity, weight
 
 **Coverage**:
-- **Frequency**: Updated monthly with ~3 week lag
-- **Historical**: 1997-present (monthly)
-- **Scope**: All formal trade (excludes informal/smuggling)
+
+- **Frequency**: monthly, ~3-week lag
+- **Historical**: NCM-based 1997–present, NBM-based 1989–1996
+- **Scope**: all formal trade
 
 ## Workflow: Download → Analyze → Insights
 
 ### Step 1: Download with Smart Caching (Idempotent)
 
-```python
-from comexdown import SiscomexDownloader
-import polars as pl
-
-downloader = SiscomexDownloader(verify_ssl=False)
-
-# Idempotent: checks Last-Modified; skips if unchanged
-result = downloader.download_exports(2023, force_refresh=False)
-
-print(f"✓ Downloaded: {result.size_mb:.0f}MB")
-
-# Load data
-exports = pl.read_parquet(result.local_path)
+```bash
+# Exports + imports for 2023 (HEAD check skips up-to-date files)
+comexdown trade 2023 -o ./DATA
 ```
+
+Equivalent Python:
+
+```python
+from pathlib import Path
+import comexdown
+
+comexdown.get_year(Path("./DATA"), year=2023)
+```
+
+The CSVs land at `./DATA/exp/2023.csv` and `./DATA/imp/2023.csv`. Re-running the
+command issues a HEAD request, sees `Last-Modified` matches local `mtime`, and
+skips the GET entirely.
 
 ### Step 2: Multi-Year Analysis with Polars
 
+```bash
+# Download a decade
+comexdown trade 2014:2023 -o ./DATA
+```
+
 ```python
-from comexdown import SiscomexDownloader
 import polars as pl
+from pathlib import Path
 
-downloader = SiscomexDownloader(verify_ssl=False)
+data_dir = Path("./DATA")
 
-# Download 10 years (idempotent—only downloads changed files)
-all_exports = []
-for year in range(2014, 2024):
-    result = downloader.download_exports(year, force_refresh=False)
-    df = pl.read_parquet(result.local_path).with_columns(
-        pl.lit(year).alias("year")
-    )
-    all_exports.append(df)
-
-combined = pl.concat(all_exports, how="vertical")
+exports = pl.concat([
+    pl.read_csv(data_dir / "exp" / f"{y}.csv", separator=";")
+        .with_columns(pl.lit(y).alias("year"))
+    for y in range(2014, 2024)
+])
 
 # Annual exports by destination
 by_country_year = (
-    combined
-    .group_by(["year", "destination_country"])
-    .agg(pl.col("value_usd").sum().alias("annual_exports"))
+    exports
+    .group_by(["year", "CO_PAIS"])
+    .agg(pl.col("VL_FOB").sum().alias("annual_exports_usd"))
 )
 ```
 
@@ -98,87 +103,68 @@ Monitor competitor countries and market access trends.
 
 ## Data Structure
 
-### Exports
+The SECEX CSVs are `;`-separated, `latin-1` (older years) or UTF-8 (recent), with columns named in Portuguese. Key fields for the NCM-based files (1997+):
 
-| Field | Type | Description |
-|-------|------|-------------|
-| **year_month** | date | Export date |
-| **hs_code** | str | HS product code (6-10 digits) |
-| **hs_product_name** | str | Product description |
-| **destination_country** | str | Destination country code |
-| **value_usd** | float | Export value (USD) |
-| **quantity** | float | Quantity exported |
-| **weight_kg** | float | Weight in kilograms |
+| Field | Description |
+|-------|-------------|
+| `CO_ANO`, `CO_MES` | Year and month of the transaction |
+| `CO_NCM` | NCM product code (8 digits) |
+| `CO_UNID` | Statistical unit code (kg, m³, …) |
+| `CO_PAIS` | Country of origin (imports) / destination (exports) |
+| `SG_UF_NCM` | State of producer / importer |
+| `CO_VIA` | Mode of transport |
+| `CO_URF` | Customs unit |
+| `QT_ESTAT` | Statistical quantity |
+| `KG_LIQUIDO` | Net weight (kg) |
+| `VL_FOB` | FOB value (USD) |
 
-### Imports
+Use `comexdown table` (run without args) to list every auxiliary table that decodes these codes (`pais`, `ncm`, `via`, `urf`, `uf`, …).
 
-| Field | Type | Description |
-|-------|------|-------------|
-| **year_month** | date | Import date |
-| **hs_code** | str | HS product code |
-| **hs_product_name** | str | Product description |
-| **origin_country** | str | Origin country code |
-| **value_usd** | float | Import value (USD) |
-| **quantity** | float | Quantity imported |
-| **weight_kg** | float | Weight in kilograms |
+## Performance & Behavior
 
-## Performance & Benchmarks
+| Operation | Notes |
+|-----------|-------|
+| First download | Streaming GET in 8 KiB chunks; written atomically via `*.tmp` rename |
+| Up-to-date file | Single HEAD request; GET is skipped |
+| Memory usage | ~8 KiB per active stream — bounded regardless of file size |
+| Retries | 3 attempts, exponential backoff (1 s → 2 s → 4 s) |
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| First download (full) | 45.3s | Streaming, no memory overhead |
-| Cached download (HEAD) | 0.8s | Idempotence check only |
-| Speedup factor | 57x | Time saved on unchanged files |
-| Memory usage | ~8 MB | Constant regardless of file size |
-| 10 concurrent downloads | 90s | 5-10x faster than sequential |
+`comexdown` does not download files in parallel today — calls are sequential.
+For multi-year batches, just pass a range to the CLI (`trade 2014:2023`) and let
+the idempotent HEAD checks make re-runs cheap.
 
 ## Best Practices
 
-### 1. Use Idempotent Downloads
+### 1. Re-run instead of forcing refresh
 
-Always check Last-Modified before downloading:
+Every run already does the right thing — files with the same `Last-Modified` are
+skipped. There is no `force_refresh` flag; if you really need to re-download,
+delete the local file first.
 
-```python
-# ❌ Never: Force re-download (45s)
-result = downloader.download_exports(2023, force_refresh=True)
-
-# ✅ Always: Check Last-Modified (0.8s)
-result = downloader.download_exports(2023, force_refresh=False)
+```bash
+# Idempotent: HEAD-checks every file, fetches only what is new
+comexdown trade 2023 -o ./DATA
 ```
 
-### 2. Download Multiple Years Concurrently
+### 2. Use `complete` for static historical analysis
 
-Maximize bandwidth:
+If you only need the full back-catalog, the bundled file is one download:
 
-```python
-# ✅ Download 10 years in ~90s (concurrent)
-downloader.download_exports_concurrent(
-    years=range(2014, 2024),
-    max_workers=5
-)
+```bash
+comexdown trade complete -o ./DATA
 ```
 
-### 3. Handle Government SSL Issues
+### 3. Pull auxiliary tables alongside trade data
 
-Legacy servers often have certificate problems:
+The trade CSVs only carry codes — keep the lookup tables in sync:
 
-```python
-# ✅ Correct: Disable SSL verification for government servers
-downloader = SiscomexDownloader(verify_ssl=False)
+```bash
+comexdown table all -o ./DATA
 ```
 
-### 4. Implement Retries for Production
+### 4. Handle SECEX SSL quirks
 
-Always handle transient network failures:
-
-```python
-downloader = SiscomexDownloader(
-    verify_ssl=False,
-    timeout=60,
-    max_retries=5,
-    backoff_factor=2
-)
-```
+`comexdown` already uses an unverified SSL context (`ssl._create_unverified_context()`) and a browser User-Agent, so it works against SECEX servers with expired or misconfigured certificates out of the box. No flag to set.
 
 ## Common Analyses
 
@@ -186,165 +172,80 @@ downloader = SiscomexDownloader(
 
 ```python
 import polars as pl
+from pathlib import Path
 
-exports = pl.read_parquet("exports_2023.parquet")
-imports = pl.read_parquet("imports_2023.parquet")
+data_dir = Path("./DATA")
+exports = pl.read_csv(data_dir / "exp" / "2023.csv", separator=";")
+imports = pl.read_csv(data_dir / "imp" / "2023.csv", separator=";")
 
-# Group by country
-exp_by_country = exports.group_by("destination_country").agg([
-    pl.col("value_usd").sum().alias("exports_usd")
-])
+exp_by_country = exports.group_by("CO_PAIS").agg(
+    pl.col("VL_FOB").sum().alias("exports_usd")
+)
+imp_by_country = imports.group_by("CO_PAIS").agg(
+    pl.col("VL_FOB").sum().alias("imports_usd")
+)
 
-imp_by_country = imports.group_by("origin_country").agg([
-    pl.col("value_usd").sum().alias("imports_usd")
-])
-
-# Trade balance (partner-specific)
-balance = exp_by_country.join(
-    imp_by_country,
-    left_on="destination_country",
-    right_on="origin_country",
-    how="full"
-).with_columns([
-    (pl.col("exports_usd") - pl.col("imports_usd")).alias("trade_balance_usd")
-])
+balance = exp_by_country.join(imp_by_country, on="CO_PAIS", how="full").with_columns(
+    (pl.col("exports_usd").fill_null(0) - pl.col("imports_usd").fill_null(0))
+        .alias("trade_balance_usd")
+)
 
 print(balance.sort("trade_balance_usd", descending=True).head(10))
 ```
 
-### Product Exports
+### Top Export Products (joined with NCM names)
 
 ```python
 import polars as pl
+from pathlib import Path
 
-exports = pl.read_parquet("exports_2023.parquet")
+data_dir = Path("./DATA")
+exports = pl.read_csv(data_dir / "exp" / "2023.csv", separator=";")
+ncm = pl.read_csv(data_dir / "auxiliary-tables" / "NCM.csv", separator=";")
 
-# Top 20 export products
 top_products = (
     exports
-    .group_by("hs_product_name")
-    .agg(pl.col("value_usd").sum().alias("export_value"))
-    .sort("export_value", descending=True)
+    .group_by("CO_NCM")
+    .agg(pl.col("VL_FOB").sum().alias("export_value_usd"))
+    .join(ncm.select(["CO_NCM", "NO_NCM_POR"]), on="CO_NCM", how="left")
+    .sort("export_value_usd", descending=True)
     .head(20)
 )
 
 print(top_products)
 ```
 
-### Specialization Index
-
-Revealed Comparative Advantage (RCA):
+### Revealed Comparative Advantage (sketch)
 
 ```python
 import polars as pl
 
-exports = pl.read_parquet("exports_2023.parquet")
-
-# Calculate RCA
-by_product = exports.group_by("hs_code").agg([
-    pl.col("value_usd").sum().alias("exports")
-])
-
-total_exports = by_product["exports"].sum()
-world_exports = total_exports / 0.03  # Brazil's ~3% of world trade
-
-# RCA = (Brazil exports of product / Brazil total exports) / (World exports of product / World total exports)
-# Simplified: high RCA = comparative advantage
-
-by_product = by_product.with_columns([
-    (pl.col("exports") / total_exports).alias("br_share"),
-    (1.0 / 100).alias("world_share")  # Rough average product share
-])
-
-by_product = by_product.with_columns([
-    (pl.col("br_share") / pl.col("world_share")).alias("rca")
-])
-
-# Products with RCA > 1
-comparative_advantage = by_product.filter(pl.col("rca") > 1).sort("rca", descending=True)
-```
-
-## Best Practices
-
-### 1. Use HS Sections
-
-HS codes are hierarchical. Group by section for high-level analysis:
-
-```python
-from comexdown import TradeClient
-
-client = TradeClient()
-
-# HS sections (2-digit) represent broad categories
-# 01-05: Animal products
-# 06-15: Vegetable products
-# 16-24: Foodstuffs
-# 25-27: Mineral products
-# 28-38: Chemicals
-# etc.
-
-# Export by section
-by_section = client.fetch_exports(
-    year=2023,
-    group_by="hs_section"
+# Brazil's share of own exports per product
+by_product = exports.group_by("CO_NCM").agg(pl.col("VL_FOB").sum().alias("br_exports"))
+total_br = by_product["br_exports"].sum()
+by_product = by_product.with_columns(
+    (pl.col("br_exports") / total_br).alias("br_share")
 )
-```
-
-### 2. Handle Currency
-
-Values are in USD. Convert to BRL if needed:
-
-```python
-import polars as pl
-
-# Exchange rates (example)
-rates = pl.DataFrame({
-    "year_month": ["2023-01", "2023-02"],
-    "usd_brl": [4.95, 4.88]
-})
-
-exports = pl.read_parquet("exports_2023.parquet")
-
-# Add exchange rate
-exports = exports.with_columns([
-    pl.col("year_month").dt.strftime("%Y-%m").alias("year_month_str")
-]).join(
-    rates.with_columns(pl.col("year_month").alias("year_month_str")),
-    on="year_month_str"
-)
-
-# Convert to BRL
-exports = exports.with_columns([
-    (pl.col("value_usd") * pl.col("usd_brl")).alias("value_brl")
-])
-```
-
-### 3. Aggregate Carefully
-
-Be aware of double-counting if raw data has both exports and imports:
-
-```python
-# If using raw transaction data, filter by transaction type
-exports = data.filter(pl.col("transaction_type") == "export")
-imports = data.filter(pl.col("transaction_type") == "import")
+# Combine with an external "world share" table (from BACI / WTO)
+# to compute RCA = br_share / world_share.
 ```
 
 ## Tools in This Section
 
 ### [comexdown](comexdown.md)
 
-Resilient data extraction agent for Siscomex:
+Resilient SECEX/COMEX downloader:
 
-- **Temporal Idempotency** — Smart HEAD requests check Last-Modified; skip if unchanged (57x speedup)
-- **Streaming Chunks** — Download in 8KB blocks; zero memory overhead
-- **SSL Resilience** — Handles expired/misconfigured certificates
-- **Auto-Retry** — Exponential backoff on connection failures
-- **Concurrent Downloads** — 5-10x speedup with parallel workers
-- **Production Ready** — Used in Airflow, Prefect, and Cron pipelines
+- **Temporal idempotency** — HEAD + `Last-Modified` skip already-current files
+- **Streaming chunks** — 8 KiB blocks, constant memory
+- **Atomic writes** — `*.tmp` + rename, no partial files
+- **Auto-retry** — exponential backoff on transient failures
+- **SSL resilience** — unverified context for SECEX servers with bad certs
+- **No deps** — pure standard library
 
 ## Learn More
 
-- **[comexdown Documentation](comexdown.md)** — Complete feature reference
+- **[comexdown Documentation](comexdown.md)** — Complete reference
 - **[IBGE Macroeconomics](../ibge/index.md)** — GDP and economic data
 - **[Architecture](../architecture/overview.md)** — System design
-- **[Siscomex Official (Portuguese)](https://www.gov.br/economia/pt-br/assuntos/comercio-exterior/siscomex)** — Government source
+- **[Siscomex Official (Portuguese)](https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta)** — Government source

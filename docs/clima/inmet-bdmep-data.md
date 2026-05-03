@@ -6,138 +6,135 @@
 
 Access Brazil's official historical weather data with:
 
-- **573+ weather stations** across the country
-- **Hourly observations** going back decades
-- **30+ meteorological variables**: precipitation, temperature, pressure, humidity, wind, radiation, and more
-- **Raw downloads** in INMET's native format
+- **National coverage** of automatic weather stations (~570+ stations in recent years)
+- **Hourly observations** going back to 2000
+- **Cleaned & standardized**: snake_case columns, parsed `data_hora`, `-9999` → null
+- **Filters**: UF, station code, date range
+- **Export**: Parquet, CSV, or JSON
+- **Engines**: pandas (default), polars (optional)
 
 ## Installation
 
 ```bash
-pip install inmet-bdmep-data
-# or
-uv add inmet-bdmep-data
+pip install git+https://github.com/dankkom/inmet-bdmep-data.git
 ```
 
 **Requirements:** Python 3.10+
 
-## Quick Start
+## CLI
 
-### Download Raw Data
+Installs the `inmet` command with three subcommands: `fetch`, `read`, `stations`.
+
+### Download raw years
+
+```bash
+# Single year
+inmet fetch 2023 --data-dir ./data
+
+# Range
+inmet fetch 2000:2024 --data-dir ./data --workers 8
+```
+
+### Read & export
+
+```bash
+# Everything to Parquet
+inmet read --data-dir ./data --output all.parquet
+
+# Filter by UF and year, export CSV
+inmet read --data-dir ./data --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+
+# Single station, date range
+inmet read --data-dir ./data --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+```
+
+### Station catalog
+
+```bash
+inmet stations --data-dir ./data --output estacoes.csv
+```
+
+## Python API
 
 ```python
-from inmet_bdmep import fetch
+import inmet_bdmep as inmet
+from pathlib import Path
 
-# Fetch raw files for specific years
-fetch.download_data(
+data_dir = Path("./data")
+
+# 1. Fetch raw zips (parallel)
+inmet.fetch([2020, 2021, 2022, 2023], data_dir, workers=4)
+
+# 2. Read with filters → pandas DataFrame
+df = inmet.read(
+    data_dir,
     years=[2022, 2023],
-    dest_dir="./data"
+    uf=["SP", "RJ", "MG"],
+    start="2022-06-01",
+    end="2023-05-31",
 )
+
+# Daily mean temperature by state
+df["temperatura_ar"].groupby([df["uf"], df["data_hora"].dt.date]).mean()
+
+# 3. Station catalog
+stations = inmet.read_stations(data_dir)
+print(stations[["codigo_wmo", "estacao", "uf", "latitude", "longitude", "altitude"]])
 ```
 
-### Read INMET Data Files
-
-```python
-from inmet_bdmep.reader import read_zipfile
-import polars as pl
-
-# Read downloaded zip file
-df = read_zipfile("inmet-bdmep_2022_20220712.zip")
-
-# Data is a Polars DataFrame with 30+ columns
-print(df.schema)
-print(df.head())
-
-# Example output:
-# ┌────────┬──────────────┬────────────────────┬──────────────────────┐
-# │ hora   ┆ precipitacao ┆ pressao_atmosfer… ┆ pressao_atmosfer…    │
-# │ ---    ┆ ---          ┆ ---                ┆ ---                  │
-# │ u32    ┆ f64          ┆ f64                ┆ f64                  │
-# ╞════════╪══════════════╪════════════════════╪══════════════════════╡
-# │ 0      ┆ 0.0          ┆ 902.9              ┆ 902.9                │
-# │ 1      ┆ 0.0          ┆ 903.4              ┆ 903.4                │
-# │ 2      ┆ 0.0          ┆ 903.7              ┆ 903.7                │
-# │ 3      ┆ 0.0          ┆ 903.4              ┆ 903.4                │
-# │ 4      ┆ 0.0          ┆ 903.2              ┆ 903.2                │
-# └────────┴──────────────┴────────────────────┴──────────────────────┘
-```
+Lower-level helpers also exposed: `inmet.read_zipfile(path, uf=..., station=..., start=..., end=...)`, `inmet.find_zipfiles(data_dir, years)`, `inmet.read_metadata(file)`, `inmet.read_station_data(file)`.
 
 ## Data Source
 
-Download historical weather data from INMET's public repository:
 - **Portal**: https://portal.inmet.gov.br/dadoshistoricos
-- **Available data**: 1979-present (varies by station)
-- **Update frequency**: Monthly
-- **Format**: Zipped text files with fixed schema
+- **URL pattern**: `https://portal.inmet.gov.br/uploads/dadoshistoricos/{year}.zip`
+- **Available data**: 2000–present (one zip per year, refreshed periodically)
+- **Format**: Per-station CSV (`;`-separated, `latin-1`, `,` decimal, `-9999` null) with 8-row metadata header
 
-## Available Variables
+## Variables
 
-Each observation includes:
-
-| Variable | Unit | Description |
-|----------|------|-------------|
-| `hora` | hour | Hour of day (0-23) |
+| Column | Unit | Description |
+|---|---|---|
+| `data_hora` | datetime | Observation timestamp (UTC) |
 | `precipitacao` | mm | Total precipitation |
-| `pressao_atmosferica` | hPa | Atmospheric pressure |
-| `pressao_maxima` | hPa | Maximum pressure |
-| `pressao_minima` | hPa | Minimum pressure |
-| `radiacao` | kJ/m² | Solar radiation |
-| `temperatura` | °C | Air temperature |
-| `temperatura_maxima` | °C | Maximum temperature |
-| `temperatura_minima` | °C | Minimum temperature |
-| `temperatura_orvalho` | °C | Dew point temperature |
-| `umidade` | % | Relative humidity |
-| `umidade_maxima` | % | Maximum humidity |
-| `umidade_minima` | % | Minimum humidity |
-| `velocidade_vento` | m/s | Wind speed |
-| `velocidade_vento_max` | m/s | Maximum wind speed |
-| And more... | | 30+ total variables |
+| `pressao_atmosferica` | mB | Pressure at station level |
+| `pressao_atmosferica_maxima` | mB | Max pressure in last hour |
+| `pressao_atmosferica_minima` | mB | Min pressure in last hour |
+| `radiacao` | kJ/m² | Global solar radiation |
+| `temperatura_ar` | °C | Dry-bulb air temperature |
+| `temperatura_orvalho` | °C | Dew point |
+| `temperatura_maxima` / `_minima` | °C | Max/min air temperature |
+| `temperatura_orvalho_maxima` / `_minima` | °C | Max/min dew point |
+| `umidade_relativa` | % | Relative humidity |
+| `umidade_relativa_maxima` / `_minima` | % | Max/min relative humidity |
+| `vento_velocidade` | m/s | Wind speed |
+| `vento_rajada` | m/s | Wind gust |
+| `vento_direcao` | ° | Wind direction |
 
-## Station Information
-
-Access metadata about weather stations:
-
-```python
-from inmet_bdmep import stations
-
-# List all stations
-all_stations = stations.get_all()
-
-for station in all_stations:
-    print(f"{station.codigo_wmo}: {station.nome}")
-    print(f"  Location: {station.latitude}, {station.longitude}")
-    print(f"  Altitude: {station.altitude}m")
-    print()
-
-# Example:
-# A898: BAGÉ
-#   Location: -27.388611, -51.215833
-#   Altitude: 963.0m
-```
+Per-row station metadata joined automatically: `regiao`, `uf`, `estacao`, `codigo_wmo`, `latitude`, `longitude`, `altitude`, `data_fundacao`.
 
 ## Use Cases
 
-- **Climate research**: Historical weather patterns and trends
-- **Agricultural analysis**: Precipitation, temperature, radiation for crop modeling
-- **Hydrology**: Rainfall patterns for water resource management
-- **Energy planning**: Solar radiation data for renewable energy assessment
-- **Environmental studies**: Long-term meteorological trends
+- **Climate research** — long-term trends, anomalies
+- **Agricultural analysis** — precipitation, GDD, radiation
+- **Hydrology** — rainfall for water-resource modeling
+- **Energy planning** — solar radiation, wind for renewables
+- **Environmental studies** — multi-decade meteorology
 
 ## Development
-
-Install for development:
 
 ```bash
 git clone https://github.com/Quantilica/inmet-bdmep-data.git
 cd inmet-bdmep-data
-pip install -e .
+uv sync
+pytest
 ```
 
 ## References
 
-- **INMET**: https://portal.inmet.gov.br/
-- **BDMEP Portal**: https://portal.inmet.gov.br/dadoshistoricos
-- **Station Codes (WMO)**: https://en.wikipedia.org/wiki/WMO_station_ID
+- **INMET portal**: https://portal.inmet.gov.br/
+- **BDMEP downloads**: https://portal.inmet.gov.br/dadoshistoricos
+- **WMO station IDs**: https://en.wikipedia.org/wiki/WMO_station_ID
 
 ## Learn More
 

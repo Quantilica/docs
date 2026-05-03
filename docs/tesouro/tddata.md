@@ -7,7 +7,7 @@
 - **Automated Downloads**: Easily fetch datasets directly from the Government's CKAN API
 - **Specialized Readers**: Dedicated functions to read and parse CSVs for Prices, Stock, Investors, Operations, Sales, Buybacks/Redemptions, and more
 - **Standardized Data**: All DataFrames come with consistent, analyst-friendly column names defined in a robust schema
-- **Visualization**: Built-in plotting module to generate beautiful time-series, distribution, and demographic charts using Matplotlib and Seaborn
+- **Visualization**: Built-in plotting module that returns **Altair** charts for time-series, distribution, and demographic analysis (no Matplotlib/Seaborn needed)
 - **CLI**: A convenient command-line interface for quick data fetching
 
 ## Installation
@@ -24,27 +24,68 @@ pip install "git+https://github.com/Quantilica/tddata#egg=tddata"
 pip install "git+https://github.com/Quantilica/tddata#egg=tddata[analysis]"
 ```
 
-The minimal installation includes only `httpx` and `tqdm` for downloading data. The `[analysis]` extras add `Polars`, and `Altair` for reading CSV files and creating visualizations.
+The minimal installation includes only `httpx` and `tqdm` for downloading data. The `[analysis]` extras add `polars` (CSV parsing, analytics) and `altair[save]` (charts).
 
 ## Usage
 
 ### The `tddata` CLI
 
-The package includes a comprehensive Command-Line Interface (CLI) for downloading, inspecting, and converting Tesouro Direto data.
+The package installs a `tddata` command with three subcommands:
+
+```text
+tddata <command> [options]
+
+Commands:
+  download [-o OUTPUT_DIR] [--dataset DATASET]
+        Download a CKAN dataset. DATASET ∈ {prices, operations, investors,
+        stock, buybacks, sales, all}. Default: prices.
+  info     [-o OUTPUT_DIR] [--dataset DATASET]
+        Print resources, sizes, Last-Modified, and whether each file would be
+        downloaded — without writing anything.
+  convert  FILE [--type {prices,operations,investors,stock,buybacks,sales,maturities,infer}]
+        Convert a downloaded CSV to Parquet. `--type infer` (default) detects
+        the dataset from the filename. Requires the `analysis` extras.
+```
+
+`OUTPUT_DIR` defaults to `data`.
+
+```bash
+# Inspect, download, convert
+tddata info     --dataset prices -o ./data
+tddata download --dataset prices -o ./data
+tddata convert  ./data/taxas-dos-titulos-ofertados-pelo-tesouro-direto@*.csv
+
+# Pull every dataset
+tddata download --dataset all -o ./data
+```
+
 ### The `tddata` Python Package
 
 You can use `tddata` as a library in your Python scripts or Jupyter Notebooks.
 
 #### Downloading Data
 
+`downloader.download` is asynchronous; wrap it with `asyncio.run` or `await` it inside a coroutine.
+
 ```python
+import asyncio
 from pathlib import Path
 from tddata import downloader
 
-# Download 'prices' dataset to ./data folder
-downloader.download(
-    dest_dir=Path("./data"),
-    dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+asyncio.run(
+    downloader.download(
+        dest_dir=Path("./data"),
+        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+        max_concurrency=3,
+    )
+)
+
+# Inspect what would be downloaded without writing anything
+infos = asyncio.run(
+    downloader.get_download_info(
+        dest_dir=Path("./data"),
+        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+    )
 )
 ```
 
@@ -83,33 +124,33 @@ df_investors = reader.read_investors(
 
 #### Plotting Data
 
-The `tddata.plot` module makes visualization easy.
+The `tddata.plot` module returns Altair charts (`alt.Chart`). Display them in a notebook with `chart.display()` or save with `chart.save("name.png")` / `.html` / `.svg`.
 
 ```python
-import matplotlib.pyplot as plt
 from tddata import plot
 from tddata.constants import Column
 
 # 1. Plot Price History
-fig1 = plot.plot_prices(df_prices, bond_type="Tesouro Selic", variable=Column.BASE_PRICE.value)
-fig1.show()
+plot.plot_prices(
+    df_prices,
+    bond_type="Tesouro Selic",
+    variable=Column.BASE_PRICE.value,
+).save("prices_tesouro-selic.html")
 
 # 2. Plot Stock Evolution by Bond Type
-fig2 = plot.plot_stock(df_stock, by_bond_type=True)
-fig2.show()
+plot.plot_stock(df_stock, by_bond_type=True).save("stock_evolution_by_type.html")
 
-# 3. Plot Investor Demographics (e.g., Population Pyramid)
-fig3 = plot.plot_investors_population_pyramid(df_investors)
-fig3.show()
+# 3. Plot Investor Demographics (Population Pyramid)
+plot.plot_investors_population_pyramid(df_investors).save("investors_pyramid.html")
 
-# 4. Plot Investor Demographics (e.g., Profession Horizontal Bar)
-fig4 = plot.plot_investors_demographics(
+# 4. Plot Investor Demographics (e.g., Profession bar chart)
+plot.plot_investors_demographics(
     df_investors,
     column=Column.PROFESSION.value,
-    chart_type="barh",
-)
-fig4.show()
+).save("investors_profession.html")
 ```
+
+Other plotting helpers exposed by `tddata.plot`: `plot_investors_evolution`, `plot_operations`, `plot_sales`, `plot_buybacks`, `plot_maturities`, `plot_interest_coupons`.
 
 ## Data Source
 

@@ -16,30 +16,39 @@ Each tool is **independent**, **self-contained**, and **reusable**.
 ### How We Achieve It
 
 ```
-sidra-fetcher     tddata         pdet-data      comexdown
-├─ Depends: 3 pkgs ├─ Depends: 3 pkgs ├─ Depends: 3 pkgs ├─ Depends: 3 pkgs
-└─ No deps on others
+sidra-fetcher       tddata               pdet-data            comexdown
+├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
+└─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
-You can use ONLY sidra-fetcher without touching tddata or comexdown.
+datasus-fetcher        inmet-bdmep-data
+├─ stdlib only         ├─ httpx, pandas, pyarrow
+└─ no cross-deps       └─ no cross-deps
+
+Use ONLY sidra-fetcher without touching tddata or comexdown.
 ```
 
 ### Example: Two Analysts, Same Platform, Different Tools
 
 ```python
-# Economist A: Only needs SIDRA metadata
+from pathlib import Path
+
+# Economist A: only needs SIDRA metadata
 from sidra_fetcher import SidraClient
 with SidraClient() as client:
     agregado = client.get_agregado_metadados(1620)
 
-# Economist B: Only needs labor market data
-from pdet_data.fetch import connect, fetch_rais
+# Economist B: only needs labor market data
+from pdet_data import connect, fetch_rais
 ftp = connect()
-fetch_rais(ftp, dest_dir="raw/rais")
+try:
+    fetch_rais(ftp=ftp, dest_dir=Path("raw/rais"))
+finally:
+    ftp.close()
 
-# Economist C: Needs both + trade data
-from sidra_fetcher import SidraClient
+# Economist C: SIDRA + trade
 import comexdown
-# (each tool uses its own access pattern; no shared abstraction required)
+comexdown.get_year(Path("./DATA"), year=2023)
+# Each tool keeps its own access pattern; no shared abstraction required.
 ```
 
 ## 2. Resilience

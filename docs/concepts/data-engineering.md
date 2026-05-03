@@ -111,19 +111,30 @@ graph TD
 ### Brazilian Public Data Suite Uses ELT
 
 ```python
-# EXTRACT & LOAD: Store raw data
-gdp = SidraClient().fetch(table="1620", variable=116)
-gdp.to_parquet("gdp_raw.parquet")  # Store raw
-
-# TRANSFORM: Process on-demand
+# EXTRACT & LOAD: store raw rows from SIDRA
 import polars as pl
-gdp = pl.read_parquet("gdp_raw.parquet")
-gdp = gdp.with_columns([
-    pl.col("value").pct_change().alias("growth")
-])
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# Can re-transform anytime without re-fetching
-# Raw data is preserved for debugging
+param = Parametro(
+    agregado="1620",
+    territorios={"1": ["all"]},
+    variaveis=["116"],
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+with SidraClient(timeout=60) as client:
+    rows = client.get(param.url())  # list[dict]
+
+pl.DataFrame(rows).write_parquet("gdp_raw.parquet")  # store raw
+
+# TRANSFORM: process on demand
+gdp = pl.read_parquet("gdp_raw.parquet").with_columns(
+    pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("growth")
+)
+# Re-transform anytime without re-fetching; raw data preserved for debugging.
 ```
 
 ## Data Quality Dimensions

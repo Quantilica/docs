@@ -1,15 +1,15 @@
 # comexdown: Brazil's Foreign Trade Data Downloader
 
-**comexdown** is a Python package to download and process Brazilian foreign trade data published by the Ministério da Economia (ME) / Secretaria de Comércio Exterior (SCE).
+**comexdown** is a Python package and CLI to download Brazilian foreign trade microdata published by SECEX/COMEX (Secretaria de Comércio Exterior, Ministério da Economia).
 
 ## Features
 
-- **Multi-threaded downloads** — configurable parallel connections for faster retrieval
-- **File integrity checks** — skips already-downloaded files by comparing Last-Modified dates
-- **Automatic retries** — handles transient network errors with exponential backoff
-- **Streaming downloads** — processes large files in chunks without memory exhaustion
-- **Code tables** — download NCM, UF, and other reference tables
-- **Exports & Imports** — complete Siscomex data from 1997 to present
+- **Temporal idempotency** — HEAD request checks `Last-Modified`; skips files already up to date
+- **Streaming downloads** — 8 KiB chunks; constant memory regardless of file size
+- **Atomic writes** — downloads to `*.tmp` and renames on success; partial files never appear
+- **Auto-retry** — up to 3 attempts with exponential backoff (1 s → 2 s → 4 s)
+- **SSL resilience** — uses an unverified SSL context for SECEX servers with expired/misconfigured certs
+- **No third-party dependencies** — pure standard library (`urllib`, `ssl`, `http.client`)
 
 ## Installation
 
@@ -17,88 +17,130 @@
 pip install comexdown
 ```
 
-## Quick Start
+**Requirements:** Python 3.10+
 
-### Download trade data
+## CLI
+
+```text
+comexdown <command> [args]
+
+Commands:
+  trade YEARS [-exp] [-imp] [-mun] [-o PATH]
+        Download trade transactions for one year, a range (2018:2023), or 'complete'.
+        -exp / -imp restrict the direction; default downloads both.
+        -mun adds municipality-level files (1997+).
+  table [TABLES...] [-o PATH]
+        Download auxiliary code tables. 'all' downloads every table.
+        Run with no arguments to print the list of available tables.
+  all   [-y] [-o PATH]
+        Download EVERYTHING (all years, all tables, all datasets). Asks for
+        confirmation unless -y is given.
+```
+
+`PATH` defaults to `data/secex-comex`.
+
+### Examples
+
+```bash
+# Exports + imports for 2023
+comexdown trade 2023 -o ./DATA
+
+# Imports only, 2018–2023, with municipality breakdown
+comexdown trade 2018:2023 -imp -mun -o ./DATA
+
+# Single complete-history file (all years bundled by SECEX)
+comexdown trade complete -o ./DATA
+
+# Auxiliary tables
+comexdown table all -o ./DATA          # every table
+comexdown table ncm pais uf -o ./DATA  # specific tables
+comexdown table                        # list available tables
+
+# Everything (long-running, multi-GB)
+comexdown all -y -o ./DATA
+```
+
+## Python API
+
+Top-level functions in `comexdown`:
 
 ```python
+from pathlib import Path
 import comexdown
 
-# Download 2019 exports data to ./DATA directory
-comexdown.exp(year=2019, path="./DATA")
+data_dir = Path("./DATA")
 
-# Download 2019 imports data
-comexdown.imp(year=2019, path="./DATA")
+# Trade transactions for one year (NCM-based, 1997+)
+comexdown.get_year(data_dir, year=2023)                     # exports + imports
+comexdown.get_year(data_dir, year=2023, exp=True)           # exports only
+comexdown.get_year(data_dir, year=2023, imp=True, mun=True) # imports, municipality
+
+# Older NBM-based trade data (1989–1996)
+comexdown.get_year_nbm(data_dir, year=1995)
+
+# Complete historical files (one file per direction, all years)
+comexdown.get_complete(data_dir)
+comexdown.get_complete(data_dir, exp=True, mun=True)
+
+# Auxiliary code table
+comexdown.get_table(data_dir, table="ncm")
+comexdown.get_table(data_dir, table="pais")
+
+# Everything
+comexdown.download_all(data_dir)
 ```
 
-### Download code tables
+Lower-level helpers in `comexdown.download`: `download_file(url, output, retry=3, blocksize=8192)`, `remote_is_more_recent(headers, dest)`, `get_file_metadata(url)`.
 
-```python
-import comexdown
+## Datasets
 
-# Download NCM table (commodity codes)
-comexdown.ncm(table="ncm", path="./DATA")
+### Trade transactions
 
-# Download UF table (state codes)
-comexdown.ncm(table="uf", path="./DATA")
+| Dataset | Coverage | Notes |
+|---|---|---|
+| `exp`, `imp` | 1997–present | NCM-based, monthly granularity |
+| `exp-mun`, `imp-mun` | 1997–present | Same, with municipality of origin/destination |
+| `exp-nbm`, `imp-nbm` | 1989–1996 | Pre-NCM, NBM classification |
+| `exp-completa`, `imp-completa` | full history | Single bundled file per direction |
+| `exp-mun-completa`, `imp-mun-completa` | full history | Same, with municipality |
+
+### Validation totals (cross-check sums)
+
+`exp-validacao`, `imp-validacao`, `exp-mun-validacao`, `imp-mun-validacao`.
+
+### REPETRO (oil & gas special regime)
+
+`exp-repetro`, `imp-repetro`.
+
+### Auxiliary tables
+
+`ncm`, `sh`, `cuci`, `cgce`, `isic`, `siit`, `fat-agreg`, `unidade`, `ppi`, `ppe`, `grupo`, `pais`, `pais-bloco`, `uf`, `uf-mun`, `via`, `urf`, `isic-cuci`, `nbm`, `ncm-nbm`.
+
+Run `comexdown table` (no args) to print the live list with descriptions.
+
+## On-disk layout
+
+`comexdown` writes to a structured tree under the output path:
+
+```
+data/secex-comex/
+├── exp/2023.csv
+├── imp/2023.csv
+├── exp-mun/2023.csv
+├── exp-nbm/1995.csv
+├── exp-completa.csv
+├── auxiliary-tables/<table>.csv
+├── validacao/<file>
+└── repetro/<file>
 ```
 
-## Command Line Tool
+## Idempotence
 
-Download trade transactions for a range of years:
-
-```bash
-comexdown trade 2008:2019 -o "./DATA"
-```
-
-Download code tables:
-
-```bash
-# Download all related code files
-comexdown table all
-
-# Download only the UF.csv file
-comexdown table uf
-
-# Download only the NCM_CGCE.csv file
-comexdown table ncm_cgce
-
-# Download only the NBM_NCM.csv file
-comexdown table nbm_ncm
-```
-
-## Data Format
-
-Downloaded files include:
-
-- **year_month**: Year and month of transaction
-- **hs_code**: HS commodity code (2-10 digits)
-- **origin_country**: Country code (imports)
-- **destination_country**: Country code (exports)
-- **value_usd**: Value in USD
-- **quantity**: Quantity in units
-- **weight_kg**: Weight in kilograms
-- **ncm_code**: Brazilian NCM code
-
-## Development
-
-Install for development:
-
-```bash
-git clone https://github.com/Quantilica/comexdown.git
-cd comexdown
-pip install -e .[dev]
-```
-
-Run tests:
-
-```bash
-pytest tests/
-```
+Every download starts with a HEAD request. `remote_is_more_recent` compares `Last-Modified` against the local file's `mtime`; if the local file is up to date the GET is skipped entirely. After a successful download the file's `mtime` is set from `Last-Modified`, so the next run finds it idempotent without re-fetching.
 
 ## Data Source
 
-Brazilian foreign trade data: https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta
+[Ministério do Desenvolvimento, Indústria, Comércio e Serviços — Estatísticas de Comércio Exterior](https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta).
 
 ## Learn More
 
