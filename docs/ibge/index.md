@@ -54,9 +54,9 @@ graph LR
 
 Como o domínio IBGE concretiza os princípios da plataforma:
 
-- **[Resiliência](../concepts/principios.md#resiliencia)** — `sidra-fetcher` aplica `tenacity` com backoff exponencial em metadados; `sidra-sql` é idempotente, pode ser re-executado em pipelines parcialmente bem-sucedidos.
+- **[Resiliência](../concepts/principios.md#resiliência)** — `sidra-fetcher` aplica `tenacity` com backoff exponencial em metadados; `sidra-sql` é idempotente, pode ser re-executado em pipelines parcialmente bem-sucedidos.
 - **[Performance](../concepts/principios.md#performance)** — `AsyncSidraClient` paraleliza com `asyncio.gather`; `sidra-sql` usa `COPY FROM STDIN` para bulk load 400k+ rows/s.
-- **[Sem Mágica](../concepts/principios.md#sem-magica)** — a classe `Parametro` torna cada parâmetro de URL nomeado e visível; pipelines TOML declarativos não escondem comportamento em código.
+- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — a classe `Parametro` torna cada parâmetro de URL nomeado e visível; pipelines TOML declarativos não escondem comportamento em código.
 - **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — SCD Type II preserva revisões IBGE; qualquer snapshot histórico pode ser reconstruído.
 
 Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Auto-retry](../concepts/padroes.md#auto-retry).

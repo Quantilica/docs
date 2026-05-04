@@ -47,9 +47,9 @@ Para o tutorial de Parquet + Polars (não específico de RAIS, aplicável a qual
 ## Princípios em ação
 
 - **[Performance](../concepts/principios.md#performance)** — processamento vetorial Polars é 10× Pandas; Parquet comprime CSV em ~88%.
-- **[Resiliência](../concepts/principios.md#resiliencia)** — `pdet-data fetch` é idempotente: re-rodar pula `.7z` já presentes; FTP intermitente é tolerável.
+- **[Resiliência](../concepts/principios.md#resiliência)** — `pdet-data fetch` é idempotente: re-rodar pula `.7z` já presentes; FTP intermitente é tolerável.
 - **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — schemas por-ano são tipados e documentados; conversão é determinística.
-- **[Sem Mágica](../concepts/principios.md#sem-magica)** — `pdet-data convert` faz exatamente isto: descompacta, parseia, escreve. Sem caching escondido, sem flags surpresa.
+- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — `pdet-data convert` faz exatamente isto: descompacta, parseia, escreve. Sem caching escondido, sem flags surpresa.
 
 Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
 

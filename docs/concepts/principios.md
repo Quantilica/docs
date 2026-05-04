@@ -7,10 +7,10 @@ A Plataforma Brasileira de Dados Públicos é construída sobre cinco princípio
 Os cinco princípios funcionam como um conjunto:
 
 1. **[Modularidade](#modularidade)** — escolha a ferramenta certa para cada fonte sem dependências cruzadas.
-2. **[Resiliência](#resiliencia)** — pipelines funcionam apesar da instabilidade da infraestrutura.
+2. **[Resiliência](#resiliência)** — pipelines funcionam apesar da instabilidade da infraestrutura.
 3. **[Performance](#performance)** — datasets massivos são tratados com rapidez e baixa memória.
 4. **[Reprodutibilidade](#reprodutibilidade)** — toda transformação é determinística e auditável.
-5. **[Sem Mágica](#sem-magica)** — o usuário entende, controla e consegue depurar tudo.
+5. **[Sem Mágica](#sem-mágica)** — o usuário entende, controla e consegue depurar tudo.
 
 Cada seção termina com links para os [Padrões Práticos](padroes.md) que materializam o princípio em código.
 
