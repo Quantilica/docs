@@ -253,5 +253,5 @@ datasus-fetcher baixa arquivos `.dbc`, que são um formato comprimido usado pelo
 ## Saiba Mais
 
 - **[Pesquisas de Saúde IBGE](../ibge/index.md)** — Estatísticas de saúde populacional
-- **[Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema
 - **[DATASUS Oficial (Português)](https://datasus.saude.gov.br/)** — Fonte governamental

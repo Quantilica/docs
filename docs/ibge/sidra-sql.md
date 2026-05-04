@@ -178,19 +178,19 @@ sidra-sql run std pib_municipal
 
 ## Instalação
 
-=== "pip"
+### "pip"
 
 ```bash
 pip install sidra-sql
 ```
 
-=== "uv"
+### "uv"
 
 ```bash
 uv pip install sidra-sql
 ```
 
-=== "from source"
+### "from source"
 
 ```bash
 git clone https://github.com/Quantilica/sidra-sql.git
@@ -914,6 +914,6 @@ config = Config()
 - [Visão Geral IBGE](index.md)
 - [sidra-fetcher](sidra-fetcher.md) — Ferramenta de extração de dados
 - [sidra-pipelines](sidra-pipelines.md) — Catálogo de pipelines padrão
-- [Arquitetura: Princípios de Design](../architecture/design-principles.md)
+- [Princípios de Design](../concepts/principios.md)
 - [Banco de Dados SIDRA (Português)](https://sidra.ibge.gov.br/)
 - [Documentação PostgreSQL](https://www.postgresql.org/docs/)

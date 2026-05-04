@@ -172,4 +172,4 @@ pytest
 ## Saiba Mais
 
 - **[Dados de Saúde Pública](../saude/datasus-fetcher.md)** — Sistemas de vigilância em saúde
-- **[Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema
