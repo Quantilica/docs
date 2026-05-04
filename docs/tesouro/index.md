@@ -52,10 +52,10 @@ Para dados fiscais (RTN), o fluxo é mais simples: `rtnpy` baixa a planilha mais
 
 ## Princípios em ação
 
-- **[Resiliência](../concepts/principios.md#resiliencia)** — `tddata.downloader` verifica `last_modified` no CKAN antes de baixar, pulando arquivos atualizados; `rtnpy` deduplica por timestamp.
+- **[Resiliência](../concepts/principios.md#resiliência)** — `tddata.downloader` verifica `last_modified` no CKAN antes de baixar, pulando arquivos atualizados; `rtnpy` deduplica por timestamp.
 - **[Performance](../concepts/principios.md#performance)** — async fetching paraleliza até `max_concurrency` recursos por dataset; readers Polars processam 15M linhas em 0.34s.
 - **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — Modified Dietz pondera fluxos de caixa pelo timing dentro do mês, garantindo conformidade GIPS auditável; matching FIFO é determinístico (vendas associadas às compras mais antigas).
-- **[Sem Mágica](../concepts/principios.md#sem-magica)** — algoritmos complexos (FIFO, Modified Dietz) são documentados inline; cupons são injetados explicitamente como fluxo de caixa.
+- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — algoritmos complexos (FIFO, Modified Dietz) são documentados inline; cupons são injetados explicitamente como fluxo de caixa.
 
 Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Idempotência](../concepts/padroes.md#processamento-idempotente), [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation).
 
