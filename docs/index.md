@@ -1,67 +1,72 @@
-# Brazilian Public Data Suite
+# Plataforma Brasileira de Dados Públicos
 
-A modular platform for extracting, processing and analyzing Brazilian public datasets.
+Uma plataforma modular para extrair, processar e analisar datasets públicos brasileiros.
 
 <div align="center">
   <img src="../assets/logo.png" alt="Logo" width="200" height="200">
 </div>
 
-## The Problem
+## O Problema
 
-Brazilian public data is fragmented across multiple government agencies, each with its own data infrastructure:
+Dados públicos brasileiros estão fragmentados em múltiplas agências governamentais, cada uma com sua própria infraestrutura:
 
-- **Unstable APIs**: Endpoints change without warning, rate limiting is unpredictable, and downtime is common
-- **Legacy infrastructure**: FTP servers, CKAN instances, and older web APIs lack modern data formats
-- **Inconsistent schemas**: Table structures differ across years, missing values are handled inconsistently
-- **Large files**: Datasets range from hundreds of MB to tens of GB, requiring careful handling
-- **No standardization**: Each source has its own naming conventions, column ordering, and data types
+- **APIs instáveis**: Endpoints mudam sem aviso, rate limiting é imprevisível, e downtime é comum
+- **Infraestrutura legada**: Servidores FTP, instâncias CKAN e APIs web antigas carecem de formatos modernos
+- **Esquemas inconsistentes**: Estruturas de tabelas diferem ao longo dos anos, valores ausentes são tratados inconsistentemente
+- **Arquivos grandes**: Datasets variam de centenas de MB a dezenas de GB, exigindo tratamento cuidadoso
+- **Sem padronização**: Cada fonte tem suas próprias convenções de nomenclatura, ordenação de colunas e tipos de dados
 
-Building reliable data pipelines on top of this requires:
+Construir pipelines de dados confiáveis em cima disso requer:
 
-- Resilient extraction logic that handles API failures gracefully
-- Data validation and cleaning at the source level
-- Structured storage formats that enable efficient analytics
-- Reproducible transformation pipelines
+- Lógica de extração resiliente que lida com falhas de API graciosamente
+- Validação e limpeza de dados no nível da fonte
+- Formatos de armazenamento estruturados que permitem análise eficiente
+- Pipelines de transformação reproduzíveis
 
-## The Solution
+## A Solução
 
-This platform provides a set of **specialized, modular tools** designed to handle real-world Brazilian public data. Each tool is engineered for its specific infrastructure, with distinct architectural patterns:
+Esta plataforma fornece um conjunto de **ferramentas especializadas e modulares** projetadas para lidar com dados públicos brasileiros do mundo real. Cada ferramenta é projetada para sua infraestrutura específica, com padrões arquiteturais distintos:
 
-| Component | Architecture Pattern | Infrastructure Challenge |
+| Componente | Padrão Arquitetural | Desafio de Infraestrutura |
 |-----------|---------------------|--------------------------|
-| **sidra-fetcher** | Dual sync/async clients with smart caching | Unstable IBGE REST API, rate limiting |
-| **sidra-sql** | Plugin-based ETL motor with star-schema modeling | Streaming bulk load + revision history (SCD II) |
-| **tddata** | Financial engineering with FIFO lot matching | Streaming portfolio transactions, GIPS compliance |
-| **pdet-data** | Big Data transformation with Polars vectorial processing | 50M+ row CSVs that exhaust Pandas memory |
-| **comexdown** | Resilient extraction agent with temporal idempotency | Legacy government servers, SSL issues, colossal files |
-| **datasus-fetcher** | Multithreaded concurrent crawler with semantic parsing | Legacy FTP infrastructure, cryptic nomenclature, weeks of sequential downloads |
+| **sidra-fetcher** | Clientes sync/async dual com smart caching | API REST IBGE instável, rate limiting |
+| **sidra-sql** | Motor ETL baseado em plugins com modelagem star-schema | Bulk load streaming + histórico de revisões (SCD II) |
+| **tddata** | Engenharia financeira com matching FIFO de lotes | Transações de portfólio streaming, conformidade GIPS |
+| **pdet-data** | Transformação Big Data com processamento vetorial Polars | CSVs 50M+ linhas que esgotam memória Pandas |
+| **comexdown** | Agente de extração resiliente com idempotência temporal | Servidores governamentais legados, problemas SSL, arquivos colossais |
+| **datasus-fetcher** | Crawler concorrente multithreaded com parsing semântico | Infraestrutura FTP legada, nomenclatura críptica, semanas de downloads sequenciais |
 
-Each tool is production-hardened for its domain:
+Cada ferramenta é endurecida em produção para seu domínio:
 
-- **Resilience**: Exponential backoff, auto-retry, graceful degradation
-- **Efficiency**: Smart caching, idempotence checks, streaming processing
-- **Reliability**: Data validation, deduplication, comprehensive audit trails
-- **Performance**: Multithreaded concurrency, vectorial processing, columnar storage
-- **Reproducibility**: Deterministic transformations, versioned outputs, complete lineage
+- **Resiliência**: Backoff exponencial, auto-retry, degradação graciosa
+- **Eficiência**: Smart caching, verificações de idempotência, processamento streaming
+- **Confiabilidade**: Validação de dados, deduplicação, trilhas de auditoria abrangentes
+- **Performance**: Concorrência multithreaded, processamento vetorial, armazenamento colunares
+- **Reprodutibilidade**: Transformações determinísticas, outputs versionados, linhagem completa
 
-## Domains Covered
+## Domínios Cobertos
 
-### IBGE (Macroeconomics)
-SIDRA is the official source for Brazilian macroeconomic time series: GDP, inflation, employment, trade, etc. Our tools make it accessible.
+### IBGE (Macroeconomia)
 
-### Treasury Direct (Finance)
-Fixed-income yields and bond pricing data. Used for financial analysis, portfolio construction, and risk modeling.
+SIDRA é a fonte oficial para séries temporais macroeconômicas brasileiras: PIB, inflação, emprego, comércio, etc. Nossas ferramentas a tornam acessível.
 
-### Labor Market (Trabalho)
-RAIS (annual employment census) and CAGED (monthly job flows) provide granular labor market data by region and sector.
+### Tesouro Direto (Finanças)
 
-### Foreign Trade (Comex)
-Siscomex export/import flows enable trade analysis and competitiveness studies.
+Dados de rendimento de renda fixa e precificação de títulos. Usado para análise financeira, construção de portfólio e modelagem de risco.
 
-### Public Health (Saúde)
-DATASUS epidemiological data for disease surveillance, health economics, and public health research.
+### Mercado de Trabalho
 
-## Platform Architecture
+RAIS (censo anual de emprego) e CAGED (fluxos mensais de empregos) fornecem dados granulares do mercado de trabalho por região e setor.
+
+### Comércio Exterior
+
+Fluxos de exportação/importação do Siscomex permitem análise de comércio e estudos de competitividade.
+
+### Saúde Pública
+
+Dados epidemiológicos DATASUS para vigilância de doenças, economia da saúde e pesquisa em saúde pública.
+
+## Arquitetura da Plataforma
 
 ```mermaid
 graph TD
@@ -72,15 +77,15 @@ graph TD
     classDef storage fill:#f1f8e9,stroke:#33691e,stroke-width:2px;
     classDef research fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
 
-    subgraph Sources [Public Data Sources]
+    subgraph Sources [Fontes de Dados Públicos]
         direction LR
         S1[IBGE]:::source
-        S2[Treasury]:::source
-        S3[Labor]:::source
-        S4[Trade]:::source
+        S2[Tesouro]:::source
+        S3[Trabalho]:::source
+        S4[Comércio]:::source
     end
 
-    subgraph Acquisition [Specialized Extractors]
+    subgraph Acquisition [Extractores Especializados]
         direction LR
         A1[sidra-fetcher]:::extractor
         A2[tddata]:::extractor
@@ -88,18 +93,18 @@ graph TD
         A4[comexdown]:::extractor
     end
 
-    subgraph Processing [Data Pipelines]
+    subgraph Processing [Pipelines de Dados]
         P1[sidra-pipelines]:::pipeline
         P2[sidra-sql]:::pipeline
     end
 
-    subgraph Storage [Structured Storage]
+    subgraph Storage [Armazenamento Estruturado]
         direction LR
         ST1[(PostgreSQL)]:::storage
         ST2[Parquet Lake]:::storage
     end
 
-    R[Research & Analytics]:::research
+    R[Pesquisa & Análise]:::research
 
     %% Connections
     Sources --> Acquisition
@@ -108,70 +113,70 @@ graph TD
     Storage --> R
 ```
 
-## Key Components
+## Componentes Principais
 
 ### sidra-fetcher
 
-**Dual client pattern** for IBGE SIDRA macroeconomic extraction. Provides both synchronous (simplicity) and asynchronous (performance) clients with smart caching via HEAD requests checking Last-Modified headers.
+**Padrão dual client** para extração macroeconômica SIDRA IBGE. Fornece clientes síncronos (simplicidade) e assíncronos (performance) com smart caching via requisições HEAD verificando headers Last-Modified.
 
-- **Sync mode** (~60s): Sequential table fetches for one-off queries or simplicity
-- **Async mode** (~15s): Concurrent fetches via `asyncio.gather` with 4x speedup
-- **Smart caching**: Skip unchanged tables via URL parametrization; idempotence checks
-- **Use when**: You need real-time economic indicators, inflation data, or employment statistics from SIDRA with flexible sync/async requirements
+- **Modo Sync** (~60s): Fetches sequenciais de tabelas para queries one-off ou simplicidade
+- **Modo Async** (~15s): Fetches concorrentes via `asyncio.gather` com speedup 4x
+- **Smart caching**: Pula tabelas inalteradas via parametrização de URL; verificações de idempotência
+- **Use quando**: Precisa de indicadores econômicos em tempo real, dados de inflação ou estatísticas de emprego da SIDRA com requisitos flexíveis sync/async
 
 ### sidra-sql
 
-**Plugin-based ETL motor** that ingests SIDRA tables into a normalized PostgreSQL star schema. Streaming bulk load via PostgreSQL `COPY FROM STDIN` (400k+ rows/sec). Implements Slowly Changing Dimensions (SCD Type II) so historical revisions are preserved instead of overwritten.
+**Motor ETL baseado em plugins** que ingere tabelas SIDRA em um schema star normalizado PostgreSQL. Bulk load streaming via `COPY FROM STDIN` PostgreSQL (400k+ rows/sec). Implementa Slowly Changing Dimensions (SCD Type II) para que revisões históricas sejam preservadas em vez de sobrescritas.
 
-- **Declarative TOML pipelines**: `fetch.toml` + `transform.toml` + `transform.sql` per dataset; no Python required
-- **Plugin system**: Pre-built catalog at `sidra-pipelines`; one-command install + run
-- **Star schema**: 5 tables (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`) decouple metadata from facts
-- **SCD Type II**: `ativo` + `modificacao` columns reproduce any historical snapshot
-- **Use when**: Building a reproducible data warehouse, exposing IBGE data to BI tools, or tracking IBGE revisions over time
+- **Pipelines TOML declarativos**: `fetch.toml` + `transform.toml` + `transform.sql` por dataset; sem Python necessário
+- **Sistema de plugins**: Catálogo pré-construído em `sidra-pipelines`; install + run one-command
+- **Star schema**: 5 tabelas (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`) desacoplam metadata de facts
+- **SCD Type II**: Colunas `ativo` + `modificacao` reproduzem qualquer snapshot histórico
+- **Use quando**: Construindo um data warehouse reproduzível, expondo dados IBGE a ferramentas BI, ou rastreando revisões IBGE ao longo do tempo
 
 ### tddata
 
-**Financial engineering suite** for Treasury Direct fixed-income analysis. Features FIFO inventory control algorithm, Modified Dietz Method for GIPS-compliant portfolio performance measurement, and async concurrent bond downloads.
+**Suite de engenharia financeira** para análise de renda fixa Tesouro Direto. Conta com algoritmo de controle de inventário FIFO, Modified Dietz Method para medição de performance de portfólio em conformidade GIPS, e downloads de títulos concorrentes assíncronos.
 
-- **Smart async fetching** (3x faster than sync): Parallel bond downloads with idempotence checks
-- **FIFO inventory control**: Per-lot return attribution with coupon injection
-- **Modified Dietz Method**: GIPS-compliant weighted cash flow portfolio returns
-- **Polars vectorial processing**: 10x faster than Pandas for bulk calculations
-- **Use when**: Building fixed-income analytics, calculating portfolio performance, or analyzing Brazilian government bond yields
+- **Smart async fetching** (3x mais rápido que sync): Downloads paralelos de títulos com verificações de idempotência
+- **Controle de inventário FIFO**: Atribuição de retorno por lote com injeção de cupom
+- **Modified Dietz Method**: Retornos de portfólio de fluxo de caixa ponderado em conformidade GIPS
+- **Processamento vetorial Polars**: 10x mais rápido que Pandas para cálculos em massa
+- **Use quando**: Construindo análise de renda fixa, calculando performance de portfólio, ou analisando rendimentos de títulos do governo brasileiro
 
 ### pdet-data
 
-**Big Data transformation engine** for Brazilian labor market microdata. Multithreaded Polars vectorial processing transforms legacy CSV/TXT formats into efficient Parquet columnar storage with 95%+ compression.
+**Motor de transformação Big Data** para microdados de mercado de trabalho brasileiro. Processamento vetorial Polars multithreaded transforma formatos CSV/TXT legados em armazenamento colunares Parquet eficiente com compressão 95%+.
 
-- **Raw-to-Parquet conversion**: 8 GB CSV → 0.4 GB Parquet (96% compression)
-- **Vectorial processing**: Multithreaded Rust execution; 10x faster than Pandas
-- **Intelligent memory management**: Streaming decompression with dynamic cleanup
-- **Idempotent processing**: First run 62s → cached runs 0.08s (778x speedup)
-- **Use when**: Processing 50M+ row employment datasets that exhaust Pandas memory
+- **Conversão Raw-to-Parquet**: 8 GB CSV → 0.4 GB Parquet (compressão 96%)
+- **Processamento vetorial**: Execução Rust multithreaded; 10x mais rápido que Pandas
+- **Gerenciamento inteligente de memória**: Descompressão streaming com limpeza dinâmica
+- **Processamento idempotent**: Primeira execução 62s → execuções em cache 0.08s (speedup 778x)
+- **Use quando**: Processando datasets de emprego 50M+ linhas que esgotam memória Pandas
 
 ### comexdown
 
-**Resilient network extraction agent** for Siscomex trade data with streaming efficiency and SSL resilience. Handles legacy government infrastructure instability through temporal idempotency and exponential backoff.
+**Agente de extração de rede resiliente** para dados de comércio Siscomex com eficiência streaming e resiliência SSL. Lida com instabilidade de infraestrutura governamental legada através de idempotência temporal e backoff exponencial.
 
-- **Temporal idempotency** (57x speedup): HEAD requests check Last-Modified; skip unchanged files
-- **Streaming chunks** (8KB blocks): Zero memory overhead regardless of file size
-- **SSL resilience**: Handles expired/misconfigured certificates; User-Agent spoofing
-- **Auto-retry**: Exponential backoff on transient failures
-- **Concurrent downloads**: 5-10x speedup with parallel workers
-- **Use when**: Downloading gigabyte-scale trade datasets or analyzing import/export patterns
+- **Idempotência temporal** (speedup 57x): Requisições HEAD verificam Last-Modified; pula arquivos inalterados
+- **Chunks streaming** (blocos 8KB): Zero overhead de memória independentemente do tamanho do arquivo
+- **Resiliência SSL**: Lida com certificados expirados/mal configurados; spoofing de User-Agent
+- **Auto-retry**: Backoff exponencial em falhas transitórias
+- **Downloads concorrentes**: Speedup 5-10x com workers paralelos
+- **Use quando**: Baixando datasets de comércio em escala gigabyte ou analisando padrões de importação/exportação
 
 ### datasus-fetcher
 
-**Multithreaded concurrent crawler** for DATASUS epidemiological systems hosted on legacy FTP servers. Producer-Consumer threading pattern with recursive directory crawling and semantic filename parsing.
+**Crawler concorrente multithreaded** para sistemas epidemiológicos DATASUS hospedados em servidores FTP legados. Padrão threading Producer-Consumer com crawling recursivo de diretório e parsing semântico de nome de arquivo.
 
-- **Multithreaded concurrency** (6-10x speedup): Pool-based parallelization with 5-10 concurrent FTP connections
-- **Smart resume** (1,350x speedup on re-runs): Size-based idempotence; skip unchanged files
-- **Recursive crawling**: Dynamic directory mapping; no hardcoded paths
-- **Semantic parsing**: Decode filenames into metadata (year, month, state, system) for surgical subsetting
-- **Complete ecosystem**: Download data + layouts + documentation with versioning
-- **Use when**: Extracting complete public health microdata (SIM, SINASC, SIA, SIHSUS, CNES) for epidemiological research
+- **Concorrência multithreaded** (speedup 6-10x): Paralelização baseada em pool com 5-10 conexões FTP concorrentes
+- **Smart resume** (speedup 1,350x em re-runs): Idempotência baseada em tamanho; pula arquivos inalterados
+- **Crawling recursivo**: Mapeamento dinâmico de diretório; sem caminhos hardcoded
+- **Parsing semântico**: Decodificar nomes de arquivo em metadados (ano, mês, estado, sistema) para subsetting cirúrgico
+- **Ecossistema completo**: Baixa dados + layouts + documentação com versionamento
+- **Use quando**: Extraindo microdados completos de saúde pública (SIM, SINASC, SIA, SIHSUS, CNES) para pesquisa epidemiológica
 
-## Quick Examples
+## Exemplos Rápidos
 
 ### Economic Analysis: Async Fetching with Dual Clients
 
@@ -285,89 +290,89 @@ fetcher.download_data(
 )
 ```
 
-## Use Cases
+## Casos de Uso
 
-### Real-Time Economic Monitoring
+### Monitoramento Econômico em Tempo Real
 
-Use async sidra-fetcher to concurrently fetch GDP, inflation, and employment from IBGE SIDRA. 4x faster than sequential approaches. Combine with tddata for yield curves and macro analysis.
+Use async sidra-fetcher para fazer fetch concorrente de PIB, inflação e emprego da SIDRA IBGE. 4x mais rápido que abordagens sequenciais. Combine com tddata para curvas de rendimento e análise macro.
 
-### Portfolio Analytics & Risk Management
+### Análise de Portfólio & Gestão de Risco
 
-Fetch Treasury Direct historical yields with tddata. Calculate GIPS-compliant returns using Modified Dietz Method with FIFO lot matching. Analyze duration and convexity risk across your fixed-income holdings.
+Faça fetch de rendimentos históricos Tesouro Direto com tddata. Calcule retornos em conformidade GIPS usando Modified Dietz Method com matching FIFO de lotes. Analise risco de duration e convexidade em suas participações de renda fixa.
 
-### Labor Market Dynamics
+### Dinâmica do Mercado de Trabalho
 
-Process 50M+ row RAIS employment records with pdet-data (raw CSV → Parquet in 62s). Analyze wage trends, job creation, and sectoral shifts using Polars vectorial processing. Track monthly flows with CAGED data.
+Processe 50M+ registros RAIS de emprego com pdet-data (CSV bruto → Parquet em 62s). Analise tendências salariais, criação de emprego e deslocamentos setoriais usando processamento vetorial Polars. Rastreie fluxos mensais com dados CAGED.
 
-### Trade Competitiveness & Supply Chain
+### Competitividade Comercial & Cadeia de Suprimentos
 
-Download complete trade flows from Siscomex with comexdown (57x speedup via smart caching). Analyze export specialization, import dependency, and competitiveness indices by commodity and destination.
+Baixe fluxos de comércio completos do Siscomex com comexdown (speedup 57x via smart caching). Analise especialização de exportação, dependência de importação e índices de competitividade por commodity e destino.
 
-### Epidemiological Surveillance & Public Health
+### Vigilância Epidemiológica & Saúde Pública
 
-Concurrently crawl DATASUS FTP servers with datasus-fetcher (6-10x speedup). Build disease burden studies from complete microdata (SIM mortality, SINASC births). Track health inequities and resource allocation efficiency.
+Faça crawl concorrente de servidores FTP DATASUS com datasus-fetcher (speedup 6-10x). Construa estudos de carga de doença a partir de microdados completos (mortalidade SIM, nascimentos SINASC). Rastreie inequidades de saúde e eficiência de alocação de recursos.
 
-## Design Philosophy
+## Filosofia de Design
 
-### Modularity
+### Modularidade
 
-Each tool is independent. Use only what you need; don't pull in unnecessary dependencies.
+Cada ferramenta é independente. Use apenas o que precisa; não puxe dependências desnecessárias.
 
 ### Performance
 
-Prefer columnar storage (Parquet) for analytical queries. Support PostgreSQL for operational access.
+Prefira armazenamento colunares (Parquet) para queries analíticas. Suporte PostgreSQL para acesso operacional.
 
-### Resilience
+### Resiliência
 
-Handle API failures, retries, and partial failures gracefully. Never silently drop data.
+Lide com falhas de API, retries e falhas parciais graciosamente. Nunca descarte dados silenciosamente.
 
-### Reproducibility
+### Reprodutibilidade
 
-All transformations are deterministic and logged. Replay any pipeline from raw data.
+Todas as transformações são determinísticas e registradas. Repita qualquer pipeline a partir de dados brutos.
 
-### No Magic
+### Sem Mágica
 
-Explicit is better than implicit. Know what data is being fetched, transformed, and stored.
+Explícito é melhor que implícito. Saiba quais dados estão sendo buscados, transformados e armazenados.
 
-## Getting Started
+## Começando
 
-### By Use Case
+### Por Caso de Uso
 
-**Economic Indicators?** → [IBGE (sidra-fetcher, sidra-sql, sidra-pipelines)](ibge/index.md)
+**Indicadores Econômicos?** → [IBGE (sidra-fetcher, sidra-sql, sidra-pipelines)](ibge/index.md)
 
-- Real-time GDP, inflation, employment statistics
-- Async fetching for ad-hoc analysis; declarative TOML pipelines for production warehousing
+- Estatísticas de PIB, inflação, emprego em tempo real
+- Fetching assíncrono para análise ad-hoc; pipelines TOML declarativos para data warehousing em produção
 
-**Fixed-Income Analysis?** → [Treasury Direct (tddata)](tesouro/tddata.md)
+**Análise de Renda Fixa?** → [Tesouro Direto (tddata)](tesouro/tddata.md)
 
-- GIPS-compliant portfolio returns with Modified Dietz
-- FIFO inventory control for per-lot attribution
+- Retornos de portfólio em conformidade GIPS com Modified Dietz
+- Controle de inventário FIFO para atribuição por lote
 
-**Employment & Wages?** → [Labor Market (pdet-data)](trabalho/pdet-data.md)
+**Emprego & Salários?** → [Mercado de Trabalho (pdet-data)](trabalho/pdet-data.md)
 
-- 50M+ row RAIS microdata processed in seconds with Polars
-- Monthly job flows from CAGED
+- Microdados RAIS 50M+ linhas processados em segundos com Polars
+- Fluxos mensais de empregos do CAGED
 
-**Trade Patterns?** → [Foreign Trade (comexdown)](comex/comexdown.md)
+**Padrões de Comércio?** → [Comércio Exterior (comexdown)](comex/comexdown.md)
 
-- Complete Siscomex datasets with temporal idempotency
-- 57x speedup via smart caching
+- Datasets completos Siscomex com idempotência temporal
+- Speedup 57x via smart caching
 
-**Disease Surveillance?** → [Public Health (datasus-fetcher)](saude/datasus-fetcher.md)
+**Vigilância de Doenças?** → [Saúde Pública (datasus-fetcher)](saude/datasus-fetcher.md)
 
-- Multithreaded FTP crawling (6-10x faster than sequential)
-- Complete microdata from DATASUS epidemiological systems
+- Crawling FTP multithreaded (6-10x mais rápido que sequencial)
+- Microdados completos de sistemas epidemiológicos DATASUS
 
-### By Learning Path
+### Por Caminho de Aprendizado
 
-1. **[Architecture Overview](architecture/overview.md)**: How each tool solves its infrastructure challenge
-2. **[Design Philosophy](design-philosophy.md)**: Resilience, efficiency, reliability, reproducibility
-3. **[Pick a Domain](ibge/index.md)**: Dive deep into IBGE, Treasury, Labor, Trade, or Health
-4. **[Best Practices](best-practices.md)**: Idempotent processing, smart caching, concurrent downloads
+1. **[Visão Geral da Arquitetura](architecture/overview.md)**: Como cada ferramenta resolve seu desafio de infraestrutura
+2. **[Filosofia de Design](design-philosophy.md)**: Resiliência, eficiência, confiabilidade, reprodutibilidade
+3. **[Escolha um Domínio](ibge/index.md)**: Aprofunde em IBGE, Tesouro, Trabalho, Comércio ou Saúde
+4. **[Melhores Práticas](best-practices.md)**: Processamento idempotent, smart caching, downloads concorrentes
 
-## Next Steps
+## Próximas Etapas
 
-- **Quick win**: Fetch macroeconomic data with [sidra-fetcher (async)](ibge/index.md)
-- **Production pipeline**: Build a Treasury Direct analytics engine with [tddata](tesouro/index.md)
-- **Big data**: Process RAIS with [pdet-data](trabalho/pdet-data.md) and Polars
-- **Complete ecosystem**: Download DATASUS with [datasus-fetcher concurrent crawler](saude/datasus-fetcher.md)
+- **Vitória rápida**: Faça fetch de dados macroeconômicos com [sidra-fetcher (async)](ibge/index.md)
+- **Pipeline em produção**: Construa um engine de análise Tesouro Direto com [tddata](tesouro/index.md)
+- **Big data**: Processe RAIS com [pdet-data](trabalho/pdet-data.md) e Polars
+- **Ecossistema completo**: Baixe DATASUS com [concurrent crawler datasus-fetcher](saude/datasus-fetcher.md)

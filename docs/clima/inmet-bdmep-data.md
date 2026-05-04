@@ -1,93 +1,93 @@
-# Climate & Environment
+# Clima e Ambiente
 
-Brazilian meteorological and environmental data from INMET (National Institute of Meteorology).
+Dados meteorológicos e ambientais brasileiros do INMET (Instituto Nacional de Meteorologia).
 
-**inmet-bdmep-data** provides access to Brazil's comprehensive historical weather station network, enabling climate research, agricultural analysis, hydrology studies, and environmental monitoring.
+**inmet-bdmep-data** fornece acesso à rede abrangente de estações meteorológicas históricas do Brasil, habilitando pesquisa climática, análise agrícola, estudos de hidrologia e monitoramento ambiental.
 
-## Overview
+## Visão Geral
 
-INMET's BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa — Meteorological Database for Teaching and Research) offers:
+BDMEP do INMET (Banco de Dados Meteorológicos para Ensino e Pesquisa) oferece:
 
-- **National coverage** of automatic weather stations (~570+ stations in recent years)
-- **Hourly observations** going back to 2000
-- **17 core meteorological variables**: precipitation, temperature, pressure, humidity, wind, solar radiation
-- **Long-term climate trends** for research and planning
+- **Cobertura nacional** de estações meteorológicas automáticas (~570+ estações em anos recentes)
+- **Observações horárias** remontando a 2000
+- **17 variáveis meteorológicas principais**: precipitação, temperatura, pressão, umidade, vento, radiação solar
+- **Tendências climáticas de longo prazo** para pesquisa e planejamento
 
-## Use Cases
+## Casos de Uso
 
-### Climate Research
+### Pesquisa Climática
 
-Analyze long-term climate patterns, temperature trends, and seasonal variations across Brazil.
+Analisar padrões climáticos de longo prazo, tendências de temperatura e variações sazonais em todo o Brasil.
 
-### Agricultural Planning & Modeling
+### Planejamento e Modelagem Agrícola
 
-Use precipitation and temperature data to inform crop selection, irrigation scheduling, and agricultural risk assessment.
+Use dados de precipitação e temperatura para informar seleção de culturas, agendamento de irrigação e avaliação de risco agrícola.
 
-### Hydrology & Water Resources
+### Hidrologia e Recursos Hídricos
 
-Analyze rainfall patterns and runoff to inform water resource management, drought planning, and flood prediction.
+Analisar padrões de chuva e escoamento para informar gerenciamento de recursos hídricos, planejamento de secas e predição de inundações.
 
-### Energy Planning
+### Planejamento de Energia
 
-Solar radiation and wind data for renewable energy assessment and grid planning.
+Dados de radiação solar e vento para avaliação de energia renovável e planejamento de rede.
 
-### Environmental Impact Assessment
+### Avaliação de Impacto Ambiental
 
-Monitor long-term environmental changes, air quality correlations, and climate variability.
+Monitorar mudanças ambientais de longo prazo, correlações de qualidade do ar e variabilidade climática.
 
-## Access
+## Acesso
 
-Access Brazil's official historical weather data with:
+Acesse dados meteorológicos históricos oficiais do Brasil com:
 
-- **National coverage** of automatic weather stations (~570+ stations in recent years)
-- **Hourly observations** going back to 2000
-- **Cleaned & standardized**: snake_case columns, parsed `data_hora`, `-9999` → null
-- **Filters**: UF, station code, date range
-- **Export**: Parquet, CSV, or JSON
-- **Engines**: pandas (default), polars (optional)
+- **Cobertura nacional** de estações meteorológicas automáticas (~570+ estações em anos recentes)
+- **Observações horárias** remontando a 2000
+- **Limpo & padronizado**: colunas snake_case, `data_hora` parseado, `-9999` → null
+- **Filtros**: UF, código de estação, intervalo de data
+- **Export**: Parquet, CSV, ou JSON
+- **Engines**: pandas (padrão), polars (opcional)
 
-## Installation
+## Instalação
 
 ```bash
 pip install git+https://github.com/dankkom/inmet-bdmep-data.git
 ```
 
-**Requirements:** Python 3.10+
+**Requisitos:** Python 3.10+
 
 ## CLI
 
-Installs the `inmet` command with three subcommands: `fetch`, `read`, `stations`.
+Instala o comando `inmet` com três subcomandos: `fetch`, `read`, `stations`.
 
-### Download raw years
+### Baixar anos brutos
 
 ```bash
-# Single year
+# Ano único
 inmet fetch 2023 --data-dir ./data
 
-# Range
+# Intervalo
 inmet fetch 2000:2024 --data-dir ./data --workers 8
 ```
 
-### Read & export
+### Ler & exportar
 
 ```bash
-# Everything to Parquet
+# Tudo para Parquet
 inmet read --data-dir ./data --output all.parquet
 
-# Filter by UF and year, export CSV
+# Filtrar por UF e ano, exportar CSV
 inmet read --data-dir ./data --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
 
-# Single station, date range
+# Estação única, intervalo de data
 inmet read --data-dir ./data --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
 ```
 
-### Station catalog
+### Catálogo de estações
 
 ```bash
 inmet stations --data-dir ./data --output estacoes.csv
 ```
 
-## Python API
+## API Python
 
 ```python
 import inmet_bdmep as inmet
@@ -95,10 +95,10 @@ from pathlib import Path
 
 data_dir = Path("./data")
 
-# 1. Fetch raw zips (parallel)
+# 1. Buscar zips brutos (em paralelo)
 inmet.fetch([2020, 2021, 2022, 2023], data_dir, workers=4)
 
-# 2. Read with filters → pandas DataFrame
+# 2. Ler com filtros → pandas DataFrame
 df = inmet.read(
     data_dir,
     years=[2022, 2023],
@@ -107,54 +107,54 @@ df = inmet.read(
     end="2023-05-31",
 )
 
-# Daily mean temperature by state
+# Temperatura média diária por estado
 df["temperatura_ar"].groupby([df["uf"], df["data_hora"].dt.date]).mean()
 
-# 3. Station catalog
+# 3. Catálogo de estações
 stations = inmet.read_stations(data_dir)
 print(stations[["codigo_wmo", "estacao", "uf", "latitude", "longitude", "altitude"]])
 ```
 
-Lower-level helpers also exposed: `inmet.read_zipfile(path, uf=..., station=..., start=..., end=...)`, `inmet.find_zipfiles(data_dir, years)`, `inmet.read_metadata(file)`, `inmet.read_station_data(file)`.
+Assistentes de nível inferior também expostos: `inmet.read_zipfile(path, uf=..., station=..., start=..., end=...)`, `inmet.find_zipfiles(data_dir, years)`, `inmet.read_metadata(file)`, `inmet.read_station_data(file)`.
 
-## Data Source
+## Fonte de Dados
 
 - **Portal**: https://portal.inmet.gov.br/dadoshistoricos
-- **URL pattern**: `https://portal.inmet.gov.br/uploads/dadoshistoricos/{year}.zip`
-- **Available data**: 2000–present (one zip per year, refreshed periodically)
-- **Format**: Per-station CSV (`;`-separated, `latin-1`, `,` decimal, `-9999` null) with 8-row metadata header
+- **Padrão de URL**: `https://portal.inmet.gov.br/uploads/dadoshistoricos/{year}.zip`
+- **Dados disponíveis**: 2000–presente (um zip por ano, atualizado periodicamente)
+- **Formato**: CSV por estação (separado por `;`, `latin-1`, `,` decimal, `-9999` nulo) com cabeçalho de metadados de 8 linhas
 
-## Variables
+## Variáveis
 
-| Column | Unit | Description |
-|---|---|---|
-| `data_hora` | datetime | Observation timestamp (UTC) |
-| `precipitacao` | mm | Total precipitation |
-| `pressao_atmosferica` | mB | Pressure at station level |
-| `pressao_atmosferica_maxima` | mB | Max pressure in last hour |
-| `pressao_atmosferica_minima` | mB | Min pressure in last hour |
-| `radiacao` | kJ/m² | Global solar radiation |
-| `temperatura_ar` | °C | Dry-bulb air temperature |
-| `temperatura_orvalho` | °C | Dew point |
-| `temperatura_maxima` / `_minima` | °C | Max/min air temperature |
-| `temperatura_orvalho_maxima` / `_minima` | °C | Max/min dew point |
-| `umidade_relativa` | % | Relative humidity |
-| `umidade_relativa_maxima` / `_minima` | % | Max/min relative humidity |
-| `vento_velocidade` | m/s | Wind speed |
-| `vento_rajada` | m/s | Wind gust |
-| `vento_direcao` | ° | Wind direction |
+| Coluna | Unidade | Descrição |
+|--------|---------|-----------|
+| `data_hora` | datetime | Timestamp da observação (UTC) |
+| `precipitacao` | mm | Precipitação total |
+| `pressao_atmosferica` | mB | Pressão ao nível da estação |
+| `pressao_atmosferica_maxima` | mB | Pressão máxima na última hora |
+| `pressao_atmosferica_minima` | mB | Pressão mínima na última hora |
+| `radiacao` | kJ/m² | Radiação solar global |
+| `temperatura_ar` | °C | Temperatura de bulbo seco |
+| `temperatura_orvalho` | °C | Ponto de orvalho |
+| `temperatura_maxima` / `_minima` | °C | Temperatura máx./mín. do ar |
+| `temperatura_orvalho_maxima` / `_minima` | °C | Ponto de orvalho máx./mín. |
+| `umidade_relativa` | % | Umidade relativa |
+| `umidade_relativa_maxima` / `_minima` | % | Umidade relativa máx./mín. |
+| `vento_velocidade` | m/s | Velocidade do vento |
+| `vento_rajada` | m/s | Rajada de vento |
+| `vento_direcao` | ° | Direção do vento |
 
-Per-row station metadata joined automatically: `regiao`, `uf`, `estacao`, `codigo_wmo`, `latitude`, `longitude`, `altitude`, `data_fundacao`.
+Metadados da estação por linha unidos automaticamente: `regiao`, `uf`, `estacao`, `codigo_wmo`, `latitude`, `longitude`, `altitude`, `data_fundacao`.
 
-## Use Cases
+## Casos de Uso
 
-- **Climate research** — long-term trends, anomalies
-- **Agricultural analysis** — precipitation, GDD, radiation
-- **Hydrology** — rainfall for water-resource modeling
-- **Energy planning** — solar radiation, wind for renewables
-- **Environmental studies** — multi-decade meteorology
+- **Pesquisa climática** — tendências de longo prazo, anomalias
+- **Análise agrícola** — precipitação, GDD, radiação
+- **Hidrologia** — chuva para modelagem de recursos hídricos
+- **Planejamento de energia** — radiação solar, vento para renováveis
+- **Estudos ambientais** — meteorologia multi-década
 
-## Development
+## Desenvolvimento
 
 ```bash
 git clone https://github.com/Quantilica/inmet-bdmep-data.git
@@ -163,13 +163,13 @@ uv sync
 pytest
 ```
 
-## References
+## Referências
 
-- **INMET portal**: https://portal.inmet.gov.br/
-- **BDMEP downloads**: https://portal.inmet.gov.br/dadoshistoricos
-- **WMO station IDs**: https://en.wikipedia.org/wiki/WMO_station_ID
+- **Portal INMET**: https://portal.inmet.gov.br/
+- **Downloads BDMEP**: https://portal.inmet.gov.br/dadoshistoricos
+- **IDs de estação WMO**: https://en.wikipedia.org/wiki/WMO_station_ID
 
-## Learn More
+## Saiba Mais
 
-- **[Public Health Data](../saude/datasus-fetcher.md)** — Health surveillance systems
-- **[Architecture](../architecture/overview.md)** — System design
+- **[Dados de Saúde Pública](../saude/datasus-fetcher.md)** — Sistemas de vigilância em saúde
+- **[Arquitetura](../architecture/overview.md)** — Design do sistema

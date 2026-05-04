@@ -1,19 +1,19 @@
-# Design Principles
+# Princípios de Design
 
-Core principles guiding the Brazilian Public Data Suite.
+Princípios centrais orientando a Plataforma Brasileira de Dados Públicos.
 
-## 1. Modularity
+## 1. Modularidade
 
-Each tool is **independent**, **self-contained**, and **reusable**.
+Cada ferramenta é **independente**, **auto-contida** e **reutilizável**.
 
-### Why Modularity?
+### Por Que Modularidade?
 
-- **Pick what you need**: Use only the tools relevant to your analysis
-- **Avoid dependency hell**: No cascading updates breaking everything
-- **Easy to test**: Each tool can be tested independently
-- **Easy to replace**: Can swap one tool for another without rewriting pipelines
+- **Escolha o que precisa**: Use apenas as ferramentas relevantes para sua análise
+- **Evite dependency hell**: Sem atualizações em cascata quebrando tudo
+- **Fácil testar**: Cada ferramenta pode ser testada independentemente
+- **Fácil substituir**: Pode trocar uma ferramenta por outra sem reescrever pipelines
 
-### How We Achieve It
+### Como Conseguimos
 
 ```
 sidra-fetcher       tddata               pdet-data            comexdown
@@ -24,20 +24,20 @@ datasus-fetcher        inmet-bdmep-data
 ├─ stdlib only         ├─ httpx, pandas, pyarrow
 └─ no cross-deps       └─ no cross-deps
 
-Use ONLY sidra-fetcher without touching tddata or comexdown.
+Use APENAS sidra-fetcher sem tocar tddata ou comexdown.
 ```
 
-### Example: Two Analysts, Same Platform, Different Tools
+### Exemplo: Dois Analistas, Mesma Plataforma, Ferramentas Diferentes
 
 ```python
 from pathlib import Path
 
-# Economist A: only needs SIDRA metadata
+# Economista A: apenas precisa de metadados SIDRA
 from sidra_fetcher import SidraClient
 with SidraClient() as client:
     agregado = client.get_agregado_metadados(1620)
 
-# Economist B: only needs labor market data
+# Economista B: apenas precisa de dados de mercado de trabalho
 from pdet_data import connect, fetch_rais
 ftp = connect()
 try:
@@ -45,96 +45,96 @@ try:
 finally:
     ftp.close()
 
-# Economist C: SIDRA + trade
+# Economista C: SIDRA + comércio
 import comexdown
 comexdown.get_year(Path("./DATA"), year=2023)
-# Each tool keeps its own access pattern; no shared abstraction required.
+# Cada ferramenta mantém seu próprio padrão de acesso; sem abstração compartilhada necessária.
 ```
 
-## 2. Resilience
+## 2. Resiliência
 
-Government infrastructure is **imperfect**. We handle failures gracefully.
+Infraestrutura governamental é **imperfeita**. Lidamos com falhas graciosamente.
 
-### Problems We Address
+### Problemas que Abordamos
 
 ```
-PROBLEM                    SOLUTION
+PROBLEMA                    SOLUÇÃO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-API timeout                Automatic retries with backoff
-Network failure            Configurable timeout + error recovery
-Rate limiting (429)        Built-in throttling + delay
-Malformed response         Validation + schema checking
-Slow API                   Pagination batching + async option
-Partial failure            Continue with partial data (logged)
+API timeout                 Retries automáticos com backoff
+Falha de rede               Timeout configurável + recuperação de erro
+Rate limiting (429)         Throttling integrado + delay
+Resposta malformada         Validação + verificação de schema
+API lenta                   Batch de paginação + opção async
+Falha parcial               Continue com dados parciais (registrados)
 ```
 
-### Retry Logic Example
+### Exemplo de Lógica de Retry
 
 ```python
 from sidra_fetcher import SidraClient
 
-# SidraClient retries metadata methods automatically via tenacity
-# (3 attempts; exponential backoff on get_agregado_periodos)
+# SidraClient faz retry em métodos de metadados automaticamente via tenacity
+# (3 tentativas; backoff exponencial em get_agregado_periodos)
 with SidraClient(timeout=60) as client:
     agregado = client.get_agregado_metadados(1620)
-    # Attempt 1: timeout
-    # Attempt 2: timeout
-    # Attempt 3: success ✓
+    # Tentativa 1: timeout
+    # Tentativa 2: timeout
+    # Tentativa 3: sucesso ✓
 ```
 
-### Error Handling Philosophy
+### Filosofia de Error Handling
 
 ```python
-# DON'T: Silently drop data
+# NÃO FAÇA: Descartar dados silenciosamente
 try:
     data = fetch_data()
 except Exception:
-    return pd.DataFrame()  # Empty result = silent failure ❌
+    return pd.DataFrame()  # Resultado vazio = falha silenciosa ❌
 
-# DO: Log the failure, let user decide
+# FAÇA: Log a falha, deixe o usuário decidir
 try:
     data = fetch_data()
 except TemporaryFailure as e:
-    logger.warning(f"Temporary failure: {e}, retrying...")
-    # Auto-retry happens here
+    logger.warning(f"Falha temporária: {e}, tentando novamente...")
+    # Auto-retry acontece aqui
 except PermanentFailure as e:
-    logger.error(f"Cannot recover: {e}")
-    raise  # User handles it ✓
+    logger.error(f"Não pode recuperar: {e}")
+    raise  # Usuário trata ✓
 ```
 
 ## 3. Performance
 
-Brazilian datasets are **large**. We optimize for speed and memory.
+Datasets brasileiros são **grandes**. Otimizamos para velocidade e memória.
 
-### Storage: Parquet vs CSV
+### Armazenamento: Parquet vs CSV
 
 ```
 CSV: 850 MB
-Parquet: 100 MB (12% of CSV size)
+Parquet: 100 MB (12% do tamanho CSV)
 ↓
-Fast loading + low disk usage
+Carregamento rápido + uso baixo de disco
 
-Also: Columnar structure = fast analytical queries
+Também: Estrutura colunar = consultas analíticas rápidas
 ```
 
-### Query Optimization: Lazy Evaluation
+### Otimização de Consultas: Lazy Evaluation
 
 ```python
-# Eager (traditional): Load everything, then filter
-df = pd.read_csv("huge_file.csv")  # 10 seconds
-result = df[df["state"] == "SP"]   # 5 more seconds
+# Eager (tradicional): Carregar tudo, depois filtrar
+df = pd.read_csv("huge_file.csv")  # 10 segundos
+result = df[df["state"] == "SP"]   # 5 segundos mais
 
-# Lazy (Polars): Optimize query plan first
+# Lazy (Polars): Otimizar plano de consulta primeiro
 df = pl.scan_csv("huge_file.csv")
 result = df.filter(pl.col("state") == "SP").collect()
-# Polars: Push filter down → read only matching rows
-# ↓ 1 second total
+# Polars: Empurrar filtro → ler apenas linhas correspondentes
+# ↓ 1 segundo total
 ```
 
-### Streaming for Large Files
+### Streaming para Arquivos Grandes
 
 ```python
-# Process large files in batches, not all-at-once
+# Processar arquivos grandes em batches, não tudo-de-uma-vez
 
 import polars as pl
 
@@ -143,90 +143,90 @@ reader = pl.read_parquet("rais_2023.parquet")
 batch_size = 100_000
 for i in range(0, len(reader), batch_size):
     batch = reader[i:i+batch_size]
-    # Process this batch
+    # Processar este batch
     result = batch.group_by("sector").agg(...)
-    # Save intermediate result
+    # Salvar resultado intermediário
 ```
 
-## 4. Reproducibility
+## 4. Reprodutibilidade
 
-All transformations are **deterministic**. Same input = same output, always.
+Todas as transformações são **determinísticas**. Mesma entrada = mesma saída, sempre.
 
-### Why Reproducibility Matters
+### Por Que Reprodutibilidade Importa
 
 ```
-Scenario: Build a model on 2023 GDP data
+Cenário: Construir um modelo com dados de PIB 2023
 ↓
-Deploy model to production
+Deploy do modelo para produção
 ↓
-Later: Run model again on same data
+Depois: Executar modelo novamente nos mesmos dados
 ↓
-Result: Different output (because data changed)
+Resultado: Saída diferente (porque dados mudaram)
 ↓
-Problem: Can't debug (is code broken? Did data change?)
+Problema: Não consegue debugar (código quebrado? Dados mudaram?)
 
-Solution: Version everything
+Solução: Versioná tudo
 ```
 
-### Best Practices
+### Melhores Práticas
 
 ```python
 from datetime import datetime
 
-# 1. Version your data
+# 1. Versionar seus dados
 gdp_file = f"data/gdp_{datetime.now():%Y_%m_%d}.parquet"
 
-# 2. Log source and time
+# 2. Log source e time
 data_metadata = {
-    "source": "IBGE SIDRA table 1620, variable 116",
+    "source": "Tabela IBGE SIDRA 1620, variável 116",
     "fetch_date": "2024-01-15T14:32:00Z",
     "rows": 348,
     "date_range": ["2000-01-01", "2024-10-01"],
     "crc32": "0x1a2b3c4d"  # Checksum
 }
 
-# 3. Document transformations
+# 3. Documentar transformações
 """
 Pipeline:
-1. Fetch from IBGE SIDRA
-2. Normalize dates to ISO format
-3. Type cast (string → float)
-4. Remove missing values (status="." → None)
-5. Save to Parquet
+1. Buscar do IBGE SIDRA
+2. Normalizar datas para formato ISO
+3. Casting de tipo (string → float)
+4. Remover valores faltantes (status="." → None)
+5. Salvar em Parquet
 """
 
-# 4. Make operations idempotent
-# (Safe to re-run without side effects)
-df.write_parquet("output.parquet")  # Overwrites OK
+# 4. Fazer operações idempotentes
+# (Seguro executar novamente sem efeitos colaterais)
+df.write_parquet("output.parquet")  # Sobrescreve OK
 # vs
-df.write_parquet("output_append.parquet", append=True)  # Risk: duplicates
+df.write_parquet("output_append.parquet", append=True)  # Risco: duplicatas
 ```
 
-## 5. No Magic
+## 5. Sem Mágica
 
-**Explicit is better than implicit.**
+**Explícito é melhor que implícito.**
 
-### Anti-Pattern: Magic Happens Invisibly
+### Anti-Padrão: Mágica Acontece Invisível
 
 ```python
-# Bad: Silent assumptions
-df = fetch_gdp()  # Where from? Updated when? Cached?
-# What if API fails? What if no data?
-# User doesn't know.
+# Ruim: Suposições silenciosas
+df = fetch_gdp()  # De onde? Atualizado quando? Cacheado?
+# E se API falha? E se sem dados?
+# Usuário não sabe.
 ```
 
-### Pattern: Explicit Everything
+### Padrão: Explícito Tudo
 
 ```python
 import polars as pl
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# Good: every parameter is named and visible
+# Bom: todo parâmetro é nomeado e visível
 param = Parametro(
-    agregado="1620",                      # GDP table
-    territorios={"1": ["all"]},           # Brazil total
-    variaveis=["116"],                    # Real GDP
+    agregado="1620",                      # Tabela de PIB
+    territorios={"1": ["all"]},           # Total Brasil
+    variaveis=["116"],                    # PIB Real
     periodos=["202001", "202002", "202003", "202004"],
     classificacoes={},
     formato=Formato.A,
@@ -236,139 +236,139 @@ param = Parametro(
 with SidraClient(timeout=60) as client:
     rows = client.get(param.url())
 
-# Explicit failure handling
+# Tratamento de falha explícito
 if not rows:
-    raise ValueError("No data returned from IBGE")
+    raise ValueError("Sem dados retornados do IBGE")
 
-# Explicit output
+# Output explícito
 gdp = pl.DataFrame(rows)
 gdp.write_parquet("gdp_data.parquet")
-print(f"Saved {len(gdp)} GDP observations to gdp_data.parquet")
+print(f"Salvos {len(gdp)} observações de PIB em gdp_data.parquet")
 ```
 
-### Transparency Checklist
+### Checklist de Transparência
 
-- [ ] **What**: What data is being fetched?
-- [ ] **Where**: What API/database/file?
-- [ ] **When**: What date range?
-- [ ] **How much**: How many rows?
-- [ ] **Failures**: What happens if API fails?
-- [ ] **Output**: Where does result go?
-- [ ] **Format**: What format (Parquet/CSV/Database)?
+- [ ] **O quê**: Quais dados estão sendo buscados?
+- [ ] **Onde**: Qual API/banco de dados/arquivo?
+- [ ] **Quando**: Qual intervalo de datas?
+- [ ] **Quanto**: Quantas linhas?
+- [ ] **Falhas**: O que acontece se API falha?
+- [ ] **Output**: Para onde vai resultado?
+- [ ] **Formato**: Qual formato (Parquet/CSV/Banco de dados)?
 
-## 6. User Control
+## 6. Controle do Usuário
 
-Users, not libraries, decide **what to do with data**.
+Usuários, não bibliotecas, decidem **o que fazer com dados**.
 
-### Anti-Pattern: Library Decides
+### Anti-Padrão: Biblioteca Decide
 
 ```python
-# Bad: Library makes assumptions
-gdp.save()  # Where? What format? Overwrite?
+# Ruim: Biblioteca faz suposições
+gdp.save()  # Onde? Qual formato? Sobrescrever?
 
-# Bad: Limited options
-client.fetch(cache=True)  # Can't control cache location
+# Ruim: Opções limitadas
+client.fetch(cache=True)  # Não pode controlar localização cache
 ```
 
-### Pattern: User Decides
+### Padrão: Usuário Decide
 
 ```python
-# Good: user picks output format and destination
+# Bom: usuário escolhe formato de output e destino
 gdp.write_parquet("gdp.parquet")
 gdp.write_csv("gdp.csv")
 gdp.write_database("gdp_table", connection="postgresql://...")
 
-# Good: client exposes a small, explicit knob set
+# Bom: client expõe conjunto de botões pequeno e explícito
 client = SidraClient(timeout=120)
 ```
 
-## 7. Data Integrity
+## 7. Integridade de Dados
 
-**Never silently lose data.**
+**Nunca perca dados silenciosamente.**
 
-### Validation Checks
+### Verificações de Validação
 
 ```python
-# Check 1: Schema validation
+# Check 1: Validação de schema
 expected_columns = {"date", "value", "status_code"}
 actual_columns = set(df.columns)
 assert expected_columns.issubset(actual_columns)
 
-# Check 2: No unexpected nulls
+# Check 2: Sem nulos inesperados
 null_rate = df["value"].is_null().sum() / len(df)
 if null_rate > 0.10:
-    logger.warning(f"High null rate: {null_rate*100:.1f}%")
+    logger.warning(f"Taxa alta de nulos: {null_rate*100:.1f}%")
 
-# Check 3: Date coverage
+# Check 3: Cobertura de datas
 first_date = df["date"].min()
 last_date = df["date"].max()
-expected_rows = (last_date - first_date).days / 90  # Quarterly
+expected_rows = (last_date - first_date).days / 90  # Trimestral
 
 if len(df) < expected_rows * 0.8:
-    logger.warning(f"Possible missing data (expected ~{expected_rows}, got {len(df)})")
+    logger.warning(f"Possível dados faltantes (esperado ~{expected_rows}, obtido {len(df)})")
 ```
 
-### Idempotency
+### Idempotência
 
-Operations should be safe to re-run:
+Operações devem ser seguras para re-executar:
 
 ```python
-# Safe to re-run
-df.write_parquet("output.parquet")  # Overwrites ✓
+# Seguro para re-executar
+df.write_parquet("output.parquet")  # Sobrescreve ✓
 
-# Dangerous to re-run
+# Perigoso para re-executar
 df.write_parquet("output.parquet", append=True)
-# Second run = duplicates ❌
+# Segunda execução = duplicatas ❌
 
-# Better: With deduplication
+# Melhor: Com deduplicação
 combined = pl.concat([existing, new])
 combined.unique().write_parquet("output.parquet")
 ```
 
-## Decision Matrix
+## Matriz de Decisão
 
-### When to Use Each Tool
+### Quando Usar Cada Ferramenta
 
-| Need | Tool |
+| Necessidade | Ferramenta |
 |------|------|
-| IBGE macroeconomic data | sidra-fetcher |
-| Brazilian government bonds | tddata |
-| Employment & labor market | pdet-data |
-| Trade flows (import/export) | comexdown |
-| Health surveillance data | datasus-fetcher |
-| Large file processing | Polars |
-| Statistical analysis | Pandas / NumPy / Statsmodels |
-| Dashboarding | PostgreSQL + BI tool |
-| Time series forecasting | Prophet / ARIMA / ML |
+| Dados macroeconômicos IBGE | sidra-fetcher |
+| Títulos do governo brasileiro | tddata |
+| Emprego & mercado de trabalho | pdet-data |
+| Fluxos de comércio (import/export) | comexdown |
+| Dados vigilância de saúde | datasus-fetcher |
+| Processamento de arquivos grandes | Polars |
+| Análise estatística | Pandas / NumPy / Statsmodels |
+| Dashboarding | PostgreSQL + ferramenta BI |
+| Previsão de séries temporais | Prophet / ARIMA / ML |
 
-## Implementation Checklist
+## Checklist de Implementação
 
-When building tools for this suite:
+Ao construir ferramentas para este suite:
 
-- [ ] **Modularity**: No unnecessary dependencies on other tools
-- [ ] **Error handling**: Specific error types, actionable messages
-- [ ] **Retries**: Handle transient failures gracefully
-- [ ] **Validation**: Check data schema and integrity
-- [ ] **Logging**: Debug-friendly output
-- [ ] **Performance**: Optimize for large datasets
-- [ ] **Testing**: Comprehensive unit + integration tests
-- [ ] **Documentation**: Clear examples and API docs
-- [ ] **Backwards compatibility**: Don't break existing code
-- [ ] **Reproducibility**: Deterministic output
+- [ ] **Modularidade**: Sem dependências desnecessárias em outras ferramentas
+- [ ] **Error handling**: Tipos específicos de erro, mensagens acionáveis
+- [ ] **Retries**: Lidar com falhas transitórias graciosamente
+- [ ] **Validação**: Verificar schema de dados e integridade
+- [ ] **Logging**: Output amigável para debug
+- [ ] **Performance**: Otimizar para datasets grandes
+- [ ] **Testing**: Testes unitários + integração abrangentes
+- [ ] **Documentation**: Exemplos claros e docs de API
+- [ ] **Backwards compatibility**: Não quebrar código existente
+- [ ] **Reproducibility**: Output determinístico
 
-## Philosophy
+## Filosofia
 
-> **Build for the real world.**
+> **Construa para o mundo real.**
 >
-> Government data is messy. APIs are unreliable. Networks are slow.
+> Dados governamentais são bagunçados. APIs são não confiáveis. Redes são lentas.
 >
-> Don't assume perfection. Handle failures. Validate data. Log decisions.
+> Não assuma perfeição. Trate falhas. Valide dados. Log decisões.
 >
-> Make users productive, not frustrated.
+> Torne usuários produtivos, não frustrados.
 
 ---
 
-## See Also
+## Saiba Mais
 
 - [Architecture Overview](overview.md)
 - [Concepts - Data Engineering](../concepts/data-engineering.md)

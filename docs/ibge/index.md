@@ -1,199 +1,199 @@
-# IBGE: Macroeconomic Data
+# IBGE: Dados Macroeconômicos
 
-Brazilian Institute of Geography and Statistics (IBGE) is the official source for macroeconomic statistics. Its **SIDRA** system contains thousands of time series on GDP, inflation, employment, trade, and demographics.
+Instituto Brasileiro de Geografia e Estatística (IBGE) é a fonte oficial de estatísticas macroeconômicas. Seu sistema **SIDRA** contém milhares de séries temporais em PIB, inflação, emprego, comércio e demografia.
 
-## The SIDRA Challenge
+## O Desafio SIDRA
 
-SIDRA is Brazil's richest data source, but consuming it at scale encounters critical engineering challenges:
+SIDRA é a fonte de dados mais rica do Brasil, mas consumi-la em escala encontra desafios críticos de engenharia:
 
-### Network Instability
+### Instabilidade de Rede
 
-- Government servers suffer from overload and rate limiting
-- Transient errors (HTTP 429, 500+) interrupt pipelines
-- Timeouts are frequent; retries require backoff strategies
+- Servidores governamentais sofrem de sobrecarga e rate limiting
+- Erros transitórios (HTTP 429, 500+) interrompem pipelines
+- Timeouts são frequentes; retries requerem estratégias de backoff
 
-### Parametric Complexity
+### Complexidade Paramétrica
 
-- API uses cryptic positional URL structures: `/t/1620/n1/all/v/116/p/all/d/m`
-- Manual URL construction is error-prone and difficult to maintain
-- Missing a single parameter breaks the entire request
+- API usa estruturas de URL posicionais crípticas: `/t/1620/n1/all/v/116/p/all/d/m`
+- Construção manual de URL é propensa a erros e difícil de manter
+- Falta de um único parâmetro quebra toda a requisição
 
-### Data Scale
+### Escala de Dados
 
-- **Massive catalog**: 30,000+ tables across dozens of themes
-- **Large files**: Some historical series span 50+ years with monthly/daily granularity
-- **Complex structure**: Tables contain nested classifications, categories, and dimensions
-- **Fragmented documentation**: Spread across multiple Portuguese-language websites
-
----
-
-## The IBGE Data Tools Ecosystem
-
-We provide **two complementary stacks** for different use cases:
-
-### Stack 1: Flexible SDK (For Exploration & Custom Workflows)
-
-**Tool:** `sidra-fetcher`
-
-For data scientists and analysts who need:
-
-- Quick notebook exploration
-- Custom extraction logic
-- On-demand data fetching
-- Flexible output formats (Parquet, CSV, DataFrames)
-
-```mermaid
-graph TD
-    A[IBGE SIDRA API] --> B[sidra-fetcher <br/> extraction + URL abstraction + retries]
-    B --> C[Your analysis <br/> Python/Jupyter, Polars, pandas]
-```
-
-### Stack 2: Enterprise ETL (For Production Pipelines)
-
-**Tools:** `sidra-sql` + `sidra-pipelines`
-
-For data engineers building:
-
-- Automated, reproducible pipelines
-- Normalized relational databases
-- Multi-user data warehouses
-- Declarative (no-code) definitions
-
-```mermaid
-graph TD
-    A[IBGE SIDRA API] --> B[sidra-sql <br/> motor: download + normalize + load]
-    B --> C[PostgreSQL <br/> fully normalized schema]
-    C --> D[SQL transformations <br/> Analytics tables]
-    D --> E[Power BI, Metabase, SQL queries]
-```
+- **Catálogo massivo**: 30,000+ tabelas em dezenas de temas
+- **Arquivos grandes**: Algumas séries históricas abrangem 50+ anos com granularidade mensal/diária
+- **Estrutura complexa**: Tabelas contêm classificações aninhadas, categorias e dimensões
+- **Documentação fragmentada**: Espalhada em múltiplos sites em português
 
 ---
 
-## Tool Reference
+## O Ecossistema de Ferramentas IBGE
 
-### 🔍 Stack 1: Exploration & Notebooks
+Fornecemos **dois stacks complementares** para diferentes casos de uso:
 
-**[sidra-fetcher](sidra-fetcher.md) — Industrial-Grade SDK**
+### Stack 1: SDK Flexível (Para Exploração & Workflows Customizados)
 
-An advanced Python SDK for robust extraction:
+**Ferramenta:** `sidra-fetcher`
 
-- **Dual clients:** `SidraClient` (sync) vs `AsyncSidraClient` (async, 3x faster)
-- **Smart resilience:** Exponential backoff, automatic retries
-- **URL abstraction:** No magic strings; `Parametro` class
-- **Strong typing:** Metadata as dataclasses, not dicts
-- **Multiple formats:** Parquet, CSV, PostgreSQL, Polars DataFrames
+Para cientistas de dados e analistas que precisam:
 
-**Best for:**
+- Exploração rápida em notebooks
+- Lógica de extração customizada
+- Fetching de dados on-demand
+- Formatos de output flexíveis (Parquet, CSV, DataFrames)
 
-- Jupyter notebooks & quick exploration
-- One-off analysis
-- Small datasets (<100 MB)
-- When you need custom transformation logic
-- Academic research workflows
+```mermaid
+graph TD
+    A[API SIDRA IBGE] --> B[sidra-fetcher <br/> extração + abstração de URL + retries]
+    B --> C[Sua análise <br/> Python/Jupyter, Polars, pandas]
+```
+
+### Stack 2: Enterprise ETL (Para Production Pipelines)
+
+**Ferramentas:** `sidra-sql` + `sidra-pipelines`
+
+Para engenheiros de dados construindo:
+
+- Pipelines automatizados e reproduzíveis
+- Bancos de dados relacionais normalizados
+- Data warehouses multi-usuário
+- Definições declarativas (sem código)
+
+```mermaid
+graph TD
+    A[API SIDRA IBGE] --> B[sidra-sql <br/> motor: download + normalização + carga]
+    B --> C[PostgreSQL <br/> schema totalmente normalizado]
+    C --> D[Transformações SQL <br/> Tabelas analíticas]
+    D --> E[Power BI, Metabase, consultas SQL]
+```
+
+---
+
+## Referência de Ferramentas
+
+### 🔍 Stack 1: Exploração & Notebooks
+
+**[sidra-fetcher](sidra-fetcher.md) — SDK de Nível Industrial**
+
+Um SDK Python avançado para extração robusta:
+
+- **Clients duais:** `SidraClient` (sync) vs `AsyncSidraClient` (async, 3x mais rápido)
+- **Resiliência inteligente:** Backoff exponencial, retries automáticos
+- **Abstração de URL:** Sem magic strings; classe `Parametro`
+- **Tipagem forte:** Metadados como dataclasses, não dicts
+- **Múltiplos formatos:** Parquet, CSV, PostgreSQL, Polars DataFrames
+
+**Melhor para:**
+
+- Notebooks Jupyter & exploração rápida
+- Análise one-off
+- Datasets pequenos (<100 MB)
+- Quando precisa de lógica de transformação customizada
+- Workflows de pesquisa acadêmica
 
 ---
 
 ### 🏭 Stack 2: Production ETL
 
-**[sidra-sql](sidra-sql.md) — ETL Motor**
+**[sidra-sql](sidra-sql.md) — Motor ETL**
 
-Industrial-strength pipeline orchestration:
+Orquestração de pipeline de nível industrial:
 
-- **Plugin architecture:** Lightweight motor + separate data definitions
-- **Full normalization:** 5-table relational schema (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`)
-- **Bulk loading:** PostgreSQL COPY protocol (400k+ rows/sec)
-- **Idempotent operations:** Safe re-execution
-- **SQL transformations:** Generate analytics tables automatically
-- **SCD Type II audit trail:** `ativo` + `modificacao` columns preserve revision history
+- **Arquitetura de plugin:** Motor leve + definições de dados separadas
+- **Normalização completa:** Schema relacional 5-tabelas (`sidra_tabela`, `localidade`, `periodo`, `dimensao`, `dados`)
+- **Bulk loading:** Protocolo PostgreSQL COPY (400k+ rows/sec)
+- **Operações idempotentes:** Re-execução segura
+- **Transformações SQL:** Gere tabelas de análise automaticamente
+- **Trilha de auditoria SCD Type II:** Colunas `ativo` + `modificacao` preservam histórico de revisões
 
-**[sidra-pipelines](sidra-pipelines.md) — Standard Library**
+**[sidra-pipelines](sidra-pipelines.md) — Biblioteca Standard**
 
-Pre-built catalog of production-ready pipelines:
+Catálogo pré-construído de pipelines production-ready:
 
-- GDP, inflation, population, agriculture, etc.
-- One-command deployment: `sidra-sql run std pib_municipal`
-- Ready for Power BI, Metabase, analytics
-- Extensible for custom datasets
+- PIB, inflação, população, agricultura, etc.
+- Deployment one-command: `sidra-sql run std pib_municipal`
+- Pronto para Power BI, Metabase, analytics
+- Extensível para datasets customizados
 
-**Best for:**
+**Melhor para:**
 
 - Production data pipelines (hourly/daily)
 - Enterprise data warehouses
-- Multi-user access via PostgreSQL
-- Reproducible, auditable datasets
-- Academic/regulatory compliance
-- Complex multi-table workflows
+- Acesso multi-usuário via PostgreSQL
+- Datasets reproduzíveis e auditáveis
+- Conformidade acadêmica/regulatória
+- Workflows multi-tabela complexos
 
 ---
 
-## When to Use Each Stack
+## Quando Usar Cada Stack
 
-| Dimension | Exploration (Stack 1) | Production (Stack 2) |
+| Dimensão | Exploração (Stack 1) | Produção (Stack 2) |
 |-----------|---|---|
-| **Setup time** | Minutes (pip install) | ~30 minutes (config + PostgreSQL) |
-| **Maintenance** | None (ad-hoc) | Scheduled pipeline runs |
-| **Data freshness** | On-demand | Hourly/daily/weekly |
-| **Scalability** | Notebooks, personal use | Multi-user, enterprise |
-| **Dependencies** | Python only | Python + PostgreSQL |
-| **Data validation** | Manual | Automated (constraints, uniqueness) |
-| **Audit trail** | Basic logging | Full SCD Type II versioning |
-| **Transformation** | Python (Polars, pandas) | SQL (declarative) |
-| **Sharing results** | CSV/Parquet exports | SQL queries + BI tools |
+| **Tempo de configuração** | Minutos (pip install) | ~30 minutos (config + PostgreSQL) |
+| **Manutenção** | Nenhuma (ad-hoc) | Execuções de pipeline agendadas |
+| **Recência dos dados** | On-demand | Horária/diária/semanal |
+| **Escalabilidade** | Notebooks, uso pessoal | Multi-usuário, enterprise |
+| **Dependências** | Apenas Python | Python + PostgreSQL |
+| **Validação de dados** | Manual | Automatizada (constraints, unicidade) |
+| **Trilha de auditoria** | Logging básico | Versionamento completo SCD Type II |
+| **Transformação** | Python (Polars, pandas) | SQL (declarativa) |
+| **Compartilhamento** | Exportações CSV/Parquet | Consultas SQL + ferramentas BI |
 
-### Decision Tree
+### Árvore de Decisão
 
 ```mermaid
 graph TD
-    Q[Do you need:] --> A[Quick exploration in a notebook?]
-    A -- Yes --> SF[Use sidra-fetcher]
-    Q --> B[One-off data extraction?]
-    B -- Yes --> SF
-    Q --> C[Daily/hourly automated pipeline?]
-    C -- Yes --> SS[Use sidra-sql + sidra-pipelines]
-    Q --> D[Multi-user data warehouse?]
-    D -- Yes --> SS
-    Q --> E[Fully normalized relational schema?]
-    E -- Yes --> SS2[Use sidra-sql]
-    Q --> F[Custom transformation logic in Python?]
-    F -- Yes --> SF
+    Q[Você precisa de:] --> A[Exploração rápida em um notebook?]
+    A -- Sim --> SF[Use sidra-fetcher]
+    Q --> B[Extração de dados única?]
+    B -- Sim --> SF
+    Q --> C[Pipeline automatizado diário/horário?]
+    C -- Sim --> SS[Use sidra-sql + sidra-pipelines]
+    Q --> D[Data warehouse multi-usuário?]
+    D -- Sim --> SS
+    Q --> E[Schema relacional totalmente normalizado?]
+    E -- Sim --> SS2[Use sidra-sql]
+    Q --> F[Lógica de transformação customizada em Python?]
+    F -- Sim --> SF
 ```
 
 ---
 
-## SIDRA Table Categories
+## Categorias de Tabelas SIDRA
 
-| Category | Examples | Use Case |
+| Categoria | Exemplos | Caso de Uso |
 |----------|----------|----------|
-| **National Accounts** | GDP, GVA, investment | Macro analysis |
-| **Prices & Inflation** | IPCA, IGP-M, IPC | Inflation tracking |
-| **Industrial Production** | Output, capacity utilization | Cyclical analysis |
-| **Trade** | Exports, imports, balance | Trade analysis |
-| **Employment** | Unemployment, hours worked | Labor market |
-| **Demographics** | Population, migration | Social research |
-| **Agriculture** | Crops, livestock, forestry | Agricultural analysis |
+| **Contas Nacionais** | PIB, VVA, investimento | Análise macro |
+| **Preços & Inflação** | IPCA, IGP-M, IPC | Rastreamento de inflação |
+| **Produção Industrial** | Produção, utilização de capacidade | Análise cíclica |
+| **Comércio** | Exportações, importações, saldo | Análise comercial |
+| **Emprego** | Desemprego, horas trabalhadas | Mercado de trabalho |
+| **Demografia** | População, migração | Pesquisa social |
+| **Agricultura** | Cultivos, pecuária, silvicultura | Análise agrícola |
 
 ---
 
-## Common Use Cases
+## Casos de Uso Comuns
 
-### 📊 Economic Monitoring (→ Stack 2: Production ETL)
+### 📊 Monitoramento Econômico (→ Stack 2: Production ETL)
 
-Track Brazil's real-time economic performance with automated pipelines:
+Rastrear o desempenho econômico brasileiro em tempo real com pipelines automatizados:
 
-- GDP growth (quarterly and annual)
-- Inflation (IPCA, INPC, IPCA-15)
-- Industrial production
+- Crescimento do PIB (trimestral e anual)
+- Inflação (IPCA, INPC, IPCA-15)
+- Produção industrial
 
-**Command:**
+**Comando:**
 
 ```bash
 sidra-sql run std pib_municipal
 sidra-sql run std ipca
 ```
 
-### 📈 Macroeconomic Analysis (→ Either stack)
+### 📈 Análise Macroeconômica (→ Qualquer stack)
 
-**Ad-hoc analysis:** Use `sidra-fetcher` in Python
+**Análise ad-hoc:** Use `sidra-fetcher` em Python
 
 ```python
 from sidra_fetcher import AsyncSidraClient
@@ -201,25 +201,25 @@ client = AsyncSidraClient()
 gdp = await client.fetch(table="1620", variable=116)
 ```
 
-**Recurring analysis:** Use `sidra-sql` + PostgreSQL
+**Análise recorrente:** Use `sidra-sql` + PostgreSQL
 
 ```sql
 SELECT * FROM analytics.pib_municipal
 WHERE ano >= 2020;
 ```
 
-### 👥 Demographics & Social Research (→ Stack 2: Production ETL)
+### 👥 Demografia & Pesquisa Social (→ Stack 2: Production ETL)
 
-Population, household composition, census data:
+População, composição de domicílios, dados censitários:
 
 ```bash
 sidra-sql run std censo_populacao
 sidra-sql run std estimativa_populacao
 ```
 
-### 🌾 Agricultural Analysis (→ Stack 2: Production ETL)
+### 🌾 Análise Agrícola (→ Stack 2: Production ETL)
 
-Crop production and livestock data:
+Dados de produção agrícola e pecuária:
 
 ```bash
 sidra-sql run std pam_lavouras_temporarias
@@ -229,9 +229,9 @@ sidra-sql run std pevs_producao
 
 ---
 
-## Example Workflows
+## Fluxos de Trabalho de Exemplo
 
-### Workflow A: Quick Analysis (Stack 1)
+### Fluxo A: Análise Rápida (Stack 1)
 
 ```python
 from sidra_fetcher import AsyncSidraClient
@@ -243,51 +243,51 @@ async def analyze_gdp():
     gdp.write_parquet("gdp_recent.parquet")
     return gdp
 
-# Run once, analyze in notebook
+# Executar uma vez, analisar em notebook
 data = asyncio.run(analyze_gdp())
 ```
 
-### Workflow B: Production Dashboard (Stack 2)
+### Fluxo B: Dashboard Production (Stack 2)
 
 ```bash
-# 1. Install pipelines
+# 1. Instalar pipelines
 sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
 
-# 2. Run pipeline (creates PostgreSQL tables)
+# 2. Executar pipeline (cria tabelas PostgreSQL)
 sidra-sql run std ipca
 
-# 3. Connect Power BI to analytics.ipca table
-# → Real-time dashboard ready
+# 3. Conectar Power BI à tabela analytics.ipca
+# → Dashboard em tempo real pronto
 ```
 
 ---
 
-## Getting Started
+## Começando
 
-### Quick Exploration (sidra-fetcher)
+### Exploração Rápida (sidra-fetcher)
 
-#### Step 1: Discover the Right Table
+#### Etapa 1: Descobrir a Tabela Correta
 
-Browse the [SIDRA catalog](https://sidra.ibge.gov.br/) directly to find table codes,
-variable codes, and classification IDs. Use the search bar (Portuguese) or navigate
-by theme. Each table page shows:
+Navegue pelo [catálogo SIDRA](https://sidra.ibge.gov.br/) diretamente para encontrar códigos de tabela,
+códigos de variáveis e IDs de classificação. Use a barra de pesquisa (Português) ou navegue
+por tema. Cada página de tabela mostra:
 
-- Table code (e.g., `1620` for GDP)
-- Available variables and their codes
-- Territorial levels supported
-- Available classifications
+- Código da tabela (ex. `1620` para PIB)
+- Variáveis disponíveis e seus códigos
+- Níveis territoriais suportados
+- Classificações disponíveis
 
-You can also reverse-engineer URLs from the SIDRA website. Example URL:
+Você também pode fazer engenharia reversa de URLs do website SIDRA. URL de exemplo:
 
 ```
 https://sidra.ibge.gov.br/tabela/1620
 ```
 
-Table code = `1620`. Click into the table to see variables and classifications.
+Código da tabela = `1620`. Clique na tabela para ver variáveis e classificações.
 
-#### Step 2: Extract Data
+#### Etapa 2: Extrair Dados
 
-**Synchronous (single table):**
+**Síncrono (tabela única):**
 
 ```python
 from sidra_fetcher import SidraClient
@@ -299,10 +299,10 @@ gdp = client.fetch(
     frequency="quarterly",
     initial_date="2015-01-01"
 )
-print(f"✓ Fetched {len(gdp)} observations")
+print(f"✓ Exttraídas {len(gdp)} observações")
 ```
 
-**Asynchronous (multiple tables, 3x faster):**
+**Assíncrono (múltiplas tabelas, 3x mais rápido):**
 
 ```python
 import asyncio
@@ -312,9 +312,9 @@ async def fetch_macro_suite():
     client = AsyncSidraClient()
     try:
         results = await asyncio.gather(
-            client.fetch(table="1620", variable=116),  # GDP
-            client.fetch(table="1612", variable=117),  # GVA
-            client.fetch(table="1637", variable=119)   # Investment
+            client.fetch(table="1620", variable=116),  # PIB
+            client.fetch(table="1612", variable=117),  # VVA
+            client.fetch(table="1637", variable=119)   # Investimento
         )
         return results
     finally:
@@ -323,39 +323,39 @@ async def fetch_macro_suite():
 gdp, gva, investment = asyncio.run(fetch_macro_suite())
 ```
 
-#### Step 3: Store and Analyze
+#### Etapa 3: Armazenar e Analisar
 
 ```python
 import polars as pl
 
-# Calculate growth rates
+# Calcular taxas de crescimento
 gdp_analysis = gdp.with_columns([
     pl.col("value").pct_change().alias("qoq_growth"),
     pl.col("value").pct_change(4).alias("yoy_growth")
 ])
 
-# Save to Parquet (80%+ compression)
+# Salvar em Parquet (compressão 80%+)
 gdp_analysis.write_parquet("gdp_quarterly.parquet")
 ```
 
-### Production Pipeline (sidra-sql)
+### Pipeline Production (sidra-sql)
 
 ```bash
-# 1. Install sidra-sql
+# 1. Instalar sidra-sql
 git clone https://github.com/Quantilica/sidra-sql.git
 cd sidra-sql
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
 
-# 2. Configure database
+# 2. Configurar banco de dados
 cat > config.ini << EOF
 [storage]
 data_dir = data
 
 [database]
 user = postgres
-password = your_password
+password = sua_senha
 host = localhost
 port = 5432
 dbname = dados
@@ -364,13 +364,13 @@ tablespace = pg_default
 readonly_role = readonly_role
 EOF
 
-# 3. Install official pipelines
+# 3. Instalar pipelines oficiais
 sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
 
-# 4. Run a pipeline
+# 4. Executar um pipeline
 sidra-sql run std pib_municipal
 
-# 5. Query results
+# 5. Consultar resultados
 psql -U postgres -d dados << EOF
 SELECT * FROM analytics.pib_municipal
 WHERE ano >= 2015
@@ -380,89 +380,89 @@ EOF
 
 ---
 
-## Best Practices
+## Melhores Práticas
 
-### 1. Choose the Right Tool Early
+### 1. Escolha a Ferramenta Correta Cedo
 
-- Notebook/exploration → sidra-fetcher
-- Production pipeline → sidra-sql + sidra-pipelines
+- Notebook/exploração → sidra-fetcher
+- Pipeline production → sidra-sql + sidra-pipelines
 
-### 2. Use Async for Multi-Table Extraction
+### 2. Use Async para Extração Multi-Tabela
 
-Concurrent fetching is 3x faster than sequential:
+Fetching concorrente é 3x mais rápido que sequencial:
 
 ```python
-# 30 seconds (sync)
+# 30 segundos (sync)
 client = SidraClient()
 gdp = client.fetch(table="1620", variable=116)
 gva = client.fetch(table="1612", variable=117)
 
-# 10 seconds (async)
+# 10 segundos (async)
 results = await asyncio.gather(
     client.fetch(table="1620", variable=116),
     client.fetch(table="1612", variable=117)
 )
 ```
 
-### 3. Filter Data on Fetch
+### 3. Filtre Dados no Fetch
 
-Reduce data volume before loading:
+Reduza volume de dados antes de carregar:
 
 ```python
-# Good: Filter by date on fetch
+# Bom: Filtrar por data no fetch
 recent = client.fetch(
     table="1620",
     variable=116,
     initial_date="2020-01-01"
 )
 
-# Less efficient: Fetch all, filter locally
+# Menos eficiente: Buscar tudo, filtrar localmente
 all_data = client.fetch(table="1620", variable=116)
 recent = all_data.filter(pl.col("date") >= "2020-01-01")
 ```
 
-### 4. Store to Parquet, Not CSV
+### 4. Armazene em Parquet, Não CSV
 
-Parquet is 80%+ smaller and faster to read:
+Parquet é 80%+ menor e mais rápido para ler:
 
 ```python
-# Good
+# Bom
 df.write_parquet("data.parquet")
 
-# Not efficient
+# Não eficiente
 df.write_csv("data.csv")
 ```
 
-### 5. Leverage Production Features in sidra-sql
+### 5. Aproveite Recursos de Production em sidra-sql
 
-Use idempotent operations for safe re-execution:
+Use operações idempotentes para re-execução segura:
 
 ```bash
-# Safe to run multiple times
+# Seguro executar múltiplas vezes
 sidra-sql run std pib_municipal
 
-# Cached files skipped on re-run → near-instant completion
+# Arquivos cache pulados em re-execução → conclusão quase instantânea
 sidra-sql run std pib_municipal
 ```
 
 ---
 
-## Troubleshooting
+## Resolução de Problemas
 
 ### "Table not found"
 
-SIDRA table codes must be strings, not integers. Verify the table still exists at
-[sidra.ibge.gov.br/tabela/{id}](https://sidra.ibge.gov.br/) — IBGE occasionally
-deprecates or replaces tables.
+Códigos de tabela SIDRA devem ser strings, não inteiros. Verifique se a tabela ainda existe em
+[sidra.ibge.gov.br/tabela/{id}](https://sidra.ibge.gov.br/) — IBGE ocasionalmente
+descontinua ou substitui tabelas.
 
 ```python
 gdp = client.fetch(table="1620", variable=116)   # ✅ string
-gdp = client.fetch(table=1620, variable=116)     # ❌ may fail
+gdp = client.fetch(table=1620, variable=116)     # ❌ pode falhar
 ```
 
-### Timeout errors
+### Erros de Timeout
 
-Increase timeout and retries:
+Aumente timeout e retries:
 ```python
 client = SidraClient(
     timeout=60,
@@ -471,24 +471,24 @@ client = SidraClient(
 )
 ```
 
-### PostgreSQL connection error (sidra-sql)
+### Erro de conexão PostgreSQL (sidra-sql)
 
-Verify `config.ini`:
+Verifique `config.ini`:
 
-- Database exists: `createdb dados`
-- User has permissions: `ALTER USER postgres WITH PASSWORD 'password';`
-- Schema exists or user can create it: `CREATE SCHEMA ibge_sidra;`
-- Test connection: `psql -U postgres -h localhost -d dados`
+- Banco de dados existe: `createdb dados`
+- Usuário tem permissões: `ALTER USER postgres WITH PASSWORD 'senha';`
+- Schema existe ou usuário pode criá-lo: `CREATE SCHEMA ibge_sidra;`
+- Testar conexão: `psql -U postgres -h localhost -d dados`
 
-### sidra-sql plugin not found
+### Plugin sidra-sql não encontrado
 
-Verify installation:
+Verifique instalação:
 
 ```bash
 sidra-sql plugin list
 ```
 
-If empty, install the standard catalog:
+Se vazio, instale o catálogo padrão:
 
 ```bash
 sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
@@ -496,18 +496,18 @@ sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --ali
 
 ---
 
-## Learn More
+## Saiba Mais
 
 ### Stack 1 (SDK):
 
-- [sidra-fetcher Documentation](sidra-fetcher.md)
+- [Documentação sidra-fetcher](sidra-fetcher.md)
 
 ### Stack 2 (Production ETL):
 
-- [sidra-sql Documentation](sidra-sql.md)
-- [sidra-pipelines Catalog](sidra-pipelines.md)
+- [Documentação sidra-sql](sidra-sql.md)
+- [Catálogo sidra-pipelines](sidra-pipelines.md)
 
-### External Resources:
+### Recursos Externos:
 
-- [IBGE Official Website (Portuguese)](https://www.ibge.gov.br/)
-- [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
+- [Website Oficial IBGE (Português)](https://www.ibge.gov.br/)
+- [Banco de Dados SIDRA (Português)](https://sidra.ibge.gov.br/)

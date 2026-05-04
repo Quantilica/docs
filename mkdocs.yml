@@ -1,5 +1,5 @@
-site_name: Brazilian Public Data Suite
-site_description: Tools for extracting, processing and analyzing Brazilian public datasets.
+site_name: Plataforma Brasileira de Dados Públicos
+site_description: Ferramentas para extrair, processar e analisar datasets públicos brasileiros.
 site_author: Komesu, D.K.
 
 theme:
@@ -22,35 +22,35 @@ theme:
       accent: indigo
 
 nav:
-  - Home:
-      - Overview: index.md
-      - Design Philosophy: design-philosophy.md
-      - Best Practices: best-practices.md
+  - Início:
+      - Visão Geral: index.md
+      - Filosofia de Design: design-philosophy.md
+      - Melhores Práticas: best-practices.md
 
-  - Data Tools & Sources:
-      - IBGE (Macroeconomics):
+  - Ferramentas & Fontes:
+      - IBGE (Macroeconomia):
           - ibge/index.md
           - sidra-fetcher: ibge/sidra-fetcher.md
           - sidra-sql: ibge/sidra-sql.md
           - sidra-pipelines: ibge/sidra-pipelines.md
-      - Treasury (Finance):
+      - Tesouro (Finanças):
           - tesouro/index.md
           - tddata: tesouro/tddata.md
           - rtnpy: tesouro/rtnpy.md
-          - Portfolio Returns Guide: tesouro/calculo-retornos.md
-      - Labor Market:
+          - Guia de Cálculo de Retornos: tesouro/calculo-retornos.md
+      - Mercado de Trabalho:
           - trabalho/index.md
           - pdet-data: trabalho/pdet-data.md
-          - Parquet + Polars Guide: trabalho/guia-parquet.md
-      - Foreign Trade: comex/comexdown.md
-      - Public Health: saude/datasus-fetcher.md
-      - Climate & Environment: clima/inmet-bdmep-data.md
+          - Guia Parquet + Polars: trabalho/guia-parquet.md
+      - Comércio Exterior: comex/comexdown.md
+      - Saúde Pública: saude/datasus-fetcher.md
+      - Clima & Meio Ambiente: clima/inmet-bdmep-data.md
 
-  - Architecture & Concepts:
-      - Platform Architecture: architecture/overview.md
-      - Design Principles: architecture/design-principles.md
-      - Data Engineering: concepts/data-engineering.md
-      - Pipelines & Storage: concepts/pipelines.md
+  - Arquitetura & Conceitos:
+      - Arquitetura da Plataforma: architecture/overview.md
+      - Princípios de Design: architecture/design-principles.md
+      - Engenharia de Dados: concepts/data-engineering.md
+      - Pipelines & Armazenamento: concepts/pipelines.md
 
 plugins:
   - search

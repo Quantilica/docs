@@ -1,23 +1,23 @@
-# Data Pipelines
+# Pipelines de Dados
 
-Building reliable, automated data workflows.
+Construindo fluxos de trabalho de dados confiáveis e automatizados.
 
-## What Is a Pipeline?
+## O Que é um Pipeline?
 
-A sequence of automated steps that move data from source to destination.
+Uma sequência de etapas automatizadas que movem dados da fonte para o destino.
 
 ```
-Pipeline = Extract → Validate → Transform → Load → Expose
+Pipeline = Extrair → Validar → Transformar → Carregar → Expor
 ```
 
-### Simple Pipeline Example
+### Exemplo Simples de Pipeline
 
 ```python
 import polars as pl
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# EXTRACT: Build a Parametro and fetch raw rows
+# EXTRACT: Construir um Parametro e buscar linhas brutas
 param = Parametro(
     agregado="1620",
     territorios={"1": ["all"]},
@@ -31,151 +31,151 @@ param = Parametro(
 with SidraClient(timeout=60) as client:
     rows = client.get(param.url())  # list[dict]
 
-# VALIDATE: Check quality
-assert len(rows) > 0, "No data returned"
+# VALIDATE: Verificar qualidade
+assert len(rows) > 0, "Nenhum dado retornado"
 gdp = pl.DataFrame(rows)
-assert "V" in gdp.columns, "Missing value column"
+assert "V" in gdp.columns, "Coluna de valor ausente"
 
-# TRANSFORM: Process
+# TRANSFORM: Processar
 gdp = gdp.with_columns([
     pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("growth")
 ])
 
-# LOAD: Store result
+# LOAD: Armazenar resultado
 gdp.write_parquet("gdp_analysis.parquet")
 ```
 
-## Pipeline Types
+## Tipos de Pipeline
 
-### 1. Batch Pipelines
+### 1. Pipelines em Batch
 
-Run at scheduled intervals (daily, weekly, monthly).
+Executam em intervalos agendados (diário, semanal, mensal).
 
-**Example**: Daily unemployment data fetch
-
-```python
-# Schedule: Every day at 8 AM
-# Run: Fetch yesterday's CAGED data
-# Store: Append to PostgreSQL
-# Time: 5-10 minutes
-```
-
-**Tools**: cron, Airflow, Lambda, Cloud Scheduler
-
-**Pros**:
-
-- Simple to implement
-- Easy to debug (predictable schedule)
-- Cost-effective (run only when needed)
-
-**Cons**:
-
-- Stale data between runs
-- May be overkill for small datasets
-
-### 2. Streaming Pipelines
-
-Process data in real-time as it arrives.
-
-**Example**: Live COVID-19 case monitoring
+**Exemplo**: Busca diária de dados de desemprego
 
 ```python
-# Monitor: DATASUS API
-# Every: 1 minute
-# Check: New cases reported
-# Alert: If threshold exceeded
+# Agendamento: Todos os dias às 8 AM
+# Executar: Buscar dados de CAGED de ontem
+# Armazenar: Anexar ao PostgreSQL
+# Tempo: 5-10 minutos
 ```
 
-**Tools**: Kafka, Spark Streaming, Kinesis, Pub/Sub
+**Ferramentas**: cron, Airflow, Lambda, Cloud Scheduler
 
-**Pros**:
+**Vantagens**:
 
-- Real-time alerts possible
-- Current view of world
+- Simples implementar
+- Fácil debugar (schedule previsível)
+- Eficiente em custo (executa apenas quando necessário)
 
-**Cons**:
+**Desvantagens**:
 
-- Complex infrastructure
-- Higher operational cost
-- Brazilian government data rarely updates real-time
+- Dados antigos entre execuções
+- Pode ser excessivo para datasets pequenos
 
-### 3. Hybrid Pipelines
+### 2. Pipelines de Streaming
 
-Batch with real-time components.
+Processa dados em tempo real conforme chegam.
 
-**Example**: Daily economic dashboard
+**Exemplo**: Monitoramento ao vivo de casos de COVID-19
+
+```python
+# Monitor: API DATASUS
+# Cada: 1 minuto
+# Verificar: Novos casos reportados
+# Alerta: Se threshold excedido
+```
+
+**Ferramentas**: Kafka, Spark Streaming, Kinesis, Pub/Sub
+
+**Vantagens**:
+
+- Alertas em tempo real possíveis
+- Visão atual do mundo
+
+**Desvantagens**:
+
+- Infraestrutura complexa
+- Custo operacional maior
+- Dados governamentais brasileiros raramente atualizam em tempo real
+
+### 3. Pipelines Híbridos
+
+Batch com componentes em tempo real.
+
+**Exemplo**: Dashboard econômico diário
 
 ```mermaid
 graph TD
-    A["Batch Daily<br/>Fetch IBGE SIDRA, Treasury, RAIS<br/>Aggregate and store"] --> B["Real-time Every minute<br/>Stream latest data<br/>Update dashboard"]
+    A["Batch Diário<br/>Buscar IBGE SIDRA, Tesouro, RAIS<br/>Agregar e armazenar"] --> B["Tempo real A cada minuto<br/>Stream dados mais recentes<br/>Atualizar dashboard"]
 ```
 
-## Pipeline Patterns
+## Padrões de Pipeline
 
-### Pattern 1: Extract-Load-Transform
+### Padrão 1: Extrair-Carregar-Transformar
 
 ```mermaid
 graph TD
-    A["Raw Data<br/>unchanged"] --> B["LOAD"]
-    B --> C["PostgreSQL<br/>raw table"]
+    A["Dados Brutos<br/>inalterados"] --> B["LOAD"]
+    B --> C["PostgreSQL<br/>tabela bruta"]
     C --> D["TRANSFORM<br/>on-demand"]
-    D --> E["Views / Aggregations"]
+    D --> E["Views / Agregações"]
     E --> F["EXPOSE"]
-    F --> G["Dashboards / Analysis"]
+    F --> G["Dashboards / Análise"]
 ```
 
-**Pros**: Flexibility, preserves raw data, easy to re-process
+**Vantagens**: Flexibilidade, preserva dados brutos, fácil reprocessar
 
-**Best for**: Large datasets, evolving analysis
+**Melhor para**: Datasets grandes, análise evoluindo
 
-### Pattern 2: Extract-Transform-Load
+### Padrão 2: Extrair-Transformar-Carregar
 
 ```mermaid
 graph TD
-    A["Raw Data<br/>API"] --> B["TRANSFORM"]
-    B --> C["Clean Data<br/>memory"]
+    A["Dados Brutos<br/>API"] --> B["TRANSFORM"]
+    B --> C["Dados Limpos<br/>memória"]
     C --> D["LOAD"]
-    D --> E["PostgreSQL<br/>processed table"]
+    D --> E["PostgreSQL<br/>tabela processada"]
     E --> F["EXPOSE"]
-    F --> G["Dashboards / Analysis"]
+    F --> G["Dashboards / Análise"]
 ```
 
-**Pros**: Optimized storage, predictable output
+**Vantagens**: Armazenamento otimizado, saída previsível
 
-**Best for**: Small datasets, stable transformations
+**Melhor para**: Datasets pequenos, transformações estáveis
 
-### Pattern 3: Data Lake
+### Padrão 3: Data Lake
 
 ```mermaid
 graph TD
-    A["Multiple Sources<br/>APIs, databases"] --> B["INGEST"]
-    B --> C["Raw Layer<br/>Parquet files in S3"]
+    A["Múltiplas Fontes<br/>APIs, bancos de dados"] --> B["INGEST"]
+    B --> C["Raw Layer<br/>Arquivos Parquet em S3"]
     C --> D["TRANSFORM"]
-    D --> E["Bronze/Silver/Gold<br/>layers"]
+    D --> E["Camadas Bronze/Silver/Gold"]
     E --> F["EXPOSE"]
     F --> G["Dashboards, ML, Analytics"]
 ```
 
-**Pros**: Scalable, flexible, audit trail
+**Vantagens**: Escalável, flexível, trilha de auditoria
 
-**Best for**: Enterprise, multiple data sources, large scale
+**Melhor para**: Enterprise, múltiplas fontes de dados, grande escala
 
-## Building a Production Pipeline
+## Construindo um Pipeline de Produção
 
-### Step 1: Define Requirements
+### Etapa 1: Definir Requisitos
 
 ```
-Data source: IBGE SIDRA table 1620, variable 116
-Update frequency: Weekly (IBGE publishes Fridays)
-Update lag: 60 days (released Fridays)
-Volume: 1000-2000 rows per fetch
-History: Keep 20+ years
-Quality: Validate schema, check for NULLs, monitor for outliers
-Output: PostgreSQL table + Parquet archive
-SLA: Data available within 2 hours of publication
+Fonte de dados: Tabela SIDRA 1620 IBGE, variável 116
+Frequência de atualização: Semanal (IBGE publica sextas)
+Lag de atualização: 60 dias (liberado sextas)
+Volume: 1000-2000 linhas por fetch
+Histórico: Manter 20+ anos
+Qualidade: Validar schema, verificar NULLs, monitorar outliers
+Output: Tabela PostgreSQL + arquivo Parquet
+SLA: Dados Disponíveis dentro de 2 horas da publicação
 ```
 
-### Step 2: Error Handling
+### Etapa 2: Error Handling
 
 ```python
 import logging
@@ -201,77 +201,77 @@ try:
         rows = client.get(param.url())
 
     if not rows:
-        raise ValueError("Empty result from IBGE")
+        raise ValueError("Resultado vazio do IBGE")
 
     pl.DataFrame(rows).write_parquet("gdp.parquet")
-    logger.info(f"Successfully fetched {len(rows)} rows")
+    logger.info(f"Busca bem-sucedida de {len(rows)} linhas")
 
 except httpx.TimeoutException:
-    logger.error("IBGE API timeout - will retry tomorrow")
+    logger.error("IBGE API timeout - tentará novamente amanhã")
 
 except httpx.HTTPStatusError as e:
-    logger.error(f"HTTP error {e.response.status_code}: {e}")
+    logger.error(f"Erro HTTP {e.response.status_code}: {e}")
 
 except Exception as e:
-    logger.exception(f"Unexpected error: {e}")
+    logger.exception(f"Erro inesperado: {e}")
     raise
 ```
 
-### Step 3: Monitoring
+### Etapa 3: Monitoramento
 
 ```python
 import polars as pl
 from datetime import datetime, timedelta
 
 def check_pipeline_health():
-    """Check if pipeline is healthy"""
+    """Verificar se pipeline está saudável"""
     
-    # Check 1: Recency
+    # Check 1: Recência
     df = pl.read_parquet("gdp.parquet")
     last_date = df["date"].max()
     age = datetime.now() - last_date
     
-    if age > timedelta(days=75):  # Expect update within 75 days
-        alert(f"Data is {age.days} days old")
+    if age > timedelta(days=75):  # Espera atualização dentro de 75 dias
+        alert(f"Dados com {age.days} dias de idade")
     
-    # Check 2: Completeness
-    expected_quarters = 96  # 24 years
+    # Check 2: Completude
+    expected_quarters = 96  # 24 anos
     actual_quarters = len(df)
     
     if actual_quarters < expected_quarters * 0.95:
-        alert(f"Missing data: {expected_quarters - actual_quarters} rows")
+        alert(f"Faltam dados: {expected_quarters - actual_quarters} linhas")
     
-    # Check 3: Quality
+    # Check 3: Qualidade
     missing_values = df["value"].is_null().sum()
     
     if missing_values > 0:
-        alert(f"{missing_values} missing values")
+        alert(f"{missing_values} valores faltantes")
     
-    # Check 4: Anomalies
-    recent_mean = df.tail(8)["value"].mean()  # Last 2 years
+    # Check 4: Anomalias
+    recent_mean = df.tail(8)["value"].mean()  # Últimos 2 anos
     all_time_mean = df["value"].mean()
     
     change = abs(recent_mean - all_time_mean) / all_time_mean
     if change > 0.50:
-        alert(f"Value shifted {change*100:.1f}%")
+        alert(f"Valor mudou {change*100:.1f}%")
 
 if __name__ == "__main__":
     check_pipeline_health()
 ```
 
-### Step 4: Scheduling
+### Etapa 4: Agendamento
 
-**Option 1: cron** (simple, one machine)
+**Opção 1: cron** (simples, uma máquina)
 
 ```bash
-# Run every Friday at 9 AM
+# Executar toda sexta às 9 AM
 0 9 * * 5 /usr/bin/python3 /home/user/fetch_gdp.py
 
-# Log output
+# Output de log
 0 9 * * 5 /usr/bin/python3 /home/user/fetch_gdp.py >> /var/log/gdp_fetch.log 2>&1
 ```
 
-**Option 2: Apache Airflow** (complex, distributed)
+**Opção 2: Apache Airflow** (complexo, distribuído)
 
 ```python
 from airflow import DAG
@@ -298,7 +298,7 @@ def fetch_gdp():
 
 with DAG(
     "gdp_pipeline",
-    schedule_interval="0 9 * * 5",  # Every Friday 9 AM
+    schedule_interval="0 9 * * 5",  # Toda sexta 9 AM
     start_date=datetime(2024, 1, 1),
     default_args={"retries": 3}
 ) as dag:
@@ -321,9 +321,9 @@ with DAG(
     extract >> validate >> load
 ```
 
-## Multi-Source Pipeline
+## Pipeline Multi-Fonte
 
-Combining data from multiple Brazilian sources. Each tool has its own access pattern — use them as building blocks:
+Combinando dados de múltiplas fontes brasileiras. Cada ferramenta tem seu próprio padrão de acesso — use-as como blocos de construção:
 
 ```python
 import polars as pl
@@ -331,7 +331,7 @@ import sqlalchemy as sa
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
-# 1. SIDRA (IBGE): build Parametro → client.get(url) → list[dict]
+# 1. SIDRA (IBGE): construir Parametro → client.get(url) → list[dict]
 gdp_param = Parametro(
     agregado="1620",
     territorios={"1": ["all"]},
@@ -344,7 +344,7 @@ gdp_param = Parametro(
 with SidraClient(timeout=60) as client:
     gdp = pl.DataFrame(client.get(gdp_param.url()))
 
-# 2. Treasury Direct (tddata): converter + analytics on raw CSV files
+# 2. Tesouro Direto (tddata): converter + analytics em CSVs brutos
 from tddata.converter import convert_to_parquet
 convert_to_parquet(
     src_dir="raw/tesouro",
@@ -353,32 +353,32 @@ convert_to_parquet(
 )
 bonds = pl.read_parquet("data/tesouro/precos.parquet")
 
-# 3. RAIS (pdet-data): FTP fetch + Polars conversion
+# 3. RAIS (pdet-data): FTP fetch + conversão Polars
 from pdet_data.fetch import connect, fetch_rais
 from pdet_data.reader import convert_columns_dtypes
 ftp = connect()
-fetch_rais(ftp, dest_dir="raw/rais")  # downloads compressed CSVs
+fetch_rais(ftp, dest_dir="raw/rais")  # baixa CSVs comprimidos
 
-# Persist each source
+# Persistir cada fonte
 gdp.write_parquet("data/gdp.parquet")
 bonds.write_parquet("data/bonds.parquet")
 
-# Load into PostgreSQL for cross-source joins
+# Carregar em PostgreSQL para joins cross-source
 engine = sa.create_engine("postgresql://user:pass@localhost/analytics")
 gdp.write_database("gdp", engine, if_table_exists="replace")
 bonds.write_database("bonds", engine, if_table_exists="replace")
 ```
 
-## Testing Pipelines
+## Testando Pipelines
 
-### Unit Tests
+### Testes Unitários
 
 ```python
 import pytest
 import polars as pl
 
 def test_fetch_gdp():
-    """Test data extraction"""
+    """Testar extração de dados"""
     from sidra_fetcher import SidraClient
     from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
@@ -394,17 +394,17 @@ def test_fetch_gdp():
     with SidraClient(timeout=60) as client:
         rows = client.get(param.url())
 
-    assert len(rows) > 0, "Empty result"
-    assert "V" in rows[0], "Missing V (value) field"
-    assert "D3C" in rows[0] or "D2C" in rows[0], "Missing dimension field"
+    assert len(rows) > 0, "Resultado vazio"
+    assert "V" in rows[0], "Campo V (valor) ausente"
+    assert "D3C" in rows[0] or "D2C" in rows[0], "Campo dimensão ausente"
 
 def test_validate_gdp(gdp_data):
-    """Test validation logic"""
-    assert (gdp_data["value"] > 0).all(), "Negative values"
-    assert gdp_data["value"].is_null().sum() == 0, "Null values"
+    """Testar lógica de validação"""
+    assert (gdp_data["value"] > 0).all(), "Valores negativos"
+    assert gdp_data["value"].is_null().sum() == 0, "Valores nulos"
 
 def test_transform_gdp(gdp_data):
-    """Test transformation"""
+    """Testar transformação"""
     gdp_with_growth = gdp_data.with_columns([
         pl.col("value").pct_change().alias("growth")
     ])
@@ -413,64 +413,64 @@ def test_transform_gdp(gdp_data):
     assert gdp_with_growth["growth"].dtype == pl.Float64
 ```
 
-### Integration Tests
+### Testes de Integração
 
 ```python
 def test_end_to_end_pipeline(tmp_path):
-    """Test full pipeline"""
+    """Testar pipeline completo"""
     from pathlib import Path
     import polars as pl
     
-    # Extract
+    # Extrair
     gdp = fetch_gdp()
     
-    # Validate
+    # Validar
     assert len(gdp) > 100
     
-    # Transform
+    # Transformar
     gdp = gdp.with_columns([
         pl.col("value").pct_change().alias("growth")
     ])
     
-    # Load
+    # Carregar
     output = tmp_path / "gdp.parquet"
     gdp.write_parquet(output)
     
-    # Verify
+    # Verificar
     loaded = pl.read_parquet(output)
     assert len(loaded) == len(gdp)
     assert "growth" in loaded.columns
 ```
 
-## Common Pitfalls
+## Armadilhas Comuns
 
-### Pitfall 1: Silent Failures
+### Armadilha 1: Falhas Silenciosas
 
 ```python
-# Bad: Fails silently
+# Ruim: Falha silenciosamente
 try:
     gdp = fetch_data()
 except:
-    gdp = pd.DataFrame()  # Empty result
+    gdp = pd.DataFrame()  # Resultado vazio
     
-# Good: Log and alert
+# Bom: Log e alerta
 try:
     gdp = fetch_data()
 except Exception as e:
-    logger.error(f"Failed to fetch: {e}")
+    logger.error(f"Falha ao buscar: {e}")
     alert_team()
     raise
 ```
 
-### Pitfall 2: No Error Handling
+### Armadilha 2: Sem Error Handling
 
 ```python
-# Bad: One failure breaks everything
-gdp = fetch_gdp()  # Might fail
-bonds = fetch_bonds()  # Won't run if gdp fails
-employment = fetch_employment()  # Won't run
+# Ruim: Uma falha quebra tudo
+gdp = fetch_gdp()  # Pode falhar
+bonds = fetch_bonds()  # Não roda se gdp falha
+employment = fetch_employment()  # Não roda
 
-# Good: Handle each independently
+# Bom: Tratar cada um independentemente
 sources = {
     "gdp": fetch_gdp,
     "bonds": fetch_bonds,
@@ -482,112 +482,112 @@ for name, fetch_fn in sources.items():
     try:
         results[name] = fetch_fn()
     except Exception as e:
-        logger.error(f"Failed to fetch {name}: {e}")
-        # Continue with other sources
+        logger.error(f"Falha ao buscar {name}: {e}")
+        # Continuar com outras fontes
 ```
 
-### Pitfall 3: No Data Validation
+### Armadilha 3: Sem Validação de Dados
 
 ```python
-# Bad: Trust the API
+# Ruim: Confiar na API
 gdp = fetch_data()
-gdp.write_parquet("gdp.parquet")  # What if API returned garbage?
+gdp.write_parquet("gdp.parquet")  # E se API retornar lixo?
 
-# Good: Validate before storing
+# Bom: Validar antes de armazenar
 gdp = fetch_data()
 
 if len(gdp) == 0:
-    raise ValueError("Empty result")
+    raise ValueError("Resultado vazio")
 if gdp["value"].is_null().sum() > 0.5 * len(gdp):
-    raise ValueError("Too many nulls")
+    raise ValueError("Muitos nulos")
 
 gdp.write_parquet("gdp.parquet")
 ```
 
-## Storage & Formats
+## Armazenamento & Formatos
 
-After extracting and transforming data, choosing the right storage format is critical. Here's how to decide:
+Depois de extrair e transformar dados, escolher o formato de armazenamento certo é crítico. Aqui como decidir:
 
-### Parquet (Recommended for Analysis)
+### Parquet (Recomendado para Análise)
 
-**What**: Columnar storage format, compressed
+**O quê**: Formato de armazenamento colunares, comprimido
 
-**Pros**:
+**Vantagens**:
 
-- ✅ Highly compressed (80%+ savings vs CSV)
-- ✅ Fast reads (columnar: only read needed columns)
-- ✅ No database needed (just files)
-- ✅ Language-agnostic (Python, R, Rust, etc.)
-- ✅ Schema preserved
-- ✅ Cloud-native (works with S3, GCS, Azure)
+- ✅ Altamente comprimido (80%+ economia vs CSV)
+- ✅ Leitura rápida (colunares: ler apenas colunas necessárias)
+- ✅ Sem banco de dados (apenas arquivos)
+- ✅ Agnóstico de linguagem (Python, R, Rust, etc.)
+- ✅ Schema preservado
+- ✅ Cloud-native (funciona com S3, GCS, Azure)
 
-**Best for**: Historical data (archive), analytical queries (dashboards, reports), large datasets
+**Melhor para**: Dados históricos (arquivo), consultas analíticas (dashboards, relatórios), datasets grandes
 
-### PostgreSQL (Recommended for Operations)
+### PostgreSQL (Recomendado para Operações)
 
-**What**: Relational database, SQL interface
+**O quê**: Banco de dados relacional, interface SQL
 
-**Pros**:
+**Vantagens**:
 
-- ✅ ACID transactions (consistency)
-- ✅ Concurrent access (multiple users)
-- ✅ Real-time updates
-- ✅ SQL interface (powerful queries)
-- ✅ Backups & replication built-in
+- ✅ Transações ACID (consistência)
+- ✅ Acesso concorrente (múltiplos usuários)
+- ✅ Atualizações em tempo real
+- ✅ Interface SQL (consultas poderosas)
+- ✅ Backups & replicação embutidos
 
-**Best for**: Live data (constantly updated), applications (need consistency), multi-user environments
+**Melhor para**: Dados ao vivo (constantemente atualizados), aplicações (precisam consistência), ambientes multi-usuário
 
-### CSV (Simple, Human-Readable)
+### CSV (Simples, Legível por Humanos)
 
-**Pros**:
+**Vantagens**:
 
-- ✅ Human-readable
-- ✅ Works everywhere
-- ✅ No special tools needed
+- ✅ Legível por humanos
+- ✅ Funciona em qualquer lugar
+- ✅ Sem ferramentas especiais
 
-**Cons**:
+**Desvantagens**:
 
-- ❌ Slow to read large files
-- ❌ Large file size (no compression)
-- ❌ No type information
+- ❌ Lento para ler arquivos grandes
+- ❌ Tamanho grande de arquivo (sem compressão)
+- ❌ Sem informação de tipo
 
-**Best for**: Small datasets (<100 MB), data exchange with non-technical users
+**Melhor para**: Datasets pequenos (<100 MB), troca de dados com usuários não-técnicos
 
-### Format Comparison
+### Comparação de Formatos
 
-| Format | Size | Speed | Schema | Type Safety | Concurrent |
+| Formato | Tamanho | Velocidade | Schema | Type Safety | Concorrente |
 |--------|------|-------|--------|-------------|------------|
-| CSV | ⭐⭐⭐ (large) | ⭐ (slow) | ❌ | ❌ | ✅ (read-only) |
-| Parquet | ⭐ (tiny) | ⭐⭐⭐ (fast) | ✅ | ✅ | ❌ (read-only) |
-| PostgreSQL | ⭐⭐ (medium) | ⭐⭐ (fast) | ✅ | ✅ | ✅ |
+| CSV | ⭐⭐⭐ (grande) | ⭐ (lento) | ❌ | ❌ | ✅ (leitura) |
+| Parquet | ⭐ (minúsculo) | ⭐⭐⭐ (rápido) | ✅ | ✅ | ❌ (leitura) |
+| PostgreSQL | ⭐⭐ (médio) | ⭐⭐ (rápido) | ✅ | ✅ | ✅ |
 
-### Strategy: Parquet Archive + PostgreSQL Live
+### Estratégia: Arquivo Parquet + PostgreSQL Live
 
 ```
-Parquet (long-term storage)
-    ↓ [yearly archive]
+Parquet (armazenamento longo prazo)
+    ↓ [arquivo anual]
     gdp_2015.parquet
     gdp_2024.parquet
 
-PostgreSQL (live data)
-    ↓ [latest months only]
-    Last 12 months of data
-    Updated daily
+PostgreSQL (dados ao vivo)
+    ↓ [apenas últimos meses]
+    Últimos 12 meses de dados
+    Atualizado diariamente
     
-Benefits:
-  - Efficient archival (cheap storage)
-  - Fast live queries (current data in DB)
-  - Recovery from archives if needed
+Benefícios:
+  - Arquivo eficiente (armazenamento barato)
+  - Consultas ao vivo rápidas (dados atuais em BD)
+  - Recuperação de arquivos se necessário
 ```
 
-### Best Practices
+### Melhores Práticas
 
-1. **Use appropriate formats**: CSV for development, Parquet for storage, PostgreSQL for operations
-2. **Version your data**: `gdp_2024_01_10.parquet`, `gdp_2024_01_15.parquet` (corrections), etc.
-3. **Archive old data**: Keep last 2 years in PostgreSQL, archive older data to Parquet
-4. **Index critical columns**: Speed up common queries in PostgreSQL
+1. **Usar formatos apropriados**: CSV para desenvolvimento, Parquet para armazenamento, PostgreSQL para operações
+2. **Versione seus dados**: `gdp_2024_01_10.parquet`, `gdp_2024_01_15.parquet` (correções), etc.
+3. **Arquive dados antigos**: Manter últimos 2 anos em PostgreSQL, arquivar dados mais antigos em Parquet
+4. **Indexar colunas críticas**: Acelerar consultas comuns em PostgreSQL
 
-## See Also
+## Saiba Mais
 
 - [Data Engineering](data-engineering.md)
 - [Architecture Overview](../architecture/overview.md)

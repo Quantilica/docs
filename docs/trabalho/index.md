@@ -1,137 +1,144 @@
-# Labor Market Data (Trabalho)
+# Dados de Mercado de Trabalho (Trabalho)
 
-Brazilian labor market microdata from administrative sources: RAIS (annual employment census) and CAGED (monthly job flows).
+Microdados de mercado de trabalho brasileiro de fontes administrativas: RAIS (censo anual de emprego) e CAGED (fluxos mensais de empregos).
 
-**pdet-data** is a Big Data processing engine that transforms massive government labor datasets into production-ready analytics infrastructure—the first stage of a modern data stack for employment analysis.
+**pdet-data** é um engine de processamento Big Data que transforma massivos datasets governamentais de trabalho em infraestrutura de análise production-ready—a primeira etapa de um stack de dados moderno para análise de emprego.
 
-## The Challenge
+## O Desafio
 
-Brazilian labor market microdata encounters severe infrastructure barriers:
+Microdados de mercado de trabalho brasileiro encontram barreiras severas de infraestrutura:
 
-- **Memory Exhaustion**: Single RAIS files (50M+ rows) crash traditional tools (Pandas)
-- **Format Inefficiency**: Legacy CSV/TXT formats are slow, untyped, and space-wasting
-- **Temporary File Explosion**: Decompression requires disk space unavailable on cloud instances
+- **Esgotamento de Memória**: Arquivos RAIS únicos (50M+ linhas) quebram ferramentas tradicionais (Pandas)
+- **Ineficiência de Formato**: Formatos legados CSV/TXT são lentos, não-tipados e desperdiçadores de espaço
+- **Explosão de Arquivo Temporário**: Descompressão requer espaço em disco indisponível em instâncias cloud
 
-**pdet-data** overcomes these through Polars vectorial processing, Apache Parquet columnar storage, and intelligent memory management.
+**pdet-data** supera isso através de processamento vetorial Polars, armazenamento colunar Apache Parquet e gerenciamento inteligente de memória.
 
-## Data Sources
+## Fontes de Dados
 
 ### RAIS (Relação Anual de Informações Sociais)
 
-Annual employment census of all formal employment relationships:
+Censo anual de todas as relações de emprego formal:
 
-- **Coverage**: ~60 million employment records per year
-- **Available**: 1985-present
-- **Content**: Demographics, wages, occupation, education, tenure, firm details
-- **Size**: 8-10 GB per year (uncompressed)
+- **Cobertura**: ~60 milhões de registros de emprego por ano
+- **Disponível**: 1985-presente
+- **Conteúdo**: Dados demográficos, salários, ocupação, educação, permanência, detalhes da firma
+- **Tamanho**: 8-10 GB por ano (descomprimido)
 
 ### CAGED (Cadastro Geral de Empregados e Desempregados)
 
-Monthly administrative record of job flows:
+Registro administrativo mensal de fluxos de emprego:
 
-- **Coverage**: New hires and separations by sector/region
-- **Available**: 1992-present (monthly)
-- **Frequency**: Released with 3-week lag
-- **Size**: 200-500 MB per month (uncompressed)
+- **Cobertura**: Contratações e desligamentos por setor/região
+- **Disponível**: 1992-presente (mensal)
+- **Frequência**: Divulgado com 3 semanas de atraso
+- **Tamanho**: 200-500 MB por mês (descomprimido)
 
-## Architecture: pdet-data Pipeline
+## Arquitetura: Pipeline pdet-data
 
 ```mermaid
 graph TD
-    A[Brazilian Ministry of Labor Raw Data <br/> RAIS: 8 GB/year CSV CAGED: 200MB/mo CSV] --> B[pdet-data <br/> Transformation Engine]
+    A[Dados Brutos do Ministério do Trabalho Brasileiro <br/> RAIS: 8 GB/ano CSV CAGED: 200MB/mês CSV] --> B[pdet-data <br/> Engine de Transformação]
     
     subgraph pdet-data
-        B1[Multithreaded Polars processing]
-        B2[Raw-to-Parquet conversion]
-        B3[Intelligent memory management]
-        B4[Idempotent processing]
+        B1[Processamento Polars Multithreaded]
+        B2[Conversão Raw-to-Parquet]
+        B3[Gerenciamento inteligente de memória]
+        B4[Processamento Idempotente]
     end
     
-    B --> C[Your Analysis Layer <br/> Wage analysis, job creation, demographics]
+    B --> C[Sua Camada de Análise <br/> Análise de salários, criação de empregos, demografia]
 ```
 
-## Capabilities
+## Capacidades
 
-- ✅ **Raw-to-Parquet**: Convert 8 GB CSV → 0.4 GB Parquet (95% compression)
-- ✅ **Multithreaded**: Process 100M+ records in seconds
-- ✅ **Memory-efficient**: Minimal disk footprint during transformation
-- ✅ **Idempotent**: First run 60s → cached runs <0.1s (600x speedup)
-- ✅ **Typed schema**: Automatic data type detection and validation
-- ✅ **Production-ready**: Versioned outputs, daily pipelines
+- ✅ **Raw-to-Parquet**: Converter 8 GB CSV → 0.4 GB Parquet (compressão 95%)
+- ✅ **Multithreaded**: Processar 100M+ registros em segundos
+- ✅ **Eficiente em memória**: Footprint mínimo em disco durante transformação
+- ✅ **Idempotente**: Primeira execução 60s → execuções cache <0.1s (speedup 600x)
+- ✅ **Schema tipado**: Detecção automática e validação de tipo de dado
+- ✅ **Production-ready**: Outputs versionados, pipelines diários
 
-## Use Cases
+## Casos de Uso
 
-### Labor Market Monitoring
-Track employment trends, unemployment flows, and job creation by sector.
+### Monitoramento do Mercado de Trabalho
 
-### Wage Analysis
-Study wage levels, inequality, and sectoral differences using RAIS.
+Rastrear tendências de emprego, fluxos de desemprego e criação de empregos por setor.
 
-### Regional Economics
-Analyze labor market specialization and economic structure by state/municipality.
+### Análise de Salários
 
-### Education & Skills
-Examine relationship between education levels and employment outcomes.
+Estudar níveis salariais, desigualdade e diferenças setoriais usando RAIS.
 
-### Firm Dynamics
-Study job creation patterns and firm growth using RAIS historical panels.
+### Economia Regional
 
-## Tools
+Analisar especialização do mercado de trabalho e estrutura econômica por estado/município.
+
+### Educação e Habilidades
+
+Examinar relação entre níveis de educação e resultados de emprego.
+
+### Dinâmica de Empresas
+
+Estudar padrões de criação de empregos e crescimento de empresas usando painéis históricos da RAIS.
+
+## Ferramentas
 
 ### pdet-data
-Fetch RAIS and CAGED data with automatic aggregation and Parquet export.
 
-**Use when**: You need employment data by state, sector, or education level.
+Buscar dados RAIS e CAGED com agregação automática e export Parquet.
+
+**Use quando**: Você precisa de dados de emprego por estado, setor ou nível de educação.
 
 ### guia-parquet
-Guide to working with large labor datasets using Polars and Parquet.
 
-**Use when**: You're processing large RAIS/CAGED files for analysis.
+Guia para trabalhar com grandes datasets de trabalho usando Polars e Parquet.
 
-## Data Structure
+**Use quando**: Você está processando grandes arquivos RAIS/CAGED para análise.
 
-### RAIS Fields (Selection)
+## Estrutura de Dados
 
-| Field | Type | Description |
+### Campos RAIS (Seleção)
+
+| Campo | Tipo | Descrição |
 |-------|------|-------------|
-| **year** | int | Report year |
-| **employee_id** | str | Anonymized employee ID |
-| **employer_id** | str | CNPJ/firm ID |
-| **state** | str | State (UF) |
-| **municipality** | str | Municipality code |
-| **occupation_code** | str | CBO (occupation) |
-| **education** | str | Education level |
-| **salary** | float | Monthly salary (R$) |
-| **start_date** | date | Employment start date |
-| **end_date** | date | Employment end date (if separated) |
-| **sector** | str | CNAE (economic sector) |
+| **year** | int | Ano da competência |
+| **employee_id** | str | ID anônimo de funcionário |
+| **employer_id** | str | CNPJ/ID da firma |
+| **state** | str | Estado (UF) |
+| **municipality** | str | Código de município |
+| **occupation_code** | str | CBO (ocupação) |
+| **education** | str | Nível de educação |
+| **salary** | float | Salário mensal (R$) |
+| **start_date** | date | Data de início do emprego |
+| **end_date** | date | Data de término do emprego (se desligado) |
+| **sector** | str | CNAE (setor econômico) |
 
-### CAGED Fields (Selection)
+### Campos CAGED (Seleção)
 
-| Field | Type | Description |
+| Campo | Tipo | Descrição |
 |-------|------|---------|
-| **year_month** | date | Year-month of report |
-| **state** | str | State (UF) |
-| **sector** | str | CNAE (economic sector) |
-| **admissions** | int | New hires during month |
-| **demissions** | int | Separations during month |
-| **net_flow** | int | admissions - demissions |
+| **year_month** | date | Ano-mês da competência |
+| **state** | str | Estado (UF) |
+| **sector** | str | CNAE (setor econômico) |
+| **admissions** | int | Contratações durante o mês |
+| **demissions** | int | Desligamentos durante o mês |
+| **net_flow** | int | contratações - desligamentos |
 
-## Workflow: Transform → Load → Analyze
+## Fluxo de Trabalho: Transformar → Carregar → Analisar
 
-### Step 1: Transform Raw RAIS to Parquet (Idempotent)
+### Etapa 1: Transformar RAIS Bruto em Parquet (Idempotente)
 
-Download once with the CLI, then convert every archive in bulk. `convert_rais` decompresses each `.7z`, parses the CSV with the right schema for that year, and writes a Parquet alongside.
+Baixe uma vez com o CLI, depois converta todos os arquivos em bulk. `convert_rais` descomprime cada `.7z`, faz parse do CSV com o schema correto para esse ano, e escreve um Parquet ao lado.
 
 ```bash
-# Download every RAIS / CAGED archive (idempotent: skips files already present)
+# Baixar todo arquivo RAIS / CAGED (idempotente: pula arquivos já presentes)
 pdet-data fetch ./raw
 
-# Decompress + parse + write Parquet for every archive in ./raw
+# Descomprimir + parse + escrever Parquet para todo arquivo em ./raw
 pdet-data convert ./raw ./parquet
 ```
 
-Equivalent Python:
+Equivalente em Python:
 
 ```python
 from pathlib import Path
@@ -146,13 +153,13 @@ finally:
 convert_rais(Path("./raw"), Path("./parquet"))
 ```
 
-### Step 2: Multi-Year Analysis with Polars
+### Etapa 2: Análise Multi-Ano com Polars
 
 ```python
 import polars as pl
 from pathlib import Path
 
-# Lazy scan — Polars only reads the columns/rows you actually use
+# Lazy scan — Polars só lê as colunas/linhas que você realmente usa
 all_data = []
 for year in range(1994, 2024):
     df = (
@@ -162,10 +169,10 @@ for year in range(1994, 2024):
     )
     all_data.append(df)
 
-# Concatenate all years (Polars handles 100M+ rows)
+# Concatenar todos os anos (Polars manipula 100M+ linhas)
 combined = pl.concat(all_data, how="vertical")
 
-# Analyze wage growth
+# Analisar crescimento de salários
 wage_trends = (
     combined
     .group_by(["year", "cnae_code"])
@@ -175,10 +182,10 @@ wage_trends = (
     ])
 )
 
-print(f"✓ Analyzed {len(combined):,} employment records")
+print(f"✓ Analisados {len(combined):,} registros de emprego")
 ```
 
-### Step 3: CAGED Job Flow Analysis
+### Etapa 3: Análise de Fluxo de Empregos CAGED
 
 ```python
 from pdet_data import CAGEDProcessor
@@ -186,7 +193,7 @@ import polars as pl
 
 processor = CAGEDProcessor()
 
-# Process multiple years
+# Processar múltiplos anos
 monthly_data = []
 for year in [2023, 2024]:
     result = processor.process_year(year, force_refresh=False)
@@ -194,7 +201,7 @@ for year in [2023, 2024]:
 
 combined = pl.concat(monthly_data, how="vertical")
 
-# Annual job creation by state
+# Criação anual de empregos por estado
 annual_jobs = (
     combined
     .with_columns([
@@ -211,29 +218,29 @@ annual_jobs = (
 print(annual_jobs.filter(pl.col("year") == 2024).sort("net_jobs", descending=True))
 ```
 
-## Best Practices
+## Melhores Práticas
 
-### 1. Always Use Idempotent Processing
+### 1. Sempre Use Processamento Idempotente
 
-Skip expensive re-computation:
+Pule reprocessamento caro:
 
 ```python
-# ❌ Never: Force reprocessing (60 seconds)
+# ❌ Nunca: Forçar reprocessamento (60 segundos)
 result = processor.process_year(2023, force_refresh=True)
 
-# ✅ Always: Use cache if unchanged (0.08 seconds)
+# ✅ Sempre: Use cache se inalterado (0.08 segundos)
 result = processor.process_year(2023, force_refresh=False)
 ```
 
-### 2. Use Lazy Evaluation for Multi-Year Analysis
+### 2. Use Avaliação Lazy para Análise Multi-Ano
 
-Defer execution until collection:
+Adie execução até coleta:
 
 ```python
-# ❌ Eager: Loads all intermediate results
+# ❌ Eager: Carrega todos os resultados intermediários
 by_sector = df.group_by("cnae_code").agg(...)
 
-# ✅ Lazy: Optimizes entire query before execution
+# ✅ Lazy: Otimiza consulta inteira antes da execução
 by_sector = (
     df
     .lazy()
@@ -243,20 +250,20 @@ by_sector = (
 )
 ```
 
-### 3. Concatenate First, Aggregate Second
+### 3. Concatenar Primeiro, Agregar Segundo
 
-Efficient multi-year processing:
+Processamento multi-ano eficiente:
 
 ```python
-# ❌ Inefficient: Aggregate per year, then combine
+# ❌ Ineficiente: Agregar por ano, depois combinar
 results = []
 for year in range(1994, 2024):
-    agg = df_year.group_by("cnae_code").agg(...)  # 30 aggregations
+    agg = df_year.group_by("cnae_code").agg(...)  # 30 agregações
     results.append(agg)
 
 combined = pl.concat(results)
 
-# ✅ Efficient: Concatenate once, aggregate once
+# ✅ Eficiente: Concatenar uma vez, agregar uma vez
 all_data = []
 for year in range(1994, 2024):
     df = pl.read_parquet(f"rais_{year}.parquet").with_columns(
@@ -264,34 +271,34 @@ for year in range(1994, 2024):
     )
     all_data.append(df)
 
-combined = pl.concat(all_data, how="vertical")  # Single concatenation
+combined = pl.concat(all_data, how="vertical")  # Concatenação única
 by_sector = combined.group_by(["year", "cnae_code"]).agg(...)
 ```
 
-### 4. Store Results in Parquet
+### 4. Armazene Resultados em Parquet
 
-Never use CSV for processed data:
+Nunca use CSV para dados processados:
 
 ```python
-# ❌ Slow, large, untyped
-result.write_csv("output.csv")  # 4 GB, 30s to read
+# ❌ Lento, grande, sem tipo
+result.write_csv("output.csv")  # 4 GB, 30s para ler
 
-# ✅ Fast, compact, typed
-result.write_parquet("output.parquet")  # 0.4 GB, 0.5s to read
+# ✅ Rápido, compacto, tipado
+result.write_parquet("output.parquet")  # 0.4 GB, 0.5s para ler
 ```
 
-### 5. Handle Employment Spells Correctly
+### 5. Manipule Vínculos de Emprego Corretamente
 
-RAIS reports employment status on December 31 of each year:
+RAIS reporta status de emprego em 31 de dezembro de cada ano:
 
 ```python
 import polars as pl
 
-# Track worker transitions
+# Rastrear transições de trabalhadores
 rais_2022 = pl.read_parquet("rais_2022.parquet")
 rais_2023 = pl.read_parquet("rais_2023.parquet")
 
-# Workers who changed sectors
+# Trabalhadores que mudaram de setor
 transitions = (
     rais_2022
     .join(
@@ -303,36 +310,39 @@ transitions = (
     .filter(pl.col("cnae_code") != pl.col("cnae_code_2023"))
 )
 
-print(f"Sector transitions: {len(transitions):,}")
+print(f"Transições de setor: {len(transitions):,}")
 ```
 
-## Performance Benchmarks
+## Benchmarks de Performance
 
-| Operation | Time | Throughput |
+| Operação | Tempo | Throughput |
 |-----------|------|-----------|
-| Process RAIS 2023 (first run) | 62s | 800k rows/sec |
-| Process RAIS 2023 (cached) | 0.08s | — |
-| Concatenate 30 years (100M rows) | 0.5s | 200M rows/sec |
-| Aggregate all 100M rows | 4.2s | 23.8M rows/sec |
-| CSV (10 GB) vs Parquet (0.4 GB) | — | 96% compression |
+| Processar RAIS 2023 (primeira execução) | 62s | 800k linhas/seg |
+| Processar RAIS 2023 (cache) | 0.08s | — |
+| Concatenar 30 anos (100M linhas) | 0.5s | 200M linhas/seg |
+| Agregar todas as 100M linhas | 4.2s | 23.8M linhas/seg |
+| CSV (10 GB) vs Parquet (0.4 GB) | — | compressão 96% |
 
-## Tools in This Section
+## Ferramentas nesta Seção
 
 ### [pdet-data](pdet-data.md)
-Industrial Big Data transformation engine for RAIS and CAGED:
-- **Raw-to-Parquet conversion** (95%+ compression, typed schema)
-- **Multithreaded Polars processing** (10x faster than Pandas)
-- **Intelligent memory management** (minimal disk footprint)
-- **Idempotent processing** (cache unchanged files)
-- **Production-ready**: Daily pipelines, versioned outputs
 
-### [Parquet + Polars Guide](guia-parquet.md)
-Best practices for working with large labor datasets.
+Engine industrial de transformação Big Data para RAIS e CAGED:
 
-## Learn More
+- **Conversão Raw-to-Parquet** (compressão 95%+, schema tipado)
+- **Processamento Polars multithreaded** (10x mais rápido que Pandas)
+- **Gerenciamento inteligente de memória** (footprint mínimo em disco)
+- **Processamento idempotente** (cache de arquivos inalterados)
+- **Production-ready**: Pipelines diários, outputs versionados
 
-- **[pdet-data Documentation](pdet-data.md)** — Complete feature reference
-- **[IBGE Employment Statistics](../ibge/index.md)** — Unemployment rates
-- **[Architecture Overview](../architecture/overview.md)** — System design
-- **[RAIS Official (Portuguese)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/rais)** — Government source
-- **[CAGED Official (Portuguese)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/caged)** — Government source
+### [Guia Parquet + Polars](guia-parquet.md)
+
+Melhores práticas para trabalhar com grandes datasets de trabalho.
+
+## Saiba Mais
+
+- **[Documentação pdet-data](pdet-data.md)** — Referência completa de recursos
+- **[Estatísticas de Emprego IBGE](../ibge/index.md)** — Taxas de desemprego
+- **[Visão Geral da Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[RAIS Oficial (Português)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/rais)** — Fonte governamental
+- **[CAGED Oficial (Português)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/caged)** — Fonte governamental

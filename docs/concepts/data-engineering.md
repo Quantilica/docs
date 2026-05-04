@@ -1,117 +1,117 @@
-# Data Engineering Principles
+# Princípios de Engenharia de Dados
 
-Fundamental concepts underlying the Brazilian Public Data Suite.
+Conceitos fundamentais subjacentes à Plataforma Brasileira de Dados Públicos.
 
-## What Is Data Engineering?
+## O Que é Engenharia de Dados?
 
-Data engineering is the **infrastructure for data work**.
+Engenharia de dados é a **infraestrutura para trabalho com dados**.
 
-While data science answers "what does the data tell us?", data engineering answers "how do we reliably get, store, and manage data?"
-
-```mermaid
-graph TD
-    A[Unreliable data sources <br/> Government APIs, FTP servers] -- data engineering --> B[Clean, reliable data <br/> Parquet files, PostgreSQL]
-    B -- data science --> C[Insights & predictions <br/> Models, dashboards, reports]
-```
-
-## Core Problems Data Engineering Solves
-
-### 1. Reliability
-
-**Problem**: APIs are unreliable
+Enquanto ciência de dados responde "o que os dados nos dizem?", engenharia de dados responde "como obtemos, armazenamos e gerenciamos dados confiável?"
 
 ```mermaid
 graph TD
-    A["Attempt 1: Timeout<br/>30 seconds"] --> B["Attempt 2: Timeout"]
-    B --> C["Attempt 3: 500 Internal<br/>Server Error"]
-    C --> D["Attempt 4: Partial response<br/>rate limit"]
-    D --> E["Attempt 5: Success ✓"]
+    A[Fontes de dados não confiáveis <br/> APIs governamentais, servidores FTP] -- engenharia de dados --> B[Dados limpos e confiáveis <br/> Arquivos Parquet, PostgreSQL]
+    B -- ciência de dados --> C[Insights & previsões <br/> Modelos, dashboards, relatórios]
 ```
 
-**Solution**: Retries with exponential backoff, timeout handling, partial failure recovery
+## Problemas Principais que Engenharia de Dados Resolve
+
+### 1. Confiabilidade
+
+**Problema**: APIs são pouco confiáveis
+
+```mermaid
+graph TD
+    A["Tentativa 1: Timeout<br/>30 segundos"] --> B["Tentativa 2: Timeout"]
+    B --> C["Tentativa 3: 500 Erro<br/>Servidor Interno"]
+    C --> D["Tentativa 4: Resposta parcial<br/>rate limit"]
+    D --> E["Tentativa 5: Sucesso ✓"]
+```
+
+**Solução**: Retries com backoff exponencial, tratamento de timeout, recuperação de falha parcial
 
 ### 2. Performance
 
-**Problem**: Data is large
+**Problema**: Dados são grandes
 
 ```mermaid
 graph TD
-    A["RAIS: 60 million records<br/>850 MB"] --> B["Need to process,<br/>aggregate, store efficiently"]
-    B --> C["Solution:<br/>Columnar storage Parquet<br/>lazy evaluation, streaming"]
+    A["RAIS: 60 milhões de registros<br/>850 MB"] --> B["Precisa processar,<br/>agregar, armazenar eficientemente"]
+    B --> C["Solução:<br/>Armazenamento colunar Parquet<br/>lazy evaluation, streaming"]
 ```
 
-### 3. Consistency
+### 3. Consistência
 
-**Problem**: Data changes over time
+**Problema**: Dados mudam ao longo do tempo
 
 ```mermaid
 graph TD
-    A["Fetch on Monday<br/>1000 records"] --> B["Fetch on Friday<br/>1002 records<br/>IBGE revised"]
-    B --> C["Which version is truth?<br/>How to track versions?"]
-    C --> D["Solution:<br/>Data lineage tracking<br/>version control, audit logs"]
+    A["Busca segunda<br/>1000 registros"] --> B["Busca sexta<br/>1002 registros<br/>IBGE revisou"]
+    B --> C["Qual versão é verdade?<br/>Como rastrear versões?"]
+    C --> D["Solução:<br/>Rastreamento de linhagem<br/>controle de versão, logs de auditoria"]
 ```
 
-### 4. Integration
+### 4. Integração
 
-**Problem**: Data comes from different sources
+**Problema**: Dados vêm de diferentes fontes
 
 ```mermaid
 graph TD
-    A["IBGE: dates as 2024-01-01<br/>values as strings"] --> B["Treasury: dates as 01/01/2024<br/>values as floats"]
-    B --> C["RAIS: dates as 2024-01-31 00:00:00<br/>values as ints"]
-    C --> D["Need unified schema<br/>for analysis"]
-    D --> E["Solution:<br/>Schema normalization<br/>type casting, quality checks"]
+    A["IBGE: datas como 2024-01-01<br/>valores como strings"] --> B["Tesouro: datas como 01/01/2024<br/>valores como floats"]
+    B --> C["RAIS: datas como 2024-01-31 00:00:00<br/>valores como ints"]
+    C --> D["Precisa de schema unificado<br/>para análise"]
+    D --> E["Solução:<br/>Normalização de schema<br/>casting de tipos, verificações de qualidade"]
 ```
 
 ## ETL vs ELT
 
-### ETL: Extract → Transform → Load (traditional)
+### ETL: Extrair → Transformar → Carregar (tradicional)
 
 ```mermaid
 graph TD
-    A[Raw Data] --> B[Transform <br/> clean, aggregate, join]
-    B --> C[Processed Data]
-    C --> D[Load into <br/> append/overwrite]
+    A[Dados Brutos] --> B[Transformar <br/> limpar, agregar, juntar]
+    B --> C[Dados Processados]
+    C --> D[Carregar em <br/> anexar/sobrescrever]
 ```
 
-**When to use**: Data is small, transformations are complex
+**Quando usar**: Dados são pequenos, transformações são complexas
 
-**Pros**:
+**Vantagens**:
 
-- Reduced storage (only store processed data)
-- Reduced transfer (only move clean data)
+- Armazenamento reduzido (apenas armazenar dados processados)
+- Transferência reduzida (apenas mover dados limpos)
 
-**Cons**:
+**Desvantagens**:
 
-- Transformation failures lose raw data
-- Hard to change transformations later (have to re-fetch)
+- Falhas de transformação perdem dados brutos
+- Difícil mudar transformações depois (precisa refazer fetch)
 
-### ELT: Extract → Load → Transform (modern)
+### ELT: Extrair → Carregar → Transformar (moderno)
 
 ```mermaid
 graph TD
-    A[Raw Data] --> B[Load <br/> store as-is]
-    B --> C[Raw Data stored]
-    C --> D[Transform on-demand <br/> clean, aggregate, join]
+    A[Dados Brutos] --> B[Carregar <br/> armazenar como-é]
+    B --> C[Dados Brutos Armazenados]
+    C --> D[Transformar on-demand <br/> limpar, agregar, juntar]
 ```
 
-**When to use**: Data is large, transformations evolve
+**Quando usar**: Dados são grandes, transformações evoluem
 
-**Pros**:
+**Vantagens**:
 
-- Raw data preserved (debugging, re-processing)
-- Flexible transformations (no re-fetch)
-- Parallelizable (transform many ways in parallel)
+- Dados brutos preservados (debug, re-processamento)
+- Transformações flexíveis (sem re-fetch)
+- Paralelizável (transformar de muitas formas em paralelo)
 
-**Cons**:
+**Desvantagens**:
 
-- Requires more storage
-- Need tools to handle raw data
+- Requer mais armazenamento
+- Precisa de ferramentas para lidar com dados brutos
 
-### Brazilian Public Data Suite Uses ELT
+### Plataforma de Dados Públicos Brasileira Usa ELT
 
 ```python
-# EXTRACT & LOAD: store raw rows from SIDRA
+# EXTRACT & LOAD: armazenar linhas brutas do SIDRA
 import polars as pl
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
@@ -128,148 +128,148 @@ param = Parametro(
 with SidraClient(timeout=60) as client:
     rows = client.get(param.url())  # list[dict]
 
-pl.DataFrame(rows).write_parquet("gdp_raw.parquet")  # store raw
+pl.DataFrame(rows).write_parquet("gdp_raw.parquet")  # armazenar bruto
 
-# TRANSFORM: process on demand
+# TRANSFORM: processar on demand
 gdp = pl.read_parquet("gdp_raw.parquet").with_columns(
     pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("growth")
 )
-# Re-transform anytime without re-fetching; raw data preserved for debugging.
+# Re-transformar anytime sem re-fetch; dados brutos preservados para debug.
 ```
 
-## Data Quality Dimensions
+## Dimensões de Qualidade de Dados
 
-### 1. Accuracy
+### 1. Precisão
 
-Does the data represent reality?
-
-```
-Sources:
-- Algorithmic: Calculation errors, rounding
-- Typographical: Typos in manual entry
-- Source: Errors in original system
-- Temporal: Stale data
-
-Check:
-- Validate against independent sources
-- Look for outliers and anomalies
-- Check for sign errors (GDP growth -50%?)
-```
-
-### 2. Completeness
-
-Is all data present?
+Os dados representam a realidade?
 
 ```
-IBGE SIDRA table 1620:
-  Expected: 96 quarters (2000-2024)
-  Actual: 88 quarters
-  Missing: 8 quarters (data not available)
+Fontes:
+- Algorítmica: Erros de cálculo, arredondamento
+- Tipográfica: Typos em entrada manual
+- Fonte: Erros em sistema original
+- Temporal: Dados obsoletos
 
-Check:
-- Count rows vs expected
-- Check for NULL values
-- Verify date coverage
+Verificar:
+- Validar contra fontes independentes
+- Procurar outliers e anomalias
+- Verificar erros de sinal (crescimento PIB -50%?)
 ```
 
-### 3. Consistency
+### 2. Completude
 
-Is data formatted consistently?
+Todos os dados estão presentes?
 
 ```
-Bad: Mixing formats
+Tabela IBGE SIDRA 1620:
+  Esperado: 96 trimestres (2000-2024)
+  Atual: 88 trimestres
+  Faltando: 8 trimestres (dados não disponíveis)
+
+Verificar:
+- Contar linhas vs esperado
+- Verificar valores NULL
+- Verificar cobertura de datas
+```
+
+### 3. Consistência
+
+Os dados estão formatados consistentemente?
+
+```
+Ruim: Misturando formatos
   "2024-01-01" (ISO)
   "01/01/2024" (US)
-  "01-01-2024" (EU)
-  "Jan 1, 2024" (text)
+  "01-01-2024" (UE)
+  "Jan 1, 2024" (texto)
 
-Good: Normalized
-  All dates: "2024-01-01" (ISO 8601)
+Bom: Normalizado
+  Todas as datas: "2024-01-01" (ISO 8601)
 ```
 
-### 4. Timeliness
+### 4. Tempestividade
 
-Is data current?
+Os dados estão atuais?
 
 ```
-IBGE publishes GDP with ~60 day lag
-Treasury publishes daily
-RAIS publishes annually (Dec 31 of following year)
+IBGE publica PIB com ~60 dias de atraso
+Tesouro publica diariamente
+RAIS publica anualmente (31 de dez. do ano seguinte)
 ↓
-Know your update frequency!
+Conhecer sua frequência de atualização!
 ```
 
-### 5. Validity
+### 5. Validade
 
-Does data fit the schema?
+Dados se encaixam no schema?
 
 ```
-Column "salary" should be:
-  Type: float (numeric)
-  Range: 0 to 1,000,000
-  Not null
+Coluna "salary" deveria ser:
+  Tipo: float (numérico)
+  Intervalo: 0 a 1.000.000
+  Não nulo
 
-Check:
+Verificar:
   assert df["salary"].dtype == pl.Float64
   assert (df["salary"] >= 0) & (df["salary"] <= 1_000_000)
   assert df["salary"].is_null().sum() == 0
 ```
 
-## Validation Patterns
+## Padrões de Validação
 
-### Schema Validation
+### Validação de Schema
 
 ```python
 import polars as pl
 
 df = pl.read_parquet("gdp.parquet")
 
-# Expected schema
+# Schema esperado
 expected = {
     "date": pl.Date,
     "value": pl.Float64,
     "status_code": pl.Utf8
 }
 
-# Check
+# Verificar
 for col, dtype in expected.items():
-    assert col in df.columns, f"Missing column: {col}"
-    assert df[col].dtype == dtype, f"Wrong type for {col}"
+    assert col in df.columns, f"Coluna ausente: {col}"
+    assert df[col].dtype == dtype, f"Tipo incorreto para {col}"
 ```
 
-### Range Validation
+### Validação de Intervalo
 
 ```python
-# GDP growth should be -50% to +50%
+# Crescimento do PIB deve estar entre -50% e +50%
 assert (df["growth"] >= -0.50) & (df["growth"] <= 0.50)
 
-# Unemployment rate should be 0-100%
+# Taxa de desemprego deve estar entre 0-100%
 assert (df["unemployment"] >= 0) & (df["unemployment"] <= 1.0)
 
-# Wages should be positive
+# Salários devem ser positivos
 assert df["salary"] > 0
 ```
 
-### Temporal Validation
+### Validação Temporal
 
 ```python
-# Check date continuity (for time series)
+# Verificar continuidade de datas (para séries temporais)
 dates = df["date"].sort()
 gaps = dates.diff()
 
 max_gap = gaps.max()
 if max_gap > timedelta(days=100):
-    logger.warning(f"Gap found: {max_gap}")
+    logger.warning(f"Gap encontrado: {max_gap}")
 ```
 
-### Statistical Validation
+### Validação Estatística
 
 ```python
 import polars as pl
 
 df = pl.read_parquet("data.parquet")
 
-# Detect outliers (values > 3 std devs)
+# Detectar outliers (valores > 3 desvios padrão)
 mean = df["value"].mean()
 std = df["value"].std()
 
@@ -278,118 +278,118 @@ outliers = df.filter(
 )
 
 if len(outliers) > 0:
-    logger.warning(f"Outliers detected: {len(outliers)} rows")
+    logger.warning(f"Outliers detectados: {len(outliers)} linhas")
 ```
 
-## Data Pipeline Layers
+## Camadas de Pipeline de Dados
 
-### Layer 1: Raw Data
-
-```
-What: Exactly as received from source
-Why: Preserves original for debugging
-Format: Parquet (efficient storage)
-Example: gdp_raw.parquet
-```
-
-### Layer 2: Validated Data
+### Camada 1: Dados Brutos
 
 ```
-What: Checked schema, types, ranges
-Why: Catches errors early
-Format: Parquet
-Example: gdp_validated.parquet
+O quê: Exatamente como recebido da fonte
+Por quê: Preserva original para debug
+Formato: Parquet (armazenamento eficiente)
+Exemplo: gdp_raw.parquet
 ```
 
-### Layer 3: Processed Data
+### Camada 2: Dados Validados
 
 ```
-What: Cleaned, standardized, normalized
-Why: Ready for analysis
-Format: Parquet or PostgreSQL
-Example: gdp_processed.parquet
+O quê: Schema, tipos e intervalos verificados
+Por quê: Detecta erros cedo
+Formato: Parquet
+Exemplo: gdp_validated.parquet
 ```
 
-### Layer 4: Aggregated Data
+### Camada 3: Dados Processados
 
 ```
-What: Grouped, summarized, pre-computed
-Why: Fast dashboards and reports
-Format: PostgreSQL (for real-time access)
-Example: gdp_by_sector table
+O quê: Limpo, padronizado, normalizado
+Por quê: Pronto para análise
+Formato: Parquet ou PostgreSQL
+Exemplo: gdp_processed.parquet
 ```
 
-## Monitoring Data Pipelines
+### Camada 4: Dados Agregados
 
-### What to Monitor
+```
+O quê: Agrupado, resumido, pré-computado
+Por quê: Dashboards e relatórios rápidos
+Formato: PostgreSQL (para acesso em tempo real)
+Exemplo: tabela gdp_by_sector
+```
+
+## Monitoramento de Pipelines de Dados
+
+### O Que Monitorar
 
 ```python
-# 1. Freshness
+# 1. Atualidade
 last_update = get_last_update_time()
 age_hours = (now - last_update).total_seconds() / 3600
 
-if age_hours > 72:  # Alert if older than 3 days
-    alert(f"Data is {age_hours} hours old")
+if age_hours > 72:  # Alerta se mais antigo que 3 dias
+    alert(f"Dados com {age_hours} horas de idade")
 
-# 2. Completeness
+# 2. Completude
 expected_rows = get_expected_row_count()
 actual_rows = len(df)
 
 if actual_rows < expected_rows * 0.9:
-    alert(f"Missing {expected_rows - actual_rows} rows")
+    alert(f"Faltam {expected_rows - actual_rows} linhas")
 
-# 3. Quality
+# 3. Qualidade
 null_rate = df.is_null().sum() / len(df)
 
 if null_rate > 0.05:
-    alert(f"{null_rate*100:.1f}% missing data")
+    alert(f"{null_rate*100:.1f}% dados faltantes")
 
-# 4. Anomalies
+# 4. Anomalias
 recent_mean = df.tail(30)["value"].mean()
 all_time_mean = df["value"].mean()
 change = abs(recent_mean - all_time_mean) / all_time_mean
 
 if change > 0.50:
-    alert(f"Value changed {change*100:.1f}%")
+    alert(f"Valor mudou {change*100:.1f}%")
 ```
 
-## Tools for Data Engineering
+## Ferramentas para Engenharia de Dados
 
-### Extraction
+### Extração
 
-- **HTTP clients**: requests, httpx
-- **Database drivers**: psycopg2, sqlite3
-- **Cloud SDKs**: boto3 (AWS), google-cloud (GCP)
+- **Clientes HTTP**: requests, httpx
+- **Drivers de banco de dados**: psycopg2, sqlite3
+- **SDKs de nuvem**: boto3 (AWS), google-cloud (GCP)
 
-### Transformation
+### Transformação
 
-- **Pandas**: Flexible, widely-used
-- **Polars**: Fast, memory-efficient
-- **DuckDB**: SQL on files/dataframes
-- **Spark**: Distributed processing
+- **Pandas**: Flexível, amplamente usado
+- **Polars**: Rápido, eficiente em memória
+- **DuckDB**: SQL em arquivos/dataframes
+- **Spark**: Processamento distribuído
 
-### Storage
+### Armazenamento
 
-- **Parquet**: Columnar, compressed
-- **PostgreSQL**: Relational, ACID
+- **Parquet**: Colunar, comprimido
+- **PostgreSQL**: Relacional, ACID
 - **S3/Cloud Storage**: Data lake
-- **Snowflake/BigQuery**: Cloud data warehouse
+- **Snowflake/BigQuery**: Data warehouse em nuvem
 
-### Orchestration
+### Orquestração
 
-- **Apache Airflow**: Workflow scheduler
-- **Dagster**: Data-aware orchestration
-- **Prefect**: Modern flow orchestration
-- **cron**: Simple scheduled jobs
+- **Apache Airflow**: Agendador de workflows
+- **Dagster**: Orquestração com consciência de dados
+- **Prefect**: Orquestração de fluxos moderna
+- **cron**: Jobs agendados simples
 
-### Monitoring
+### Monitoramento
 
-- **Prometheus**: Metrics collection
+- **Prometheus**: Coleta de métricas
 - **Grafana**: Dashboarding
-- **DataDog**: APM and monitoring
-- **Custom scripts**: Application-specific checks
+- **DataDog**: APM e monitoramento
+- **Scripts customizados**: Verificações específicas de aplicação
 
-## See Also
+## Saiba Mais
 
 - [Pipelines & Storage](pipelines.md)
 - [Architecture Overview](../architecture/overview.md)

@@ -1,28 +1,28 @@
-# Design Philosophy
+# Filosofia de Design
 
-The Brazilian Public Data Suite is built on five core principles that guide every tool, from sidra-fetcher to datasus-fetcher. Understanding these principles helps you use the tools effectively and extend them for your own needs.
+A Plataforma Brasileira de Dados Públicos é construída em cinco princípios centrais que orientam cada ferramenta, de sidra-fetcher a datasus-fetcher. Entender esses princípios ajuda você a usar as ferramentas efetivamente e estendê-las para suas próprias necessidades.
 
-## 1. Modularity
+## 1. Modularidade
 
-Each tool is **independent and self-contained**. You can use only what you need without pulling in unnecessary dependencies or coupling.
+Cada ferramenta é **independente e auto-contida**. Você pode usar apenas o que precisa sem puxar dependências desnecessárias ou acoplamento.
 
-### Why It Matters
+### Por Que Importa
 
-Brazilian government data sources are diverse and fragmented. Forcing a single unified API would sacrifice the specialized optimizations each tool needs.
+Fontes de dados governamentais brasileiros são diversas e fragmentadas. Forçar uma API única unificada sacrificaria as otimizações especializadas que cada ferramenta necessita.
 
-- **sidra-fetcher** is optimized for IBGE REST APIs with async concurrency
-- **pdet-data** is optimized for massive CSV files with Polars vectorial processing
-- **datasus-fetcher** is optimized for legacy FTP infrastructure with multithreaded crawling
+- **sidra-fetcher** é otimizada para APIs REST IBGE com concorrência assíncrona
+- **pdet-data** é otimizada para arquivos CSV massivos com processamento vetorial Polars
+- **datasus-fetcher** é otimizada para infraestrutura FTP legada com crawling multithreaded
 
-Each tool solves its specific infrastructure challenge. Mixing them into a monolithic "mega-fetcher" would weaken all of them.
+Cada ferramenta resolve seu desafio de infraestrutura específico. Misturá-las em um "mega-fetcher" monolítico as enfraqueceria todas.
 
-### How We Apply It
+### Como Aplicamos
 
-- No shared internal dependencies between tools
-- Each tool has its own retry logic, error handling, and caching strategy
-- Tools are composable: combine sidra-fetcher + tddata + pdet-data in a single pipeline without conflicts
+- Sem dependências internas compartilhadas entre ferramentas
+- Cada ferramenta tem sua própria lógica de retry, tratamento de erro e estratégia de caching
+- Ferramentas são composáveis: combine sidra-fetcher + tddata + pdet-data em um único pipeline sem conflitos
 
-### Example: Using Multiple Tools
+### Exemplo: Usando Múltiplas Ferramentas
 
 ```python
 import asyncio
@@ -48,109 +48,109 @@ async def multi_source_analysis():
 
 ## 2. Performance
 
-**Speed matters**. All tools are engineered for speed at scale:
+**Velocidade importa**. Todas as ferramentas são projetadas para velocidade em escala:
 
-- Multithreaded concurrency where applicable (datasus-fetcher: 6-10x speedup)
-- Async/await where applicable (sidra-fetcher: 3x speedup on metadata harvest)
-- Vectorial processing where applicable (pdet-data: 10x speedup)
-- Smart caching and idempotence checks (comexdown: 57x speedup on re-runs)
-- Streaming/chunked processing for large files (comexdown: constant memory overhead)
-- Columnar storage formats (Parquet: 95%+ compression vs CSV)
+- Concorrência multithreaded onde aplicável (datasus-fetcher: speedup 6-10x)
+- Async/await onde aplicável (sidra-fetcher: speedup 3x em harvest de metadata)
+- Processamento vetorial onde aplicável (pdet-data: speedup 10x)
+- Smart caching e verificações de idempotência (comexdown: speedup 57x em re-runs)
+- Processamento streaming/chunked para arquivos grandes (comexdown: overhead de memória constante)
+- Formatos de armazenamento colunares (Parquet: compressão 95%+ vs CSV)
 
-### Why It Matters
+### Por Que Importa
 
-When you're processing 50M+ row labor market datasets or downloading gigabytes of trade data, performance isn't a luxury—it's a prerequisite. Legacy tools like Pandas exhaust memory. Sequential downloads take weeks. Poor choices here lock you into slow, expensive infrastructure.
+Quando você está processando datasets de mercado de trabalho 50M+ linhas ou baixando gigabytes de dados comerciais, performance não é luxo—é pré-requisito. Ferramentas legadas como Pandas esgotam memória. Downloads sequenciais levam semanas. Escolhas ruins aqui o trancam em infraestrutura lenta e cara.
 
-### How We Apply It
+### Como Aplicamos
 
-Every tool is benchmarked. Performance metrics are documented. When a faster approach exists, we use it:
+Cada ferramenta é benchmarked. Métricas de performance são documentadas. Quando uma abordagem mais rápida existe, a usamos:
 
-- **RAIS (50M rows)**: Polars vectorial processing, not Pandas
-- **DATASUS microdata (100+ GB)**: Multithreaded concurrent crawling, not sequential FTP
-- **Treasury bonds (100k+ transactions)**: Async concurrent fetches, not sync requests
-- **Siscomex (gigabyte files)**: Streaming chunks, not in-memory buffering
+- **RAIS (50M linhas)**: Processamento vetorial Polars, não Pandas
+- **Microdados DATASUS (100+ GB)**: Crawling concorrente multithreaded, não FTP sequencial
+- **Títulos de Tesouro (100k+ transações)**: Fetches concorrentes assíncronos, não requisições sync
+- **Siscomex (arquivos gigabyte)**: Chunks streaming, não buffering em memória
 
-### Example: Idempotent Processing with HEAD + `Last-Modified`
+### Exemplo: Processamento Idempotente com HEAD + `Last-Modified`
 
 ```python
 from pathlib import Path
 import comexdown
 
-# First run: streams the SECEX CSVs in 8 KiB chunks
+# Primeira execução: transmite os CSVs do SECEX em chunks de 8 KiB
 comexdown.get_year(Path("./DATA"), year=2023)
 
-# Second run: HEAD shows Last-Modified == local mtime, GET is skipped entirely
+# Segunda execução: HEAD mostra Last-Modified == mtime local, GET é pulado inteiramente
 comexdown.get_year(Path("./DATA"), year=2023)
 
-# Re-runs cost a single HEAD round-trip per file when nothing has changed.
+# Re-execuções custam apenas um round-trip HEAD por arquivo quando nada mudou.
 ```
 
-## 3. Resilience
+## 3. Resiliência
 
-**Failures happen**. All tools are engineered to handle them gracefully.
+**Falhas acontecem**. Todas as ferramentas são projetadas para lidar com elas graciosamente.
 
-### Why It Matters
+### Por Que Importa
 
-Government APIs go down. FTP servers time out. SSL certificates expire. Network connections drop. Legacy infrastructure is unstable. Tools that crash on transient failures are unusable in production.
+APIs governamentais caem. Servidores FTP expiram. Certificados SSL expiram. Conexões de rede caem. Infraestrutura legada é instável. Ferramentas que caem em falhas transitórias são inutilizáveis em produção.
 
-### How We Apply It
+### Como Aplicamos
 
-- **Auto-retry with exponential backoff**: Transient failures are retried 3-5 times with increasing delays
-- **Smart resume**: If a download fails at 70%, subsequent runs resume from that point, not the beginning
-- **SSL resilience**: Handle expired/misconfigured government certificates gracefully (comexdown)
-- **Size-based idempotence**: Compare remote file size with local file; skip if identical (datasus-fetcher)
-- **Validation at source**: Detect corruption/truncation immediately, not after expensive transformation
+- **Auto-retry com backoff exponencial**: Falhas transitórias são retentadas 3-5 vezes com delays crescentes
+- **Smart resume**: Se um download falha a 70%, execuções subsequentes resumem daquele ponto, não do começo
+- **Resiliência SSL**: Lidar graciosamente com certificados governamentais expirados/mal configurados (comexdown)
+- **Idempotência baseada em tamanho**: Compare tamanho de arquivo remoto com arquivo local; pule se idêntico (datasus-fetcher)
+- **Validação na fonte**: Detecte corrupção/truncamento imediatamente, não após transformação cara
 
-### Example: Auto-Retry on Transient FTP Failures
+### Exemplo: Auto-Retry em Falhas FTP Transitórias
 
 ```sh
-# datasus-fetcher retries each file up to 3 times on FTP errors
-# If one connection drops, the other threads continue downloading.
+# datasus-fetcher retenta cada arquivo até 3 vezes em erros FTP
+# Se uma conexão cai, as outras threads continuam baixando.
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
-Internally, each `Fetcher` thread reconnects and retries failed transfers without aborting the batch.
+Internamente, cada thread `Fetcher` reconecta e retenta transferências falhadas sem abortar o batch.
 
-### Example: Size-Based Idempotence
+### Exemplo: Idempotência Baseada em Tamanho
 
 ```sh
-# First run: downloads everything
+# Primeira execução: baixa tudo
 datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
 
-# Re-run after a partial failure: remote size is compared to local size,
-# and only missing or mismatched files are re-fetched.
+# Re-execução após falha parcial: tamanho remoto é comparado ao tamanho local,
+# e apenas arquivos faltando ou com mismatch são re-buscados.
 datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
 ```
 
-## 4. Reproducibility
+## 4. Reprodutibilidade
 
-**Every transformation is deterministic and auditable**. You can replay any pipeline from raw data and get identical results.
+**Toda transformação é determinística e auditável**. Você pode reexecutar qualquer pipeline a partir de dados brutos e obter resultados idênticos.
 
-### Why It Matters
+### Por Que Importa
 
-In research, finance, and public health, reproducibility is non-negotiable. If you can't explain exactly what data was fetched, transformed, and stored, your analysis is worthless.
+Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se você não consegue explicar exatamente quais dados foram buscados, transformados e armazenados, sua análise não vale nada.
 
-### How We Apply It
+### Como Aplicamos
 
-- **Versioned outputs**: Every download includes metadata (timestamp, source version, schema version)
-- **Deterministic ordering**: Results are always sorted consistently; no random variation
-- **Complete lineage**: Track which raw files produced which Parquet files
-- **Audit trails**: Log every transformation step; never silently drop or modify data
-- **Documentation extraction**: Download layouts, PDFs, and lookup tables alongside data (datasus-fetcher)
+- **Outputs versionados**: Cada download inclui metadados (timestamp, versão da fonte, versão do schema)
+- **Ordenação determinística**: Resultados são sempre ordenados consistentemente; sem variação aleatória
+- **Linhagem completa**: Rastreie quais arquivos brutos produziram quais arquivos Parquet
+- **Trilhas de auditoria**: Registre cada passo de transformação; nunca descarte ou modifique dados silenciosamente
+- **Extração de documentação**: Baixe layouts, PDFs e tabelas de lookup junto aos dados (datasus-fetcher)
 
-### Example: Versioned Outputs with Metadata
+### Exemplo: Outputs Versionados com Metadados
 
 ```sh
-# Microdata + codebooks + reference tables, each with date-stamped filenames
+# Microdados + livros de códigos + tabelas de referência, cada um com nomes de arquivo datados
 datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
 datasus-fetcher docs --data-dir ./docs sim
 datasus-fetcher aux  --data-dir ./aux  sim
 ```
 
-Each downloaded `.dbc` is named `dataset_uf_period_YYYYMMDD.dbc`, so multiple DATASUS revisions of the same period coexist on disk. Use `datasus-fetcher archive` to move non-latest versions out of the active tree while preserving them for audit.
+Cada `.dbc` baixado é nomeado como `dataset_uf_periodo_YYYYMMDD.dbc`, de modo que múltiplas revisões do DATASUS do mesmo período coexistem no disco. Use `datasus-fetcher archive` para mover versões antigas para fora da árvore ativa, preservando-as para auditoria.
 
-### Example: Complete Lineage
+### Exemplo: Linhagem Completa
 
 ```bash
 # Raw RAIS .7z → typed Parquet
@@ -159,7 +159,7 @@ pdet-data convert ./raw ./parquet
 ```
 
 ```python
-# Capture lineage alongside the converted Parquet
+# Capturar linhagem junto ao Parquet convertido
 import json, hashlib, polars as pl
 from datetime import datetime, timezone
 from pathlib import Path
@@ -180,75 +180,76 @@ lineage = {
 out.with_suffix(".lineage.json").write_text(json.dumps(lineage, indent=2))
 ```
 
-## 5. No Magic
+## 5. Sem Mágica
 
-**Explicit is better than implicit**. You should understand what data is being fetched, how it's transformed, and where it's stored.
+**Explícito é melhor que implícito**. Você deve entender quais dados estão sendo buscados, como são transformados e onde são armazenados.
 
-### Why It Matters
+### Por Que Importa
 
-"Magic" is tempting for API designers. "Just call `fetch_all()` and it works!" But when something breaks, invisible magic makes debugging impossible. When you need to modify behavior, magic prevents it.
+"Mágica" é tentadora para designers de API. "Apenas chame `fetch_all()` e funciona!" Mas quando algo quebra, a mágica invisível torna debugging impossível. Quando você precisa modificar comportamento, a mágica o impede.
 
-In data engineering, transparency is critical. You need to know:
-- Exactly which API endpoints are being called
-- Which rows are being filtered or transformed
-- Why a pipeline succeeded or failed
-- How to modify behavior for your specific needs
+Em engenharia de dados, transparência é crítica. Você precisa saber:
 
-### How We Apply It
+- Exatamente quais endpoints de API estão sendo chamados
+- Quais linhas estão sendo filtradas ou transformadas
+- Por que um pipeline succeeded ou falhou
+- Como modificar comportamento para suas necessidades específicas
 
-- **No implicit type conversions**: Date strings stay as strings until explicitly converted
-- **No silent filtering**: If data is dropped, it's logged and reversible
-- **Explicit concurrency**: Specify `num_workers=5` rather than auto-detecting CPU count
-- **Clear error messages**: When something fails, the error message tells you why and how to fix it
-- **Readable code**: Complex algorithms (FIFO lot matching, Modified Dietz) are documented with comments
+### Como Aplicamos
 
-### Example: Explicit Configuration
+- **Sem conversões de tipo implícitas**: Strings de data permanecem strings até serem explicitamente convertidas
+- **Sem filtragem silenciosa**: Se dados são descartados, é registrado e reversível
+- **Concorrência explícita**: Especifique `num_workers=5` ao invés de auto-detectar contagem de CPU
+- **Mensagens de erro claras**: Quando algo falha, a mensagem de erro lhe diz por quê e como corrigir
+- **Código legível**: Algoritmos complexos (matching FIFO de lotes, Modified Dietz) são documentados com comentários
+
+### Exemplo: Configuração Explícita
 
 ```sh
-# ✅ Clear: every flag is explicit
+# ✅ Claro: cada flag é explícito
 datasus-fetcher data \
     --data-dir ./data sim-do-cid10 \
     --start 2023 --end 2023 \
     --regions sp rj mg \
     --threads 5
 
-# ❌ Implicit: defaults hide what is actually being fetched
-datasus-fetcher data --data-dir ./data    # all 113 datasets, ~320 GB
+# ❌ Implícito: padrões escondem o que realmente está sendo buscado
+datasus-fetcher data --data-dir ./data    # todos os 113 datasets, ~320 GB
 ```
 
-### Example: Explicit Transformations
+### Exemplo: Transformações Explícitas
 
 ```python
-# ❌ Magic: Lost data is invisible
-df_filtered = df.filter(lambda row: row["salary"] > 0)  # Silently drops rows
+# ❌ Mágica: Dados perdidos são invisíveis
+df_filtered = df.filter(lambda row: row["salary"] > 0)  # Silenciosamente descarta linhas
 
-# ✅ Clear: Explicitly track what was filtered and why
+# ✅ Claro: Rastrear explicitamente o que foi filtrado e por quê
 invalid_count = len(df.filter(pl.col("salary") <= 0))
 df_filtered = df.filter(pl.col("salary") > 0)
-print(f"Filtered {invalid_count} rows with salary ≤ 0")  # You know what happened
+print(f"Filtradas {invalid_count} linhas com salário ≤ 0")  # Você sabe o que aconteceu
 ```
 
-### Example: Explicit Error Messages
+### Exemplo: Mensagens de Erro Explícitas
 
 ```python
-# ✅ Clear error message
+# ✅ Mensagem de erro clara
 # "FTP connection timeout after 60 seconds.
 #  Server: ftp.datasus.gov.br
 #  Path: /dissemin/arquivos/SIM/
-#  Retrying (attempt 2/5) with 2-second backoff..."
+#  Tentando novamente (tentativa 2/5) com backoff de 2 segundos..."
 
-# ❌ Unclear error message
+# ❌ Mensagem de erro pouco clara
 # "Error: Connection failed"
 ```
 
-## Summary
+## Resumo
 
-These five principles work together:
+Esses cinco princípios funcionam juntos:
 
-1. **Modularity** lets you pick the right tool for your data source
-2. **Performance** means you can handle Brazil's massive datasets
-3. **Resilience** means your pipelines work despite infrastructure instability
-4. **Reproducibility** means your analysis is auditable and replayable
-5. **No Magic** means you understand and can troubleshoot everything
+1. **Modularidade** deixa você escolher a ferramenta certa para sua fonte de dados
+2. **Performance** significa que você pode lidar com datasets massivos do Brasil
+3. **Resiliência** significa que seus pipelines funcionam apesar da instabilidade de infraestrutura
+4. **Reprodutibilidade** significa que sua análise é auditável e reexecutável
+5. **Sem Mágica** significa que você entende e consegue fazer troubleshoot de tudo
 
-When you build on top of these tools, follow the same principles in your own code. The result is a data platform that is fast, reliable, transparent, and maintainable.
+Quando você constrói em cima dessas ferramentas, siga os mesmos princípios em seu próprio código. O resultado é uma plataforma de dados que é rápida, confiável, transparente e mantenível.

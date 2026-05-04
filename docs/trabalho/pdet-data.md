@@ -1,52 +1,52 @@
-# pdet-data: Brazilian Labor Market Microdata Fetcher
+# pdet-data: Buscador de Microdados de Mercado de Trabalho Brasileiro
 
-**pdet-data** is a Python package to fetch, read, and convert microdata from PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — Brazil's official labor statistics platform maintained by the Ministry of Labor and Social Security.
+**pdet-data** é um pacote Python para buscar, ler e converter microdados de PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — plataforma oficial de estatísticas de trabalho do Brasil mantida pelo Ministério do Trabalho e Previdência Social.
 
-It covers RAIS (annual employment census) and CAGED (monthly employment flows), including the legacy CAGED through 2019 and the redesigned CAGED 2020+. Output is Polars DataFrames, with utilities to bulk-convert raw archives to Parquet.
+Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluindo CAGED legado até 2019 e CAGED redesenhado 2020+. Output é DataFrames Polars, com utilitários para bulk-convert de arquivos brutos para Parquet.
 
-## Key Features
+## Recursos Principais
 
-- **FTP fetcher** — downloads everything from `ftp.mtps.gov.br` (RAIS, CAGED, docs)
-- **Smart CSV reader** — auto-detects separator, handles `latin-1` and `utf-8`, repairs ragged CSVs
-- **Type conversion** — `INT64`, `FLOAT64`, `Boolean`, and `Categorical` based on per-column metadata
-- **Bulk Parquet conversion** — `convert_rais` / `convert_caged` orchestrate decompression + read + write
-- **Schema introspection** — `extract_columns_for_dataset` dumps every per-file header to CSV
-- **Polars-native** — fast columnar processing with minimal dependencies (`polars`, `tqdm`)
+- **FTP fetcher** — baixa tudo de `ftp.mtps.gov.br` (RAIS, CAGED, docs)
+- **Smart CSV reader** — auto-detecta separator, lida com `latin-1` e `utf-8`, conserta CSVs ragged
+- **Type conversion** — `INT64`, `FLOAT64`, `Boolean` e `Categorical` baseado em metadata por coluna
+- **Bulk Parquet conversion** — `convert_rais` / `convert_caged` orquestram decompression + read + write
+- **Schema introspection** — `extract_columns_for_dataset` dumpa todo header por arquivo para CSV
+- **Polars-native** — processamento colunares rápido com dependências mínimas (`polars`, `tqdm`)
 
-## Installation
+## Instalação
 
 ```bash
 pip install pdet-data
 ```
 
-**Requirements:** Python 3.10+ and the `7z` CLI on `PATH` (used by `convert_*` to extract `.7z` archives).
+**Requisitos:** Python 3.10+ e o CLI `7z` em `PATH` (usado por `convert_*` para extrair arquivos `.7z`).
 
 ## CLI
 
-The package installs the `pdet-data` command (also available as `python -m pdet_data`) with four subcommands:
+O pacote instala o comando `pdet-data` (também disponível como `python -m pdet_data`) com quatro subcomandos:
 
 ```text
 pdet-data <subcommand> [args]
 
-Subcommands:
-  fetch    DEST_DIR              Download every RAIS and CAGED file (data + docs) to DEST_DIR
-  list     DEST_DIR              List remote files that are not yet present locally
-  convert  DATA_DIR DEST_DIR     Decompress the raw archives and write Parquet files
+Subcomandos:
+  fetch    DEST_DIR              Baixa todo arquivo RAIS e CAGED (data + docs) para DEST_DIR
+  list     DEST_DIR              Lista arquivos remotos que ainda não estão presentes localmente
+  convert  DATA_DIR DEST_DIR     Descomprime os arquivos brutos e escreve arquivos Parquet
   columns  DATA_DIR DATASET [-o OUT_DIR]
-                                 Dump per-file column headers for one dataset to CSV
+                                 Dumpa headers de coluna por arquivo para um dataset para CSV
 ```
 
-`DATASET` for `columns` accepts: `rais-vinculos`, `rais-estabelecimentos`, `caged`, `caged-ajustes`, `caged-2020`.
+`DATASET` para `columns` aceita: `rais-vinculos`, `rais-estabelecimentos`, `caged`, `caged-ajustes`, `caged-2020`.
 
-## Quick Start
+## Início Rápido
 
-### 1. Download all data
+### 1. Baixar todos os dados
 
 ```bash
 pdet-data fetch ./data
 ```
 
-Equivalent Python:
+Python equivalente:
 
 ```python
 from pathlib import Path
@@ -69,7 +69,7 @@ finally:
     ftp.close()
 ```
 
-### 2. Convert raw archives to Parquet
+### 2. Converter arquivos brutos para Parquet
 
 ```bash
 pdet-data convert ./data ./parquet
@@ -83,7 +83,7 @@ convert_rais(Path("./data"), Path("./parquet"))
 convert_caged(Path("./data"), Path("./parquet"))
 ```
 
-### 3. Read RAIS CSVs
+### 3. Ler CSVs RAIS
 
 ```python
 from pathlib import Path
@@ -104,17 +104,17 @@ top_sectors = (
 )
 ```
 
-### 4. Read CAGED CSVs (legacy or 2020+)
+### 4. Ler CSVs CAGED (legado ou 2020+)
 
-A single `read_caged` covers every variant, dispatched by the `dataset` argument:
+Um único `read_caged` cobre todas as variantes, despachadas pelo argumento `dataset`:
 
-| `dataset` | Source | Period |
+| `dataset` | Fonte | Período |
 |---|---|---|
-| `caged` | Legacy CAGED | until 2019 |
-| `caged-ajustes` | Legacy CAGED — late filings | until 2019 |
-| `caged-2020-mov` | New CAGED — on-time movements | 2020+ |
-| `caged-2020-for` | New CAGED — late filings | 2020+ |
-| `caged-2020-exc` | New CAGED — exclusions | 2020+ |
+| `caged` | CAGED Legado | até 2019 |
+| `caged-ajustes` | CAGED Legado — arquivos atrasados | até 2019 |
+| `caged-2020-mov` | CAGED Novo — movimentos em tempo | 2020+ |
+| `caged-2020-for` | CAGED Novo — arquivos atrasados | 2020+ |
+| `caged-2020-exc` | CAGED Novo — exclusões | 2020+ |
 
 ```python
 from pathlib import Path
@@ -141,7 +141,7 @@ balance = (
 )
 ```
 
-### 5. Extract per-file schema
+### 5. Extrair schema por arquivo
 
 ```bash
 pdet-data columns ./data rais-vinculos -o ./schemas
@@ -160,91 +160,91 @@ extract_columns_for_dataset(
 )
 ```
 
-## Available Data
+## Dados Disponíveis
 
 ### RAIS (Relação Anual de Informações Sociais)
 
-Annual census of formal employment. Datasets: `rais-vinculos` (employment bonds) and `rais-estabelecimentos` (establishments). Coverage from 1985 to present.
+Censo anual de emprego formal. Datasets: `rais-vinculos` (vínculos de emprego) e `rais-estabelecimentos` (estabelecimentos). Cobertura de 1985 até presente.
 
-### CAGED legacy
+### CAGED legado
 
-Monthly employment flows up to December 2019. Datasets: `caged`, `caged-ajustes`.
+Fluxos de emprego mensais até dezembro de 2019. Datasets: `caged`, `caged-ajustes`.
 
-### New CAGED (2020+)
+### CAGED Novo (2020+)
 
-Monthly employment flows from January 2020 onward, split into three files per competence:
+Fluxos de emprego mensais a partir de janeiro de 2020, divididos em três arquivos por competência:
 
-- `caged-2020-mov` — on-time movements
-- `caged-2020-for` — late filings
-- `caged-2020-exc` — exclusions / retroactive cancellations
+- `caged-2020-mov` — movimentos em tempo
+- `caged-2020-for` — registros atrasados
+- `caged-2020-exc` — exclusões / cancelamentos retroativos
 
-## Architecture
+## Arquitetura
 
 ```
 src/pdet_data/
-├── __init__.py        # Re-exports the public API
+├── __init__.py        # Re-exporta API pública
 ├── __main__.py        # CLI (fetch / list / convert / columns)
-├── fetch.py           # FTP connection, listing, downloads
-├── reader.py          # CSV parsing + dtype conversion
+├── fetch.py           # Conexão FTP, listagem, downloads
+├── reader.py          # Parsing CSV + conversão de dtype
 ├── wrangling.py       # convert_rais, convert_caged, extract_columns_for_dataset
-├── storage.py         # Destination path conventions
-├── constants.py       # Per-year column schemas, NA values, ragged file list
-└── meta.py            # FTP directories and filename patterns
+├── storage.py         # Convenções de caminho de destino
+├── constants.py       # Schemas de coluna por ano, valores NA, lista de arquivos ragged
+└── meta.py            # Diretórios FTP e padrões de nome de arquivo
 ```
 
-Pipeline: FTP → compressed archive (`.7z` / `.zip`) → `7z` extract → CSV → `read_rais` / `read_caged` → typed Polars DataFrame → Parquet.
+Pipeline: FTP → arquivo comprimido (`.7z` / `.zip`) → extração `7z` → CSV → `read_rais` / `read_caged` → DataFrame Polars tipado → Parquet.
 
-## Public API
+## API Pública
 
-Importable directly from `pdet_data`:
+Importável diretamente de `pdet_data`:
 
-| Function | Purpose |
+| Função | Propósito |
 |---|---|
-| `connect()` | Open FTP connection to `ftp.mtps.gov.br`. |
-| `list_rais(ftp)`, `list_rais_docs(ftp)` | Iterate RAIS files / docs metadata. |
-| `list_caged(ftp)`, `list_caged_docs(ftp)` | Iterate legacy CAGED files / docs. |
-| `list_caged_2020(ftp)`, `list_caged_2020_docs(ftp)` | Iterate New CAGED files / docs. |
-| `fetch_rais(ftp, dest_dir)`, `fetch_rais_docs(...)` | Download RAIS data / docs. |
-| `fetch_caged(ftp, dest_dir)`, `fetch_caged_docs(...)` | Download legacy CAGED data / docs. |
-| `fetch_caged_2020(ftp, dest_dir)`, `fetch_caged_2020_docs(...)` | Download New CAGED data / docs. |
-| `convert_rais(data_dir, dest_dir)` | Decompress + read + write Parquet for every RAIS archive. |
-| `convert_caged(data_dir, dest_dir)` | Same for every CAGED archive (legacy + 2020+). |
-| `extract_columns_for_dataset(...)` | Dump per-file headers for one dataset glob. |
+| `connect()` | Abrir conexão FTP em `ftp.mtps.gov.br`. |
+| `list_rais(ftp)`, `list_rais_docs(ftp)` | Iterar metadata de arquivos RAIS / docs. |
+| `list_caged(ftp)`, `list_caged_docs(ftp)` | Iterar arquivos CAGED legado / docs. |
+| `list_caged_2020(ftp)`, `list_caged_2020_docs(ftp)` | Iterar arquivos CAGED Novo / docs. |
+| `fetch_rais(ftp, dest_dir)`, `fetch_rais_docs(...)` | Baixar dados RAIS / docs. |
+| `fetch_caged(ftp, dest_dir)`, `fetch_caged_docs(...)` | Baixar dados CAGED legado / docs. |
+| `fetch_caged_2020(ftp, dest_dir)`, `fetch_caged_2020_docs(...)` | Baixar dados CAGED Novo / docs. |
+| `convert_rais(data_dir, dest_dir)` | Descompactar + ler + escrever Parquet para cada arquivo RAIS. |
+| `convert_caged(data_dir, dest_dir)` | Mesmo para cada arquivo CAGED (legado + 2020+). |
+| `extract_columns_for_dataset(...)` | Dumpar headers por arquivo para um glob de dataset. |
 
-Low-level reading helpers in `pdet_data.reader`:
+Helpers de leitura de baixo nível em `pdet_data.reader`:
 
 - `read_rais(filepath, year, dataset, **read_csv_args)` — `dataset` ∈ `{"vinculos", "estabelecimentos"}`
 - `read_caged(filepath, date, dataset, **read_csv_args)` — `dataset` ∈ `{"caged", "caged-ajustes", "caged-2020-mov", "caged-2020-for", "caged-2020-exc"}`
 - `write_parquet(df, filepath)`
-- `decompress(file_metadata)` — shells out to the `7z` binary
+- `decompress(file_metadata)` — chamada ao binário `7z`
 
-## Data Quality
+## Qualidade de Dados
 
-`read_rais` / `read_caged` automatically:
+`read_rais` / `read_caged` automaticamente:
 
-- Detect the CSV separator (`;`, `\t`, `,`) on the first line
-- Use the right encoding (`latin-1` for RAIS / legacy CAGED, `utf-8` for New CAGED)
-- Strip whitespace and thousand separators from `INTEGER_COLUMNS`
-- Convert decimal commas to dots for `NUMERIC_COLUMNS`
-- Cast `BOOLEAN_COLUMNS` from `0/1` integers to `Boolean`
-- Cast everything else to `Categorical` after `strip_chars()`
-- Truncate over-long rows in files listed in `constants.RAGGED_CSV_FILES` to header width
+- Detectam separador CSV (`;`, `\t`, `,`) na primeira linha
+- Usam encoding correto (`latin-1` para RAIS / CAGED legado, `utf-8` para CAGED Novo)
+- Removem espaço em branco e separadores de milhares de `INTEGER_COLUMNS`
+- Convertem vírgulas decimais para pontos para `NUMERIC_COLUMNS`
+- Fazem cast de `BOOLEAN_COLUMNS` de inteiros `0/1` para `Boolean`
+- Fazem cast de todo o resto para `Categorical` depois de `strip_chars()`
+- Truncam linhas muito longas em arquivos listados em `constants.RAGGED_CSV_FILES` para largura do header
 
 ## Performance
 
-For one full RAIS year (~10 GB uncompressed):
+Para um ano RAIS completo (~10 GB descomprimido):
 
-| Step | Wall time | Peak memory |
+| Etapa | Tempo | Pico de memória |
 |------|-----------|-------------|
-| FTP download | 5–15 min | – |
-| `7z` extraction | 1–3 min | – |
+| Download FTP | 5–15 min | – |
+| Extração `7z` | 1–3 min | – |
 | `read_rais` (parse + cast) | ~10 s | ~2 GB |
-| Simple group-by / agg | <1 s | – |
+| Group-by / agg simples | <1 s | – |
 
-*Reference: modern CPU, 16 GB RAM, SSD.*
+*Referência: CPU moderno, 16 GB RAM, SSD.*
 
-## Learn More
+## Saiba Mais
 
-- **[Foreign Trade Data](../comex/comexdown.md)** — Trade statistics
-- **[Architecture](../architecture/overview.md)** — System design
-- **[PDET Official](http://pdet.mte.gov.br/microdados-rais-e-caged)** — Government source
+- **[Dados de Comércio Exterior](../comex/comexdown.md)** — Estatísticas comerciais
+- **[Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[PDET Oficial](http://pdet.mte.gov.br/microdados-rais-e-caged)** — Fonte governamental
