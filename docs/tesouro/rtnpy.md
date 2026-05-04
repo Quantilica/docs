@@ -1,72 +1,72 @@
-# rtnpy — Brazilian Treasury Fiscal Results (RTN)
+# rtnpy — Resultado do Tesouro Nacional (RTN) Brasileiro
 
-**rtnpy** is a Python package that downloads, extracts, and normalizes the *Resultado do Tesouro Nacional* (RTN) — Brazil's monthly federal fiscal results report. It turns the Treasury's multi-sheet Excel workbooks into clean long-format tables with hierarchical account expansion, ready for analysis or warehouse loading.
+**rtnpy** é um pacote Python que baixa, extrai e normaliza o *Resultado do Tesouro Nacional* (RTN) — relatório mensal de resultados fiscais federais do Brasil. Transforma as pastas de trabalho Excel com múltiplas abas do Tesouro em tabelas de formato longo limpo com expansão hierárquica de contas, prontas para análise ou carregamento em warehouse.
 
-## What It Is
+## O Que É
 
-The *Resultado do Tesouro Nacional* contains consolidated fiscal data of the Brazilian Federal Government: revenues, expenses, and primary result, in current and constant values, monthly, quarterly, and annual, also as percentages of GDP. The Treasury publishes this as a sprawling Excel workbook with 24+ sheets, each with its own header layout and account hierarchy. `rtnpy` automates the fetch-and-normalize pipeline so you can go from the official URL to a tidy long-format table in a few lines of Python — or one CLI command.
+O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo Federal Brasileiro: receitas, despesas e resultado primário, em valores correntes e constantes, mensais, trimestrais e anuais, também como percentuais do PIB. O Tesouro publica isso como uma extensa pasta de trabalho Excel com 24+ abas, cada uma com seu próprio layout de header e hierarquia de contas. `rtnpy` automatiza o pipeline de fetch-and-normalize para você ir da URL oficial a uma tabela de formato longo arrumada em poucas linhas de Python — ou um comando CLI.
 
 **Source:** [Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)
 
-## The Challenge
+## O Desafio
 
-- **Multi-sheet Excel** with shifting headers and merged cells across 24 supported sheets — header rows are not at fixed positions, requiring dynamic detection.
-- **Wide-format account hierarchy**: codes like `1.2.3` carry implicit parent levels (`1`, `1.2`) that need to be expanded into a separate dimension table.
-- **Mixed units and periods**: values appear as R$ millions, R$ constants, or % of GDP; periods mix monthly, quarterly, and annual — each sheet needs the right normalization.
+- **Excel com múltiplas abas** com headers variáveis e células mescladas em 24 abas suportadas — linhas de header não estão em posições fixas, requerendo detecção dinâmica.
+- **Hierarquia de contas em formato amplo**: códigos como `1.2.3` carregam níveis pai implícitos (`1`, `1.2`) que precisam ser expandidos em uma tabela de dimensão separada.
+- **Unidades e períodos mistos**: valores aparecem como milhões de R$, R$ constantes, ou % do PIB; períodos misturam mensal, trimestral e anual — cada aba precisa da normalização correta.
 
-## Features
+## Recursos
 
-- Auto-download of the latest RTN workbook with timestamp-based deduplication
-- Reads 24 supported sheets covering monthly / quarterly / annual; current / constant; % of GDP
-- Long-format output with hierarchical account expansion
-- Unit normalization (R$ millions → reais; % of GDP preserved as a fraction)
-- Period split into `year` / `month` or `year` / `quarter` columns
-- Account hierarchy returned as a separate dimension table
-- CLI for fetch and Excel/SQLite export
+- Download automático da pasta de trabalho RTN mais recente com deduplicação baseada em timestamp
+- Lê 24 abas suportadas cobrindo mensal / trimestral / anual; corrente / constante; % do PIB
+- Saída em formato longo com expansão hierárquica de contas
+- Normalização de unidades (milhões de R$ → reais; % do PIB preservado como fração)
+- Período dividido em colunas `year` / `month` ou `year` / `quarter`
+- Hierarquia de contas retornada como tabela de dimensão separada
+- CLI para fetch e exportação Excel/SQLite
 
-## Supported Sheets
+## Abas Suportadas
 
-| Sheets | Description | Period | Unit |
+| Abas | Descrição | Período | Unidade |
 |--------|-------------|--------|------|
-| 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 | Monthly series, current values | Monthly | R$ |
-| 1.1-A, 1.2-A, 1.3-A, 1.4-A, 1.5-A | Monthly series, constant values | Monthly | R$ |
-| 1.2-B | Monthly series, 12-month rolling, IPCA-deflated | Monthly | R$ |
-| 2.1, 2.2, 2.3, 2.4, 2.5 | Annual series, current values | Annual | R$ |
-| 2.1-A, 2.2-A, 2.3-A, 2.4-A, 2.5-A | Annual series, % of GDP | Annual | Fraction of GDP |
-| 4.1, 4.2 | Quarterly series, Central Government Budget | Quarterly | R$ |
+| 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 | Série mensal, valores correntes | Mensal | R$ |
+| 1.1-A, 1.2-A, 1.3-A, 1.4-A, 1.5-A | Série mensal, valores constantes | Mensal | R$ |
+| 1.2-B | Série mensal, rolling 12-meses, deflacionado pelo IPCA | Mensal | R$ |
+| 2.1, 2.2, 2.3, 2.4, 2.5 | Série anual, valores correntes | Anual | R$ |
+| 2.1-A, 2.2-A, 2.3-A, 2.4-A, 2.5-A | Série anual, % do PIB | Anual | Fração do PIB |
+| 4.1, 4.2 | Série trimestral, Orçamento do Governo Central | Trimestral | R$ |
 
-Sheets `3.1` and `3.2` use a comparative current-publication layout with multi-level headers and are not yet normalized by the historical-series reader.
+As abas `3.1` e `3.2` usam um layout comparativo de publicação atual com headers multi-nível e ainda não são normalizadas pelo leitor de série histórica.
 
-## Installation
+## Instalação
 
-Requires Python 3.13+.
+Requer Python 3.13+.
 
 ```bash
 pip install rtnpy
-# or
+# ou
 uv add rtnpy
 ```
 
-Dependencies: `httpx`, `openpyxl`, `beautifulsoup4`.
+Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
 
-## Command-Line Interface
+## Interface de Linha de Comando
 
-The package installs an `rtnpy` command with `fetch` and `export` subcommands:
+O pacote instala um comando `rtnpy` com subcomandos `fetch` e `export`:
 
 ```bash
 rtnpy --help
 
-# Fetch operations
-rtnpy fetch metadata          # Build metadata.json from the publications page
-rtnpy fetch download          # Download files listed in metadata.json
-rtnpy fetch latest            # Download the most recent RTN workbook
+# Operações de fetch
+rtnpy fetch metadata          # Construir metadata.json da página de publicações
+rtnpy fetch download          # Baixar arquivos listados em metadata.json
+rtnpy fetch latest            # Baixar a pasta de trabalho RTN mais recente
 
-# Export operations
-rtnpy export excel            # Export to a formatted Excel workbook
-rtnpy export sqlite           # Export to a SQLite database
+# Operações de export
+rtnpy export excel            # Exportar para uma pasta de trabalho Excel formatada
+rtnpy export sqlite           # Exportar para um banco de dados SQLite
 ```
 
-### Fetch options
+### Opções de Buscar
 
 ```bash
 rtnpy fetch metadata --dest data --force
@@ -74,30 +74,30 @@ rtnpy fetch download --metadata data/metadata.json --concurrency 8
 rtnpy fetch latest   --dest data
 ```
 
-### Export options
+### Opções de Export
 
 ```bash
 rtnpy export excel  --data-dir data --output rtn_data.xlsx
 rtnpy export sqlite --data-dir data --output rtn_data.db
 ```
 
-Both `export` commands download the latest workbook and write all supported sheets along with the account-hierarchy dimension.
+Ambos os comandos `export` baixam a pasta de trabalho mais recente e escrevem todas as abas suportadas junto com a dimensão de hierarquia de contas.
 
-## Python API
+## API Python
 
-### Download
+### Baixar
 
 ```python
 from pathlib import Path
 from rtnpy import download_latest_file
 
 filepath = download_latest_file(Path("data"))
-print(f"Downloaded: {filepath}")
+print(f"Baixado: {filepath}")
 ```
 
-`download_latest_file` returns the `Path` of the downloaded file, or `None` if a current copy already exists in the destination.
+`download_latest_file` retorna o `Path` do arquivo baixado, ou `None` se uma cópia atual já existe no destino.
 
-### Read a single sheet
+### Ler uma aba única
 
 ```python
 from pathlib import Path
@@ -106,16 +106,16 @@ from rtnpy import read_sheet, write_table_to_csv
 filepath = Path("data/rtn_202412301200.xlsx")
 data, accounts = read_sheet(filepath, "1.2")
 
-print(f"Data:    {data.nrows} rows x {data.ncols} cols")
-print(f"Accounts:{accounts.nrows} rows x {accounts.ncols} cols")
+print(f"Dados:     {data.nrows} linhas x {data.ncols} colunas")
+print(f"Contas:    {accounts.nrows} linhas x {accounts.ncols} colunas")
 
 write_table_to_csv(data,     Path("output/rtn_1_2_data.csv"))
 write_table_to_csv(accounts, Path("output/rtn_1_2_accounts.csv"))
 ```
 
-`read_sheet(filepath, sheet_name)` returns a `(data, accounts)` tuple of `Tbl` instances — the long-format fact table and the account-hierarchy dimension.
+`read_sheet(filepath, sheet_name)` retorna uma tupla `(data, accounts)` de instâncias `Tbl` — a tabela de fatos em formato longo e a dimensão de hierarquia de contas.
 
-### Read every supported sheet
+### Ler cada aba suportada
 
 ```python
 from rtnpy import read_all_sheets
@@ -135,45 +135,45 @@ publications = fetch_publications_metadata()
 print(publications[0])
 ```
 
-## Data Structure
+## Estrutura de Dados
 
-### Fact table (long format)
+### Tabela de fatos (formato longo)
 
-| Column  | Type      | Description                                |
+| Coluna  | Tipo      | Descrição                                |
 |---------|-----------|--------------------------------------------|
-| year    | int       | Reference year                             |
-| month   | int       | Reference month (monthly sheets)           |
-| quarter | int       | Reference quarter (quarterly sheets)       |
-| account | str       | Hierarchical account code                  |
-| value   | int/float | Reais for currency sheets; fraction for % of GDP |
+| year    | int       | Ano de referência                             |
+| month   | int       | Mês de referência (abas mensais)           |
+| quarter | int       | Trimestre de referência (abas trimestrais)       |
+| account | str       | Código hierárquico da conta                  |
+| value   | int/float | Reais para abas de moeda; fração para % do PIB |
 
-### Account hierarchy (dimension)
+### Hierarquia de contas (dimensão)
 
-| Column        | Type | Description                              |
+| Coluna        | Tipo | Descrição                              |
 |---------------|------|------------------------------------------|
-| account_code  | str  | Hierarchical code (e.g., `1.2.3`)        |
-| account_name  | str  | Full account name                        |
-| account_level | int  | Hierarchy depth                          |
-| P_1, P_2, ... | str  | Name at each hierarchy level             |
+| account_code  | str  | Código hierárquico (ex: `1.2.3`)        |
+| account_name  | str  | Nome completo da conta                        |
+| account_level | int  | Profundidade da hierarquia                          |
+| P_1, P_2, ... | str  | Nome em cada nível da hierarquia             |
 
-### Example
+### Exemplo
 
 ```python
-# Fact rows
+# Linhas de fatos
 year  month  account  value
 2024  1      1.1      1500000000
 2024  1      1.2      2300000000
 2024  2      1.1      1600000000
 
-# Hierarchy rows
+# Linhas de hierarquia
 account_code  account_name             account_level  P_1       P_2
 1.1           1.1 Receitas Correntes   2              Receitas  Receitas Correntes
 1.2           1.2 Receitas de Capital  2              Receitas  Receitas de Capital
 ```
 
-## The `Tbl` Class
+## A Classe `Tbl`
 
-`rtnpy` ships with `Tbl`, a small column-oriented table — data is stored as a list of columns rather than rows. There is no Polars or Pandas dependency; `Tbl` is the only data structure you need to learn.
+O `rtnpy` vem com a `Tbl`, uma pequena tabela orientada a colunas — os dados são armazenados como uma lista de colunas em vez de linhas. Não há dependência de Polars ou Pandas; a `Tbl` é a única estrutura de dados que você precisa aprender.
 
 ```python
 from rtnpy import Tbl
@@ -184,20 +184,20 @@ t = Tbl([
 ])
 
 t["name"]                       # ["name", "Alice", "Bob"]
-t.select("name")                # subset
-t.assign(city=["SP", "RJ"])     # add/overwrite a column
+t.select("name")                # subconjunto
+t.assign(city=["SP", "RJ"])     # adicionar/sobrescrever uma coluna
 t.melt(id_cols=["name"])        # wide -> long
-t.rename(name="full_name")      # rename columns
+t.rename(name="full_name")      # renomear colunas
 
 for row in t.iter_rows():
     print(row)
 ```
 
-Main methods: `select`, `assign`, `melt`, `transpose`, `insert`, `drop_rows`, `drop_cols`, `rename`, `iter_rows`, `get_header`. Attributes: `data`, `nrows`, `ncols`. All transformations return new tables — operations are non-mutating.
+Principais métodos: `select`, `assign`, `melt`, `transpose`, `insert`, `drop_rows`, `drop_cols`, `rename`, `iter_rows`, `get_header`. Atributos: `data`, `nrows`, `ncols`. Todas as transformações retornam novas tabelas — as operações não são mutáveis.
 
-## Learn More
+## Saiba Mais
 
-- **[Treasury Overview](index.md)** — All Treasury (Finance) tools
-- **[tddata](tddata.md)** — Tesouro Direto microdata and portfolio analytics
-- **[Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)** — Official source
-- **[Tesouro Nacional API](https://apiapex.tesouro.gov.br/)** — Publications metadata API
+- **[Visão Geral do Tesouro](index.md)** — Todas as ferramentas do Tesouro (Finanças)
+- **[tddata](tddata.md)** — Microdados do Tesouro Direto e análise de portfólio
+- **[Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)** — Fonte oficial
+- **[API do Tesouro Nacional](https://apiapex.tesouro.gov.br/)** — API de metadados de publicações

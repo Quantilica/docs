@@ -1,170 +1,177 @@
-# Public Health (Saúde)
+# Saúde Pública (Saúde)
 
-Brazilian health surveillance data from DATASUS (Health Data Department).
+Dados de vigilância de saúde brasileira do DATASUS (Departamento de Dados de Saúde).
 
-**datasus-fetcher** is a multithreaded concurrent crawler engineered specifically for the massive microdata of Brazil's Unified Health System (SUS) hosted on legacy FTP servers.
+**datasus-fetcher** é um crawler concorrente multithreaded engenhosamente projetado para os microdados massivos do Sistema Único de Saúde (SUS) do Brasil hospedados em servidores FTP legados.
 
-Far more than a simple data client, it understands the complex taxonomy of Brazilian health systems (SIHSUS, SIM, SINASC, SIA, etc.) and abstracts the inefficiency of legacy FTP infrastructure into a high-performance, fault-tolerant network pipeline.
+Muito mais que um simples cliente de dados, ele entende a taxonomia complexa dos sistemas de saúde brasileiros (SIHSUS, SIM, SINASC, SIA, etc.) e abstrai a ineficiência da infraestrutura FTP legada em um pipeline de rede de alto desempenho e tolerante a falhas.
 
-## The Challenge
+## O Desafio
 
-Obtaining complete Brazilian public health microdata encounters severe infrastructure barriers:
+Obter microdados completos de saúde pública brasileira encontra barreiras severas de infraestrutura:
 
-### 1. FTP Protocol Limitations
+### 1. Limitações do Protocolo FTP
 
-DATASUS primarily hosts data on public FTP (`ftp.datasus.gov.br`). The FTP protocol is inherently:
-- Synchronous (one file at a time)
-- Prone to silent transfer failures
-- Subject to connection timeouts and bandwidth throttling
-- Severely limited per-thread bandwidth
+DATASUS hospeda principalmente dados em FTP público (`ftp.datasus.gov.br`). O protocolo FTP é inerentemente:
 
-### 2. Labyrinth of Directories & Cryptic Nomenclature
+- Síncrono (um arquivo por vez)
+- Propenso a falhas de transferência silenciosas
+- Sujeito a timeouts de conexão e throttling de largura de banda
+- Largura de banda severamente limitada por thread
 
-Files (often in proprietary `.dbc` format) are scattered across dozens of nested directories. Filenames encode complex business logic positionally:
-- `RDSP2001.dbc` = AIH Reduced, SP state, Year 2020, Month 01
-- Manual parsing is error-prone and brittle
+### 2. Labirinto de Diretórios & Nomenclatura Críptica
 
-### 3. Infeasible Sequential Downloads
+Arquivos (frequentemente em formato proprietário `.dbc`) estão espalhados por dezenas de diretórios aninhados. Nomes de arquivo codificam lógica de negócio complexa posicionalmente:
 
-Downloading all data (all states, all years, all subsystems) sequentially via scripts can take weeks. Network failures mid-transfer mean total loss of progress.
+- `RDSP2001.dbc` = AIH Reduzido, estado SP, Ano 2020, Mês 01
+- Parse manual é propenso a erros e frágil
 
-**datasus-fetcher** solves these through multithreaded concurrency, semantic file parsing, and intelligent resumption.
+### 3. Downloads Sequenciais Inviáveis
 
-## Use Cases
+Baixar todos os dados (todos os estados, todos os anos, todos os subsistemas) sequencialmente via scripts pode levar semanas. Falhas de rede no meio da transferência significam perda total de progresso.
 
-### Epidemiological Surveillance
-Track disease outbreaks, geographic spread, seasonal patterns, and incidence trends in real-time.
+**datasus-fetcher** resolve esses problemas através de concorrência multithreaded, parse semântico de arquivo e resumption inteligente.
 
-### Mortality Analysis
-Study causes of death, health disparities by region/demographic, and mortality trends over time using complete microdata.
+## Casos de Uso
 
-### Health Economics & Resource Allocation
-Analyze hospital utilization patterns, procedure volumes, cost-effectiveness, and resource allocation efficiency.
+### Vigilância Epidemiológica
 
-### Health Inequities Research
-Examine disparities in health outcomes, access to care, and mortality differences across socioeconomic and demographic groups.
+Rastrear surtos de doenças, disseminação geográfica, padrões sazonais e tendências de incidência em tempo real.
 
-### Disease Burden Studies
-Quantify disease burden using complete SINASC (birth registrations) and SIM (mortality) datasets for population-level epidemiology.
+### Análise de Mortalidade
 
-## Key Features
+Estudar causas de morte, disparidades de saúde por região/demografia e tendências de mortalidade ao longo do tempo usando microdados completos.
 
-- **113 datasets** across all major Brazilian health information systems
-- **320+ GB** of historical microdata, some series going back to 1979
-- **Multi-threaded downloads** — configurable parallel connections for faster retrieval
-- **Smart filtering** — slice by date range and/or Brazilian state (UF) before downloading
-- **File integrity checks** — skips already-downloaded files by comparing sizes
-- **Automatic retries** — up to 3 retries on transient FTP errors
-- **File versioning** — stores every downloaded version with a date-stamped filename; archive old ones automatically
-- **Documentation & auxiliary tables** — download codebooks and reference tables alongside data
-- **No external dependencies** — pure Python 3.10+
+### Economia da Saúde & Alocação de Recursos
 
-## Installation
+Analisar padrões de utilização de hospitais, volumes de procedimentos, efetividade de custos e eficiência de alocação de recursos.
+
+### Pesquisa de Desigualdades de Saúde
+
+Examinar disparidades em resultados de saúde, acesso ao cuidado e diferenças de mortalidade entre grupos socioeconômicos e demográficos.
+
+### Estudos de Carga de Doença
+
+Quantificar carga de doença usando datasets completos de SINASC (registros de nascimento) e SIM (mortalidade) para epidemiologia no nível populacional.
+
+## Recursos Principais
+
+- **113 datasets** em todos os principais sistemas de informação de saúde brasileiros
+- **320+ GB** de microdados históricos, algumas séries remontam a 1979
+- **Downloads multithreaded** — conexões paralelas configuráveis para recuperação mais rápida
+- **Filtragem inteligente** — fatia por intervalo de data e/ou estado (UF) antes de baixar
+- **Verificações de integridade de arquivo** — pula arquivos já baixados comparando tamanhos
+- **Retries automáticos** — até 3 tentativas em erros FTP transitórios
+- **Versionamento de arquivo** — armazena cada versão baixada com nome com data; arquiva antigas automaticamente
+- **Documentação & tabelas auxiliares** — baixa livros de códigos e tabelas de referência junto aos dados
+- **Sem dependências externas** — Python 3.10+ puro
+
+## Instalação
 
 ```bash
 pip install datasus-fetcher
 ```
 
-For isolated global installation (recommended for CLI-only use):
+Para instalação global isolada (recomendado para uso CLI apenas):
 
 ```bash
 pipx install datasus-fetcher
 ```
 
-## Quick Start
+## Início Rápido
 
-Download SIH-RD (Hospital Admissions) for São Paulo, Rio de Janeiro, and Minas Gerais from 2020 to 2023:
+Baixar SIH-RD (Admissões Hospitalares) para São Paulo, Rio de Janeiro e Minas Gerais de 2020 a 2023:
 
 ```bash
-datasus-fetcher data --data-dir /path/to/data sih-rd \
+datasus-fetcher data --data-dir /caminho/para/dados sih-rd \
     --start 2020-01 \
     --end 2023-12 \
     --regions sp rj mg
 ```
 
-Download all datasets (warning: 320+ GB total):
+Baixar todos os datasets (aviso: 320+ GB total):
 
 ```bash
-datasus-fetcher data --data-dir /path/to/data
+datasus-fetcher data --data-dir /caminho/para/dados
 ```
 
-## Command Reference
+## Referência de Comando
 
-datasus-fetcher exposes five subcommands:
+datasus-fetcher expõe cinco subcomandos:
 
-### `data` — Download microdata files
+### `data` — Baixar arquivos de microdados
 
 ```bash
 datasus-fetcher data --data-dir <DIR> [DATASETS...] [OPTIONS]
 ```
 
-| Argument | Description |
+| Argumento | Descrição |
 |---|---|
-| `DATASETS` | One or more dataset codes (e.g. `sih-rd cnes-st`). Omit to download all datasets. |
-| `--data-dir DIR` | **Required.** Local directory where files will be stored. |
-| `--start PERIOD` | Start of the date filter. Format: `YYYY` or `YYYY-MM`. |
-| `--end PERIOD` | End of the date filter. Format: `YYYY` or `YYYY-MM`. |
-| `--regions UF ...` | One or more state codes in lowercase (e.g. `sp rj mg ba`). |
-| `-t, --threads N` | Number of concurrent download threads (default: `2`). |
-| `--dry-run` | List the files that would be downloaded (with sizes and totals) without downloading them. |
+| `DATASETS` | Um ou mais códigos de dataset (ex. `sih-rd cnes-st`). Omita para baixar todos os datasets. |
+| `--data-dir DIR` | **Obrigatório.** Diretório local onde os arquivos serão armazenados. |
+| `--start PERIOD` | Início do filtro de data. Formato: `YYYY` ou `YYYY-MM`. |
+| `--end PERIOD` | Fim do filtro de data. Formato: `YYYY` ou `YYYY-MM`. |
+| `--regions UF ...` | Um ou mais códigos de estado em minúscula (ex. `sp rj mg ba`). |
+| `-t, --threads N` | Número de threads de download concorrentes (padrão: `2`). |
+| `--dry-run` | Lista os arquivos que seriam baixados (com tamanhos e totais) sem baixá-los. |
 
-**Examples:**
+**Exemplos:**
 
 ```bash
-# Dengue notifications from SINAN — all years, all states
+# Notificações de dengue de SINAN — todos os anos, todos os estados
 datasus-fetcher data --data-dir ./data sinan-deng
 
-# CNES establishments for the entire Northeast, from 2015 onwards
+# Estabelecimentos CNES para todo o Nordeste, a partir de 2015
 datasus-fetcher data --data-dir ./data cnes-st \
     --start 2015-01 \
     --regions al ba ce ma pb pe pi rn se
 
-# SIM death records (ICD-10) from 2000 to 2023
+# Registros de morte SIM (ICD-10) de 2000 a 2023
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2000 --end 2023
 
-# Speed up downloads with more parallel threads
+# Acelere downloads com mais threads paralelas
 datasus-fetcher data --data-dir ./data sih-rd --threads 4
 ```
 
-### `list-datasets` — Inspect available datasets
+### `list-datasets` — Inspecionar datasets disponíveis
 
-Connects to the DATASUS FTP server and prints file counts, sizes, and date ranges for each dataset:
+Conecta ao servidor FTP do DATASUS e imprime contagens de arquivo, tamanhos e intervalos de data para cada dataset:
 
 ```bash
 datasus-fetcher list-datasets
 
-# Inspect specific datasets only
+# Inspecionar apenas datasets específicos
 datasus-fetcher list-datasets sih-rd sia-pa cnes-pf
 ```
 
-### `docs` — Download documentation files
+### `docs` — Baixar arquivos de documentação
 
-Downloads the official documentation files (data dictionaries, codebooks) for each system:
+Baixa arquivos de documentação oficial (dicionários de dados, livros de códigos) para cada sistema:
 
 ```bash
-# Download docs for specific systems
+# Baixar docs para sistemas específicos
 datasus-fetcher docs --data-dir ./docs sih cnes sia sim sinan
 
-# Download docs for all systems
+# Baixar docs para todos os sistemas
 datasus-fetcher docs --data-dir ./docs
 ```
 
-### `aux` — Download auxiliary reference tables
+### `aux` — Baixar tabelas de referência auxiliares
 
-Downloads lookup/reference tables (ICD codes, municipality codes, procedure tables, occupation codes, etc.):
+Baixa tabelas de lookup/referência (códigos ICD, códigos de município, tabelas de procedimentos, códigos de ocupação, etc.):
 
 ```bash
-# Download auxiliary tables for specific systems
+# Baixar tabelas auxiliares para sistemas específicos
 datasus-fetcher aux --data-dir ./aux sih cnes
 
-# Download auxiliary tables for all systems
+# Baixar tabelas auxiliares para todos os sistemas
 datasus-fetcher aux --data-dir ./aux
 ```
 
-### `archive` — Move old file versions to an archive
+### `archive` — Mover versões antigas de arquivo para um arquivo
 
-DATASUS periodically updates its files. datasus-fetcher stores every downloaded version with a date-stamped filename. Use `archive` to move non-latest versions to a separate directory:
+DATASUS periodicamente atualiza seus arquivos. datasus-fetcher armazena cada versão baixada com nome com data. Use `archive` para mover versões não-latest para um diretório separado:
 
 ```bash
 datasus-fetcher archive \
@@ -172,15 +179,15 @@ datasus-fetcher archive \
     --archive-data-dir ./data-archive
 ```
 
-## File Storage Structure
+## Estrutura de Armazenamento
 
-Downloaded files are organized into a structured directory tree:
+Arquivos baixados são organizados em uma árvore de diretórios estruturada:
 
 ```
 data/
 └── sih-rd/
-    ├── 199201/                              ← YYYYMM partition directory
-    │   └── sih-rd_sp_199201_20250218.dbc   ← dataset_uf_period_downloaddate.dbc
+    ├── 199201/                              ← diretório partição YYYYMM
+    │   └── sih-rd_sp_199201_20250218.dbc   ← dataset_uf_período_datadedownload.dbc
     ├── 202001/
     │   ├── sih-rd_sp_202001_20250218.dbc
     │   └── sih-rd_rj_202001_20250218.dbc
@@ -188,7 +195,7 @@ data/
         └── sih-rd_mg_202312_20250218.dbc
 ```
 
-For year-only datasets (e.g. SIM, SINASC):
+Para datasets com apenas ano (ex. SIM, SINASC):
 
 ```
 data/
@@ -198,53 +205,53 @@ data/
         └── sim-do-cid10_rj_2023_20250218.dbc
 ```
 
-Each filename encodes: **dataset** + **state (UF)** + **period** + **download date**.
+Cada nome de arquivo codifica: **dataset** + **estado (UF)** + **período** + **data de download**.
 
-## Logging Configuration
+## Configuração de Logging
 
-datasus-fetcher logs download progress to the console by default. You can override this by placing a `logging.ini` file in your working directory.
+datasus-fetcher registra o progresso de download no console por padrão. Você pode substituir isso colocando um arquivo `logging.ini` no seu diretório de trabalho.
 
-## Available Datasets
+## Datasets Disponíveis
 
-datasus-fetcher supports **113 datasets** across these systems:
+datasus-fetcher suporta **113 datasets** em todos esses sistemas:
 
-- **SIHSUS** — Hospital admissions
-- **SIM** — Mortality records (ICD-9 and ICD-10)
-- **SINASC** — Birth registrations
-- **SIA** — Ambulatory procedures and outpatient production
-- **CNES** — Health facilities registry (establishments, professionals, equipment, services)
-- **SINAN** — Notifiable diseases (dengue, tuberculosis, HIV, and 60+ others)
-- **And more** — SISCOLO, SISMAMA, SISPRENATAL, population bases, territorial data
+- **SIHSUS** — Admissões hospitalares
+- **SIM** — Registros de mortalidade (ICD-9 e ICD-10)
+- **SINASC** — Registros de nascimento
+- **SIA** — Procedimentos ambulatoriais e produção ambulatória
+- **CNES** — Registro de instalações de saúde (estabelecimentos, profissionais, equipamentos, serviços)
+- **SINAN** — Doenças notificáveis (dengue, tuberculose, HIV e 60+ outras)
+- **E mais** — SISCOLO, SISMAMA, SISPRENATAL, bases populacionais, dados territoriais
 
-For a complete list with file counts and date ranges, use:
+Para uma lista completa com contagens de arquivo e intervalos de datas, use:
 
 ```bash
 datasus-fetcher list-datasets
 ```
 
-## Brazilian State Codes
+## Códigos de Estados Brasileiros
 
-Use lowercase two-letter codes with `--regions`. Common codes:
+Use códigos de duas letras em minúscula com `--regions`. Códigos comuns:
 
-| Code | State | Code | State |
-|------|-------|------|-------|
+| Código | Estado | Código | Estado |
+|--------|--------|--------|--------|
 | `sp` | São Paulo | `ba` | Bahia |
 | `rj` | Rio de Janeiro | `mg` | Minas Gerais |
 | `rs` | Rio Grande do Sul | `sc` | Santa Catarina |
 | `ce` | Ceará | `pe` | Pernambuco |
 
-See the full list in the [README](https://github.com/Quantilica/datasus-fetcher).
+Veja a lista completa no [README](https://github.com/Quantilica/datasus-fetcher).
 
-## Reading DBC Files
+## Lendo Arquivos DBC
 
-datasus-fetcher downloads `.dbc` files, which is a compressed format used by DATASUS. To read these files in Python, you can use packages such as:
+datasus-fetcher baixa arquivos `.dbc`, que são um formato comprimido usado pelo DATASUS. Para ler esses arquivos em Python, você pode usar pacotes como:
 
 - [PySUS](https://github.com/AlertaDengue/PySUS)
 - [read.dbc](https://github.com/Quantilica/read.dbc) (R)
-- [dbf2dbc](https://github.com/AlertaDengue/dbf2dbc) (conversion tool)
+- [dbf2dbc](https://github.com/AlertaDengue/dbf2dbc) (ferramenta de conversão)
 
-## Learn More
+## Saiba Mais
 
-- **[IBGE Health Surveys](../ibge/index.md)** — Population health statistics
-- **[Architecture](../architecture/overview.md)** — System design
-- **[DATASUS Official (Portuguese)](https://datasus.saude.gov.br/)** — Government source
+- **[Pesquisas de Saúde IBGE](../ibge/index.md)** — Estatísticas de saúde populacional
+- **[Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[DATASUS Oficial (Português)](https://datasus.saude.gov.br/)** — Fonte governamental

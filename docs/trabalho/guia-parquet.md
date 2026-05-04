@@ -1,101 +1,103 @@
-# Parquet + Polars Guide
+# Guia Parquet + Polars
 
-Working with large labor datasets efficiently.
+Trabalhando com grandes datasets de trabalho eficientemente.
 
-## Why Parquet?
+## Por Que Parquet?
 
-Brazilian labor datasets are large:
+Datasets de trabalho brasileiros são grandes:
 
-- **RAIS 2023**: ~60 million employment records (~1 GB raw CSV)
-- **CAGED monthly**: ~500k-1M job flows per month
-- **Historical**: 30-40 years of data = multi-GB files
+- **RAIS 2023**: ~60 milhões de registros de emprego (~1 GB CSV bruto)
+- **CAGED mensal**: ~500k-1M fluxos de trabalho por mês
+- **Histórico**: 30-40 anos de dados = arquivos multi-GB
 
-**CSV is slow**:
-- Load entire file into memory
-- Parse all data types
-- Filtering requires full table scan
+**CSV é lento**:
 
-**Parquet is fast**:
-- Columnar storage (only read needed columns)
-- Compressed (~80% reduction)
-- Predicate pushdown (filter before loading)
-- Schema preserved (no type guessing)
+- Carrega arquivo inteiro em memória
+- Faz parse de todos os tipos de dados
+- Filtragem requer varredura de tabela completa
 
-## Quick Start
+**Parquet é rápido**:
 
-### Convert CSV to Parquet
+- Armazenamento colunar (lê apenas colunas necessárias)
+- Comprimido (~80% de redução)
+- Predicate pushdown (filtra antes de carregar)
+- Schema preservado (sem adivinhação de tipos)
+
+## Início Rápido
+
+### Converter CSV para Parquet
 
 ```python
 import polars as pl
 
-# Read CSV
+# Ler CSV
 df = pl.read_csv("rais_2023.csv")
 
-# Write Parquet
+# Escrever Parquet
 df.write_parquet("rais_2023.parquet")
 
-# File size comparison:
+# Comparação de tamanho de arquivo:
 # CSV: 850 MB
-# Parquet: 120 MB (14% of original)
+# Parquet: 120 MB (14% do original)
 ```
 
-### Read Parquet
+### Ler Parquet
 
 ```python
 import polars as pl
 
-# Full read
+# Leitura completa
 df = pl.read_parquet("rais_2023.parquet")
 
-# Selective columns (faster)
+# Colunas seletivas (mais rápido)
 df = pl.read_parquet(
     "rais_2023.parquet",
     columns=["employee_id", "salary", "sector"]
 )
 
-# With filter
+# Com filtro
 df = pl.read_parquet(
     "rais_2023.parquet",
     filters=[("state", "==", "SP")]
 )
 ```
 
-## Memory-Efficient Workflows
+## Workflows Eficientes em Memória
 
-### Streaming Large Files
+### Streaming de Arquivos Grandes
 
-Don't load the entire file—process in batches:
+Não carregue o arquivo inteiro — processe em batches:
 
 ```python
 import polars as pl
 
-# Stream mode: load in chunks
+# Modo stream: carregar em chunks
 reader = pl.read_parquet(
     "rais_2023.parquet"
 )
 
-# Process in batches
+# Processar em batches
 batch_size = 100000
 for i in range(0, len(reader), batch_size):
     batch = reader[i:i+batch_size]
     
-    # Process batch
+    # Processar batch
     result = batch.group_by("sector").agg(
         pl.col("salary").mean()
     )
     
-    # Append to file
+    # Anexar ao arquivo
     result.write_parquet(f"output_{i}.parquet", append=True)
 ```
 
 ### Lazy Evaluation
 
-Use lazy evaluation to optimize queries:
+Use lazy evaluation para otimizar consultas:
 
 ```python
 import polars as pl
 
-# Lazy (not evaluated yet)
+# Lazy (ainda não avaliado)
 query = (
     pl.scan_parquet("rais_2023.parquet")
     .filter(pl.col("state") == "SP")
@@ -104,23 +106,23 @@ query = (
     .agg(pl.col("salary").mean())
 )
 
-# Collect when ready
+# Coletar quando pronto
 result = query.collect()
 
-# Polars optimizes the query before execution:
-# 1. Push filter down (state == "SP")
-# 2. Select columns early (drop unused data)
-# 3. Aggregate efficiently
+# Polars otimiza a consulta antes da execução:
+# 1. Empurrar filtro para baixo (state == "SP")
+# 2. Selecionar colunas cedo (descartar dados não utilizados)
+# 3. Agregar eficientemente
 ```
 
-## Common Tasks
+## Tarefas Comuns
 
-### Filter by Multiple Criteria
+### Filtrar por Múltiplos Critérios
 
 ```python
 import polars as pl
 
-# Read with filters
+# Ler com filtros
 df = pl.read_parquet(
     "rais_2023.parquet",
     filters=[
@@ -129,7 +131,7 @@ df = pl.read_parquet(
     ]
 )
 
-# Result: Only matching rows loaded
+# Resultado: Apenas linhas correspondentes carregadas
 ```
 
 ### Group and Aggregate
@@ -139,7 +141,7 @@ import polars as pl
 
 df = pl.read_parquet("rais_2023.parquet")
 
-# Employment by state and sector
+# Emprego por estado e setor
 summary = (
     df.group_by(["state", "sector"])
     .agg([
@@ -162,17 +164,17 @@ RAIS is annual (December 31 snapshot). For trends:
 ```python
 import polars as pl
 
-# Combine multiple years
+# Combinar múltiplos anos
 data_2021 = pl.read_parquet("rais_2021.parquet")
 data_2022 = pl.read_parquet("rais_2022.parquet")
 data_2023 = pl.read_parquet("rais_2023.parquet")
 
 combined = pl.concat([data_2021, data_2022, data_2023])
 
-# Aggregate by year
+# Agregar por ano
 by_year = (
     combined
-    .with_columns(pl.lit(2021, 2022, 2023).alias("year"))  # Add year if not present
+    .with_columns(pl.lit(2021, 2022, 2023).alias("year"))  # Adicionar ano se não presente
     .group_by(["year", "sector"])
     .agg([
         pl.col("employee_id").count().alias("employment"),
@@ -180,7 +182,7 @@ by_year = (
     ])
 )
 
-# Calculate growth
+# Calcular crescimento
 by_year = by_year.sort("year")
 by_year = by_year.with_columns([
     pl.col("employment").pct_change().alias("employment_growth"),
@@ -199,7 +201,7 @@ import polars as pl
 
 df = pl.read_parquet("rais_2023.parquet")
 
-# Top 10 sectors by employment
+# Top 10 setores por emprego
 top_sectors = (
     df.group_by("sector")
     .agg(pl.col("employee_id").count().alias("employment"))
@@ -220,10 +222,10 @@ import polars as pl
 # RAIS employment
 rais = pl.read_parquet("rais_2023.parquet")
 
-# External data (sector metadata)
+# Dados externos (metadados de setor)
 sector_info = pl.read_csv("sectors.csv")
 
-# Join
+# Unir
 enriched = rais.join(
     sector_info,
     left_on="sector",
@@ -264,7 +266,7 @@ import polars as pl
 
 df = pl.read_parquet("rais_2023.parquet")
 
-# Convert salary to integer (save space)
+# Converter salário para inteiro (economizar espaço)
 df = df.with_columns([
     pl.col("salary").cast(pl.Int32).alias("salary")
 ])
@@ -280,7 +282,7 @@ import polars as pl
 
 df = pl.read_parquet("rais_2023.parquet")
 
-# Add tenure groups
+# Adicionar grupos de tempo de serviço
 df = df.with_columns([
     pl.when(pl.col("tenure_days") < 90)
     .then("< 3 months")
@@ -295,26 +297,26 @@ df = df.with_columns([
 df.write_parquet("rais_2023_with_tenure_group.parquet")
 ```
 
-## Performance Optimization
+## Otimização de Performance
 
-### Query 1: Compare CSV vs Parquet
+### Comparação 1: CSV vs Parquet
 
-**CSV read** (1 GB file):
+**Leitura CSV** (arquivo de 1 GB):
 ```
-Time: 12 seconds
-```
-
-**Parquet read** (same data):
-```
-Time: 0.3 seconds (40x faster)
+Tempo: 12 segundos
 ```
 
-**Parquet with filter**:
+**Leitura Parquet** (mesmos dados):
 ```
-Time: 0.05 seconds (240x faster)
+Tempo: 0.3 segundos (40x mais rápido)
 ```
 
-### Profile Your Queries
+**Parquet com filtro**:
+```
+Tempo: 0.05 segundos (240x mais rápido)
+```
+
+### Perfil Suas Queries
 
 ```python
 import polars as pl
@@ -322,7 +324,7 @@ import time
 
 df = pl.read_parquet("rais_2023.parquet")
 
-# Time your operations
+# Cronometrize suas operações
 start = time.time()
 
 result = (
@@ -333,12 +335,12 @@ result = (
 )
 
 elapsed = time.time() - start
-print(f"Query took {elapsed:.3f} seconds")
+print(f"Query levou {elapsed:.3f} segundos")
 ```
 
-### Partition Large Files
+### Particionar Arquivos Grandes
 
-Store Parquet files by partition (e.g., by year or state):
+Armazene arquivos Parquet por partição (ex: por ano ou estado):
 
 ```python
 import polars as pl
@@ -346,7 +348,7 @@ from pathlib import Path
 
 df = pl.read_parquet("rais_combined.parquet")
 
-# Write partitioned by state
+# Escrever particionado por estado
 (
     df
     .with_columns(pl.col("state").alias("partition_state"))
@@ -356,23 +358,23 @@ df = pl.read_parquet("rais_combined.parquet")
     )
 )
 
-# Read only specific partition
+# Ler apenas partição específica
 sp_data = pl.read_parquet("rais_partitioned/partition_state=SP")
 ```
 
-## Common Patterns
+## Padrões Comuns
 
-### Reproducible Analysis
+### Análise Reproduzível
 
 ```python
 import polars as pl
 from pathlib import Path
 
-# Version your parquet files
+# Versione seus arquivos parquet
 today = Path.cwd().parent / "data"
 today.mkdir(exist_ok=True)
 
-# Save with timestamp
+# Salvar com timestamp
 timestamp = "2024_01_15"
 filename = today / f"rais_analysis_{timestamp}.parquet"
 
@@ -381,13 +383,13 @@ result = df.group_by("sector").agg(pl.col("salary").mean())
 
 result.write_parquet(filename)
 
-# Load consistent data later
+# Carregue dados consistentes depois
 result = pl.read_parquet(filename)
 ```
 
-### Incremental Aggregation
+### Agregação Incremental
 
-Process monthly CAGED data as it arrives:
+Processe dados CAGED mensais conforme chegam:
 
 ```python
 import polars as pl
@@ -395,7 +397,7 @@ from pathlib import Path
 
 data_dir = Path("caged_data")
 
-# Aggregate all months available
+# Agregue todos meses disponíveis
 dfs = []
 for parquet_file in data_dir.glob("caged_2024_*.parquet"):
     df = pl.read_parquet(parquet_file)
@@ -403,7 +405,7 @@ for parquet_file in data_dir.glob("caged_2024_*.parquet"):
 
 combined = pl.concat(dfs)
 
-# Aggregate once, save
+# Agregue uma vez, salve
 summary = combined.group_by("state").agg(
     [pl.col("net_flow").sum()]
 )
@@ -411,56 +413,56 @@ summary = combined.group_by("state").agg(
 summary.write_parquet("caged_2024_summary.parquet")
 ```
 
-## Troubleshooting
+## Resolução de Problemas
 
-### Out of Memory on Large File
+### Falta de Memória em Arquivo Grande
 
-**Problem**: File is too large to load entirely
+**Problema**: Arquivo é muito grande para carregar completamente
 
-**Solution**: Use filtering on read:
+**Solução**: Use filtragem na leitura:
 
 ```python
 import polars as pl
 
-# Instead of:
-df = pl.read_parquet("huge_file.parquet")  # Crashes
+# Em vez de:
+df = pl.read_parquet("huge_file.parquet")  # Crash
 
-# Use filter:
+# Use filtro:
 df = pl.read_parquet(
     "huge_file.parquet",
     filters=[("state", "==", "SP")]
-)  # Fast, low memory
+)  # Rápido, pouca memória
 ```
 
-### Slow Queries on Parquet
+### Queries Lentas em Parquet
 
-**Problem**: Query is slower than expected
+**Problema**: Query é mais lenta que o esperado
 
-**Solution**: Use lazy evaluation:
+**Solução**: Use lazy evaluation:
 
 ```python
 import polars as pl
 
-# Eager (executes immediately)
+# Eager (executa imediatamente)
 df = pl.read_parquet("file.parquet")
 result = df.filter(...)
 
-# Lazy (optimizes first)
+# Lazy (otimiza primeiro)
 result = pl.scan_parquet("file.parquet").filter(...).collect()
 ```
 
-### Type Mismatch on Write
+### Type Mismatch na Escrita
 
-**Problem**: Salary written as string instead of float
+**Problema**: Salário escrito como string em vez de float
 
-**Solution**: Cast before writing:
+**Solução**: Fazer cast antes de escrever:
 
 ```python
 import polars as pl
 
 df = pl.read_parquet("rais.parquet")
 
-# Fix types
+# Corrigir tipos
 df = df.with_columns([
     pl.col("salary").cast(pl.Float64)
 ])
@@ -468,7 +470,7 @@ df = df.with_columns([
 df.write_parquet("rais_fixed.parquet")
 ```
 
-## See Also
+## Saiba Mais
 
-- [pdet-data Tool](pdet-data.md)
-- [Polars Documentation](https://pola-rs.github.io/)
+- [Ferramenta pdet-data](pdet-data.md)
+- [Documentação Polars](https://pola-rs.github.io/)

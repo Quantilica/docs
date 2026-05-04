@@ -1,118 +1,118 @@
-# Treasury (Finance)
+# Tesouro (Finanças)
 
-Brazil's Federal Treasury (Tesouro Nacional) publishes two very different kinds of data: **fixed-income securities microdata** through the Treasury Direct (Tesouro Direto) program, and **fiscal aggregates** through reports such as the *Resultado do Tesouro Nacional* (RTN) — revenues, expenses, and primary results of the Federal Government.
+O Tesouro Nacional Brasileiro publica dois tipos bem diferentes de dados: **microdados de títulos de renda fixa** através do programa Tesouro Direto, e **agregados fiscais** através de relatórios como o *Resultado do Tesouro Nacional* (RTN) — receitas, despesas e resultado primário do Governo Federal.
 
-This section covers two packages: **[tddata](tddata.md)** for Treasury Direct microdata and portfolio analytics, and **[rtnpy](rtnpy.md)** for the RTN fiscal-results spreadsheet.
+Esta seção cobre dois pacotes: **[tddata](tddata.md)** para microdados Tesouro Direto e análise de portfólio, e **[rtnpy](rtnpy.md)** para a planilha fiscal RTN.
 
-## tddata: Treasury Direct Analytics
+## tddata: Análise Tesouro Direto
 
-**tddata** is an industrial-grade financial engineering suite for Treasury Direct microdata—far more than a data client, it abstracts government communication and natively implements sophisticated financial mathematics for portfolio analytics.
+**tddata** é uma suíte de engenharia financeira de nível industrial para microdados Tesouro Direto — muito mais que um cliente de dados, abstrai a comunicação com o governo e implementa nativamente matemática financeira sofisticada para análise de portfólio.
 
-## The Challenge
+## O Desafio
 
-Treasury Direct data analysis encounters critical obstacles:
+A análise de dados do Tesouro Direto encontra obstáculos críticos:
 
-- **Volume & Speed**: Massive daily files with millions of records; traditional libraries (Pandas) cause memory exhaustion
-- **FIFO Complexity**: Computing returns for investors with multiple purchases and partial sales requires strict accounting controls
-- **Portfolio Performance**: Calculating monthly returns with deposits, withdrawals, and coupon income demands GIPS-compliant methodologies (Modified Dietz)
+- **Volume e Velocidade**: Arquivos diários massivos com milhões de registros; bibliotecas tradicionais (como Pandas) causam esgotamento de memória.
+- **Complexidade FIFO**: Computar retornos para investidores com múltiplas compras e vendas parciais requer controles contábeis estritos.
+- **Performance de Portfólio**: Calcular retornos mensais com depósitos, saques e renda de cupom demanda metodologias em conformidade com GIPS (Modified Dietz).
 
-**tddata** solves these through smart async fetching, Polars-powered processing (10x faster), automatic FIFO lot matching, and Modified Dietz portfolio analytics.
+**tddata** resolve isso através de fetching assíncrono inteligente, processamento Polars (10x mais rápido), matching automático FIFO de lotes e análise de portfólio Modified Dietz.
 
-## Architecture: How tddata Powers Treasury Analysis
+## Arquitetura: Como o tddata Potencializa a Análise do Tesouro
 
 ```mermaid
 graph TD
-    A[Brazilian Treasury CKAN API <br/> Large daily files: prices, yields, volumes] --> B[tddata <br/> Smart Fetching + Analytics Layer]
+    A[API CKAN do Tesouro Nacional <br/> Grandes arquivos diários: preços, yields, volumes] --> B[tddata <br/> Camada de Fetching Inteligente + Analytics]
     
     subgraph tddata
-        B1[Async downloads]
-        B2[Polars processing]
-        B3[FIFO inventory control]
-        B4[Modified Dietz returns]
+        B1[Downloads assíncronos]
+        B2[Processamento Polars]
+        B3[Controle de inventário FIFO]
+        B4[Retornos Modified Dietz]
     end
     
-    B --> C[Your Analysis <br/> Portfolio, Risk, Curve]
+    B --> C[Sua Análise <br/> Portfólio, Risco, Curva]
 ```
 
-## Core Capabilities
+## Capacidades Principais
 
-- ✅ **Smart async fetching** with idempotence (skip unchanged files)
-- ✅ **Polars-powered analytics** (10x faster than Pandas)
-- ✅ **FIFO lot matching** (precise per-lot returns with coupon injection)
-- ✅ **Modified Dietz portfolio returns** (GIPS-compliant performance measurement)
-- ✅ **Market-to-market pricing** (O(1) lookups for speed)
-- ✅ **All bond types**: LTN, NTN-B, NTN-F, LFT, NTN-C
-- ✅ **Export to Parquet, CSV, PostgreSQL**
+- ✅ **Fetching assíncrono inteligente** com idempotência (pula arquivos inalterados).
+- ✅ **Analytics powered by Polars** (10x mais rápido que Pandas).
+- ✅ **Matching de lotes FIFO** (retornos precisos por lote com injeção de cupom).
+- ✅ **Retornos de portfólio Modified Dietz** (medição de performance GIPS-compliant).
+- ✅ **Precificação mark-to-market** (buscas O(1) para velocidade).
+- ✅ **Todos os tipos de títulos**: LTN, NTN-B, NTN-F, LFT, NTN-C.
+- ✅ **Exportação para Parquet, CSV, PostgreSQL**.
 
-## Use Cases
+## Casos de Uso
 
-### Economic Monitoring
+### Monitoramento Econômico
 
-Track real-time Brazilian fixed-income market conditions:
+Rastrear condições reais do mercado de renda fixa brasileiro:
 
-- Yield curve trends (prefixed vs. inflation-indexed spreads)
-- Duration risk exposure
-- Market volatility and repricing
+- Tendências da curva de rendimento (prefixados vs. spreads indexados à inflação).
+- Exposição ao risco de duration.
+- Volatilidade de mercado e repricing.
 
-### Portfolio Management
+### Gestão de Portfólio
 
-Build and optimize Brazilian government bond portfolios:
+Construir e otimizar portfólios de títulos do governo brasileiro:
 
-- FIFO lot matching for per-lot returns
-- Modified Dietz portfolio performance (GIPS-compliant)
-- Asset allocation and duration management
+- Matching de lotes FIFO para retornos por lote.
+- Performance de portfólio Modified Dietz (GIPS-compliant).
+- Gestão de alocação de ativos e duration.
 
-### Quantitative Analysis
+### Análise Quantitativa
 
-Model term structure and price dynamics:
+Modelar estrutura a termo e dinâmica de preços:
 
-- Yield curve modeling
-- Interest rate sensitivity (duration/convexity)
-- Market microstructure
+- Modelagem de curva de rendimento (YTM).
+- Sensibilidade a taxas de juros (duration/convexity).
+- Microestrutura de mercado.
 
-### Academic Research
+### Pesquisa Acadêmica
 
-Study emerging market fixed-income dynamics with 20+ years of historical data.
+Estudar dinâmica de renda fixa de mercados emergentes com mais de 20 anos de dados históricos.
 
-### Risk Management
+### Gestão de Riscos
 
-Calculate bond-level and portfolio-level risks:
+Calcular riscos no nível de título e portfólio:
 
-- Interest rate risk (duration)
-- Liquidity risk (bid-ask spreads)
-- Credit risk (government solvency)
+- Risco de taxa de juros (duration).
+- Risco de liquidez (spreads bid-ask).
+- Risco de crédito (solvência do governo).
 
-## Data Available
+## Dados Disponíveis
 
-### Bond Types
+### Tipos de Títulos
 
-| Code | Full Name | Characteristics |
+| Código | Nome Completo | Características |
 |------|-----------|-----------------|
-| **LTN** | Treasury Notes | Prefixed (zero-coupon), short-term |
-| **NTN-B** | IPCA-indexed Notes | Inflation-protected, semi-annual coupons |
-| **NTN-F** | Fixed-rate Notes | Prefixed with coupons, longer-term |
-| **NTN-C** | CCI-indexed Notes | Currency-indexed (INPC) |
-| **LFT** | Financial Treasury Letters | Selic-linked, floating-rate bonds |
+| **LTN** | Letras do Tesouro Nacional | Prefixados (cupom zero), curto prazo |
+| **NTN-B** | Notas do Tesouro Nacional Série B | Indexados ao IPCA, cupons semestrais |
+| **NTN-F** | Notas do Tesouro Nacional Série F | Prefixados com cupons, longo prazo |
+| **NTN-C** | Notas do Tesouro Nacional Série C | Indexados ao IGP-M (antigamente INPC) |
+| **LFT** | Letras Financeiras do Tesouro | Atrelados à Selic, pós-fixados |
 
-### Available Metrics
+### Métricas Disponíveis
 
-For each bond and date:
+Para cada título e data:
 
-- **Yield (YTM)**: Annual percentage yield
-- **Price**: Market price as % of par
-- **Duration**: Modified duration in years
-- **Maturity Date**: When the bond expires
-- **Accrued Interest**: Interest accrued since last coupon
-- **Outstanding Volume**: Amount in circulation
+- **Yield (YTM)**: Rendimento em percentual anual.
+- **Price**: Preço de mercado em % do par (mark-to-market).
+- **Duration**: Duration modificada em anos.
+- **Maturity Date**: Data de vencimento do título.
+- **Accrued Interest**: Juros acumulados desde o último cupom.
+- **Outstanding Volume**: Quantidade em circulação.
 
-## Workflow: Fetch → Process → Analyze
+## Fluxo de Trabalho: Buscar → Processar → Analisar
 
-### Step 1: Fetch Treasury Data (Async, Last-Modified idempotent)
+### Etapa 1: Buscar Dados do Tesouro (Assíncrono, idempotente por Last-Modified)
 
-`tddata.downloader.download` is async and uses CKAN's `last_modified` plus the local filename timestamp to skip already-current files. Up to `max_concurrency` resources are fetched in parallel.
+`tddata.downloader.download` é assíncrono e utiliza o `last_modified` do CKAN junto com o timestamp do arquivo local para pular arquivos já atualizados. Até `max_concurrency` recursos são buscados em paralelo.
 
 ```bash
-# Pull every Treasury Direct dataset once
+# Baixar cada conjunto de dados do Tesouro Direto uma vez
 tddata download --dataset all -o ./data
 ```
 
@@ -132,12 +132,13 @@ DATASETS = [
 
 async def fetch_all(dest_dir: Path):
     for ds in DATASETS:
+        # Busca recursos em paralelo
         await downloader.download(dest_dir, dataset_id=ds, max_concurrency=3)
 
 asyncio.run(fetch_all(Path("./data")))
 ```
 
-### Step 2: Read CSVs into typed Polars DataFrames
+### Etapa 2: Ler CSVs em DataFrames Polars Tipados
 
 ```python
 from pathlib import Path
@@ -145,13 +146,14 @@ from tddata import reader
 
 data_dir = Path("./data")
 
+# Leitura performática com Polars
 prices     = reader.read_prices(next(data_dir.glob("taxas-dos-titulos*.csv")))
 operations = reader.read_operations(next(data_dir.glob("operacoes-do-tesouro-direto*.csv")))
 stock      = reader.read_stock(next(data_dir.glob("estoque-do-tesouro-direto*.csv")))
 investors  = reader.read_investors(next(data_dir.glob("investidores-do-tesouro-direto*.csv")))
 ```
 
-### Step 3: Per-Lot Returns with FIFO Matching
+### Etapa 3: Retornos por Lote com Matching FIFO
 
 ```python
 from tddata.analytics import calculate_operations_returns
@@ -159,13 +161,13 @@ from tddata.analytics import calculate_operations_returns
 lots = calculate_operations_returns(
     operations=operations,
     prices=prices,
-    coupons=None,  # optional coupons DataFrame
+    coupons=None,  # cupons opcionais (DataFrame)
 )
-# One row per lot (closed or still open). FIFO matches sells against oldest buys
-# and splits partial sells into closed + open positions automatically.
+# Uma linha por lote (fechado ou ainda aberto). O FIFO associa vendas às compras mais antigas
+# e divide vendas parciais em posições fechadas + abertas automaticamente.
 ```
 
-### Step 4: Monthly Portfolio Returns (Modified Dietz, GIPS-compliant)
+### Etapa 4: Retornos Mensais do Portfólio (Modified Dietz, GIPS-compliant)
 
 ```python
 from tddata.analytics import calculate_portfolio_monthly_returns
@@ -175,22 +177,22 @@ monthly = calculate_portfolio_monthly_returns(
     prices=prices,
     coupons=None,
 )
-# Columns: month, monthly_return, cumulative_return, portfolio_value, net_cash_flow
+# Colunas: month, monthly_return, cumulative_return, portfolio_value, net_cash_flow
 print(monthly.select(["month", "monthly_return", "cumulative_return"]))
 ```
 
-## Best Practices
+## Melhores Práticas
 
-### 1. Use the async downloader; let `max_concurrency` do the work
+### 1. Use o Downloader Assíncrono; Deixe o `max_concurrency` Trabalhar
 
 ```python
 import asyncio
 from pathlib import Path
 from tddata import downloader
 
-# `download` overlaps up to `max_concurrency` resource downloads inside one
-# dataset. It also HEAD-checks CKAN's last_modified, so re-runs only fetch
-# what changed.
+# O `download` sobrepõe até `max_concurrency` downloads de recursos dentro de um
+# dataset. Também verifica o `last_modified` via HEAD no CKAN, para que as execuções
+# seguintes busquem apenas o que mudou.
 asyncio.run(
     downloader.download(
         Path("./data"),
@@ -200,26 +202,26 @@ asyncio.run(
 )
 ```
 
-### 2. Use Modified Dietz for Portfolio Returns
+### 2. Use Modified Dietz para Retornos de Portfólio
 
-`calculate_portfolio_monthly_returns` already implements Modified Dietz, weighting cash flows by timing within each month — never roll your own simple-return formula when buys/sells happen mid-period.
+`calculate_portfolio_monthly_returns` já implementa o Modified Dietz, ponderando fluxos de caixa pelo timing dentro de cada mês — nunca implemente sua própria fórmula de retorno simples quando compras/vendas ocorrem no meio do período.
 
 ```python
 from tddata.analytics import calculate_portfolio_monthly_returns
 
-# ❌ Wrong: ignores the timing of buys/sells within each month
+# ❌ Errado: ignora o timing de compras/vendas dentro do mês
 # simple = (ending_value - beginning_value) / beginning_value
 
-# ✅ GIPS-compliant: Modified Dietz weights cash flows by their day-of-month
+# ✅ GIPS-compliant: Modified Dietz pondera fluxos de caixa pelo dia do mês
 monthly_returns = calculate_portfolio_monthly_returns(
     operations=operations,
     prices=prices,
 )
 ```
 
-### 3. Include Coupons in FIFO Returns
+### 3. Inclua Cupons em Retornos FIFO
 
-Pass a coupons DataFrame to `calculate_operations_returns` / `calculate_portfolio_monthly_returns` so coupon income is injected as positive cash flow on the payment dates:
+Passe um DataFrame de cupons para `calculate_operations_returns` / `calculate_portfolio_monthly_returns` para que a renda de cupom seja injetada como fluxo de caixa positivo nas datas de pagamento:
 
 ```python
 from tddata import reader
@@ -227,125 +229,125 @@ from tddata.analytics import calculate_operations_returns
 
 coupons = reader.read_interest_coupons(coupons_csv)
 
-# ✅ Includes coupon payments
+# ✅ Inclui pagamentos de cupons
 lots_with_coupons = calculate_operations_returns(
     operations=operations,
     prices=prices,
     coupons=coupons,
 )
 
-# ❌ Misses coupon income for NTN-B / NTN-F lots
+# ❌ Perde a renda de cupons para lotes NTN-B / NTN-F
 lots_no_coupons = calculate_operations_returns(operations, prices)
 ```
 
-### 4. Use Polars, Not Pandas
+### 4. Use Polars, Não Pandas
 
-Polars is 10x faster for large Treasury datasets:
+Polars é 10x mais rápido para grandes datasets do Tesouro:
 
 ```python
 import polars as pl
 
-# ❌ Slow (Pandas)
+# ❌ Lento (Pandas)
 import pandas as pd
-df = pd.read_csv("treasury.csv")  # Slow, high memory
-grouped = df.groupby("bond_type").agg({"yield": "mean"})  # Minutes
+df = pd.read_csv("treasury.csv")  # Lento, alto uso de memória
+grouped = df.groupby("bond_type").agg({"yield": "mean"})  # Minutos
 
-# ✅ Fast (Polars)
-df = pl.read_parquet("treasury.parquet")  # Fast, low memory
+# ✅ Rápido (Polars)
+df = pl.read_parquet("treasury.parquet")  # Rápido, baixo uso de memória
 grouped = df.group_by("bond_type").agg(pl.col("yield").mean())  # <1s
 ```
 
-### 5. Store in Parquet Format
+### 5. Armazene em Formato Parquet
 
-Parquet provides 80%+ compression and faster I/O:
+Parquet fornece compressão de 80%+ e I/O mais rápido:
 
 ```python
 import polars as pl
 
-# Save processed data
+# Salve dados processados
 result.write_parquet("treasury_processed.parquet")
 
-# Load later (10x faster than CSV)
+# Carregue depois (10x mais rápido que CSV)
 df = pl.read_parquet("treasury_processed.parquet")
 ```
 
-## Key Concepts
+## Conceitos Principais
 
-### Prefixed Bonds (LTN, NTN-F)
+### Títulos Prefixados (LTN, NTN-F)
 
-You know the exact return when you buy. Fixed interest rate, paid at maturity (LTN) or semi-annually (NTN-F).
+Você sabe o retorno exato no momento da compra. Taxa de juros fixa, paga no vencimento (LTN) ou semestralmente (NTN-F).
 
-### IPCA-Indexed Bonds (NTN-B)
+### Títulos Indexados ao IPCA (NTN-B)
 
-Principal adjusts by IPCA inflation. Coupon rate is typically 4-6% above inflation—the real return.
+O principal é ajustado pela inflação (IPCA). A taxa de cupom é tipicamente 4-6% acima da inflação — o retorno real.
 
-### Selic-Linked Bonds (LFT)
+### Títulos Atrelados à Selic (LFT)
 
-Interest rate tracks the Selic overnight rate. Minimal interest rate risk, but subject to inflation.
+A taxa de juros acompanha a taxa Selic overnight. Risco de taxa de juros (duration) mínimo, mas sujeito à inflação.
 
 ### Duration
 
-Measures bond price sensitivity to interest rate changes. Higher duration = greater price volatility.
+Mede a sensibilidade do preço do título a mudanças nas taxas de juros. Maior duration = maior volatilidade de preço (convexity também aumenta).
 
-### Yield Curve
+### Curva de Rendimento (Yield Curve)
 
-Relationship between yield and time-to-maturity. Steep curve suggests rate increases expected; flat suggests uncertainty.
+Relação entre o rendimento (YTM) e o tempo até o vencimento. Uma curva inclinada sugere expectativas de alta nas taxas; uma curva flat sugere incerteza.
 
-## Tools in This Section
+## Ferramentas nesta Seção
 
 ### [tddata](tddata.md)
 
-Industrial-grade financial engineering suite for Treasury Direct. Master:
+Suíte de engenharia financeira de nível industrial para Tesouro Direto. Domine:
 
-- **Smart async fetching** with idempotence (skip unchanged files)
-- **FIFO lot matching** (per-lot returns with coupon injection)
-- **Modified Dietz** (GIPS-compliant portfolio performance)
-- **Polars processing** (10x faster than Pandas)
-- **High-performance analytics** (10M+ rows in seconds)
+- **Smart async fetching** com idempotência (pula arquivos inalterados).
+- **Matching de lotes FIFO** (retornos por lote com injeção de cupom).
+- **Modified Dietz** (performance de portfólio GIPS-compliant).
+- **Processamento Polars** (10x mais rápido que Pandas).
+- **Analytics de alto desempenho** (10M+ linhas em segundos).
 
 ### [rtnpy](rtnpy.md)
 
-Downloader and normalizer for the *Resultado do Tesouro Nacional* (RTN) fiscal-results spreadsheet:
+Downloader e normalizador para a planilha de resultados fiscais *Resultado do Tesouro Nacional* (RTN):
 
-- **Auto-download** of the latest RTN workbook with timestamp dedup
-- **24 supported sheets** (monthly / quarterly / annual; current / constant; % of GDP)
-- **Long-format normalization** with year/month or year/quarter split
-- **Account hierarchy expansion** as a separate dimension table
-- **CLI export** to formatted Excel or SQLite
+- **Auto-download** da última planilha RTN com deduplicação por timestamp.
+- **24 planilhas suportadas** (mensal / trimestral / anual; corrente / constante; % do PIB).
+- **Normalização em formato longo** com divisão ano/mês ou ano/trimestre.
+- **Expansão da hierarquia de contas** como tabela de dimensão separada.
+- **CLI de Exportação** para Excel formatado ou SQLite.
 
-### [Portfolio Returns Guide](calculo-retornos.md)
+### [Guia de Retornos de Portfólio](calculo-retornos.md)
 
-Deep dive into fixed-income mathematics:
+Mergulho profundo na matemática de renda fixa:
 
-- YTM and duration calculations
-- Modified Dietz methodology
-- Real returns for inflation-indexed bonds
+- Cálculos de YTM e duration.
+- Metodologia Modified Dietz.
+- Retornos reais para títulos indexados à inflação.
 
-## Performance & Benchmarks
+## Performance e Benchmarks
 
-- **Async fetching**: First run 30s → cached runs <1s (40x speedup)
-- **Polars processing**: 15M rows in 0.34s (44M rows/sec throughput)
-- **FIFO matching**: 500k transactions in 2.4s (208k tx/sec)
+- **Async fetching**: Primeira execução 30s → execuções em cache <1s (ganho de 40x).
+- **Processamento Polars**: 15M linhas em 0.34s (vazão de 44M linhas/seg).
+- **Matching FIFO**: 500k transações em 2.4s (208k tx/seg).
 
-## When to Use tddata
+## Quando Usar o tddata
 
-**Use tddata when:**
+**Use o tddata quando:**
 
-- Building production Treasury Direct pipelines
-- Calculating GIPS-compliant portfolio returns
-- Analyzing millions of historical transactions
-- Need precise per-lot return attribution (FIFO)
-- Combining Treasury data with other data sources
+- Construindo pipelines de produção para o Tesouro Direto.
+- Calculando retornos de portfólio GIPS-compliant.
+- Analisando milhões de transações históricas.
+- Precisar de atribuição de retorno precisa por lote (FIFO).
+- Combinando dados do Tesouro com outras fontes.
 
-**Use simple scripts when:**
+**Use scripts simples quando:**
 
-- Quick one-off analysis
-- Small datasets (<100MB)
-- Academic exploration
+- Análises rápidas e únicas (one-off).
+- Pequenos conjuntos de dados (<100MB).
+- Exploração acadêmica inicial.
 
-## Learn More
+## Saiba Mais
 
-- **[tddata Documentation](tddata.md)** — Complete feature reference
-- **[IBGE Macroeconomics](../ibge/index.md)** — Pair Treasury yields with inflation data
-- **[Architecture Overview](../architecture/overview.md)** — System design principles
-- **[Treasury Direct Official](https://www.tesouro.gov.br/tesouro-direto)** — Government site (Portuguese)
+- **[Documentação do tddata](tddata.md)** — Referência completa de funcionalidades.
+- **[IBGE Macroeconomia](../ibge/index.md)** — Combine rendimentos do Tesouro com dados de inflação.
+- **[Visão Geral da Arquitetura](../architecture/overview.md)** — Princípios de design do sistema.
+- **[Tesouro Direto Oficial](https://www.tesouro.gov.br/tesouro-direto)** — Site do governo brasileiro.

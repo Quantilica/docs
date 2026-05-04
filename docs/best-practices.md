@@ -1,51 +1,51 @@
-# Best Practices
+# Melhores Práticas
 
-This guide covers practical patterns used across all tools in the Brazilian Public Data Suite. Following these patterns will make your data pipelines faster, more reliable, and easier to maintain.
+Este guia cobre padrões práticos usados em todas as ferramentas da Plataforma Brasileira de Dados Públicos. Seguindo esses padrões seu pipelines de dados ficarão mais rápidos, mais confiáveis e mais fáceis de manter.
 
-## 1. Always Use Idempotent Processing
+## 1. Sempre Use Processamento Idempotent
 
-**Definition**: Idempotent operations produce the same result whether run once or multiple times. They check before downloading/processing, skip unchanged work, and resume interrupted tasks.
+**Definição**: Operações idempotentes produzem o mesmo resultado se executadas uma ou múltiplas vezes. Elas verificam antes de baixar/processar, pulam trabalho inalterado e resumem tarefas interrompidas.
 
-### Why It Matters
+### Por Que Importa
 
-- **Saves bandwidth**: Don't re-download unchanged datasets
-- **Saves time**: 57x speedup on cached runs (comexdown)
-- **Fault tolerance**: Resume mid-transfer instead of starting over
-- **Safe to retry**: Running twice produces same result as running once
+- **Economiza bandwidth**: Não re-baixe datasets inalterados
+- **Economiza tempo**: Speedup 57x em execuções em cache (comexdown)
+- **Tolerância a falhas**: Resume meio de transferência em vez de começar novamente
+- **Seguro para retry**: Executar duas vezes produz mesmo resultado que uma
 
-### Pattern: Check Before Downloading
+### Padrão: Verificar Antes de Baixar
 
 ```python
-# ✅ Idempotent: comexdown HEAD-checks Last-Modified before every GET
+# ✅ Idempotente: comexdown HEAD-verifica Last-Modified antes de cada GET
 from pathlib import Path
 import comexdown
 
 comexdown.get_year(Path("./DATA"), year=2023)
-# First run: streams the CSV in 8 KiB chunks
-# Re-runs: HEAD shows Last-Modified == local mtime, GET is skipped entirely
+# Primeira execução: faz stream do CSV em chunks de 8 KiB
+# Re-execuções: HEAD mostra Last-Modified == mtime local, GET é pulado
 ```
 
-There is no `force_refresh` flag — to re-fetch, delete the local file first.
+Não há flag `force_refresh` — para re-buscar, delete o arquivo local primeiro.
 
-### Pattern: Smart Resume
+### Padrão: Retomada Inteligente
 
 ```sh
-# ✅ datasus-fetcher always compares remote vs. local size and skips matches
-# First attempt: interrupted partway
+# ✅ datasus-fetcher sempre compara tamanho remoto vs local e pula correspondências
+# Primeira tentativa: interrompida no meio
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 
-# Second attempt: re-run the same command
-# Already-complete files are skipped, only missing/mismatched ones re-download
+# Segunda tentativa: re-execute o mesmo comando
+# Arquivos já completos são pulados, apenas faltantes/incompatíveis são re-baixados
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
-### Pattern: Skip Already-Downloaded Archives
+### Padrão: Pular Archives Já Baixados
 
 ```python
-# ✅ pdet-data fetchers check if dest_filepath already exists and skip it.
-# Re-running `pdet-data fetch ./raw` only downloads new RAIS / CAGED archives.
+# ✅ Fetchers pdet-data verificam se dest_filepath já existe e pulam.
+# Re-executar `pdet-data fetch ./raw` apenas baixa novos archives RAIS / CAGED.
 from pathlib import Path
 from pdet_data import connect, fetch_rais
 
@@ -56,27 +56,27 @@ finally:
     ftp.close()
 ```
 
-### Pattern: Dry-Run Before Bulk Downloads
+### Padrão: Dry-Run Antes de Bulk Downloads
 
 ```sh
-# ✅ Preview what `datasus-fetcher` would download before committing
+# ✅ Visualizar o que `datasus-fetcher` faria download antes de confirmar
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2018 --end 2023 --regions sp \
     --dry-run
 # Prints filenames + sizes + grand total, no bytes transferred
 ```
 
-## 2. Use Concurrency for I/O-Bound Operations
+## 2. Use Concorrência para Operações I/O-Bound
 
-**Definition**: Concurrency means doing multiple I/O operations (network requests, file downloads) simultaneously rather than sequentially.
+**Definição**: Concorrência significa fazer múltiplas operações de I/O (requisições de rede, downloads de arquivo) simultaneamente em vez de sequencialmente.
 
-### Why It Matters
+### Por Que Importa
 
-- **Network I/O is slow**: A single request might take 1 second. While waiting for one response, you could start 5 others.
-- **Massive speedup**: 4-10x faster than sequential approaches
-- **Free speedup**: Doesn't require faster hardware; just better resource utilization
+- **Network I/O é lenta**: Uma única requisição pode levar 1 segundo. Enquanto aguarda uma resposta, você pode iniciar 5 outras.
+- **Speedup massivo**: 4-10x mais rápido que abordagens sequenciais
+- **Speedup livre**: Não requer hardware mais rápido; apenas melhor utilização de recursos
 
-### Pattern: Async/Await for REST APIs
+### Padrão: Async/Await para APIs REST
 
 ```python
 import asyncio
@@ -84,7 +84,7 @@ from sidra_fetcher import AsyncSidraClient
 
 async def fetch_multiple_metadata():
     async with AsyncSidraClient(timeout=60) as client:
-        # ✅ Concurrent: fetch metadata for 3 aggregates simultaneously
+        # ✅ Concorrente: busca metadados de 3 agregados simultaneamente
         return await asyncio.gather(
             client.get_agregado(1620),  # GDP
             client.get_agregado(1419),  # IPCA inflation
@@ -96,7 +96,7 @@ async def fetch_multiple_metadata():
 agregados = asyncio.run(fetch_multiple_metadata())
 ```
 
-### Pattern: Multithreaded FTP Crawling
+### Padrão: Crawling FTP Multithreaded
 
 ```sh
 # ✅ Multithreaded: 5 concurrent FTP fetchers
@@ -108,7 +108,7 @@ datasus-fetcher data --data-dir ./data sim-do-cid10 \
 # Concurrent (--threads 5):   50 minutes (~6x faster)
 ```
 
-Equivalent Python entrypoint:
+Entrypoint Python equivalente:
 
 ```python
 from pathlib import Path
@@ -123,12 +123,12 @@ fetcher.download_data(
 )
 ```
 
-### Pattern: Multi-Year Batches with Idempotent Re-runs
+### Padrão: Batches Multi-Ano com Re-runs Idempotentes
 
-`comexdown` is sequential by design — it leans on temporal idempotency instead of parallelism. Pass a year range and let the HEAD/`Last-Modified` check make re-runs cheap:
+`comexdown` é sequencial por design — depende de idempotência temporal em vez de paralelismo. Passe um range de ano e deixe a verificação HEAD/`Last-Modified` fazer re-runs baratos:
 
 ```bash
-# First run downloads everything; later runs only fetch what changed.
+# Primeira execução baixa tudo; execuções posteriores apenas buscam o que mudou.
 comexdown trade 2014:2023 -o ./DATA
 ```
 
@@ -140,89 +140,86 @@ for year in range(2014, 2024):
     comexdown.get_year(Path("./DATA"), year=year)  # HEAD-cached
 ```
 
-If you genuinely want to overlap unrelated work (e.g. a SECEX download
-alongside a SIDRA fetch), do it at the orchestration layer with `asyncio` or
-`concurrent.futures` — but keep concurrency at a single level to avoid thread
-explosion.
+Se genuinamente quer sobrepor trabalho não relacionado (ex. download SECEX junto com fetch SIDRA), faça na camada de orquestração com `asyncio` ou `concurrent.futures` — mas mantenha concorrência em um único nível para evitar explosão de threads.
 
-## 3. Store Results in Parquet, Not CSV
+## 3. Armazene Resultados em Parquet, Não CSV
 
-**Definition**: Parquet is a columnar storage format optimized for analytics. CSV is a row-based text format from the 1970s.
+**Definição**: Parquet é um formato de armazenamento colunares otimizado para análise. CSV é um formato de texto baseado em linhas dos anos 70.
 
-### Why It Matters
+### Por Que Importa
 
-- **95%+ smaller**: 8 GB CSV → 0.4 GB Parquet
-- **100x faster to read**: Columnar format lets you skip irrelevant data
-- **Typed**: No guessing whether a column is string or number
-- **Compressed**: Built-in compression; no separate gzip files needed
+- **95%+ menor**: 8 GB CSV → 0.4 GB Parquet
+- **100x mais rápido para ler**: Formato colunares deixa você pular dados irrelevantes
+- **Tipado**: Sem adivinhar se uma coluna é string ou número
+- **Comprimido**: Compressão embutida; sem arquivos gzip separados
 
-### Pattern: Convert CSV to Parquet
+### Padrão: Converter CSV para Parquet
 
 ```python
 import polars as pl
 
-# ❌ Slow and large
-df = pl.read_csv("large_file.csv")  # 8 GB, 30 seconds to read
-df.write_csv("output.csv")          # 4 GB, 60 seconds to write
+# ❌ Lento e grande
+df = pl.read_csv("large_file.csv")  # 8 GB, 30 segundos para ler
+df.write_csv("output.csv")          # 4 GB, 60 segundos para escrever
 
-# ✅ Fast and small
+# ✅ Rápido e pequeno
 df = pl.read_csv("large_file.csv")
-df.write_parquet("output.parquet")  # 0.4 GB, 2 seconds to write
-df = pl.read_parquet("output.parquet")  # 0.5 seconds to read
+df.write_parquet("output.parquet")  # 0.4 GB, 2 segundos para escrever
+df = pl.read_parquet("output.parquet")  # 0.5 segundos para ler
 ```
 
-### Pattern: Parquet with Columns Selection
+### Padrão: Parquet com Seleção de Colunas
 
 ```python
 import polars as pl
 
-# Read only columns you need (100x faster than CSV)
+# Ler apenas colunas que precisa (100x mais rápido que CSV)
 df = pl.read_parquet(
     "large_file.parquet",
     columns=["year", "state", "salary", "employee_id"]
 )
 
-# CSV forces you to read entire file, even if you need 2 columns
-df = pl.read_csv("large_file.csv")  # Must read all 50 columns
+# CSV força você a ler arquivo inteiro, mesmo se precisa de 2 colunas
+df = pl.read_csv("large_file.csv")  # Deve ler todas as 50 colunas
 ```
 
-### Pattern: Bulk Convert to Parquet
+### Padrão: Bulk Convert para Parquet
 
 ```bash
-# pdet-data ships convert_rais / convert_caged behind a CLI subcommand.
-# It decompresses each .7z, parses with the per-year schema, and writes Parquet.
+# pdet-data fornece convert_rais / convert_caged por trás de um subcomando CLI.
+# Descompacta cada .7z, faz parse com o schema por-ano, e escreve Parquet.
 pdet-data convert ./raw ./parquet
 ```
 
 ```python
 import polars as pl
 
-# Read once, then keep everything in Parquet for analysis
+# Ler uma vez, depois manter tudo em Parquet para análise
 df = pl.read_parquet("parquet/rais-vinculos/2023.parquet")
-# CSV is only for sharing with non-technical stakeholders
+# CSV é apenas para compartilhar com stakeholders não-técnicos
 ```
 
-## 4. Use Lazy Evaluation for Multi-Year Analysis
+## 4. Use Lazy Evaluation para Análise Multi-Ano
 
-**Definition**: Lazy evaluation defers computation until explicitly requested. Lets the query optimizer simplify your operations before executing them.
+**Definição**: Lazy evaluation adia computação até ser explicitamente requisitado. Deixa o otimizador de query simplificar suas operações antes de executá-las.
 
-### Why It Matters
+### Por Que Importa
 
-- **Optimization**: Query optimizer combines multiple operations into single pass
-- **Memory efficiency**: Process 100M rows without loading all into RAM
-- **Faster execution**: Unnecessary work is eliminated automatically
+- **Otimização**: Query optimizer combina múltiplas operações em pass único
+- **Eficiência de memória**: Processe 100M linhas sem carregar tudo em RAM
+- **Execução mais rápida**: Trabalho desnecessário é eliminado automaticamente
 
-### Pattern: Lazy Group-By Aggregation
+### Padrão: Lazy Group-By Aggregation
 
 ```python
 import polars as pl
 
-# ❌ Eager: Loads all data into memory, then aggregates
+# ❌ Eager: Carrega todos os dados em memória, depois agrega
 df = pl.read_parquet("rais_2023.parquet")
 result = df.group_by("state").agg(pl.col("salary").mean())
-# High memory usage; multiple passes over data
+# Uso alto de memória; múltiplas passagens sobre dados
 
-# ✅ Lazy: Defers execution; optimizer combines operations
+# ✅ Lazy: Adia execução; optimizer combina operações
 df = pl.read_parquet("rais_2023.parquet")
 result = (
     df
@@ -235,21 +232,21 @@ result = (
 # Low memory usage; single optimized pass
 ```
 
-### Pattern: Multi-Year Concatenation
+### Padrão: Concatenação Multi-Ano
 
 ```python
 import polars as pl
 
-# ❌ Inefficient: Aggregate per year, then combine
+# ❌ Ineficiente: Agregar por ano, depois combinar
 years_data = []
 for year in range(2010, 2024):
     df = pl.read_parquet(f"rais_{year}.parquet")
-    agg = df.group_by("sector").agg(pl.col("salary").mean())  # 14 aggregations
+    agg = df.group_by("sector").agg(pl.col("salary").mean())  # 14 agregações
     years_data.append(agg)
 
 combined = pl.concat(years_data)
 
-# ✅ Efficient: Concatenate first, aggregate once
+# ✅ Eficiente: Concatenar primeiro, agregar uma vez
 years_data = []
 for year in range(2010, 2024):
     df = pl.read_parquet(f"rais_{year}.parquet").with_columns(
@@ -257,7 +254,7 @@ for year in range(2010, 2024):
     )
     years_data.append(df)
 
-combined = pl.concat(years_data, how="vertical")  # Single concat
+combined = pl.concat(years_data, how="vertical")  # Concatenação única
 by_sector = (
     combined
     .lazy()
@@ -267,32 +264,32 @@ by_sector = (
 )
 ```
 
-## 5. Handle Errors Gracefully with Auto-Retry
+## 5. Lide com Erros Graciosamente com Auto-Retry
 
-**Definition**: Auto-retry means automatically retrying failed operations with exponential backoff. Don't fail on transient errors.
+**Definição**: Auto-retry significa retentar automaticamente operações falhadas com backoff exponencial. Não falhe em erros transitórios.
 
-### Why It Matters
+### Por Que Importa
 
-- **Network is unreliable**: Timeouts, dropped connections, temporary unavailability are normal
-- **Exponential backoff**: Prevents overwhelming the server with retry storms
-- **Transparent**: You don't need to manually implement retry logic
+- **Rede é não confiável**: Timeouts, conexões caídas, indisponibilidade temporária são normais
+- **Backoff exponencial**: Previne sobrecarregar o servidor com retry storms
+- **Transparente**: Você não precisa implementar manualmente lógica de retry
 
-### Pattern: Built-in Retries
+### Padrão: Retries Embutidas
 
-`datasus-fetcher` retries each FTP transfer up to 3 times on transient errors before giving up on that file — other threads keep going. To make a long-running batch survive intermittent failures, just re-run the command; the size-based idempotence check picks up where it left off.
+`datasus-fetcher` retenta cada transferência FTP até 3 vezes em erros transitórios antes de desistir daquele arquivo — outras threads continuam. Para fazer um batch long-running sobreviver a falhas intermitentes, apenas re-execute o comando; a verificação de idempotência baseada em tamanho pega de onde parou.
 
 ```sh
 datasus-fetcher data --data-dir ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
-### Pattern: Wrapping Retries in Your Code
+### Padrão: Envolver Retries em Seu Código
 
 ```python
 import time
 
 def with_retry(func, max_retries=3, backoff_factor=2):
-    """Retry a function with exponential backoff."""
+    """Tenta novamente uma função com backoff exponencial."""
     last_exception = None
     for attempt in range(max_retries):
         try:
@@ -301,52 +298,52 @@ def with_retry(func, max_retries=3, backoff_factor=2):
             last_exception = e
             if attempt < max_retries - 1:
                 delay = backoff_factor ** attempt
-                print(f"Attempt {attempt + 1} failed: {e}; retrying in {delay}s")
+                print(f"Tentativa {attempt + 1} falhou: {e}; tentando novamente em {delay}s")
                 time.sleep(delay)
     raise last_exception
 
-# Example: wrap a SIDRA call (datasus-fetcher already retries internally)
+# Exemplo: envolver uma chamada SIDRA (datasus-fetcher já retenta internamente)
 from sidra_fetcher import SidraClient
 client = SidraClient()
 result = with_retry(lambda: client.get_agregado(1620), max_retries=5)
 ```
 
-## 6. Validate Data at the Source
+## 6. Valide Dados na Fonte
 
-**Definition**: Validate data immediately after fetching, before expensive transformations. Catch data quality issues early.
+**Definição**: Valide dados imediatamente após buscar, antes de transformações caras. Detecte problemas de qualidade de dados cedo.
 
-### Why It Matters
+### Por Que Importa
 
-- **Fail fast**: Detect data problems before wasting time on analysis
-- **Better error messages**: Know exactly which source file is corrupt
-- **Prevent garbage in, garbage out**: Invalid data doesn't contaminate your analysis
+- **Falhe rápido**: Detecte problemas de dados antes de desperdiçar tempo em análise
+- **Melhores mensagens de erro**: Saiba exatamente qual arquivo da fonte está corrompido
+- **Previna garbage in, garbage out**: Dados inválidos não contaminam sua análise
 
-### Pattern: Size-Based Validation
+### Padrão: Validação Baseada em Tamanho
 
 ```python
 import os
 from pathlib import Path
 
-# ✅ Validate file size to detect truncation
+# ✅ Validar tamanho do arquivo para detectar truncamento
 def validate_downloaded_file(expected_size_bytes: int, path: Path) -> None:
     actual = path.stat().st_size
     if actual < expected_size_bytes * 0.95:
         raise ValueError(
-            f"Downloaded file appears truncated:\n"
-            f"  Expected: {expected_size_bytes} bytes\n"
-            f"  Actual:   {actual} bytes"
+            f"Arquivo baixado parece estar truncado:\n"
+            f"  Esperado: {expected_size_bytes} bytes\n"
+            f"  Real:     {actual} bytes"
         )
 
-# datasus-fetcher already does this for you on every run — re-run to heal a
-# truncated download. For your own pipelines, apply the same pattern after fetch.
+# datasus-fetcher já faz isso para você em cada execução — re-execute para recuperar
+# um download truncado. Para seus próprios pipelines, aplique o mesmo padrão após fetch.
 ```
 
-### Pattern: Schema Validation
+### Padrão: Validação de Schema
 
 ```python
 import polars as pl
 
-# ✅ Validate schema after reading
+# ✅ Validar schema após ler
 def validate_rais_schema(df):
     required_columns = {
         "year": pl.Int32,
@@ -357,12 +354,12 @@ def validate_rais_schema(df):
     
     for col_name, col_type in required_columns.items():
         if col_name not in df.columns:
-            raise ValueError(f"Missing column: {col_name}")
+            raise ValueError(f"Coluna ausente: {col_name}")
         
         if df.schema[col_name] != col_type:
             raise ValueError(
-                f"Wrong type for {col_name}: "
-                f"expected {col_type}, got {df.schema[col_name]}"
+                f"Tipo incorreto para {col_name}: "
+                f"esperado {col_type}, obtido {df.schema[col_name]}"
             )
     
     return True
@@ -371,24 +368,24 @@ df = pl.read_parquet("rais_2023.parquet")
 validate_rais_schema(df)
 ```
 
-### Pattern: Row Count Validation
+### Padrão: Row Count Validation
 
 ```python
 import polars as pl
 
-# ✅ Validate row count is reasonable
+# ✅ Validar contagem de linhas é razoável
 def validate_rais_row_count(df, year):
-    expected_min = 50_000_000  # Should have at least 50M employment records
-    expected_max = 80_000_000  # Should have less than 80M
+    expected_min = 50_000_000  # Deveria ter no mínimo 50M registros de emprego
+    expected_max = 80_000_000  # Deveria ter menos que 80M
     
     row_count = len(df)
     
     if row_count < expected_min or row_count > expected_max:
         raise ValueError(
-            f"Unusual row count for RAIS {year}:\n"
-            f"  Expected: {expected_min:,} - {expected_max:,}\n"
-            f"  Actual: {row_count:,}\n"
-            f"  Please verify data integrity"
+            f"Contagem de linhas inusitada para RAIS {year}:\n"
+            f"  Esperado: {expected_min:,} - {expected_max:,}\n"
+            f"  Real: {row_count:,}\n"
+            f"  Por favor, verifique integridade dos dados"
         )
     
     return True
@@ -397,53 +394,53 @@ df = pl.read_parquet("rais_2023.parquet")
 validate_rais_row_count(df, year=2023)
 ```
 
-## 7. Memory Management for Large Files
+## 7. Gerenciamento de Memória para Arquivos Grandes
 
-**Definition**: Process large files without loading them entirely into RAM. Use streaming/chunking or lazy evaluation.
+**Definição**: Processe arquivos grandes sem carregar tudo em RAM. Use streaming/chunking ou lazy evaluation.
 
-### Why It Matters
+### Por Que Importa
 
-- **RAIS is 50M+ rows**: Can't fit in Pandas on typical machines
-- **Siscomex is gigabytes**: Naive approach causes OOM crashes
-- **Streaming is free**: No performance penalty for streaming; often faster
+- **RAIS é 50M+ linhas**: Não cabe em Pandas em máquinas típicas
+- **Siscomex é gigabytes**: Abordagem ingênua causa crashes OOM
+- **Streaming é livre**: Sem penalidade de performance para streaming; frequentemente mais rápido
 
-### Pattern: Streaming Chunks
+### Padrão: Streaming Chunks
 
 ```python
-# ✅ comexdown streams every download in 8 KiB chunks via urllib —
-#    constant memory regardless of file size, atomic *.tmp -> rename on success.
+# ✅ comexdown transmite cada download em chunks de 8 KiB via urllib —
+#    memória constante independente do tamanho do arquivo, *.tmp atômico -> renomeia no sucesso.
 from pathlib import Path
 import comexdown
 
 comexdown.get_year(Path("./DATA"), year=2023)
 ```
 
-### Pattern: Lazy Polars Processing
+### Padrão: Lazy Polars Processing
 
 ```python
 import polars as pl
 
-# ❌ Eager: Loads entire 8GB file into RAM
-df = pl.read_parquet("rais_2023.parquet")  # OOM on low-memory machines
+# ❌ Eager: Carrega arquivo inteiro de 8GB em RAM
+df = pl.read_parquet("rais_2023.parquet")  # OOM em máquinas com pouca memória
 result = df.group_by("state").agg(pl.col("salary").mean())
 
-# ✅ Lazy: Processes in streaming fashion
+# ✅ Lazy: Processa em modo streaming
 result = (
     pl.read_parquet("rais_2023.parquet")
     .lazy()
     .group_by("state")
     .agg(pl.col("salary").mean())
-    .collect()  # Stream execution; low memory usage
+    .collect()  # Execução por streaming; uso baixo de memória
 )
 ```
 
-### Pattern: Chunked CSV Processing
+### Padrão: Processamento CSV em Chunks
 
 ```python
 import polars as pl
 
-# ✅ Process CSV in chunks
-chunk_size = 1_000_000  # Process 1M rows at a time
+# ✅ Processar CSV em chunks
+chunk_size = 1_000_000  # Processar 1M linhas por vez
 
 all_results = []
 for chunk in pl.read_csv_batched("large_file.csv", batch_size=chunk_size):
@@ -454,17 +451,17 @@ for chunk in pl.read_csv_batched("large_file.csv", batch_size=chunk_size):
 combined = pl.concat(all_results)
 ```
 
-## 8. Documentation & Reproducibility
+## 8. Documentação & Reprodutibilidade
 
-**Definition**: Document your data: where it comes from, when it was fetched, how it was transformed, and how to reproduce it.
+**Definição**: Documente seus dados: de onde vêm, quando foram buscados, como foram transformados e como reproduzi-los.
 
-### Why It Matters
+### Por Que Importa
 
-- **Audit trail**: Know exactly what data is in your analysis
-- **Reproducibility**: Others can verify your results
-- **Debugging**: When something breaks, you know what changed
+- **Trilha de auditoria**: Saiba exatamente quais dados estão em sua análise
+- **Reprodutibilidade**: Outros podem verificar seus resultados
+- **Debugging**: Quando algo quebra, você sabe o que mudou
 
-### Pattern: Store Metadata with Parquet
+### Padrão: Armazenar Metadados com Parquet
 
 ```python
 import json
@@ -472,7 +469,7 @@ import polars as pl
 from datetime import datetime
 from pathlib import Path
 
-# ✅ Save metadata alongside data
+# ✅ Salvar metadados junto aos dados
 parquet_path = Path("parquet/rais-vinculos/2023.parquet")
 df = pl.read_parquet(parquet_path)
 
@@ -483,33 +480,33 @@ metadata = {
     "row_count": df.height,
     "columns": df.columns,
     "transformations": [
-        "Decompressed via 7z",
-        "Parsed CSV with per-year schema (pdet_data.reader.read_rais)",
+        "Descomprimido via 7z",
+        "CSV analisado com schema por-ano (pdet_data.reader.read_rais)",
         "Cast INTEGER_COLUMNS / NUMERIC_COLUMNS / BOOLEAN_COLUMNS",
-        "Wrote Parquet via polars.DataFrame.write_parquet",
+        "Escrito Parquet via polars.DataFrame.write_parquet",
     ],
 }
 
 parquet_path.with_suffix(".metadata.json").write_text(json.dumps(metadata, indent=2))
 ```
 
-### Pattern: Documentation Extraction
+### Padrão: Extração de Documentação
 
 ```sh
-# ✅ Download data + codebooks + auxiliary tables together
+# ✅ Baixar dados + livros de códigos + tabelas auxiliares juntos
 datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
 datasus-fetcher docs --data-dir ./docs sim
 datasus-fetcher aux  --data-dir ./aux  sim
 ```
 
-`.dbc` filenames already encode `dataset_uf_period_YYYYMMDD`, so multiple DATASUS revisions of the same period coexist on disk. Use `datasus-fetcher archive --archive-data-dir ./archive` to rotate non-latest versions out of the active tree without losing them.
+`.dbc` nomes de arquivo já codificam `dataset_uf_period_YYYYMMDD`, então múltiplas revisões DATASUS do mesmo período coexistem em disco. Use `datasus-fetcher archive --archive-data-dir ./archive` para rotacionar versões não-latest para fora da árvore ativa sem perdê-las.
 
-### Pattern: Transformation Log
+### Padrão: Log de Transformação
 
 ```python
 import logging
 
-# ✅ Log every transformation
+# ✅ Registrar toda transformação
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -529,29 +526,29 @@ logger.info(f"Loaded RAIS 2023: {initial_count:,} rows")
 
 # Filter
 df = df.filter(pl.col("salary") > 0)
-logger.info(f"Filtered to {len(df):,} rows with salary > 0 "
-            f"(removed {initial_count - len(df):,} invalid records)")
+logger.info(f"Filtrado para {len(df):,} linhas com salário > 0 "
+            f"(removidos {initial_count - len(df):,} registros inválidos)")
 
 # Group
 result = df.group_by("state").agg(pl.col("salary").mean())
-logger.info(f"Aggregated by state: {len(result)} states")
+logger.info(f"Agregado por estado: {len(result)} estados")
 
 # Save
 result.write_parquet("output.parquet")
-logger.info("Saved results to output.parquet")
+logger.info("Resultados salvos em output.parquet")
 ```
 
-## Summary Checklist
+## Checklist de Resumo
 
-When building data pipelines with the Brazilian Public Data Suite:
+Quando construindo pipelines de dados com a Plataforma Brasileira de Dados Públicos:
 
-- [ ] **Idempotent**: Check before downloading/processing (force_refresh=False)
-- [ ] **Concurrent**: Use async/multithreaded operations for I/O (num_workers, AsyncClient)
-- [ ] **Parquet**: Store results in Parquet, not CSV
-- [ ] **Lazy**: Use lazy evaluation for large datasets (pl.lazy().collect())
-- [ ] **Retry**: Configure auto-retry with exponential backoff
-- [ ] **Validate**: Check data quality immediately after fetching
-- [ ] **Memory**: Stream or chunk for large files; use lazy evaluation
-- [ ] **Document**: Log transformations; store metadata with results; extract docs
+- [ ] **Idempotent**: Verifique antes de baixar/processar (force_refresh=False)
+- [ ] **Concorrente**: Use operações async/multithreaded para I/O (num_workers, AsyncClient)
+- [ ] **Parquet**: Armazene resultados em Parquet, não CSV
+- [ ] **Lazy**: Use lazy evaluation para datasets grandes (pl.lazy().collect())
+- [ ] **Retry**: Configure auto-retry com backoff exponencial
+- [ ] **Validate**: Verifique qualidade de dados imediatamente após buscar
+- [ ] **Memory**: Stream ou chunk para arquivos grandes; use lazy evaluation
+- [ ] **Document**: Registre transformações; armazene metadados com resultados; extraia docs
 
-Following these patterns makes your pipelines fast, reliable, and maintainable.
+Seguindo esses padrões seus pipelines ficam rápidos, confiáveis e manteníveis.

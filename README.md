@@ -1,3 +1,3 @@
-# Quantilica - Docs
+# Quantilica - Documentação
 
-Documentations of projects.
+Documentação dos projetos.

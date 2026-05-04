@@ -1,82 +1,82 @@
 # sidra-sql
 
-**Advanced ETL & Data Warehousing infrastructure for IBGE SIDRA data.**
+**Infraestrutura avançada de ETL e Data Warehousing para dados SIDRA do IBGE.**
 
 ![sidra-sql banner](../assets/banner.png)
 
-## What It Is
+## O Que É
 
-**`sidra-sql`** is a complete Data Warehousing and ETL (Extract, Transform, Load) infrastructure designed to ingest, structure, and version data extracted from SIDRA.
+**`sidra-sql`** é uma infraestrutura completa de Data Warehousing e ETL (Extração, Transformação, Carregamento) projetada para ingerir, estruturar e versionarizare dados extraídos do SIDRA.
 
-While **sidra-fetcher** solves the communication problem (getting data from API), **sidra-sql** solves the **governance, persistence, and reproducibility** problem. It converts raw, hierarchical IBGE data into a PostgreSQL relational database optimized for heavy analytical queries.
+Enquanto **sidra-fetcher** resolve o problema de comunicação (obter dados da API), **sidra-sql** resolve o problema de **governança, persistência e reprodutibilidade**. Converte dados IBGE brutos e hierárquicos em um banco de dados relacional PostgreSQL otimizado para consultas analíticas pesadas.
 
-## Problem It Solves
+## Problema que Resolve
 
-Working with IBGE data for rigorous research or financial modeling involves structural challenges beyond simple download:
+Trabalhar com dados IBGE para pesquisa rigorosa ou modelagem financeira envolve desafios estruturais além do simples download:
 
-### 1. Complex IBGE Ontology
+### 1. Ontologia Complexa do IBGE
 
-SIDRA organizes data in highly nested structures:
+SIDRA organiza dados em estruturas altamente aninhadas:
 
-- **Aggregates** (tables) contain **variables** at multiple **territorial levels**
-- Up to **6 different classifications** can cross-tabulate
-- Flattening this into CSV files destroys **referential integrity** and causes massive duplication
+- **Agregados** (tabelas) contêm **variáveis** em múltiplos **níveis territoriais**
+- Até **6 classificações diferentes** podem se cruzar
+- Achatar isso em arquivos CSV destrói **integridade referencial** e causa duplicação massiva
 
-SIDRA Structure (hierarchical):
+Estrutura SIDRA (hierárquica):
 
 ```mermaid
 graph TD
-    T[Table 1620 - GDP] --> V[Variable 116 - Real GDP]
-    V --> L1[Territory: Brazil - Level 1]
-    V --> L3[Territory: States - Level 3]
-    V --> L5[Territory: Municipalities - Level 5]
-    T --> C[Classification: By Activity]
-    C --> C1[Agriculture]
-    C --> C2[Industry]
-    C --> C3[Services]
+    T[Tabela 1620 - PIB] --> V[Variável 116 - PIB Real]
+    V --> L1[Território: Brasil - Nível 1]
+    V --> L3[Território: Estados - Nível 3]
+    V --> L5[Território: Municípios - Nível 5]
+    T --> C[Classificação: Por Atividade]
+    C --> C1[Agricultura]
+    C --> C2[Indústria]
+    C --> C3[Serviços]
 ```
 
-Problem: How do you represent this in a flat CSV without duplication?
+Problema: Como representar isso em um CSV flat sem duplicação?
 
-### 2. Ingestion I/O Bottlenecks
+### 2. Gargalos de I/O de Ingestão
 
-Saving tens of millions of rows using traditional methods (row-by-row ORM insertion) can take **hours** and exhaust RAM.
+Salvar dezenas de milhões de linhas usando métodos tradicionais (inserção ORM linha por linha) pode levar **horas** e esgotar RAM.
 
-### 3. Revisions & Reproducibility
+### 3. Revisões & Reprodutibilidade
 
-The IBGE frequently revises historical data. Simply replacing old data with new destroys reproducibility of academic research or ML models trained on "historical snapshots."
+O IBGE frequentemente revisa dados históricos. Simplesmente substituir dados antigos por novos destrói a reprodutibilidade de pesquisa acadêmica ou modelos de ML treinados em "snapshots históricos."
 
-**sidra-sql** solves all three with senior Data Engineering architecture:
+**sidra-sql** resolve todos os três com arquitetura sênior de Data Engineering:
 
-## Architecture & Key Features
+## Architecture & Recursos Principais
 
-### 1. Streaming Ingestion ("Gold Standard" Performance)
+### 1. Ingestão Streaming (Performance "Gold Standard")
 
-For massive data volumes without memory exhaustion:
+Para volumes massivos de dados sem exaustão de memória:
 
-- **Two-Pass Strategy**: First pass resolves dimensions and foreign keys; second pass performs bulk load
-- **PostgreSQL COPY FROM STDIN**: Native binary protocol streams millions of records in seconds
-- **Atomic Upsert**: Uses `ON CONFLICT DO NOTHING` for deduplication
-- **Staging Tables**: Temporary `_staging_dados` table for atomic operations
+- **Estratégia Two-Pass**: Primeiro pass resolve dimensões e chaves estrangeiras; segundo pass faz bulk load
+- **PostgreSQL COPY FROM STDIN**: Protocolo binário nativo transmite milhões de registros em segundos
+- **Upsert Atômico**: Usa `ON CONFLICT DO NOTHING` para deduplicação
+- **Tabelas de Staging**: Tabela temporária `_staging_dados` para operações atômicas
 
-**Performance**: Insert 10M rows in ~30 seconds (vs hours with traditional `INSERT`)
+**Performance**: Inserir 10M linhas em ~30 segundos (vs horas com `INSERT` tradicional)
 
-### 2. Dimensional Star Schema
+### 2. Star Schema Dimensional
 
-Strict relational modeling separates metadata from facts:
+Modelagem relacional estrita separa metadados de fatos:
 
-**Dimension Tables:**
+**Tabelas de Dimensão:**
 
-- `sidra_tabela`: Raw metadata in `JSONB` format (preserves IBGE structure)
-- `localidade`: Territorial mesh (Brazil, states, municipalities, regions)
-- `periodo`: Time dimension with proper aggregation levels
-- `dimensao`: Classification crossings (categories × variables)
+- `sidra_tabela`: Metadados brutos em formato `JSONB` (preserva estrutura IBGE)
+- `localidade`: Malha territorial (Brasil, estados, municípios, regiões)
+- `periodo`: Dimensão de tempo com níveis apropriados de agregação
+- `dimensao`: Cruzamentos de classificações (categorias × variáveis)
 
-**Fact Table (`dados`):**
+**Tabela de Fatos (`dados`):**
 
-- Extremely lean: Only foreign keys, modification date, version flag, value
-- Composite unique constraint prevents duplicates
-- Optimized for analytical queries (OLAP workloads)
+- Extremamente enxuta: Apenas chaves estrangeiras, data de modificação, flag de versão, valor
+- Constraint unique composto previne duplicatas
+- Otimizada para consultas analíticas (workloads OLAP)
 
 ```mermaid
 erDiagram
@@ -112,71 +112,71 @@ erDiagram
     }
 ```
 
-### 3. Slowly Changing Dimensions (SCD Type II)
+### 3. Dimensões que Mudam Lentamente (SCD Type II)
 
-Auditability for research and regulatory environments:
+Auditabilidade para ambientes de pesquisa e regulatória:
 
-- **Never delete**: When IBGE revises historical data, insert new version + mark old as `ativo = FALSE`
-- **Full history preserved**: Know exactly how the database looked on any past date
-- **Columns**: `modificacao` (date), `ativo` (boolean flag)
+- **Nunca deletar**: Quando IBGE revisa dados históricos, inserir nova versão + marcar antiga como `ativo = FALSE`
+- **Histórico completo preservado**: Saber exatamente como o banco de dados estava em qualquer data passada
+- **Colunas**: `modificacao` (data), `ativo` (flag booleano)
 
-**Academic use case**: Reproduce 2015 research exactly with 2015-era data, even if 2026 has corrections
+**Caso de uso acadêmico**: Reproduzir pesquisa de 2015 exatamente com dados de 2015, mesmo se 2026 tem correções
 
-### 4. Declarative Pipelines via TOML
+### 4. Pipelines Declarativos via TOML
 
-Business logic isolated from code:
+Lógica de negócio isolada de código:
 
 ```toml
-# fetch.toml - Define pipelines without coding
+# fetch.toml - Definir pipelines sem codificar
 [[tabelas]]
 sidra_tabela = "1620"
-variables = ["116"]                    # GDP variable
-territories = {6 = []}                 # Brazil total
+variables = ["116"]                    # Variável PIB
+territories = {6 = []}                 # Total Brasil
 
 [[tabelas]]
 sidra_tabela = "1737"
-variables = ["63"]                     # IPCA inflation
-territories = {1 = [], 3 = []}        # Levels 1 & 3
+variables = ["63"]                     # Inflação IPCA
+territories = {1 = [], 3 = []}        # Níveis 1 & 3
 ```
 
-### 5. Automatic Classification Explosion
+### 5. Explosão Automática de Classificações
 
-The `unnest_classifications = true` directive triggers recursive algorithm:
+A diretiva `unnest_classifications = true` dispara algoritmo recursivo:
 
-- Maps all variable × category cross-products automatically
-- Eliminates manual ID discovery
-- Generates optimal dimensional queries
+- Mapeia todos os cross-produtos variável × categoria automaticamente
+- Elimina descoberta manual de ID
+- Gera consultas dimensionais otimizadas
 
-### 6. Plugin Architecture
+### 6. Arquitetura de Plugin
 
-The motor is lightweight and generic; data definitions live in separate Git repositories:
+O motor é leve e genérico; definições de dados vivem em repositórios Git separados:
 
 ```
-Plugin (your Git repo)
-├── manifest.toml       ← pipeline registry
+Plugin (seu repo Git)
+├── manifest.toml       ← registro de pipeline
 ├── pipeline-a/
-│   ├── fetch.toml      ← what to download from SIDRA
-│   ├── transform.toml  ← analytics table config
-│   └── transform.sql   ← denormalization query
+│   ├── fetch.toml      ← o que baixar do SIDRA
+│   ├── transform.toml  ← config de tabela analytics
+│   └── transform.sql   ← consulta de desnormalização
 ```
 
-Install and run:
+Instalar e executar:
 
 ```bash
 sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
 sidra-sql run std pib_municipal
 ```
 
-### Additional Features
+### Recursos Adicionais
 
-- ✅ Full-text search on SIDRA metadata (Portuguese JSONB)
-- ✅ Metadata caching for performance (local JSON files)
-- ✅ PostgreSQL integration (ACID transactions)
-- ✅ Idempotent operations (safe re-runs)
-- ✅ Retry logic with exponential backoff (up to 5 attempts)
-- ✅ Audit trails via `ativo` + `modificacao` columns
+- ✅ Busca full-text em metadados SIDRA (JSONB português)
+- ✅ Cache de metadados para performance (arquivos JSON locais)
+- ✅ Integração PostgreSQL (transações ACID)
+- ✅ Operações idempotentes (re-execução segura)
+- ✅ Lógica de retry com backoff exponencial (até 5 tentativas)
+- ✅ Trilhas de auditoria via colunas `ativo` + `modificacao`
 
-## Installation
+## Instalação
 
 === "pip"
 
@@ -200,9 +200,9 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-## Configuration
+## Configuração
 
-sidra-sql reads a `config.ini` file at the working directory:
+sidra-sql lê um arquivo `config.ini` no diretório de trabalho:
 
 ```ini
 [storage]
@@ -210,7 +210,7 @@ data_dir = data
 
 [database]
 user = postgres
-password = yourpassword
+password = suasenha
 host = localhost
 port = 5432
 dbname = dados
@@ -219,32 +219,32 @@ tablespace = pg_default
 readonly_role = readonly_role
 ```
 
-Load the config in Python:
+Carregue a config em Python:
 
 ```python
 from sidra_sql.config import Config
 
-config = Config()  # reads config.ini from current directory
+config = Config()  # lê config.ini do diretório atual
 ```
 
-## Quick Example: ETL Pipeline
+## Exemplo Rápido: Pipeline ETL
 
-### Option 1: CLI (Recommended)
+### Opção 1: CLI (Recomendado)
 
-Use the pre-built standard pipelines from [sidra-pipelines](sidra-pipelines.md):
+Use pipelines padrão pré-construídos de [sidra-pipelines](sidra-pipelines.md):
 
 ```bash
-# Install standard catalog
+# Instalar catálogo padrão
 sidra-sql plugin install https://github.com/Quantilica/sidra-pipelines.git --alias std
 
-# Run a pipeline (download + load + transform)
+# Executar pipeline (baixar + carregar + transformar)
 sidra-sql run std pib_municipal
 
-# Query results in PostgreSQL
+# Consultar resultados em PostgreSQL
 psql -c "SELECT * FROM analytics.pib_municipal WHERE ano >= 2020"
 ```
 
-### Option 2: Declarative TOML (Recommended for custom pipelines)
+### Opção 2: TOML Declarativo (Recomendado para pipelines customizados)
 
 Define a fetch pipeline:
 
@@ -286,7 +286,7 @@ JOIN ibge_sidra.dimensao   d ON r.dimensao_id   = d.id
 WHERE r.ativo = TRUE
 ```
 
-Run the pipeline:
+Execute o pipeline:
 
 ```python
 from pathlib import Path
@@ -303,9 +303,9 @@ TomlScript(config, Path("pipelines/economic/fetch.toml")).run()
 TransformRunner(config, Path("pipelines/economic/transform.toml")).run()
 ```
 
-### Option 3: Programmatic ETL
+### Opção 3: ETL Programático
 
-Full control over each stage:
+Controle total sobre cada fase:
 
 ```python
 from sidra_sql.config import Config
@@ -318,38 +318,38 @@ engine = get_engine(config)
 storage = Storage.default(config)
 
 with Fetcher(config, storage=storage, max_workers=4) as fetcher:
-    # 1. FETCH metadata (territories, periods, classifications)
+    # 1. BUSCAR metadados (territórios, períodos, classificações)
     metadata = fetcher.fetch_metadata("1620")
     save_agregado(engine, metadata)
 
-    # 2. DOWNLOAD data files to local storage
+    # 2. BAIXAR arquivos de dados para armazenamento local
     data_files = fetcher.download_table(
         sidra_tabela="1620",
-        territories={"6": []},  # Brazil total
+        territories={"6": []},  # Total Brasil
         variables=["116"],
     )
 
-# 3. LOAD into PostgreSQL via COPY FROM STDIN
+# 3. CARREGAR em PostgreSQL via COPY FROM STDIN
 load_dados(engine, storage, data_files)
 ```
 
-## Data Governance: Handling Revisions
+## Governança de Dados: Tratamento de Revisões
 
-IBGE frequently publishes data revisions. The warehouse preserves history instead of overwriting.
+IBGE frequentemente publica revisões de dados. Warehouse preserva histórico ao invés de sobrescrever.
 
-### How Slowly Changing Dimensions (SCD Type II) Works
+### Como Funcionam as Dimensões que Mudam Lentamente (SCD Type II)
 
-**Scenario**: IBGE revises Q3 2020 GDP on 2026-01-15
+**Cenário**: IBGE revisa PIB Q3 2020 em 2026-01-15
 
 ```sql
--- On 2024-01-01 (original data ingested)
+-- Em 2024-01-01 (dados originais ingeridos)
 -- dados row: id=1, v='1234.56', modificacao='2024-01-01', ativo=TRUE
 
--- On 2026-01-15 (IBGE revision detected during re-ingestion)
--- The ON CONFLICT DO NOTHING prevents overwriting.
--- A new row is inserted with updated modificacao:
+-- Em 2026-01-15 (revisão IBGE detectada durante re-ingestão)
+-- O ON CONFLICT DO NOTHING previne sobrescrita.
+-- Nova linha é inserida com modificacao atualizada:
 
--- 1. Mark old version inactive
+-- 1. Marcar versão antiga como inativa
 UPDATE ibge_sidra.dados
 SET ativo = FALSE
 WHERE sidra_tabela_id = '1620'
@@ -357,14 +357,14 @@ WHERE sidra_tabela_id = '1620'
   AND periodo_id = 123
   AND ativo = TRUE;
 
--- 2. Insert new version
+-- 2. Inserir nova versão
 INSERT INTO ibge_sidra.dados
   (sidra_tabela_id, localidade_id, dimensao_id, periodo_id, v, modificacao, ativo)
 VALUES
   ('1620', 6, 1, 123, '1234.89', '2026-01-15', TRUE);
 ```
 
-### Querying Historical Snapshots
+### Consultando Snapshots Históricos
 
 ```python
 from datetime import date
@@ -390,13 +390,13 @@ with engine.connect() as conn:
     ).fetchall()
 ```
 
-### Audit Trail
+### Trilha de Auditoria
 
 ```python
 from sqlalchemy import select, and_
 from sidra_sql.models import Dados
 
-# All versions of a specific data point
+# Todas as versões de um ponto de dados específico
 with engine.connect() as conn:
     history = conn.execute(
         select(Dados).where(
@@ -409,18 +409,18 @@ with engine.connect() as conn:
     ).fetchall()
 
 for row in history:
-    status = "ACTIVE" if row.ativo else "SUPERSEDED"
+    status = "ATIVO" if row.ativo else "SUBSTITUÍDO"
     print(f"{row.modificacao}: {row.v}  [{status}]")
 ```
 
 ---
 
-## Streaming Ingestion: Performance Deep Dive
+## Ingestão Streaming: Análise Profunda de Performance
 
-### The Problem: Traditional INSERT
+### Problema: INSERT Tradicional
 
 ```python
-# ❌ Row-by-row insertion (naive approach)
+# ❌ Inserção linha-por-linha (abordagem ingênua)
 for row in data_generator():
     conn.execute(
         insert(dados).values(
@@ -431,40 +431,40 @@ for row in data_generator():
     )
 conn.commit()
 
-# Time: Days for 10M rows
-# RAM: Explodes (keeps all rows in memory)
-# I/O: Worst possible (millions of round-trips)
+# Tempo: Dias para 10M linhas
+# RAM: Explode (mantém todas linhas em memória)
+# I/O: Pior possível (milhões de round-trips)
 ```
 
-### The Solution: Two-Pass Streaming
+### Solução: Streaming em Dois Passes
 
 ```mermaid
 graph TD
-    subgraph P1 [Pass 1: Resolve Dimensions]
-        P1a[Load localidade into memory]
-        P1b[Load dimensao into memory]
-        P1c[Map string codes → numeric FK ids]
+    subgraph P1 [Pass 1: Resolver Dimensões]
+        P1a[Carregar localidade em memória]
+        P1b[Carregar dimensao em memória]
+        P1c[Mapear códigos string → IDs FK numéricos]
     end
 
-    subgraph P2 [Pass 2: Bulk Stream to Staging]
-        P2a[Open PostgreSQL COPY tunnel]
-        P2b[Write binary rows to staging]
-        P2c[Atomic UPSERT: ON CONFLICT DO NOTHING]
+    subgraph P2 [Pass 2: Stream em Lote para Staging]
+        P2a[Abrir túnel PostgreSQL COPY]
+        P2b[Escrever linhas binárias para staging]
+        P2c[UPSERT Atômico: ON CONFLICT DO NOTHING]
     end
 
-    subgraph P3 [Pass 3: Verify & Promote]
-        P3a[Referential integrity validation]
-        P3b[Swap staging → production atomic]
+    subgraph P3 [Pass 3: Validar & Promover]
+        P3a[Validação de integridade referencial]
+        P3b[Trocar staging → produção atomicamente]
     end
 
     P1 --> P2
     P2 --> P3
 ```
-Time: Seconds for 10M rows
-RAM: Bounded (streaming, not all-in-memory)
-I/O: Optimal (single tunnel, binary protocol)
+Tempo: Segundos para 10M linhas
+RAM: Limitada (streaming, não tudo-em-memória)
+I/O: Ótima (túnel único, protocolo binário)
 
-### Usage Example
+### Exemplo de Uso
 
 ```python
 from sidra_sql.database import load_dados
@@ -482,7 +482,7 @@ load_dados(engine, storage, data_files)
 
 ---
 
-## API Reference
+## Referência de API
 
 ### CLI
 
@@ -490,8 +490,8 @@ load_dados(engine, storage, data_files)
 sidra-sql run <alias> <pipeline-id> [--force-metadata]
 ```
 
-Run a pipeline from an installed plugin. `--force-metadata` re-fetches SIDRA
-table metadata even if already cached.
+Executar um pipeline de um plugin instalado. `--force-metadata` re-busca metadados da
+tabela SIDRA mesmo se já estiverem em cache.
 
 ```
 sidra-sql plugin install <url> [--alias ALIAS]
@@ -502,29 +502,29 @@ sidra-sql plugin list
 
 ---
 
-### `Config` — Runtime Configuration
+### `Config` — Configuração em Tempo de Execução
 
 ```python
 from sidra_sql.config import Config
 
-config = Config()  # reads config.ini
+config = Config()  # lê config.ini
 ```
 
-Reads `config.ini` from the current working directory. Key attributes:
+Lê `config.ini` do diretório de trabalho atual. Atributos principais:
 
-| Attribute | ini key | Description |
+| Atributo | Chave ini | Descrição |
 |-----------|---------|-------------|
-| `config.data_dir` | `storage.data_dir` | Local storage root for JSON files |
-| `config.db_user` | `database.user` | PostgreSQL user |
-| `config.db_password` | `database.password` | PostgreSQL password |
-| `config.db_host` | `database.host` | PostgreSQL host |
-| `config.db_port` | `database.port` | PostgreSQL port |
-| `config.db_name` | `database.dbname` | Database name |
-| `config.db_schema` | `database.schema` | Schema (default: `ibge_sidra`) |
+| `config.data_dir` | `storage.data_dir` | Raiz de armazenamento local para arquivos JSON |
+| `config.db_user` | `database.user` | Usuário PostgreSQL |
+| `config.db_password` | `database.password` | Senha PostgreSQL |
+| `config.db_host` | `database.host` | Host PostgreSQL |
+| `config.db_port` | `database.port` | Porta PostgreSQL |
+| `config.db_name` | `database.dbname` | Nome do banco de dados |
+| `config.db_schema` | `database.schema` | Schema (padrão: `ibge_sidra`) |
 
 ---
 
-### `Fetcher` — Data Extraction
+### `Fetcher` — Extração de Dados
 
 ```python
 from sidra_sql.sidra import Fetcher
@@ -536,46 +536,46 @@ with Fetcher(config, storage=storage, max_workers=4) as fetcher:
     ...
 ```
 
-**Key Methods:**
+**Métodos Principais:**
 
-| Method | Purpose |
-|--------|---------|
-| `fetcher.fetch_metadata(sidra_tabela)` | Fetch full table metadata (territories, periods, variables) |
-| `fetcher.download_table(sidra_tabela, territories, variables, classifications)` | Download all periods; returns list of `{"filepath": Path, "modificacao": str}` |
+| Método | Propósito |
+|--------|-----------|
+| `fetcher.fetch_metadata(sidra_tabela)` | Buscar metadados completos da tabela (territórios, períodos, variáveis) |
+| `fetcher.download_table(sidra_tabela, territories, variables, classifications)` | Baixar todos os períodos; retorna lista de `{"filepath": Path, "modificacao": str}` |
 
-`download_table` parameters:
+Parâmetros de `download_table`:
 
-| Parameter | Type | Description |
+| Parâmetro | Tipo | Descrição |
 |-----------|------|-------------|
-| `sidra_tabela` | str | SIDRA table code |
-| `territories` | dict[str, list[str]] | Territory level → codes (empty list = all) |
-| `variables` | list[str] \| None | Variable codes; `None` = all |
-| `classifications` | dict[str, list[str]] \| None | Classification → category codes |
+| `sidra_tabela` | str | Código da tabela SIDRA |
+| `territories` | dict[str, list[str]] | Nível territorial → códigos (lista vazia = todos) |
+| `variables` | list[str] \| None | Códigos de variáveis; `None` = todos |
+| `classifications` | dict[str, list[str]] \| None | Classificação → códigos de categorias |
 
 ---
 
-### `Storage` — Local File Management
+### `Storage` — Gerenciamento de Arquivos Locais
 
 ```python
 from sidra_sql.storage import Storage
 
-storage = Storage.default(config)         # uses config.data_dir
-storage = Storage("/custom/path")         # explicit root
+storage = Storage.default(config)         # usa config.data_dir
+storage = Storage("/custom/path")         # raiz explícita
 ```
 
-**Key Methods:**
+**Métodos Principais:**
 
-| Method | Purpose |
-|--------|---------|
-| `storage.exists(parameter, modification)` | Check if file already downloaded |
-| `storage.write_data(data, parameter, modification)` | Save JSON data file |
-| `storage.read_data(filepath)` | Load a previously saved data file |
-| `storage.write_metadata(agregado)` | Save table metadata JSON |
-| `storage.read_metadata(agregado)` | Load table metadata |
+| Método | Propósito |
+|--------|-----------|
+| `storage.exists(parameter, modification)` | Verificar se arquivo já foi baixado |
+| `storage.write_data(data, parameter, modification)` | Salvar arquivo de dados JSON |
+| `storage.read_data(filepath)` | Carregar arquivo de dados previamente salvo |
+| `storage.write_metadata(agregado)` | Salvar metadados da tabela JSON |
+| `storage.read_metadata(agregado)` | Carregar metadados da tabela |
 
 ---
 
-### `TomlScript` — Declarative ETL Runner
+### `TomlScript` — Executor de ETL Declarativo
 
 ```python
 from pathlib import Path
@@ -587,21 +587,21 @@ script = TomlScript(
     max_workers=4,
     force_metadata=False,
 )
-script.run()  # download + load all tables declared in the TOML
+script.run()  # baixar + carregar todas as tabelas declaradas no TOML
 ```
 
-**Parameters:**
+**Parâmetros:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `config` | Config | | Runtime configuration |
-| `toml_path` | Path | | Path to `fetch.toml` |
-| `max_workers` | int | 4 | Parallel download threads |
-| `force_metadata` | bool | False | Re-fetch metadata even if cached |
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|----------|
+| `config` | Config | | Configuração em tempo de execução |
+| `toml_path` | Path | | Caminho para `fetch.toml` |
+| `max_workers` | int | 4 | Threads de download paralelo |
+| `force_metadata` | bool | False | Re-buscar metadados mesmo se em cache |
 
 ---
 
-### `TransformRunner` — SQL Transformation Executor
+### `TransformRunner` — Executor de Transformação SQL
 
 ```python
 from sidra_sql.transform_runner import TransformRunner
@@ -610,175 +610,175 @@ runner = TransformRunner(config, toml_path=Path("pipelines/economic/transform.to
 runner.run()
 ```
 
-Reads `transform.toml` + paired `.sql` file. Executes the SQL SELECT and
-materializes the result into the target table or view.
+Lê `transform.toml` + arquivo `.sql` pareado. Executa a SELECT SQL e
+materializa o resultado na tabela ou view alvo.
 
 ---
 
-### `database` — Low-Level Database Helpers
+### `database` — Auxiliares de Banco de Dados de Baixo Nível
 
 ```python
 from sidra_sql.database import get_engine, save_agregado, load_dados
 
 engine = get_engine(config)
-save_agregado(engine, metadata)          # upsert table/period/localidade metadata
+save_agregado(engine, metadata)          # upsert metadados de tabela/período/localidade
 load_dados(engine, storage, data_files)  # bulk load via COPY FROM STDIN
 ```
 
 ---
 
-## TOML Pipeline Format
+## Formato de Pipeline TOML
 
-### `fetch.toml` — Extraction Config
+### `fetch.toml` — Configuração de Extração
 
 ```toml
 [[tabelas]]
-sidra_tabela = "1620"          # SIDRA table code (required)
-variables = ["116"]             # variable codes; omit for all
-territories = {6 = []}          # {level: [codes]}; empty list = all
-unnest_classifications = true   # expand all category cross-products
+sidra_tabela = "1620"          # código da tabela SIDRA (obrigatório)
+variables = ["116"]             # códigos de variáveis; omitir para todas
+territories = {6 = []}          # {nível: [códigos]}; lista vazia = todas
+unnest_classifications = true   # expandir todos os cross-produtos de categorias
 
 [[tabelas]]
 sidra_tabela = "1737"
 variables = ["63"]
 territories = {1 = [], 3 = []}
-split_variables = true          # one request per variable (avoids SIDRA limits)
+split_variables = true          # uma requisição por variável (evita limites SIDRA)
 classifications = {81 = ["allxt"]}
 ```
 
-**`[[tabelas]]` fields:**
+**Campos de `[[tabelas]]`:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `sidra_tabela` | str | ✅ | SIDRA table code |
-| `territories` | dict[str, list] | ✅ | Territory level → unit codes |
-| `variables` | list[str] | | Variable codes (default: all) |
-| `classifications` | dict[str, list] | | Classification → category codes |
-| `unnest_classifications` | bool | | Expand all category combinations |
-| `split_variables` | bool | | One request per variable |
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|------------|----------|
+| `sidra_tabela` | str | ✅ | Código da tabela SIDRA |
+| `territories` | dict[str, list] | ✅ | Nível territorial → códigos de unidade |
+| `variables` | list[str] | | Códigos de variáveis (padrão: todas) |
+| `classifications` | dict[str, list] | | Classificação → códigos de categorias |
+| `unnest_classifications` | bool | | Expandir todas as combinações de categorias |
+| `split_variables` | bool | | Uma requisição por variável |
 
-### `transform.toml` — Transformation Config
+### `transform.toml` — Configuração de Transformação
 
 ```toml
 [table]
-name = "pib_municipal"          # target table/view name
-schema = "analytics"            # target schema
-strategy = "replace"            # "replace" (table) or "view"
-description = "Municipal GDP"
+name = "pib_municipal"          # nome da tabela/view alvo
+schema = "analytics"            # schema alvo
+strategy = "replace"            # "replace" (tabela) ou "view"
+description = "PIB Municipal"
 primary_key = ["municipio_id", "ano"]
 indexes = [
   { name = "idx_pib_ano", columns = ["ano"], unique = false }
 ]
 ```
 
-Paired with a `transform.sql` file (same stem) containing a SELECT query.
+Pareado com arquivo `transform.sql` (mesmo nome) contendo consulta SELECT.
 
-### `manifest.toml` — Plugin Registry
+### `manifest.toml` — Registro de Plugin
 
 ```toml
-name = "Standard Pipelines"
-description = "Quantilica standard SIDRA pipelines"
+name = "Pipelines Padrão"
+description = "Pipelines SIDRA padrão Quantilica"
 version = "1.0.0"
 
 [[pipeline]]
 id = "pib_municipal"
-description = "Municipal GDP from IBGE SIDRA table 5938"
+description = "PIB Municipal da tabela SIDRA 5938 IBGE"
 fetch = "pib_municipal/fetch.toml"
 transform = "pib_municipal/transform.toml"
 ```
 
 ---
 
-## Dimensional Schema
+## Schema Dimensional
 
-### Database Tables (schema: `ibge_sidra`)
+### Tabelas de Banco de Dados (schema: `ibge_sidra`)
 
-**`sidra_tabela`** — SIDRA table registry
+**`sidra_tabela`** — Registro de tabela SIDRA
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | text PK | SIDRA table code |
-| `nome` | text | Table name |
-| `periodicidade` | text | Update frequency |
-| `ultima_atualizacao` | date | Last update |
-| `metadados` | jsonb | Full metadata object |
+| Coluna | Tipo | Descrição |
+|--------|------|----------|
+| `id` | text PK | Código da tabela SIDRA |
+| `nome` | text | Nome da tabela |
+| `periodicidade` | text | Frequência de atualização |
+| `ultima_atualizacao` | date | Última atualização |
+| `metadados` | jsonb | Objeto de metadados completo |
 
-**`localidade`** — Territory dimension
+**`localidade`** — Dimensão territorial
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | bigint PK | Auto-increment |
-| `nc` | text | Territory level code (e.g., `N6`) |
-| `nn` | text | Territory level name |
-| `d1c` | text | Territory unit code |
-| `d1n` | text | Territory unit name |
+| Coluna | Tipo | Descrição |
+|--------|------|----------|
+| `id` | bigint PK | Auto-incremento |
+| `nc` | text | Código de nível territorial (ex: `N6`) |
+| `nn` | text | Nome de nível territorial |
+| `d1c` | text | Código de unidade territorial |
+| `d1n` | text | Nome de unidade territorial |
 
-Unique constraint: `(nc, d1c)`
+Constraint único: `(nc, d1c)`
 
-**`periodo`** — Time dimension
+**`periodo`** — Dimensão de tempo
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK | Auto-increment |
-| `codigo` | text | Period code |
-| `frequencia` | text | Frequency (monthly, quarterly…) |
-| `literals` | text[] | Raw period labels |
-| `data_inicio` / `data_fim` | date | Period date range |
-| `ano` / `ano_fim` | integer | Year(s) |
+| Coluna | Tipo | Descrição |
+|--------|------|----------|
+| `id` | integer PK | Auto-incremento |
+| `codigo` | text | Código do período |
+| `frequencia` | text | Frequência (mensal, trimestral…) |
+| `literals` | text[] | Rótulos de período brutos |
+| `data_inicio` / `data_fim` | date | Intervalo de datas do período |
+| `ano` / `ano_fim` | integer | Ano(s) |
 | `semestre` | smallint | 1-2 |
 | `trimestre` | smallint | 1-4 |
 | `mes` | smallint | 1-12 |
 
-Unique constraint: `(codigo, literals)`
+Constraint único: `(codigo, literals)`
 
-**`dimensao`** — Variable × classification dimension
+**`dimensao`** — Dimensão variável × classificação
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | bigint PK | Auto-increment |
-| `mc` | text | Unit of measure ID |
-| `mn` | text | Unit of measure name |
-| `d2c` / `d2n` | text | Variable code / name |
-| `d4c`–`d9c` | text \| null | Category codes (up to 6 classifications) |
-| `d4n`–`d9n` | text \| null | Category names |
+| Coluna | Tipo | Descrição |
+|--------|------|----------|
+| `id` | bigint PK | Auto-incremento |
+| `mc` | text | ID de unidade de medida |
+| `mn` | text | Nome de unidade de medida |
+| `d2c` / `d2n` | text | Código / nome de variável |
+| `d4c`–`d9c` | text \| null | Códigos de categorias (até 6 classificações) |
+| `d4n`–`d9n` | text \| null | Nomes de categorias |
 
-Unique constraint: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
+Constraint único: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
 
-**`dados`** — Fact table
+**`dados`** — Tabela de fatos
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | bigint PK | Auto-increment |
+| Coluna | Tipo | Descrição |
+|--------|------|----------|
+| `id` | bigint PK | Auto-incremento |
 | `sidra_tabela_id` | text FK | → `sidra_tabela.id` |
 | `localidade_id` | bigint FK | → `localidade.id` |
 | `dimensao_id` | bigint FK | → `dimensao.id` |
 | `periodo_id` | integer FK | → `periodo.id` |
-| `modificacao` | date | IBGE publish date |
-| `ativo` | boolean | Active record flag (SCD) |
-| `v` | text | Data value |
+| `modificacao` | date | Data de publicação IBGE |
+| `ativo` | boolean | Flag de registro ativo (SCD) |
+| `v` | text | Valor de dados |
 
-Unique constraint: `(sidra_tabela_id, localidade_id, dimensao_id, periodo_id)`
+Constraint único: `(sidra_tabela_id, localidade_id, dimensao_id, periodo_id)`
 
-### Example Analytical Query
+### Exemplo de Consulta Analítica
 
 ```python
 from sqlalchemy import select
 from sidra_sql.models import Dados, Localidade, Periodo, Dimensao
 
-# GDP by state (active records only)
+# PIB por estado (apenas registros ativos)
 query = (
     select(
-        Localidade.d1n.label("state"),
-        Periodo.codigo.label("period"),
-        Dimensao.d2n.label("variable"),
-        Dados.v.label("value"),
+        Localidade.d1n.label("estado"),
+        Periodo.codigo.label("periodo"),
+        Dimensao.d2n.label("variavel"),
+        Dados.v.label("valor"),
     )
     .join(Localidade, Dados.localidade_id == Localidade.id)
     .join(Periodo,    Dados.periodo_id    == Periodo.id)
     .join(Dimensao,   Dados.dimensao_id   == Dimensao.id)
     .where(
         Dados.ativo == True,
-        Localidade.nc == "N3",          # states
+        Localidade.nc == "N3",          # estados
         Dados.sidra_tabela_id == "1620",
     )
     .order_by(Periodo.codigo.desc())
@@ -786,38 +786,38 @@ query = (
 
 with engine.connect() as conn:
     for row in conn.execute(query):
-        print(f"{row.state} | {row.period} | {row.value}")
+        print(f"{row.estado} | {row.periodo} | {row.valor}")
 ```
 
 ---
 
 ## Performance
 
-### Local Caching
+### Cache Local
 
-Downloaded data is stored as JSON files under `data_dir`. Re-running a pipeline
-skips files that already exist on disk:
+Dados baixados são armazenados como arquivos JSON sob `data_dir`. Re-executar um pipeline
+pula arquivos que já existem em disco:
 
 ```
-First run:  downloads from IBGE (seconds to minutes)
-Re-run:     checks local cache, skips existing files (<1s overhead)
+Primeira execução:  baixa do IBGE (segundos a minutos)
+Re-execução:        verifica cache local, pula arquivos existentes (overhead <1s)
 ```
 
-Force re-download by deleting the data directory or using `--force-metadata`.
+Force re-download deletando diretório de dados ou usando `--force-metadata`.
 
-### Streaming Ingestion Benchmarks
+### Benchmarks de Ingestão Streaming
 
-Real-world performance on standard hardware (8-core, 16 GB RAM):
+Performance no mundo real em hardware padrão (8-core, 16 GB RAM):
 
-| Dataset | Rows | Time | Throughput |
-|---------|------|------|-----------|
-| IPCA monthly | 3.2M | 8s | 400k rows/sec |
-| GDP quarterly | 50k | <1s | — |
-| RAIS annual | 60M | 2.5m | 400k rows/sec |
+| Dataset | Linhas | Tempo | Throughput |
+|---------|--------|-------|-----------|
+| IPCA mensal | 3.2M | 8s | 400k linhas/sec |
+| PIB trimestral | 50k | <1s | — |
+| RAIS anual | 60M | 2.5m | 400k linhas/sec |
 
-## Best Practices for Data Governance
+## Melhores Práticas para Governança de Dados
 
-### 1. Use Declarative Pipelines (TOML) for Reproducibility
+### 1. Use Pipelines Declarativos (TOML) para Reprodutibilidade
 
 ```toml
 # pipelines/annual_snapshot/fetch.toml
@@ -832,20 +832,20 @@ variables = ["63"]
 territories = {1 = []}
 ```
 
-Advantages:
+Vantagens:
 
-- ✅ Non-developers can maintain pipelines
-- ✅ Version control (TOML in git)
-- ✅ Reproducible across machines
-- ✅ Decoupled from code changes
+- ✅ Não-desenvolvedores podem manter pipelines
+- ✅ Controle de versão (TOML em git)
+- ✅ Reprodutível entre máquinas
+- ✅ Desacoplado de mudanças de código
 
-### 2. Document Snapshot Dates for Academic Reproducibility
+### 2. Documente Datas de Snapshot para Reprodutibilidade Acadêmica
 
 ```python
 import json
 from datetime import datetime
 
-# Record when you built the dataset
+# Registrar quando você construiu o dataset
 metadata = {
     "snapshot_date": datetime.now().isoformat(),
     "pipeline": "pipelines/analysis/fetch.toml",
@@ -855,46 +855,46 @@ with open("data/metadata.json", "w") as f:
     json.dump(metadata, f, indent=2)
 ```
 
-Then query with `Dados.modificacao <= snapshot_date` to reproduce the exact dataset.
+Então consulte com `Dados.modificacao <= snapshot_date` para reproduzir o dataset exato.
 
-### 3. Use Star Schema for BI Tools
+### 3. Use Star Schema para Ferramentas BI
 
-Connect PostgreSQL directly to:
+Conecte PostgreSQL diretamente a:
 
-- **Tableau** (ODBC connection to PostgreSQL)
-- **Power BI** (native PostgreSQL connector)
+- **Tableau** (conexão ODBC para PostgreSQL)
+- **Power BI** (conector nativo PostgreSQL)
 - **Looker** (SQL runner)
-- **Metabase** (SQL queries on warehouse)
+- **Metabase** (consultas SQL em warehouse)
 
-The normalized schema is optimized for BI tools' OLAP workloads.
+Schema normalizado é otimizado para workloads OLAP de ferramentas BI.
 
 ---
 
-## Troubleshooting
+## Resolução de Problemas
 
-### Download Fails with Network Error
+### Download Falha com Erro de Rede
 
-`Fetcher` retries automatically (up to 5 times, exponential backoff: 5s → 10s → 20s…).
-If all retries fail, check SIDRA API availability or reduce `max_workers`.
+`Fetcher` retenta automaticamente (até 5 vezes, backoff exponencial: 5s → 10s → 20s…).
+Se todas as tentativas falharem, verifique disponibilidade da API SIDRA ou reduza `max_workers`.
 
-### Table Not Found
+### Tabela Não Encontrada
 
-SIDRA table codes must be strings, not integers. Use `"1620"`, not `1620`.
+Códigos de tabela SIDRA devem ser strings, não inteiros. Use `"1620"`, não `1620`.
 
 ```python
 metadata = fetcher.fetch_metadata("1620")   # ✅
 metadata = fetcher.fetch_metadata(1620)     # ❌
 ```
 
-### Variable ID Unknown
+### ID de Variável Desconhecido
 
-Browse the IBGE SIDRA catalog directly at [sidra.ibge.gov.br](https://sidra.ibge.gov.br/)
-to look up variable and classification codes for a given table.
+Procure no catálogo SIDRA IBGE diretamente em [sidra.ibge.gov.br](https://sidra.ibge.gov.br/)
+para procurar códigos de variáveis e classificações para uma tabela dada.
 
-### Config File Not Found
+### Arquivo de Configuração Não Encontrado
 
-`Config()` reads `config.ini` from the current working directory.
-Run Python from the project root, or set the path explicitly:
+`Config()` lê `config.ini` do diretório de trabalho atual.
+Execute Python da raiz do projeto, ou defina o caminho explicitamente:
 
 ```python
 import os
@@ -902,18 +902,18 @@ os.chdir("/path/to/project")
 config = Config()
 ```
 
-### Schema Already Exists
+### Schema Já Existe
 
-`TransformRunner` with `strategy = "replace"` drops and recreates the target table.
-`strategy = "view"` uses `CREATE OR REPLACE VIEW` and is non-destructive.
+`TransformRunner` com `strategy = "replace"` descarta e recria a tabela alvo.
+`strategy = "view"` usa `CREATE OR REPLACE VIEW` e é não-destrutivo.
 
 ---
 
-## See Also
+## Saiba Mais
 
-- [IBGE Overview](index.md)
-- [sidra-fetcher](sidra-fetcher.md) — Data extraction tool
-- [sidra-pipelines](sidra-pipelines.md) — Standard pipeline catalog
-- [Architecture: Design Principles](../architecture/design-principles.md)
-- [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Visão Geral IBGE](index.md)
+- [sidra-fetcher](sidra-fetcher.md) — Ferramenta de extração de dados
+- [sidra-pipelines](sidra-pipelines.md) — Catálogo de pipelines padrão
+- [Arquitetura: Princípios de Design](../architecture/design-principles.md)
+- [Banco de Dados SIDRA (Português)](https://sidra.ibge.gov.br/)
+- [Documentação PostgreSQL](https://www.postgresql.org/docs/)

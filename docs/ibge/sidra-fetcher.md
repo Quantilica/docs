@@ -1,39 +1,39 @@
 # sidra-fetcher
 
-Advanced SDK for programmatic extraction from IBGE's SIDRA API.
+SDK avançado para extração programática da API SIDRA IBGE.
 
-## What It Is
+## O Que É
 
-**`sidra-fetcher`** is a production-grade Python SDK engineered for robust extraction of data and metadata from the Sistema IBGE de Recuperação Automática (SIDRA).
+O **`sidra-fetcher`** é um SDK Python de nível de produção projetado para extração robusta de dados e metadados do Sistema IBGE de Recuperação Automática (SIDRA).
 
-It serves as the network infrastructure layer between IBGE servers and data science applications: typed metadata models, URL abstraction via the `Parametro` class, and resilient HTTP clients (sync + async) with automatic retries.
+Ele serve como uma camada de infraestrutura de rede entre os servidores do IBGE e as aplicações de ciência de dados: oferecendo modelos de metadados tipados, abstração de URL via classe `Parametro` e clientes HTTP resilientes (síncrono + assíncrono) com tentativas automáticas (retries).
 
-## Problem It Solves
+## Problema que Resolve
 
-SIDRA is one of Brazil's richest data sources—housing everything from IPCA inflation to Census demographics. However, consuming this data at scale encounters **two severe engineering bottlenecks**:
+O SIDRA é uma das fontes de dados mais ricas do Brasil — contendo desde inflação (IPCA) até demografia do Censo. No entanto, consumir esses dados em escala encontra **dois gargalos severos de engenharia**:
 
-### 1. Network Instability
+### 1. Instabilidade de Rede
 
-Government servers frequently suffer overload, resulting in:
+Os servidores governamentais frequentemente sofrem sobrecarga, resultando em:
 
-- Connection drops and timeouts
-- Transient errors (HTTP 429 rate limiting, 500+ server errors)
-- Scripts that fail and interrupt entire pipelines
+- Desconexões e timeouts
+- Erros transitórios (limitação de taxa HTTP 429, erros 500+)
+- Scripts que falham e interrompem pipelines inteiros
 
-### 2. Parametric Complexity
+### 2. Complexidade de Parâmetros
 
-The SIDRA API uses cryptic positional URL structures:
+A API do SIDRA utiliza estruturas de URL posicionais crípticas:
 
 ```
 /t/1737/n1/all/n3/all/v/2265/p/all/d/m
 ```
 
-Manual URL construction via string concatenation is error-prone and difficult to maintain.
+A construção manual de URLs via concatenação de strings é propensa a erros e difícil de manter.
 
-**`sidra-fetcher` was architected specifically to mitigate both bottlenecks:**
+**O `sidra-fetcher` foi arquitetado especificamente para mitigar ambos os gargalos:**
 
 ```python
-# Build a SIDRA request declaratively, no string concatenation
+# Construir requisição SIDRA declarativamente, sem concatenação de strings
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
@@ -48,169 +48,169 @@ param = Parametro(
 )
 
 with SidraClient(timeout=60) as client:
-    data = client.get(param.url())  # raw list[dict] from SIDRA
+    data = client.get(param.url())  # list[dict] bruto do SIDRA
 ```
 
-## Architecture & Key Features
+## Arquitetura e Principais Recursos
 
-### Dual Client Model (Sync + Async)
+### Modelo de Cliente Dual (Síncrono + Assíncrono)
 
-The library exposes two HTTP clients based on `httpx`:
+A biblioteca expõe dois clientes HTTP baseados no `httpx`:
 
-- **`SidraClient`**: Synchronous client for point extractions, notebook exploration, or `ThreadPoolExecutor` workflows
-- **`AsyncSidraClient`**: 100% asynchronous via `asyncio`. Fetch metadata, periods, and localidades concurrently with `asyncio.gather()`, drastically reducing I/O-bound wait times
+- **`SidraClient`**: Cliente síncrono para extrações pontuais, exploração em notebooks ou fluxos de trabalho com `ThreadPoolExecutor`.
+- **`AsyncSidraClient`**: 100% assíncrono via `asyncio`. Busque metadados, períodos e localidades concorrentemente com `asyncio.gather()`, reduzindo drasticamente os tempos de espera limitados por E/S (I/O-bound).
 
-### Industrial-Grade Resilience (Smart Retries)
+### Resiliência de Nível Industrial (Smart Retries)
 
-Tolerance policies via `tenacity`:
+Políticas de tolerância a falhas via `tenacity`:
 
-- ✅ Retries up to 3 attempts on each metadata method
-- ✅ Exponential backoff for periodos requests (`min=3`, `max=30` seconds)
-- ✅ Handles transient `httpx` failures (timeouts, network errors)
+- ✅ Até 3 tentativas em cada método de metadados.
+- ✅ Backoff exponencial para requisições de períodos (`min=3`, `max=30` segundos).
+- ✅ Lida com falhas transitórias do `httpx` (timeouts, erros de rede).
 
-### URL Abstraction Engine (`Parametro`)
+### Motor de Abstração de URL (`Parametro`)
 
-The `sidra_fetcher.sidra` module eliminates magic strings:
+O módulo `sidra_fetcher.sidra` elimina strings mágicas:
 
-- ✅ Transforms Python dicts/lists → valid SIDRA URLs transparently
-- ✅ Native enums for output `Formato` (`A`, `C`, `N`, `U`) and `Precisao` (`S`, `M`, `D0`–`D20`)
-- ✅ Reverse engineering: `parameter_from_url()` parses any SIDRA URL → `Parametro` object
+- ✅ Transforma dicionários/listas Python em URLs SIDRA válidas de forma transparente.
+- ✅ Enums nativos para saída de `Formato` (`A`, `C`, `N`, `U`) e `Precisao` (`S`, `M`, `D0`–`D20`).
+- ✅ Engenharia reversa: `parameter_from_url()` analisa qualquer URL do SIDRA e a transforma em um objeto `Parametro`.
 
-### Strict Domain Modeling (Strong Typing)
+### Modelagem de Domínio Estrita (Tipagem Forte)
 
-Metadata responses are parsed into rich dataclasses:
+As respostas de metadados são analisadas em dataclasses ricas:
 
-- ✅ `Agregado` (root) → `Variavel`, `Classificacao`, `Categoria`, `Periodicidade`, `AgregadoNivelTerritorial`
-- ✅ `Periodo`, `Localidade`, `NivelTerritorial`
-- ✅ `IndicePesquisaAgregados`, `IndiceAgregado` for catalog navigation
-- ✅ IDE autocompletion + linter integration
+- ✅ `Agregado` (raiz) → `Variavel`, `Classificacao`, `Categoria`, `Periodicidade`, `AgregadoNivelTerritorial`.
+- ✅ `Periodo`, `Localidade`, `NivelTerritorial`.
+- ✅ `IndicePesquisaAgregados`, `IndiceAgregado` para navegação no catálogo.
+- ✅ Autocompletar na IDE + integração com linters.
 
-### Additional Features
+### Recursos Adicionais
 
-- ✅ Streaming HTTP responses (low memory footprint)
-- ✅ JSON parsing of all responses
-- ✅ Reader helpers (`read_metadados`, `read_periodos`, `read_localidades`)
-- ✅ Save/load metadata to disk (`save_agregado`, `load_agregado`)
-- ✅ Logging via stdlib `logging` (logger name = `sidra_fetcher`)
+- ✅ Respostas HTTP em streaming (baixo consumo de memória).
+- ✅ Análise JSON de todas as respostas.
+- ✅ Auxiliares de leitura (`read_metadados`, `read_periodos`, `read_localidades`).
+- ✅ Salvar/carregar metadados em disco (`save_agregado`, `load_agregado`).
+- ✅ Registro de logs via `logging` da biblioteca padrão (nome do logger = `sidra_fetcher`).
 
-## Installation
+## Instalação
 
-### "pip"
+### Usando "pip"
 
 ```bash
 pip install sidra-fetcher
 ```
 
-### "uv"
+### Usando "uv"
 
 ```bash
 uv pip install sidra-fetcher
 ```
 
-### "from source"
+### "A partir da fonte"
 
 ```bash
 pip install git+https://github.com/Quantilica/sidra-fetcher.git
 ```
 
-## Async/Await: High-Throughput Metadata Extraction
+## Async/Await: Extração de Metadados de Alta Performance
 
-For large-scale metadata harvesting, use the **`AsyncSidraClient`** to fetch multiple aggregates concurrently. Network I/O is the bottleneck; `asyncio.gather()` removes it.
+Para coleta de metadados em larga escala, utilize o **`AsyncSidraClient`** para buscar múltiplos agregados simultaneamente. O gargalo é a E/S de rede; o `asyncio.gather()` o elimina.
 
-### Sync vs Async Performance
+### Desempenho Síncrono vs. Assíncrono
 
-**Sync approach** (sequential):
-
-```
-Fetch metadata for table 1620: ~2 seconds
-Fetch metadata for table 1612: ~2 seconds
-Fetch metadata for table 1637: ~2 seconds
-Total: ~6 seconds
-```
-
-**Async approach** (concurrent):
+**Abordagem síncrona** (sequencial):
 
 ```
-Fetch all three concurrently
-Total: ~2 seconds (3x faster)
+Buscar metadados para tabela 1620: ~2 segundos
+Buscar metadados para tabela 1612: ~2 segundos
+Buscar metadados para tabela 1637: ~2 segundos
+Total: ~6 segundos
 ```
 
-### Async Example
+**Abordagem assíncrona** (concorrente):
+
+```
+Busca os três concorrentemente
+Total: ~2 segundos (3x mais rápido)
+```
+
+### Exemplo Assíncrono
 
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
 
 async def fetch_macro_metadata():
-    """Fetch metadata for GDP, GVA, and Investment aggregates concurrently."""
+    """Busca metadados para os agregados de PIB, VAB e Investimento concorrentemente."""
     async with AsyncSidraClient(timeout=60) as client:
         gdp_meta, gva_meta, inv_meta = await asyncio.gather(
-            client.get_agregado(1620),  # GDP
-            client.get_agregado(1612),  # GVA
-            client.get_agregado(1637),  # Investment
+            client.get_agregado(1620),  # PIB
+            client.get_agregado(1612),  # VAB
+            client.get_agregado(1637),  # Investimento
         )
     return gdp_meta, gva_meta, inv_meta
 
-gdp, gva, inv = asyncio.run(fetch_macro_metadata())
-print(f"{gdp.nome}: {len(gdp.periodos)} periods, {len(gdp.localidades)} localidades")
+pib, vab, inv = asyncio.run(fetch_macro_metadata())
+print(f"{pib.nome}: {len(pib.periodos)} períodos, {len(pib.localidades)} localidades")
 ```
 
-## Quick Example (Synchronous)
+## Exemplo Rápido (Síncrono)
 
 ```python
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 with SidraClient(timeout=60) as client:
-    # 1. Fetch metadata
+    # 1. Buscar metadados
     agregado = client.get_agregado_metadados(1620)
-    print(f"Table: {agregado.nome}")
-    print(f"Variables: {[v.id for v in agregado.variaveis]}")
+    print(f"Tabela: {agregado.nome}")
+    print(f"Variáveis: {[v.id for v in agregado.variaveis]}")
 
-    # 2. Build a data request
+    # 2. Construir uma requisição de dados
     param = Parametro(
         agregado="1620",
-        territorios={"1": ["all"]},   # Brazil total
+        territorios={"1": ["all"]},   # Total Brasil
         variaveis=["116"],
-        periodos=[],                  # all periods
+        periodos=[],                  # todos os períodos
         classificacoes={},
         formato=Formato.A,
         decimais={"": Precisao.M},
     )
 
-    # 3. Fetch the data (raw list[dict])
+    # 3. Buscar os dados (list[dict] bruto)
     rows = client.get(param.url())
-    print(f"Got {len(rows)} rows")
+    print(f"Obtidas {len(rows)} linhas")
 ```
 
-The data is returned as a `list[dict]` matching the SIDRA `/values` JSON schema.
-Convert to a DataFrame yourself with Polars or pandas:
+Os dados são retornados como uma `list[dict]` correspondente ao esquema JSON do endpoint `/values` do SIDRA.
+Converta para um DataFrame utilizando Polars ou pandas:
 
 ```python
 import polars as pl
 df = pl.DataFrame(rows)
-df.write_parquet("gdp.parquet")
+df.write_parquet("pib.parquet")
 ```
 
-## How It Works
+## Como Funciona
 
-### Architecture
+### Arquitetura
 
 ```mermaid
 graph TD
-    A[Build a Parametro] --> B[Render URL]
-    B --> C[HTTP Client <br/> @retry decorators]
-    C --> D[JSON parsing]
-    D --> E[User processes data <br/> Polars / pandas / DB]
+    A[Construir um Parametro] --> B[Renderizar URL]
+    B --> C[Cliente HTTP <br/> Decoradores @retry]
+    C --> D[Análise JSON]
+    D --> E[Usuário processa dados <br/> Polars / pandas / DB]
 ```
 
-### URL Abstraction: No More Magic Strings
+### Abstração de URL: Sem Mais Strings Mágicas
 
 ```python
-# ❌ Error-prone (manual URL construction)
-url = f"/t/1620/n1/all/v/116/p/all/d/m?lang=en"
+# ❌ Propenso a erros (construção manual de URL)
+url = f"/t/1620/n1/all/v/116/p/all/d/m?lang=pt"
 
-# ✅ Type-safe (Parametro abstraction)
+# ✅ Tipagem segura (abstração de Parametro)
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 param = Parametro(
@@ -226,9 +226,9 @@ print(param.url())
 # https://apisidra.ibge.gov.br/values/t/1620/n1/all/v/116/p/all/h/y/f/a/d/m
 ```
 
-### Reverse Engineering: URL to Python
+### Engenharia Reversa: URL para Python
 
-Copied a URL from the SIDRA website? Parse it directly:
+Copiou uma URL do site do SIDRA? Analise-a diretamente:
 
 ```python
 from sidra_fetcher.sidra import parameter_from_url
@@ -240,19 +240,19 @@ print(param.variaveis)  # ["2265"]
 print(param.territorios)  # {"1": ["all"]}
 ```
 
-### Authentication & Rate Limits
+### Autenticação e Limites de Taxa
 
-SIDRA API is public—no authentication required. Be courteous with rate (especially during business hours in Brazil); `tenacity` handles transient failures but won't help if you saturate the server.
+A API do SIDRA é pública — não é necessária autenticação. Seja cortês com a taxa de requisições (especialmente durante o horário comercial no Brasil); a biblioteca `tenacity` lida com falhas transitórias, mas não ajudará se você saturar o servidor.
 
-### Retry Logic
+### Lógica de Tentativas (Retry)
 
-Retries are wired in via `tenacity` decorators on each metadata method:
+As tentativas estão configuradas via decoradores `tenacity` em cada método de metadados:
 
-- `get_indice_pesquisas_agregados`: up to 3 attempts
-- `get_agregado_metadados`: up to 3 attempts
-- `get_agregado_periodos`: up to 3 attempts with exponential backoff (3s → 30s)
+- `get_indice_pesquisas_agregados`: até 3 tentativas.
+- `get_agregado_metadados`: até 3 tentativas.
+- `get_agregado_periodos`: até 3 tentativas com backoff exponencial (3s → 30s).
 
-The raw `client.get(url)` is **not** decorated with retry. If you need retries on data downloads, wrap your call:
+O método `client.get(url)` bruto **não** possui decorador de retry. Se você precisar de retries no download de dados, envolva sua chamada:
 
 ```python
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -264,9 +264,9 @@ def fetch_with_retry(client, url):
 rows = fetch_with_retry(client, param.url())
 ```
 
-## API Reference
+## Referência da API
 
-### `SidraClient(timeout=60)` — Synchronous Client
+### `SidraClient(timeout=60)` — Cliente Síncrono
 
 ```python
 from sidra_fetcher import SidraClient
@@ -275,27 +275,27 @@ with SidraClient(timeout=60) as client:
     ...
 ```
 
-**Constructor:**
+**Construtor:**
 
-| Parameter | Type | Default | Description |
+| Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|---------|-------------|
-| `timeout` | int | 60 | Per-request timeout in seconds |
+| `timeout` | int | 60 | Timeout por requisição em segundos |
 
-**Methods:**
+**Métodos:**
 
-| Method | Returns | Purpose |
+| Método | Retorna | Objetivo |
 |--------|---------|---------|
-| `client.get(url)` | `Any` (parsed JSON) | Raw GET request; use for `Parametro.url()` data downloads |
-| `client.get_indice_pesquisas_agregados()` | `list[IndicePesquisaAgregados]` | Index of all surveys + their aggregates |
-| `client.get_agregado_metadados(agregado_id)` | `Agregado` | Variables, classifications, periodicidade, territorial levels |
-| `client.get_agregado_periodos(agregado_id)` | `list[Periodo]` | All periods for the aggregate |
-| `client.get_agregado_localidades(agregado_id, localidades_nivel)` | `list[Localidade]` | Territorial units at the requested level(s) |
-| `client.get_agregado(agregado_id)` | `Agregado` | Composed: metadata + periods + all localidades |
-| `client.get_acervo(acervo)` | `Any` | Fetch the acervo index (`AcervoEnum.A` / `.E`) |
+| `client.get(url)` | `Any` (JSON analisado) | Requisição GET bruta; use para downloads de dados via `Parametro.url()` |
+| `client.get_indice_pesquisas_agregados()` | `list[IndicePesquisaAgregados]` | Índice de todas as pesquisas + seus agregados |
+| `client.get_agregado_metadados(agregado_id)` | `Agregado` | Variáveis, classificações, periodicidade, níveis territoriais |
+| `client.get_agregado_periodos(agregado_id)` | `list[Periodo]` | Todos os períodos do agregado |
+| `client.get_agregado_localidades(agregado_id, localidades_nivel)` | `list[Localidade]` | Unidades territoriais no(s) nível(eis) solicitado(s) |
+| `client.get_agregado(agregado_id)` | `Agregado` | Composto: metadados + períodos + todas as localidades |
+| `client.get_acervo(acervo)` | `Any` | Busca o índice do acervo (`AcervoEnum.A` / `.E`) |
 
-Use as a context manager (`with SidraClient(...) as client:`) to ensure the underlying `httpx.Client` is closed.
+Use como um gerenciador de contexto (`with SidraClient(...) as client:`) para garantir que o `httpx.Client` subjacente seja fechado.
 
-### `AsyncSidraClient(timeout=60)` — Asynchronous Client
+### `AsyncSidraClient(timeout=60)` — Cliente Assíncrono
 
 ```python
 from sidra_fetcher import AsyncSidraClient
@@ -313,9 +313,9 @@ async def main():
 asyncio.run(main())
 ```
 
-Same method surface as `SidraClient`, but every method is `async`. Use `async with` for the context manager.
+Mesma interface de métodos que o `SidraClient`, mas cada método é `async`. Use `async with` para o gerenciador de contexto.
 
-### `Parametro` — SIDRA URL Builder
+### `Parametro` — Construtor de URL do SIDRA
 
 ```python
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
@@ -333,31 +333,31 @@ param = Parametro(
 url = param.url()
 ```
 
-**Constructor:**
+**Construtor:**
 
-| Parameter | Type | Default | Description |
+| Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|---------|-------------|
-| `agregado` | str | required | SIDRA table code |
-| `territorios` | dict[str, list[str]] | required | Territory level → unit codes (`["all"]` or `[]` = all) |
-| `variaveis` | list[str] | required | Variable codes (empty = all) |
-| `periodos` | list[str] | required | Period codes (empty = all) |
-| `classificacoes` | dict[str, list[str]] | required | Classification → category codes |
-| `cabecalho` | bool | True | Include header row (`/h/y` vs `/h/n`) |
-| `formato` | Formato | `Formato.A` | Output formato (`A`, `C`, `N`, `U`) |
-| `decimais` | dict[str, Precisao] | `{"": Precisao.M}` | Decimal precision per variable |
+| `agregado` | str | obrigatório | Código da tabela do SIDRA |
+| `territorios` | dict[str, list[str]] | obrigatório | Nível territorial → códigos das unidades (`["all"]` ou `[]` = todos) |
+| `variaveis` | list[str] | obrigatório | Códigos das variáveis (vazio = todas) |
+| `periodos` | list[str] | obrigatório | Códigos dos períodos (vazio = todos) |
+| `classificacoes` | dict[str, list[str]] | obrigatório | Classificação → códigos das categorias |
+| `cabecalho` | bool | True | Incluir linha de cabeçalho (`/h/y` vs `/h/n`) |
+| `formato` | Formato | `Formato.A` | Formato de saída (`A`, `C`, `N`, `U`) |
+| `decimais` | dict[str, Precisao] | `{"": Precisao.M}` | Precisão decimal por variável |
 
-**Helpers:**
+**Auxiliares:**
 
-| Function | Purpose |
+| Função | Objetivo |
 |----------|---------|
-| `param.url()` | Render the full SIDRA `/values` URL |
-| `param.assign(name, value)` | Return a copy with one field replaced |
-| `parameter_from_url(url)` | Parse a SIDRA URL → `Parametro` |
-| `get_sidra_url_request_period(parametro, period_id)` | Render URL with periods replaced by a single period |
+| `param.url()` | Renderiza a URL completa `/values` do SIDRA |
+| `param.assign(name, value)` | Retorna uma cópia com um campo substituído |
+| `parameter_from_url(url)` | Analisa uma URL do SIDRA → `Parametro` |
+| `get_sidra_url_request_period(parametro, period_id)` | Renderiza URL com períodos substituídos por um único período |
 
-### Domain Model (Dataclasses)
+### Modelo de Domínio (Dataclasses)
 
-Returned by metadata methods:
+Retornados pelos métodos de metadados:
 
 ```python
 from sidra_fetcher.agregados import (
@@ -368,23 +368,23 @@ from sidra_fetcher.agregados import (
 )
 ```
 
-`Agregado` (returned by `get_agregado_metadados` / `get_agregado`):
+`Agregado` (retornado por `get_agregado_metadados` / `get_agregado`):
 
-| Attribute | Type | Description |
+| Atributo | Tipo | Descrição |
 |-----------|------|-------------|
-| `id` | str | Aggregate id |
-| `nome` | str | Aggregate name |
-| `url` | str | SIDRA URL for this table |
-| `pesquisa` | Pesquisa | Owning survey |
-| `assunto` | str | Subject |
-| `periodicidade` | Periodicidade | Frequency + date range |
-| `nivel_territorial` | AgregadoNivelTerritorial | Supported levels |
-| `variaveis` | list[Variavel] | Available variables |
-| `classificacoes` | list[Classificacao] | Available classifications |
-| `periodos` | list[Periodo] | Periods (populated by `get_agregado`) |
-| `localidades` | list[Localidade] | Localities (populated by `get_agregado`) |
+| `id` | str | ID do agregado |
+| `nome` | str | Nome do agregado |
+| `url` | str | URL do SIDRA para esta tabela |
+| `pesquisa` | Pesquisa | Pesquisa proprietária |
+| `assunto` | str | Assunto |
+| `periodicidade` | Periodicidade | Frequência + intervalo de datas |
+| `nivel_territorial` | AgregadoNivelTerritorial | Níveis suportados |
+| `variaveis` | list[Variavel] | Variáveis disponíveis |
+| `classificacoes` | list[Classificacao] | Classificações disponíveis |
+| `periodos` | list[Periodo] | Períodos (preenchido por `get_agregado`) |
+| `localidades` | list[Localidade] | Localidades (preenchido por `get_agregado`) |
 
-### Reader Helpers
+### Auxiliares de Leitura
 
 ```python
 from sidra_fetcher.reader import (
@@ -397,16 +397,16 @@ from sidra_fetcher.reader import (
     flatten_surveys_metadata,
 )
 
-# Persist an Agregado to disk for later reuse
+# Persistir um Agregado em disco para reutilização posterior
 save_agregado(agregado, "agregado_1620.json")
 
-# Reload it without hitting the API
+# Recarregá-lo sem acessar a API
 agregado = load_agregado("agregado_1620.json")
 ```
 
-## Common Patterns
+## Padrões Comuns
 
-### Discover a Table's Variables and Periods
+### Descobrir Variáveis e Períodos de uma Tabela
 
 ```python
 from sidra_fetcher import SidraClient
@@ -414,25 +414,25 @@ from sidra_fetcher import SidraClient
 with SidraClient() as client:
     agregado = client.get_agregado_metadados(1620)
 
-    print(f"Table: {agregado.nome}")
+    print(f"Tabela: {agregado.nome}")
     print(f"Periodicidade: {agregado.periodicidade.frequencia}")
 
-    print("\nVariables:")
+    print("\nVariáveis:")
     for v in agregado.variaveis:
         print(f"  {v.id}: {v.nome} ({v.unidade})")
 
-    print("\nClassifications:")
+    print("\nClassificações:")
     for c in agregado.classificacoes:
-        print(f"  {c.id}: {c.nome} ({len(c.categorias)} categories)")
+        print(f"  {c.id}: {c.nome} ({len(c.categorias)} categorias)")
 ```
 
-### Build a Data Request from a SIDRA Web URL
+### Construir uma Requisição de Dados a partir de uma URL Web do SIDRA
 
 ```python
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import parameter_from_url
 
-# Copied from sidra.ibge.gov.br
+# Copiado de sidra.ibge.gov.br
 web_url = "https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2265/p/all/d/m"
 param = parameter_from_url(web_url)
 
@@ -440,9 +440,9 @@ with SidraClient() as client:
     rows = client.get(param.url())
 ```
 
-### Period-by-Period Streaming
+### Streaming Período por Período
 
-For large tables, fetch one period at a time to bound memory:
+Para tabelas grandes, busque um período por vez para limitar o uso de memória:
 
 ```python
 from sidra_fetcher import SidraClient
@@ -463,10 +463,10 @@ with SidraClient() as client:
     for p in periodos:
         url = get_sidra_url_request_period(base, p.id)
         rows = client.get(url)
-        # process / persist `rows` here
+        # processe / persista `rows` aqui
 ```
 
-### Concurrent Metadata Harvesting
+### Coleta Concorrente de Metadados
 
 ```python
 import asyncio
@@ -481,21 +481,21 @@ async def harvest(table_ids):
 agregados = asyncio.run(harvest([1620, 1612, 1637, 1737]))
 ```
 
-### Convert to DataFrame and Persist
+### Conversão para DataFrame e Persistência
 
 ```python
 import polars as pl
 
 rows = client.get(param.url())  # list[dict]
 df = pl.DataFrame(rows)
-df.write_parquet("data.parquet")
+df.write_parquet("dados.parquet")
 ```
 
-## Performance Tips
+## Dicas de Desempenho
 
-### 1. Cache Metadata to Disk
+### 1. Cache de Metadados em Disco
 
-Metadata changes infrequently. Save it once, reload from disk on subsequent runs:
+Os metadados mudam com pouca frequência. Salve-os uma vez e recarregue do disco nas execuções subsequentes:
 
 ```python
 from pathlib import Path
@@ -512,31 +512,31 @@ else:
     save_agregado(agregado, cache)
 ```
 
-### 2. Filter Periods Server-Side
+### 2. Filtragem de Períodos no Servidor
 
-Don't fetch all history if you only need a window. Use the `periodos` field on `Parametro`:
+Não busque todo o histórico se precisar apenas de uma janela temporal. Use o campo `periodos` no `Parametro`:
 
 ```python
 param = Parametro(
     agregado="1620",
     territorios={"1": ["all"]},
     variaveis=["116"],
-    periodos=["202001", "202002", "202003"],  # only Q1-Q3 2020
+    periodos=["202001", "202002", "202003"],  # apenas Q1-Q3 de 2020
     classificacoes={},
 )
 ```
 
-### 3. Use Async for Many Tables
+### 3. Use Async para Muitas Tabelas
 
-If you're harvesting metadata for dozens of aggregates, `AsyncSidraClient` + `asyncio.gather` is significantly faster than a sync loop.
+Se você estiver coletando metadados de dezenas de agregados, o `AsyncSidraClient` + `asyncio.gather` é significativamente mais rápido que um loop síncrono.
 
-### 4. Stream Period-by-Period for Huge Tables
+### 4. Stream Período por Período para Tabelas Gigantes
 
-Tables like RAIS, Censo, and PAM municipal have millions of rows. Iterate periods individually and persist each chunk; never load the entire table into memory.
+Tabelas como RAIS, Censo e PAM municipal possuem milhões de linhas. Itere os períodos individualmente e persista cada pedaço (chunk); nunca carregue a tabela inteira na memória.
 
-## Debugging
+## Depuração (Debugging)
 
-`sidra_fetcher` uses the stdlib `logging` module under the logger name `sidra_fetcher`. Enable debug output:
+O `sidra-fetcher` utiliza o módulo `logging` da biblioteca padrão sob o nome de logger `sidra_fetcher`. Habilite a saída de depuração:
 
 ```python
 import logging
@@ -546,12 +546,12 @@ logging.getLogger("sidra_fetcher").setLevel(logging.DEBUG)
 from sidra_fetcher import SidraClient
 with SidraClient() as client:
     rows = client.get("https://apisidra.ibge.gov.br/values/t/1620/n1/all/v/116/p/all/d/m")
-# Logs the URL, request duration, and response size
+# Registra a URL, duração da requisição e tamanho da resposta
 ```
 
-## See Also
+## Saiba Mais
 
-- [sidra-sql](sidra-sql.md) — Data warehousing & ETL motor that consumes `sidra-fetcher`
-- [sidra-pipelines](sidra-pipelines.md) — Standard pipeline catalog
-- [SIDRA Database (Portuguese)](https://sidra.ibge.gov.br/)
-- [SIDRA API Help (Portuguese)](https://apisidra.ibge.gov.br/home/ajuda)
+- [sidra-sql](sidra-sql.md) — Motor de data warehousing e ETL que consome o `sidra-fetcher`
+- [sidra-pipelines](sidra-pipelines.md) — Catálogo padrão de pipelines
+- [Base de Dados SIDRA](https://sidra.ibge.gov.br/)
+- [Ajuda da API SIDRA](https://apisidra.ibge.gov.br/home/ajuda)
