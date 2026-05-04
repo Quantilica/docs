@@ -179,4 +179,4 @@ Todo download começa com um HEAD request. `remote_is_more_recent` compara `Last
 ## Saiba Mais
 
 - **[Macroeconomia IBGE](../ibge/index.md)** — Dados de PIB e economia
-- **[Arquitetura](../architecture/overview.md)** — Design do sistema
+- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema

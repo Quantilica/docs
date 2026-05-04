@@ -169,5 +169,5 @@ Todos os dados são buscados do oficial **Tesouro Transparente** através de sua
 
 - **[Visão Geral do Tesouro Direto](index.md)** — Todas as ferramentas do Tesouro Direto
 - **[Guia de Retornos de Portfólio](calculo-retornos.md)** — Como calcular retornos de títulos
-- **[Arquitetura](../architecture/overview.md)** — Princípios de design do sistema
+- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema
 - **[Tesouro Transparente](https://www.tesourotransparente.gov.br/)** — Fonte de dados oficial

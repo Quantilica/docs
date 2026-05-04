@@ -22,12 +22,16 @@ theme:
       accent: indigo
 
 nav:
-  - Início:
-      - Visão Geral: index.md
-      - Filosofia de Design: design-philosophy.md
-      - Melhores Práticas: best-practices.md
+  - Visão Geral: index.md
 
-  - Ferramentas & Fontes:
+  - Conceitos:
+      - concepts/index.md
+      - Arquitetura da Plataforma: concepts/arquitetura.md
+      - Princípios de Design: concepts/principios.md
+      - Padrões Práticos: concepts/padroes.md
+      - Parquet + Polars: concepts/parquet-polars.md
+
+  - Domínios & Ferramentas:
       - IBGE (Macroeconomia):
           - ibge/index.md
           - sidra-fetcher: ibge/sidra-fetcher.md
@@ -37,20 +41,17 @@ nav:
           - tesouro/index.md
           - tddata: tesouro/tddata.md
           - rtnpy: tesouro/rtnpy.md
-          - Guia de Cálculo de Retornos: tesouro/calculo-retornos.md
+          - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Mercado de Trabalho:
           - trabalho/index.md
           - pdet-data: trabalho/pdet-data.md
-          - Guia Parquet + Polars: trabalho/guia-parquet.md
       - Comércio Exterior: comex/comexdown.md
       - Saúde Pública: saude/datasus-fetcher.md
       - Clima & Meio Ambiente: clima/inmet-bdmep-data.md
 
-  - Arquitetura & Conceitos:
-      - Arquitetura da Plataforma: architecture/overview.md
-      - Princípios de Design: architecture/design-principles.md
-      - Engenharia de Dados: concepts/data-engineering.md
-      - Pipelines & Armazenamento: concepts/pipelines.md
+  - Cookbook:
+      - cookbook/index.md
+      - Análise Econômica Multi-Fonte: cookbook/analise-economica-multi-fonte.md
 
 plugins:
   - search
@@ -65,6 +66,7 @@ extra:
       displayMath: [['$$', '$$'], ['\\[', '\\]']]
 
 markdown_extensions:
+  - attr_list
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.superfences:
