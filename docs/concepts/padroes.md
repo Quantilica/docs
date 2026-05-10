@@ -22,7 +22,7 @@ Este guia cobre oito padrões táticos usados em todas as ferramentas da platafo
 ### Por quê?
 
 - **Economiza banda**: não re-baixe datasets inalterados.
-- **Economiza tempo**: speedup 57× em re-runs cacheados (`comexdown`).
+- **Economiza tempo**: speedup 57× em re-runs cacheados (`comex-fetcher`).
 - **Tolerância a falhas**: resume do meio em vez de recomeçar.
 - **Seguro para retry**: rodar duas vezes produz o mesmo resultado que rodar uma vez.
 
@@ -30,10 +30,10 @@ Este guia cobre oito padrões táticos usados em todas as ferramentas da platafo
 
 ```python
 from pathlib import Path
-import comexdown
+import comex_fetcher
 
-# comexdown HEAD-verifica Last-Modified antes de cada GET
-comexdown.get_year(Path("./DATA"), year=2023)
+# comex-fetcher HEAD-verifica Last-Modified antes de cada GET
+comex_fetcher.get_year(Path("./DATA"), year=2023)
 # 1ª execução: stream do CSV em chunks de 8 KiB
 # Re-execuções: HEAD mostra Last-Modified == mtime local; GET é pulado
 ```
@@ -135,19 +135,19 @@ fetcher.download_data(
 
 ### Padrão: batches multi-ano com re-runs idempotentes
 
-`comexdown` é sequencial por design — depende de idempotência temporal em vez de paralelismo. Passe um range de anos e deixe a verificação HEAD/`Last-Modified` fazer re-runs baratos:
+`comex-fetcher` é sequencial por design — depende de idempotência temporal em vez de paralelismo. Passe um range de anos e deixe a verificação HEAD/`Last-Modified` fazer re-runs baratos:
 
 ```bash
 # 1ª execução baixa tudo; execuções posteriores buscam só o que mudou.
-comexdown trade 2014:2023 -o ./DATA
+comex-fetcher trade 2014:2023 -o ./DATA
 ```
 
 ```python
 from pathlib import Path
-import comexdown
+import comex_fetcher
 
 for year in range(2014, 2024):
-    comexdown.get_year(Path("./DATA"), year=year)  # HEAD-cached
+    comex_fetcher.get_year(Path("./DATA"), year=year)  # HEAD-cached
 ```
 
 Se quiser sobrepor trabalho não relacionado (download SECEX em paralelo com fetch SIDRA), faça na camada de orquestração com `asyncio` ou `concurrent.futures` — mas mantenha a concorrência em um único nível para evitar explosão de threads.
@@ -404,12 +404,12 @@ def validate_rais_row_count(df: pl.DataFrame, year: int) -> bool:
 
 ```python
 from pathlib import Path
-import comexdown
+import comex_fetcher
 
-# comexdown faz stream de cada download em chunks de 8 KiB via urllib —
+# comex-fetcher faz stream de cada download em chunks de 8 KiB via urllib —
 # memória constante independente do tamanho do arquivo;
 # escrita atômica via *.tmp -> rename no sucesso
-comexdown.get_year(Path("./DATA"), year=2023)
+comex_fetcher.get_year(Path("./DATA"), year=2023)
 ```
 
 ### Padrão: lazy Polars

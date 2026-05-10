@@ -12,7 +12,7 @@ graph TD
     Sources -->|IBGE SIDRA| SQL["sidra-sql"]
     Sources -->|Tesouro Direto| TD["tesouro-direto-fetcher"]
     Sources -->|RAIS/CAGED| PD["pdet-fetcher"]
-    Sources -->|Siscomex| CX["comexdown"]
+    Sources -->|Siscomex| CX["comex-fetcher"]
     Sources -->|DATASUS| DS["datasus-fetcher"]
     Sources -->|INMET BDMEP| IN["inmet-fetcher"]
 
@@ -36,7 +36,7 @@ A plataforma é organizada em **quatro camadas**: extração, processamento, arm
 
 ## Camadas e responsabilidades
 
-### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comexdown`, `datasus-fetcher`, `inmet-fetcher`)
+### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comex-fetcher`, `datasus-fetcher`, `inmet-fetcher`)
 
 Obter dados de APIs/FTPs governamentais com confiabilidade.
 
@@ -198,7 +198,7 @@ graph TD
 | `tesouro-direto-fetcher` (todos os títulos) | 5-10 s | ~1 000 títulos |
 | `pdet-fetcher` (RAIS ano completo) | 30-60 s | 60M registros |
 | `pdet-fetcher` (CAGED mensal) | 5-10 s | 10k-100k linhas |
-| `comexdown` (anual) | 10-20 s | 1M-10M transações |
+| `comex-fetcher` (anual) | 10-20 s | 1M-10M transações |
 | `datasus-fetcher` (doença/ano) | 5-15 s | 100k-1M registros |
 
 ### Compressão Parquet

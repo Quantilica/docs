@@ -35,7 +35,7 @@ Tutorial dedicado ao formato e biblioteca centrais da plataforma. Mostra workflo
 | Dados macroeconômicos IBGE | `sidra-fetcher`, `sidra-sql` |
 | Títulos do Tesouro brasileiro | `tesouro-direto-fetcher`, `rtn-fetcher` |
 | Emprego e mercado de trabalho | `pdet-fetcher` |
-| Fluxos de comércio (import/export) | `comexdown` |
+| Fluxos de comércio (import/export) | `comex-fetcher` |
 | Vigilância de saúde pública | `datasus-fetcher` |
 | Clima e meio ambiente | `inmet-fetcher` |
 | Processamento de arquivos grandes | Polars |
