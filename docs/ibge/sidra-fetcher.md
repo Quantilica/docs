@@ -95,20 +95,6 @@ As respostas de metadados são analisadas em dataclasses ricas:
 
 ## Instalação
 
-### Usando "pip"
-
-```bash
-pip install sidra-fetcher
-```
-
-### Usando "uv"
-
-```bash
-uv pip install sidra-fetcher
-```
-
-### "A partir da fonte"
-
 ```bash
 pip install git+https://github.com/Quantilica/sidra-fetcher.git
 ```
