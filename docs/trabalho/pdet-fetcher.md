@@ -16,7 +16,7 @@ Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluin
 ## Instalação
 
 ```bash
-pip install pdet-fetcher
+pip install git+https://github.com/Quantilica/pdet-fetcher.git
 ```
 
 **Requisitos:** Python 3.10+ e o CLI `7z` em `PATH` (usado por `convert_*` para extrair arquivos `.7z`).

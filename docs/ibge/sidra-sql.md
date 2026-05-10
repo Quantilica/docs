@@ -178,26 +178,8 @@ sidra-sql run std pib_municipal
 
 ## Instalação
 
-### "pip"
-
 ```bash
-pip install sidra-sql
-```
-
-### "uv"
-
-```bash
-uv pip install sidra-sql
-```
-
-### "from source"
-
-```bash
-git clone https://github.com/Quantilica/sidra-sql.git
-cd sidra-sql
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+pip install git+https://github.com/Quantilica/sidra-sql.git
 ```
 
 ## Configuração

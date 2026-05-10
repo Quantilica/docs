@@ -15,7 +15,10 @@ Para isso precisamos de:
 ## Pré-requisitos
 
 ```bash
-pip install sidra-fetcher tesouro-direto-fetcher pdet-fetcher polars
+pip install git+https://github.com/Quantilica/sidra-fetcher.git
+pip install git+https://github.com/Quantilica/pdet-fetcher.git
+pip install "git+https://github.com/Quantilica/tesouro-direto-fetcher#egg=tesouro-direto-fetcher"
+pip install polars
 ```
 
 Para `pdet-fetcher`, é necessário ter o binário `7z` no `PATH` (descompressão `.7z`).

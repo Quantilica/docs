@@ -42,9 +42,9 @@ As abas `3.1` e `3.2` usam um layout comparativo de publicação atual com heade
 Requer Python 3.13+.
 
 ```bash
-pip install rtn-fetcher
+pip install git+https://github.com/Quantilica/rtn-fetcher.git
 # ou
-uv add rtn-fetcher
+uv add "git+https://github.com/Quantilica/rtn-fetcher.git"
 ```
 
 Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
