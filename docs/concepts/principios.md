@@ -34,7 +34,7 @@ Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a 
 ### Como aplicamos
 
 ```
-sidra-fetcher       tddata               pdet-data            comexdown
+sidra-fetcher       tesouro-direto-fetcher               pdet-data            comexdown
 ├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
@@ -45,7 +45,7 @@ datasus-fetcher        inmet-bdmep-data
 
 - Sem dependências internas compartilhadas entre ferramentas.
 - Cada uma tem sua própria lógica de retry, tratamento de erro e estratégia de cache.
-- Ferramentas são **composáveis**: combine `sidra-fetcher` + `tddata` + `pdet-data` no mesmo pipeline sem conflito.
+- Ferramentas são **composáveis**: combine `sidra-fetcher` + `tesouro-direto-fetcher` + `pdet-data` no mesmo pipeline sem conflito.
 
 ### Exemplo: três fontes, zero acoplamento
 
@@ -53,7 +53,7 @@ datasus-fetcher        inmet-bdmep-data
 import asyncio
 from sidra_fetcher import AsyncSidraClient
 from pdet_data.fetch import connect, fetch_rais
-from tddata.analytics import calculate_portfolio_monthly_returns
+from tesouro_direto_fetcher.analytics import calculate_portfolio_monthly_returns
 
 async def multi_source_analysis(my_transactions):
     # 1. SIDRA metadata via async client

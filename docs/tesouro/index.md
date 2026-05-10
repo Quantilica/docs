@@ -19,24 +19,24 @@ A planilha RTN apresenta outro desafio: 24 abas mensais/trimestrais/anuais em fo
 
 ## Dois stacks: Exploração vs. Produção
 
-### Stack 1 — Exploração (`tddata` SDK + Polars)
+### Stack 1 — Exploração (`tesouro-direto-fetcher` SDK + Polars)
 
 Para análise ad-hoc, notebooks Jupyter, modelagem de yield curve, análise de portfólio one-off. Use o downloader assíncrono + readers Polars + analytics direto.
 
 ```mermaid
 graph LR
-    A[CKAN Tesouro Nacional] --> B[tddata.downloader<br/>async + idempotente]
+    A[CKAN Tesouro Nacional] --> B[tesouro_direto_fetcher.downloader<br/>async + idempotente]
     B --> C[CSVs locais]
-    C --> D[tddata.reader / analytics<br/>Polars]
+    C --> D[tesouro_direto_fetcher.reader / analytics<br/>Polars]
 ```
 
-### Stack 2 — Produção (Pipeline `tddata` + Parquet/PostgreSQL)
+### Stack 2 — Produção (Pipeline `tesouro-direto-fetcher` + Parquet/PostgreSQL)
 
-Para análise diária recorrente: scheduler chama `tddata download` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
+Para análise diária recorrente: scheduler chama `tesouro-direto-fetcher download` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
 
 ```mermaid
 graph LR
-    A[CKAN Tesouro] --> B[tddata download<br/>scheduled]
+    A[CKAN Tesouro] --> B[tesouro-direto-fetcher download<br/>scheduled]
     B --> C[CSVs Parquet]
     C --> D[(PostgreSQL)]
     D --> E[Power BI / Metabase]
@@ -46,13 +46,13 @@ Para dados fiscais (RTN), o fluxo é mais simples: `rtnpy` baixa a planilha mais
 
 ## Pacotes
 
-- **[tddata](tddata.md)** — suíte de engenharia financeira: async fetching com idempotência, processamento Polars (10× vs. Pandas), matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
+- **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — suíte de engenharia financeira: async fetching com idempotência, processamento Polars (10× vs. Pandas), matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
 - **[rtnpy](rtnpy.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI de exportação Excel/SQLite.
 - **[Cálculo de Retornos](calculo-retornos.md)** — guia matemático: YTM, duration, FIFO, Modified Dietz, retornos reais para títulos indexados à inflação.
 
 ## Princípios em ação
 
-- **[Resiliência](../concepts/principios.md#resiliência)** — `tddata.downloader` verifica `last_modified` no CKAN antes de baixar, pulando arquivos atualizados; `rtnpy` deduplica por timestamp.
+- **[Resiliência](../concepts/principios.md#resiliência)** — `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN antes de baixar, pulando arquivos atualizados; `rtnpy` deduplica por timestamp.
 - **[Performance](../concepts/principios.md#performance)** — async fetching paraleliza até `max_concurrency` recursos por dataset; readers Polars processam 15M linhas em 0.34s.
 - **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — Modified Dietz pondera fluxos de caixa pelo timing dentro do mês, garantindo conformidade GIPS auditável; matching FIFO é determinístico (vendas associadas às compras mais antigas).
 - **[Sem Mágica](../concepts/principios.md#sem-mágica)** — algoritmos complexos (FIFO, Modified Dietz) são documentados inline; cupons são injetados explicitamente como fluxo de caixa.
@@ -73,7 +73,7 @@ Métricas disponíveis por título e data: yield (YTM), preço (% do par), durat
 
 ## Próximos passos
 
-- Para análise de portfólio: vá para **[tddata](tddata.md)** e use `calculate_portfolio_monthly_returns`.
+- Para análise de portfólio: vá para **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** e use `calculate_portfolio_monthly_returns`.
 - Para a matemática por trás dos cálculos: leia **[Cálculo de Retornos](calculo-retornos.md)**.
 - Para dados fiscais (RTN): vá para **[rtnpy](rtnpy.md)**.
 - Para combinar Tesouro com IPCA/PIB: veja **[Análise Econômica Multi-Fonte](../cookbook/analise-economica-multi-fonte.md)**.

@@ -10,7 +10,7 @@ graph TD
 
     Sources -->|IBGE SIDRA| SF["sidra-fetcher"]
     Sources -->|IBGE SIDRA| SQL["sidra-sql"]
-    Sources -->|Tesouro Direto| TD["tddata"]
+    Sources -->|Tesouro Direto| TD["tesouro-direto-fetcher"]
     Sources -->|RAIS/CAGED| PD["pdet-data"]
     Sources -->|Siscomex| CX["comexdown"]
     Sources -->|DATASUS| DS["datasus-fetcher"]
@@ -36,7 +36,7 @@ A plataforma é organizada em **quatro camadas**: extração, processamento, arm
 
 ## Camadas e responsabilidades
 
-### Extração (`sidra-fetcher`, `tddata`, `pdet-data`, `comexdown`, `datasus-fetcher`, `inmet-bdmep-data`)
+### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-data`, `comexdown`, `datasus-fetcher`, `inmet-bdmep-data`)
 
 Obter dados de APIs/FTPs governamentais com confiabilidade.
 
@@ -195,7 +195,7 @@ graph TD
 |---|---|---|
 | `sidra-fetcher` (série única) | 5-10 s | 100-1 000 linhas |
 | `sidra-fetcher` (varredura) | 30-60 s | 10k-100k linhas |
-| `tddata` (todos os títulos) | 5-10 s | ~1 000 títulos |
+| `tesouro-direto-fetcher` (todos os títulos) | 5-10 s | ~1 000 títulos |
 | `pdet-data` (RAIS ano completo) | 30-60 s | 60M registros |
 | `pdet-data` (CAGED mensal) | 5-10 s | 10k-100k linhas |
 | `comexdown` (anual) | 10-20 s | 1M-10M transações |
@@ -232,7 +232,7 @@ Combinando IBGE + Tesouro num pipeline ELT canônico:
 import polars as pl
 from sidra_fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
-from tddata.converter import convert_to_parquet
+from tesouro_direto_fetcher.converter import convert_to_parquet
 
 # 1. EXTRACT: cada ferramenta usa seu próprio padrão de acesso
 gdp_param = Parametro(

@@ -17,7 +17,7 @@ $$
 \text{Preço} = \sum_{t=1}^{T} \frac{\text{Cupom}}{(1 + \text{YTM})^t} + \frac{\text{Principal}}{(1 + \text{YTM})^T}
 $$
 
-Para títulos brasileiros, YTM já é fornecido por **tddata**.
+Para títulos brasileiros, YTM já é fornecido por **tesouro-direto-fetcher**.
 
 ### Duration Modificada
 
@@ -68,10 +68,10 @@ Exemplo:
 import polars as pl
 from datetime import date
 from pathlib import Path
-from tddata import reader
-from tddata.constants import Column as C, BondType
+from tesouro_direto_fetcher import reader
+from tesouro_direto_fetcher.constants import Column as C, BondType
 
-# Ler CSV de preços baixado com `tddata download --dataset prices`
+# Ler CSV de preços baixado com `tesouro-direto-fetcher download --dataset prices`
 prices = reader.read_prices(next(Path("./data").glob("taxas-dos-titulos*.csv")))
 
 # Escolher um título: NTN-B (Tesouro IPCA+ com Juros Semestrais) vencendo 2027-05-15
@@ -272,8 +272,8 @@ print(f"Mercado espera inflação: {breakeven*100:.1f}%")
 import asyncio
 import polars as pl
 from pathlib import Path
-from tddata import downloader, reader
-from tddata.constants import Column as C
+from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher.constants import Column as C
 
 data_dir = Path("data/treasury")
 data_dir.mkdir(parents=True, exist_ok=True)
@@ -395,5 +395,5 @@ coupon_yield = 4.5   # % para reinvestimento
 ## Saiba Mais
 
 - [Visão Geral do Tesouro](index.md)
-- [Ferramenta tddata](tddata.md)
+- [Ferramenta tesouro-direto-fetcher](tesouro-direto-fetcher.md)
 - [Dados IBGE](../ibge/index.md) — Para dados de inflação

@@ -39,7 +39,7 @@ nav:
           - sidra-pipelines: ibge/sidra-pipelines.md
       - Tesouro (Finanças):
           - tesouro/index.md
-          - tddata: tesouro/tddata.md
+          - tesouro-direto-fetcher: tesouro/tesouro-direto-fetcher.md
           - rtnpy: tesouro/rtnpy.md
           - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Mercado de Trabalho:
