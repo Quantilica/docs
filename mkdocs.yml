@@ -40,7 +40,7 @@ nav:
       - Tesouro (Finanças):
           - tesouro/index.md
           - tesouro-direto-fetcher: tesouro/tesouro-direto-fetcher.md
-          - rtnpy: tesouro/rtnpy.md
+          - rtn-fetcher: tesouro/rtn-fetcher.md
           - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Mercado de Trabalho:
           - trabalho/index.md

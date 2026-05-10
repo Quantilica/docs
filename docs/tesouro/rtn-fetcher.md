@@ -1,10 +1,10 @@
-# rtnpy — Resultado do Tesouro Nacional (RTN) Brasileiro
+# rtn-fetcher — Resultado do Tesouro Nacional (RTN) Brasileiro
 
-**rtnpy** é um pacote Python que baixa, extrai e normaliza o *Resultado do Tesouro Nacional* (RTN) — relatório mensal de resultados fiscais federais do Brasil. Transforma as pastas de trabalho Excel com múltiplas abas do Tesouro em tabelas de formato longo limpo com expansão hierárquica de contas, prontas para análise ou carregamento em warehouse.
+**rtn-fetcher** é um pacote Python que baixa, extrai e normaliza o *Resultado do Tesouro Nacional* (RTN) — relatório mensal de resultados fiscais federais do Brasil. Transforma as pastas de trabalho Excel com múltiplas abas do Tesouro em tabelas de formato longo limpo com expansão hierárquica de contas, prontas para análise ou carregamento em warehouse.
 
 ## O Que É
 
-O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo Federal Brasileiro: receitas, despesas e resultado primário, em valores correntes e constantes, mensais, trimestrais e anuais, também como percentuais do PIB. O Tesouro publica isso como uma extensa pasta de trabalho Excel com 24+ abas, cada uma com seu próprio layout de header e hierarquia de contas. `rtnpy` automatiza o pipeline de fetch-and-normalize para você ir da URL oficial a uma tabela de formato longo arrumada em poucas linhas de Python — ou um comando CLI.
+O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo Federal Brasileiro: receitas, despesas e resultado primário, em valores correntes e constantes, mensais, trimestrais e anuais, também como percentuais do PIB. O Tesouro publica isso como uma extensa pasta de trabalho Excel com 24+ abas, cada uma com seu próprio layout de header e hierarquia de contas. `rtn-fetcher` automatiza o pipeline de fetch-and-normalize para você ir da URL oficial a uma tabela de formato longo arrumada em poucas linhas de Python — ou um comando CLI.
 
 **Source:** [Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)
 
@@ -42,43 +42,43 @@ As abas `3.1` e `3.2` usam um layout comparativo de publicação atual com heade
 Requer Python 3.13+.
 
 ```bash
-pip install rtnpy
+pip install rtn-fetcher
 # ou
-uv add rtnpy
+uv add rtn-fetcher
 ```
 
 Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
 
 ## Interface de Linha de Comando
 
-O pacote instala um comando `rtnpy` com subcomandos `fetch` e `export`:
+O pacote instala um comando `rtn-fetcher` com subcomandos `fetch` e `export`:
 
 ```bash
-rtnpy --help
+rtn-fetcher --help
 
 # Operações de fetch
-rtnpy fetch metadata          # Construir metadata.json da página de publicações
-rtnpy fetch download          # Baixar arquivos listados em metadata.json
-rtnpy fetch latest            # Baixar a pasta de trabalho RTN mais recente
+rtn-fetcher fetch metadata          # Construir metadata.json da página de publicações
+rtn-fetcher fetch download          # Baixar arquivos listados em metadata.json
+rtn-fetcher fetch latest            # Baixar a pasta de trabalho RTN mais recente
 
 # Operações de export
-rtnpy export excel            # Exportar para uma pasta de trabalho Excel formatada
-rtnpy export sqlite           # Exportar para um banco de dados SQLite
+rtn-fetcher export excel            # Exportar para uma pasta de trabalho Excel formatada
+rtn-fetcher export sqlite           # Exportar para um banco de dados SQLite
 ```
 
 ### Opções de Buscar
 
 ```bash
-rtnpy fetch metadata --dest data --force
-rtnpy fetch download --metadata data/metadata.json --concurrency 8
-rtnpy fetch latest   --dest data
+rtn-fetcher fetch metadata --dest data --force
+rtn-fetcher fetch download --metadata data/metadata.json --concurrency 8
+rtn-fetcher fetch latest   --dest data
 ```
 
 ### Opções de Export
 
 ```bash
-rtnpy export excel  --data-dir data --output rtn_data.xlsx
-rtnpy export sqlite --data-dir data --output rtn_data.db
+rtn-fetcher export excel  --data-dir data --output rtn_data.xlsx
+rtn-fetcher export sqlite --data-dir data --output rtn_data.db
 ```
 
 Ambos os comandos `export` baixam a pasta de trabalho mais recente e escrevem todas as abas suportadas junto com a dimensão de hierarquia de contas.
@@ -89,7 +89,7 @@ Ambos os comandos `export` baixam a pasta de trabalho mais recente e escrevem to
 
 ```python
 from pathlib import Path
-from rtnpy import download_latest_file
+from rtn_fetcher import download_latest_file
 
 filepath = download_latest_file(Path("data"))
 print(f"Baixado: {filepath}")
@@ -101,7 +101,7 @@ print(f"Baixado: {filepath}")
 
 ```python
 from pathlib import Path
-from rtnpy import read_sheet, write_table_to_csv
+from rtn_fetcher import read_sheet, write_table_to_csv
 
 filepath = Path("data/rtn_202412301200.xlsx")
 data, accounts = read_sheet(filepath, "1.2")
@@ -118,7 +118,7 @@ write_table_to_csv(accounts, Path("output/rtn_1_2_accounts.csv"))
 ### Ler cada aba suportada
 
 ```python
-from rtnpy import read_all_sheets
+from rtn_fetcher import read_all_sheets
 
 results = read_all_sheets(filepath)
 
@@ -129,7 +129,7 @@ for sheet_name, (data, accounts) in results.items():
 ### Publication metadata
 
 ```python
-from rtnpy import fetch_publications_metadata
+from rtn_fetcher import fetch_publications_metadata
 
 publications = fetch_publications_metadata()
 print(publications[0])
@@ -173,10 +173,10 @@ account_code  account_name             account_level  P_1       P_2
 
 ## A Classe `Tbl`
 
-O `rtnpy` vem com a `Tbl`, uma pequena tabela orientada a colunas — os dados são armazenados como uma lista de colunas em vez de linhas. Não há dependência de Polars ou Pandas; a `Tbl` é a única estrutura de dados que você precisa aprender.
+O `rtn-fetcher` vem com a `Tbl`, uma pequena tabela orientada a colunas — os dados são armazenados como uma lista de colunas em vez de linhas. Não há dependência de Polars ou Pandas; a `Tbl` é a única estrutura de dados que você precisa aprender.
 
 ```python
-from rtnpy import Tbl
+from rtn_fetcher import Tbl
 
 t = Tbl([
     ["name", "Alice", "Bob"],
