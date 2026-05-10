@@ -38,7 +38,7 @@ sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher           
 ├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
-datasus-fetcher        inmet-bdmep-data
+datasus-fetcher        inmet-fetcher
 ├─ stdlib only         ├─ httpx, pandas, pyarrow
 └─ no cross-deps       └─ no cross-deps
 ```

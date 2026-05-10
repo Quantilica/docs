@@ -47,7 +47,7 @@ nav:
           - pdet-fetcher: trabalho/pdet-fetcher.md
       - Comércio Exterior: comex/comexdown.md
       - Saúde Pública: saude/datasus-fetcher.md
-      - Clima & Meio Ambiente: clima/inmet-bdmep-data.md
+      - Clima & Meio Ambiente: clima/inmet-fetcher.md
 
   - Cookbook:
       - cookbook/index.md
