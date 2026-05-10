@@ -20,19 +20,19 @@ Para análise pontual de um ou poucos anos. Após uma conversão inicial dos bru
 
 ```mermaid
 graph LR
-    A[FTP MTE] --> B[pdet-data fetch<br/>raw .7z]
-    B --> C[pdet-data convert<br/>→ Parquet]
+    A[FTP MTE] --> B[pdet-fetcher fetch<br/>raw .7z]
+    B --> C[pdet-fetcher convert<br/>→ Parquet]
     C --> D[Polars / Jupyter<br/>análise ad-hoc]
 ```
 
-### Stack 2 — Produção (Pipeline `pdet-data` agendado)
+### Stack 2 — Produção (Pipeline `pdet-fetcher` agendado)
 
-Para pipelines diários/mensais que produzem artefatos versionados. RAIS é anual (release dezembro do ano seguinte); CAGED é mensal com 3 semanas de atraso. Agende `pdet-data fetch` + `convert` para rodar quando novos arquivos saem; resultados são idempotentes (re-rodar não custa nada).
+Para pipelines diários/mensais que produzem artefatos versionados. RAIS é anual (release dezembro do ano seguinte); CAGED é mensal com 3 semanas de atraso. Agende `pdet-fetcher fetch` + `convert` para rodar quando novos arquivos saem; resultados são idempotentes (re-rodar não custa nada).
 
 ```mermaid
 graph LR
     A[FTP MTE] --> B[scheduler<br/>cron / Airflow]
-    B --> C[pdet-data fetch + convert]
+    B --> C[pdet-fetcher fetch + convert]
     C --> D[Parquet versionado]
     D --> E[(PostgreSQL<br/>opcional)]
     E --> F[BI / dashboards]
@@ -40,16 +40,16 @@ graph LR
 
 ## Pacotes
 
-- **[pdet-data](pdet-data.md)** — engine de transformação Big Data. Fetch FTP idempotente, descompressão `.7z`, parser CSV com schema por-ano, escrita Parquet via Polars. Throughput: 50M linhas → Parquet em ~60s; cache de re-runs em ~0.08s.
+- **[pdet-fetcher](pdet-fetcher.md)** — engine de transformação Big Data. Fetch FTP idempotente, descompressão `.7z`, parser CSV com schema por-ano, escrita Parquet via Polars. Throughput: 50M linhas → Parquet em ~60s; cache de re-runs em ~0.08s.
 
 Para o tutorial de Parquet + Polars (não específico de RAIS, aplicável a qualquer dataset grande), veja **[Parquet + Polars](../concepts/parquet-polars.md)** em Conceitos.
 
 ## Princípios em ação
 
 - **[Performance](../concepts/principios.md#performance)** — processamento vetorial Polars é 10× Pandas; Parquet comprime CSV em ~88%.
-- **[Resiliência](../concepts/principios.md#resiliência)** — `pdet-data fetch` é idempotente: re-rodar pula `.7z` já presentes; FTP intermitente é tolerável.
+- **[Resiliência](../concepts/principios.md#resiliência)** — `pdet-fetcher fetch` é idempotente: re-rodar pula `.7z` já presentes; FTP intermitente é tolerável.
 - **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — schemas por-ano são tipados e documentados; conversão é determinística.
-- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — `pdet-data convert` faz exatamente isto: descompacta, parseia, escreve. Sem caching escondido, sem flags surpresa.
+- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — `pdet-fetcher convert` faz exatamente isto: descompacta, parseia, escreve. Sem caching escondido, sem flags surpresa.
 
 Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
 
@@ -81,7 +81,7 @@ Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. 
 
 ## Próximos passos
 
-- Para começar a converter RAIS/CAGED: vá para **[pdet-data](pdet-data.md)**.
+- Para começar a converter RAIS/CAGED: vá para **[pdet-fetcher](pdet-fetcher.md)**.
 - Para o tutorial de Parquet+Polars: veja **[Parquet + Polars](../concepts/parquet-polars.md)**.
 - Para combinar emprego com PIB e yields do Tesouro: veja **[Análise Econômica Multi-Fonte](../cookbook/analise-economica-multi-fonte.md)**.
 

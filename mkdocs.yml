@@ -44,7 +44,7 @@ nav:
           - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Mercado de Trabalho:
           - trabalho/index.md
-          - pdet-data: trabalho/pdet-data.md
+          - pdet-fetcher: trabalho/pdet-fetcher.md
       - Comércio Exterior: comex/comexdown.md
       - Saúde Pública: saude/datasus-fetcher.md
       - Clima & Meio Ambiente: clima/inmet-bdmep-data.md

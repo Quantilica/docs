@@ -22,7 +22,7 @@ A plataforma fornece **uma ferramenta especializada por domínio**, cada uma des
 | **sidra-sql** | ETL baseado em plugins, star schema PostgreSQL | Bulk load streaming + histórico de revisões (SCD II) |
 | **tesouro-direto-fetcher** | Engenharia financeira com matching FIFO de lotes | Transações de portfólio streaming, conformidade GIPS |
 | **rtnpy** | Cálculo de retornos do RTN brasileiro | Conformidade com normas oficiais |
-| **pdet-data** | Big Data com processamento vetorial Polars | CSVs 50M+ linhas que esgotam Pandas |
+| **pdet-fetcher** | Big Data com processamento vetorial Polars | CSVs 50M+ linhas que esgotam Pandas |
 | **comexdown** | Extração resiliente com idempotência temporal | SSL ruim, arquivos GB, downtime governamental |
 | **datasus-fetcher** | Crawler concorrente multithreaded | FTP legado, downloads que tomam semanas |
 | **inmet-bdmep-data** | Cliente HTTP estável para metereologia | Granularidade alta, esquema variável |

@@ -1,6 +1,6 @@
-# pdet-data: Buscador de Microdados de Mercado de Trabalho Brasileiro
+# pdet-fetcher: Buscador de Microdados de Mercado de Trabalho Brasileiro
 
-**pdet-data** é um pacote Python para buscar, ler e converter microdados de PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — plataforma oficial de estatísticas de trabalho do Brasil mantida pelo Ministério do Trabalho e Previdência Social.
+**pdet-fetcher** é um pacote Python para buscar, ler e converter microdados de PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — plataforma oficial de estatísticas de trabalho do Brasil mantida pelo Ministério do Trabalho e Previdência Social.
 
 Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluindo CAGED legado até 2019 e CAGED redesenhado 2020+. Output é DataFrames Polars, com utilitários para bulk-convert de arquivos brutos para Parquet.
 
@@ -16,17 +16,17 @@ Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluin
 ## Instalação
 
 ```bash
-pip install pdet-data
+pip install pdet-fetcher
 ```
 
 **Requisitos:** Python 3.10+ e o CLI `7z` em `PATH` (usado por `convert_*` para extrair arquivos `.7z`).
 
 ## CLI
 
-O pacote instala o comando `pdet-data` (também disponível como `python -m pdet_data`) com quatro subcomandos:
+O pacote instala o comando `pdet-fetcher` (também disponível como `python -m pdet_fetcher`) com quatro subcomandos:
 
 ```text
-pdet-data <subcommand> [args]
+pdet-fetcher <subcommand> [args]
 
 Subcomandos:
   fetch    DEST_DIR              Baixa todo arquivo RAIS e CAGED (data + docs) para DEST_DIR
@@ -43,14 +43,14 @@ Subcomandos:
 ### 1. Baixar todos os dados
 
 ```bash
-pdet-data fetch ./data
+pdet-fetcher fetch ./data
 ```
 
 Python equivalente:
 
 ```python
 from pathlib import Path
-from pdet_data import (
+from pdet_fetcher import (
     connect,
     fetch_rais, fetch_rais_docs,
     fetch_caged, fetch_caged_docs,
@@ -72,12 +72,12 @@ finally:
 ### 2. Converter arquivos brutos para Parquet
 
 ```bash
-pdet-data convert ./data ./parquet
+pdet-fetcher convert ./data ./parquet
 ```
 
 ```python
 from pathlib import Path
-from pdet_data import convert_rais, convert_caged
+from pdet_fetcher import convert_rais, convert_caged
 
 convert_rais(Path("./data"), Path("./parquet"))
 convert_caged(Path("./data"), Path("./parquet"))
@@ -88,7 +88,7 @@ convert_caged(Path("./data"), Path("./parquet"))
 ```python
 from pathlib import Path
 import polars as pl
-from pdet_data.reader import read_rais
+from pdet_fetcher.reader import read_rais
 
 df = read_rais(
     filepath=Path("data/rais_2023_vinculos.csv"),
@@ -119,7 +119,7 @@ Um único `read_caged` cobre todas as variantes, despachadas pelo argumento `dat
 ```python
 from pathlib import Path
 import polars as pl
-from pdet_data.reader import read_caged
+from pdet_fetcher.reader import read_caged
 
 df_caged = read_caged(
     Path("data/caged_201812.csv"),
@@ -144,12 +144,12 @@ balance = (
 ### 5. Extrair schema por arquivo
 
 ```bash
-pdet-data columns ./data rais-vinculos -o ./schemas
+pdet-fetcher columns ./data rais-vinculos -o ./schemas
 ```
 
 ```python
 from pathlib import Path
-from pdet_data import extract_columns_for_dataset
+from pdet_fetcher import extract_columns_for_dataset
 
 extract_columns_for_dataset(
     data_dir=Path("./data"),
@@ -181,7 +181,7 @@ Fluxos de emprego mensais a partir de janeiro de 2020, divididos em três arquiv
 ## Arquitetura
 
 ```
-src/pdet_data/
+src/pdet_fetcher/
 ├── __init__.py        # Re-exporta API pública
 ├── __main__.py        # CLI (fetch / list / convert / columns)
 ├── fetch.py           # Conexão FTP, listagem, downloads
@@ -196,7 +196,7 @@ Pipeline: FTP → arquivo comprimido (`.7z` / `.zip`) → extração `7z` → CS
 
 ## API Pública
 
-Importável diretamente de `pdet_data`:
+Importável diretamente de `pdet_fetcher`:
 
 | Função | Propósito |
 |---|---|
@@ -211,7 +211,7 @@ Importável diretamente de `pdet_data`:
 | `convert_caged(data_dir, dest_dir)` | Mesmo para cada arquivo CAGED (legado + 2020+). |
 | `extract_columns_for_dataset(...)` | Dumpar headers por arquivo para um glob de dataset. |
 
-Helpers de leitura de baixo nível em `pdet_data.reader`:
+Helpers de leitura de baixo nível em `pdet_fetcher.reader`:
 
 - `read_rais(filepath, year, dataset, **read_csv_args)` — `dataset` ∈ `{"vinculos", "estabelecimentos"}`
 - `read_caged(filepath, date, dataset, **read_csv_args)` — `dataset` ∈ `{"caged", "caged-ajustes", "caged-2020-mov", "caged-2020-for", "caged-2020-exc"}`
