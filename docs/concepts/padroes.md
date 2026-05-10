@@ -56,7 +56,7 @@ datasus-fetcher data --data-dir ./data sim-do-cid10 \
 
 ```python
 from pathlib import Path
-from pdet_data import connect, fetch_rais
+from pdet_fetcher import connect, fetch_rais
 
 ftp = connect()
 try:
@@ -196,8 +196,8 @@ df = pl.read_parquet(
 ### Padrão: bulk convert
 
 ```bash
-# pdet-data: descompacta cada .7z, faz parse com schema por-ano, escreve Parquet
-pdet-data convert ./raw ./parquet
+# pdet-fetcher: descompacta cada .7z, faz parse com schema por-ano, escreve Parquet
+pdet-fetcher convert ./raw ./parquet
 ```
 
 ```python
@@ -471,12 +471,12 @@ df = pl.read_parquet(parquet_path)
 metadata = {
     "source": "RAIS 2023 (vinculos)",
     "download_timestamp": datetime.now().isoformat(),
-    "fetch_method": "pdet_data.convert_rais",
+    "fetch_method": "pdet_fetcher.convert_rais",
     "row_count": df.height,
     "columns": df.columns,
     "transformations": [
         "Descomprimido via 7z",
-        "CSV parseado com schema por-ano (pdet_data.reader.read_rais)",
+        "CSV parseado com schema por-ano (pdet_fetcher.reader.read_rais)",
         "Cast INTEGER_COLUMNS / NUMERIC_COLUMNS / BOOLEAN_COLUMNS",
         "Escrito Parquet via polars.DataFrame.write_parquet",
     ],

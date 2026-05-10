@@ -25,7 +25,7 @@ Cada ferramenta é **independente, auto-contida e reutilizável**. Você usa ape
 Fontes de dados governamentais brasileiros são diversas e fragmentadas. Forçar uma API monolítica única sacrificaria as otimizações especializadas que cada fonte exige:
 
 - `sidra-fetcher` é otimizada para a API REST do IBGE com concorrência assíncrona.
-- `pdet-data` é otimizada para CSVs massivos da RAIS/CAGED com processamento vetorial Polars.
+- `pdet-fetcher` é otimizada para CSVs massivos da RAIS/CAGED com processamento vetorial Polars.
 - `datasus-fetcher` é otimizada para a infraestrutura FTP legada do DATASUS com crawling multithreaded.
 - `comexdown` é otimizada para arquivos GB do Siscomex com streaming chunked sem dependências externas.
 
@@ -34,7 +34,7 @@ Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a 
 ### Como aplicamos
 
 ```
-sidra-fetcher       tesouro-direto-fetcher               pdet-data            comexdown
+sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher            comexdown
 ├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
@@ -45,14 +45,14 @@ datasus-fetcher        inmet-bdmep-data
 
 - Sem dependências internas compartilhadas entre ferramentas.
 - Cada uma tem sua própria lógica de retry, tratamento de erro e estratégia de cache.
-- Ferramentas são **composáveis**: combine `sidra-fetcher` + `tesouro-direto-fetcher` + `pdet-data` no mesmo pipeline sem conflito.
+- Ferramentas são **composáveis**: combine `sidra-fetcher` + `tesouro-direto-fetcher` + `pdet-fetcher` no mesmo pipeline sem conflito.
 
 ### Exemplo: três fontes, zero acoplamento
 
 ```python
 import asyncio
 from sidra_fetcher import AsyncSidraClient
-from pdet_data.fetch import connect, fetch_rais
+from pdet_fetcher.fetch import connect, fetch_rais
 from tesouro_direto_fetcher.analytics import calculate_portfolio_monthly_returns
 
 async def multi_source_analysis(my_transactions):
@@ -166,7 +166,7 @@ Escolhas ruins aqui prendem você em infraestrutura lenta e cara. Toda ferrament
 
 - **Concorrência multithreaded** onde aplicável (`datasus-fetcher`: 6-10× speedup).
 - **Async/await** onde aplicável (`sidra-fetcher`: 3× em harvest de metadata).
-- **Processamento vetorial Polars** onde aplicável (`pdet-data`: 10× vs. Pandas).
+- **Processamento vetorial Polars** onde aplicável (`pdet-fetcher`: 10× vs. Pandas).
 - **Cache + verificações de idempotência** (`comexdown`: 57× em re-runs).
 - **Streaming/chunked** para arquivos grandes (`comexdown`: memória O(1)).
 - **Formatos colunares** (Parquet: 88% compressão vs. CSV).
@@ -260,7 +260,7 @@ lineage = {
     "output_size":  out.stat().st_size,
     "row_count":    pl.scan_parquet(out).select(pl.len()).collect().item(),
     "processed_at": datetime.now(timezone.utc).isoformat(),
-    "tool":         "pdet_data.convert_rais",
+    "tool":         "pdet_fetcher.convert_rais",
 }
 out.with_suffix(".lineage.json").write_text(json.dumps(lineage, indent=2))
 ```

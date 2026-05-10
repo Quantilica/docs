@@ -15,10 +15,10 @@ Para isso precisamos de:
 ## Pré-requisitos
 
 ```bash
-pip install sidra-fetcher tesouro-direto-fetcher pdet-data polars
+pip install sidra-fetcher tesouro-direto-fetcher pdet-fetcher polars
 ```
 
-Para `pdet-data`, é necessário ter o binário `7z` no `PATH` (descompressão `.7z`).
+Para `pdet-fetcher`, é necessário ter o binário `7z` no `PATH` (descompressão `.7z`).
 
 ## Pipeline
 
@@ -110,7 +110,7 @@ print(f"Yields: {len(yields_monthly)} meses")
 
 ```python
 from pathlib import Path
-from pdet_data import connect, fetch_rais, convert_rais
+from pdet_fetcher import connect, fetch_rais, convert_rais
 
 # Fetch + convert idempotentes; primeira execução leva tempo, demais são quase instantâneas
 ftp = connect()
@@ -199,8 +199,8 @@ wages_real.write_parquet("data/wages_real.parquet")
 
 ## O que esta receita demonstra
 
-- **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-data`) sem dependências cruzadas, compostos em camada do usuário.
-- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-data fetch` pula `.7z` já baixados.
+- **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`) sem dependências cruzadas, compostos em camada do usuário.
+- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-fetcher fetch` pula `.7z` já baixados.
 - **Performance**: tudo em Polars com lazy evaluation; mesmo cobrindo 14 anos da RAIS (~700M registros), agregações finais rodam em segundos.
 - **Reprodutibilidade**: cada estágio salva um Parquet intermediário, então re-análises não exigem re-fetch.
 
@@ -214,6 +214,6 @@ wages_real.write_parquet("data/wages_real.parquet")
 
 - **[sidra-fetcher](../ibge/sidra-fetcher.md)** — SDK SIDRA detalhado.
 - **[tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)** — análise Tesouro Direto.
-- **[pdet-data](../trabalho/pdet-data.md)** — RAIS/CAGED.
+- **[pdet-fetcher](../trabalho/pdet-fetcher.md)** — RAIS/CAGED.
 - **[Cálculo de Retornos](../tesouro/calculo-retornos.md)** — matemática por trás de yield real, duration, FIFO.
 - **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — padrão multi-fonte ELT.
