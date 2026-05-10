@@ -2,7 +2,7 @@
 
 Dados meteorológicos e ambientais brasileiros do INMET (Instituto Nacional de Meteorologia).
 
-**inmet-bdmep-data** fornece acesso à rede abrangente de estações meteorológicas históricas do Brasil, habilitando pesquisa climática, análise agrícola, estudos de hidrologia e monitoramento ambiental.
+**inmet-fetcher** fornece acesso à rede abrangente de estações meteorológicas históricas do Brasil, habilitando pesquisa climática, análise agrícola, estudos de hidrologia e monitoramento ambiental.
 
 ## Visão Geral
 
@@ -49,7 +49,7 @@ Acesse dados meteorológicos históricos oficiais do Brasil com:
 ## Instalação
 
 ```bash
-pip install git+https://github.com/dankkom/inmet-bdmep-data.git
+pip install git+https://github.com/dankkom/inmet-fetcher.git
 ```
 
 **Requisitos:** Python 3.10+
@@ -62,35 +62,35 @@ Instala o comando `inmet` com três subcomandos: `fetch`, `read`, `stations`.
 
 ```bash
 # Ano único
-inmet fetch 2023 --data-dir ./data
+inmet-fetcher fetch 2023 --data-dir ./data
 
 # Intervalo
-inmet fetch 2000:2024 --data-dir ./data --workers 8
+inmet-fetcher fetch 2000:2024 --data-dir ./data --workers 8
 ```
 
 ### Ler & exportar
 
 ```bash
 # Tudo para Parquet
-inmet read --data-dir ./data --output all.parquet
+inmet-fetcher read --data-dir ./data --output all.parquet
 
 # Filtrar por UF e ano, exportar CSV
-inmet read --data-dir ./data --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+inmet-fetcher read --data-dir ./data --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
 
 # Estação única, intervalo de data
-inmet read --data-dir ./data --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+inmet-fetcher read --data-dir ./data --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
 ```
 
 ### Catálogo de estações
 
 ```bash
-inmet stations --data-dir ./data --output estacoes.csv
+inmet-fetcher stations --data-dir ./data --output estacoes.csv
 ```
 
 ## API Python
 
 ```python
-import inmet_bdmep as inmet
+import inmet_fetcher as inmet
 from pathlib import Path
 
 data_dir = Path("./data")
@@ -157,8 +157,8 @@ Metadados da estação por linha unidos automaticamente: `regiao`, `uf`, `estaca
 ## Desenvolvimento
 
 ```bash
-git clone https://github.com/Quantilica/inmet-bdmep-data.git
-cd inmet-bdmep-data
+git clone https://github.com/Quantilica/inmet-fetcher.git
+cd inmet-fetcher
 uv sync
 pytest
 ```

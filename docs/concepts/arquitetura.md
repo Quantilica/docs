@@ -14,7 +14,7 @@ graph TD
     Sources -->|RAIS/CAGED| PD["pdet-fetcher"]
     Sources -->|Siscomex| CX["comexdown"]
     Sources -->|DATASUS| DS["datasus-fetcher"]
-    Sources -->|INMET BDMEP| IN["inmet-bdmep-data"]
+    Sources -->|INMET BDMEP| IN["inmet-fetcher"]
 
     SF --> Processing["Processamento & Transformação<br/>(Polars vetorial / Pandas)"]
     SQL --> Processing
@@ -36,7 +36,7 @@ A plataforma é organizada em **quatro camadas**: extração, processamento, arm
 
 ## Camadas e responsabilidades
 
-### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comexdown`, `datasus-fetcher`, `inmet-bdmep-data`)
+### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comexdown`, `datasus-fetcher`, `inmet-fetcher`)
 
 Obter dados de APIs/FTPs governamentais com confiabilidade.
 

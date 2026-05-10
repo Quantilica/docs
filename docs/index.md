@@ -25,7 +25,7 @@ A plataforma fornece **uma ferramenta especializada por domínio**, cada uma des
 | **pdet-fetcher** | Big Data com processamento vetorial Polars | CSVs 50M+ linhas que esgotam Pandas |
 | **comexdown** | Extração resiliente com idempotência temporal | SSL ruim, arquivos GB, downtime governamental |
 | **datasus-fetcher** | Crawler concorrente multithreaded | FTP legado, downloads que tomam semanas |
-| **inmet-bdmep-data** | Cliente HTTP estável para metereologia | Granularidade alta, esquema variável |
+| **inmet-fetcher** | Cliente HTTP estável para metereologia | Granularidade alta, esquema variável |
 
 ## Domínios cobertos
 
@@ -34,7 +34,7 @@ A plataforma fornece **uma ferramenta especializada por domínio**, cada uma des
 - **[Mercado de Trabalho](trabalho/index.md)** — RAIS (censo anual) + CAGED (fluxos mensais).
 - **[Comércio Exterior](comex/comexdown.md)** — Siscomex import/export.
 - **[Saúde Pública](saude/datasus-fetcher.md)** — microdados DATASUS (SIM, SINASC, SIA, SIHSUS, CNES).
-- **[Clima & Meio Ambiente](clima/inmet-bdmep-data.md)** — séries históricas INMET BDMEP.
+- **[Clima & Meio Ambiente](clima/inmet-fetcher.md)** — séries históricas INMET BDMEP.
 
 ## Por onde começar
 
@@ -46,7 +46,7 @@ Se você é novo na plataforma, leia em ordem:
 2. **[Princípios de Design](concepts/principios.md)** — por que o sistema tem essa forma.
 3. **[Padrões Práticos](concepts/padroes.md)** — receitas táticas que materializam os princípios.
 4. **[Parquet + Polars](concepts/parquet-polars.md)** — o tutorial sobre o formato/biblioteca centrais.
-5. Escolha um domínio: [IBGE](ibge/index.md), [Tesouro](tesouro/index.md), [Trabalho](trabalho/index.md), [Comércio](comex/comexdown.md), [Saúde](saude/datasus-fetcher.md), [Clima](clima/inmet-bdmep-data.md).
+5. Escolha um domínio: [IBGE](ibge/index.md), [Tesouro](tesouro/index.md), [Trabalho](trabalho/index.md), [Comércio](comex/comexdown.md), [Saúde](saude/datasus-fetcher.md), [Clima](clima/inmet-fetcher.md).
 6. **[Cookbook](cookbook/index.md)** — receitas que combinam múltiplos domínios.
 
 ### Por caso de uso
@@ -58,5 +58,5 @@ Se você é novo na plataforma, leia em ordem:
 | Análise de salários e fluxos de emprego | [Trabalho](trabalho/index.md) |
 | Fluxos de comércio (import/export) | [Comércio Exterior](comex/comexdown.md) |
 | Vigilância epidemiológica | [Saúde Pública](saude/datasus-fetcher.md) |
-| Séries climáticas históricas | [Clima](clima/inmet-bdmep-data.md) |
+| Séries climáticas históricas | [Clima](clima/inmet-fetcher.md) |
 | Combinar múltiplos domínios | [Cookbook](cookbook/index.md) |

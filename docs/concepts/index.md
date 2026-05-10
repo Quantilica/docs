@@ -37,7 +37,7 @@ Tutorial dedicado ao formato e biblioteca centrais da plataforma. Mostra workflo
 | Emprego e mercado de trabalho | `pdet-fetcher` |
 | Fluxos de comércio (import/export) | `comexdown` |
 | Vigilância de saúde pública | `datasus-fetcher` |
-| Clima e meio ambiente | `inmet-bdmep-data` |
+| Clima e meio ambiente | `inmet-fetcher` |
 | Processamento de arquivos grandes | Polars |
 | Análise estatística | Pandas, NumPy, Statsmodels |
 | Dashboarding | PostgreSQL + ferramenta de BI |
