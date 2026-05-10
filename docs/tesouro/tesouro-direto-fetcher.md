@@ -1,6 +1,6 @@
-# tddata - Baixar, Analisar e Plotar Dados do Tesouro Direto Brasileiro
+# tesouro-direto-fetcher - Baixar, Analisar e Plotar Dados do Tesouro Direto Brasileiro
 
-**tddata** é um poderoso pacote Python projetado para simplificar o processo de download, leitura e visualização de dados históricos do programa Tesouro Direto brasileiro. Alavanca a API CKAN oficial (Tesouro Transparente) para buscar os datasets mais atualizados.
+**tesouro-direto-fetcher** é um poderoso pacote Python projetado para simplificar o processo de download, leitura e visualização de dados históricos do programa Tesouro Direto brasileiro. Alavanca a API CKAN oficial (Tesouro Transparente) para buscar os datasets mais atualizados.
 
 ## Recursos
 
@@ -17,25 +17,25 @@ Este pacote está disponível via GitHub. Você pode instalá-lo usando `pip`:
 **Apenas download (dependências mínimas):**
 
 ```shell
-pip install "git+https://github.com/Quantilica/tddata#egg=tddata"
+pip install "git+https://github.com/Quantilica/tesouro-direto-fetcher#egg=tesouro-direto-fetcher"
 ```
 
 **Instalação completa com recursos de leitura, análise e plotagem:**
 
 ```shell
-pip install "git+https://github.com/Quantilica/tddata#egg=tddata[analysis]"
+pip install "git+https://github.com/Quantilica/tesouro-direto-fetcher#egg=tesouro-direto-fetcher[analysis]"
 ```
 
 A instalação mínima inclui apenas `httpx` e `tqdm` para download de dados. Os extras `[analysis]` adicionam `polars` (parsing CSV, analytics) e `altair[save]` (gráficos).
 
 ## Uso
 
-### O `tddata` CLI
+### O `tesouro-direto-fetcher` CLI
 
-O pacote instala um comando `tddata` com três subcomandos:
+O pacote instala um comando `tesouro-direto-fetcher` com três subcomandos:
 
 ```text
-tddata <command> [options]
+tesouro-direto-fetcher <command> [options]
 
 Comandos:
   download [-o OUTPUT_DIR] [--dataset DATASET]
@@ -53,17 +53,17 @@ Comandos:
 
 ```bash
 # Inspecionar, baixar, converter
-tddata info     --dataset prices -o ./data
-tddata download --dataset prices -o ./data
-tddata convert  ./data/taxas-dos-titulos-ofertados-pelo-tesouro-direto@*.csv
+tesouro-direto-fetcher info     --dataset prices -o ./data
+tesouro-direto-fetcher download --dataset prices -o ./data
+tesouro-direto-fetcher convert  ./data/taxas-dos-titulos-ofertados-pelo-tesouro-direto@*.csv
 
 # Baixar cada dataset
-tddata download --dataset all -o ./data
+tesouro-direto-fetcher download --dataset all -o ./data
 ```
 
-### O `tddata` Pacote Python
+### O `tesouro-direto-fetcher` Pacote Python
 
-Você pode usar `tddata` como uma biblioteca em seus scripts Python ou Notebooks Jupyter.
+Você pode usar `tesouro-direto-fetcher` como uma biblioteca em seus scripts Python ou Notebooks Jupyter.
 
 #### Baixando Dados
 
@@ -72,7 +72,7 @@ Você pode usar `tddata` como uma biblioteca em seus scripts Python ou Notebooks
 ```python
 import asyncio
 from pathlib import Path
-from tddata import downloader
+from tesouro_direto_fetcher import downloader
 
 asyncio.run(
     downloader.download(
@@ -93,11 +93,11 @@ infos = asyncio.run(
 
 #### Lendo Dados
 
-O módulo `tddata.reader` fornece funções especializadas para cada tipo de dataset.
+O módulo `tesouro_direto_fetcher.reader` fornece funções especializadas para cada tipo de dataset.
 
 ```python
 from pathlib import Path
-from tddata import reader
+from tesouro_direto_fetcher import reader
 
 # Ler Preços/Taxas
 df_prices = reader.read_prices(
@@ -126,11 +126,11 @@ df_investors = reader.read_investors(
 
 #### Plotagem de Dados
 
-Módulo `tddata.plot` retorna gráficos Altair (`alt.Chart`). Exiba-os em um notebook com `chart.display()` ou salve com `chart.save("nome.png")` / `.html` / `.svg`.
+Módulo `tesouro_direto_fetcher.plot` retorna gráficos Altair (`alt.Chart`). Exiba-os em um notebook com `chart.display()` ou salve com `chart.save("nome.png")` / `.html` / `.svg`.
 
 ```python
-from tddata import plot
-from tddata.constants import Column
+from tesouro_direto_fetcher import plot
+from tesouro_direto_fetcher.constants import Column
 
 # 1. Plotar Histórico de Preços
 plot.plot_prices(
@@ -152,7 +152,7 @@ plot.plot_investors_demographics(
 ).save("investors_profession.html")
 ```
 
-Outros helpers de plotagem expostos por `tddata.plot`: `plot_investors_evolution`, `plot_operations`, `plot_sales`, `plot_buybacks`, `plot_maturities`, `plot_interest_coupons`.
+Outros helpers de plotagem expostos por `tesouro_direto_fetcher.plot`: `plot_investors_evolution`, `plot_operations`, `plot_sales`, `plot_buybacks`, `plot_maturities`, `plot_interest_coupons`.
 
 ## Fonte de Dados
 

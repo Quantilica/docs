@@ -33,7 +33,7 @@ Tutorial dedicado ao formato e biblioteca centrais da plataforma. Mostra workflo
 | Necessidade | Ferramenta da plataforma |
 |---|---|
 | Dados macroeconômicos IBGE | `sidra-fetcher`, `sidra-sql` |
-| Títulos do Tesouro brasileiro | `tddata`, `rtnpy` |
+| Títulos do Tesouro brasileiro | `tesouro-direto-fetcher`, `rtnpy` |
 | Emprego e mercado de trabalho | `pdet-data` |
 | Fluxos de comércio (import/export) | `comexdown` |
 | Vigilância de saúde pública | `datasus-fetcher` |

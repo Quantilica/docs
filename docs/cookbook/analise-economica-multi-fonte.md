@@ -15,7 +15,7 @@ Para isso precisamos de:
 ## Pré-requisitos
 
 ```bash
-pip install sidra-fetcher tddata pdet-data polars
+pip install sidra-fetcher tesouro-direto-fetcher pdet-data polars
 ```
 
 Para `pdet-data`, é necessário ter o binário `7z` no `PATH` (descompressão `.7z`).
@@ -69,7 +69,7 @@ print(f"IPCA: {len(ipca)} meses")
 ```python
 import asyncio
 from pathlib import Path
-from tddata import downloader, reader
+from tesouro_direto_fetcher import downloader, reader
 
 async def fetch_treasury():
     await downloader.download(
@@ -199,8 +199,8 @@ wages_real.write_parquet("data/wages_real.parquet")
 
 ## O que esta receita demonstra
 
-- **Modularidade**: três pacotes (`sidra-fetcher`, `tddata`, `pdet-data`) sem dependências cruzadas, compostos em camada do usuário.
-- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tddata.downloader` verifica `last_modified` no CKAN, `pdet-data fetch` pula `.7z` já baixados.
+- **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-data`) sem dependências cruzadas, compostos em camada do usuário.
+- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-data fetch` pula `.7z` já baixados.
 - **Performance**: tudo em Polars com lazy evaluation; mesmo cobrindo 14 anos da RAIS (~700M registros), agregações finais rodam em segundos.
 - **Reprodutibilidade**: cada estágio salva um Parquet intermediário, então re-análises não exigem re-fetch.
 
@@ -213,7 +213,7 @@ wages_real.write_parquet("data/wages_real.parquet")
 ## Saiba mais
 
 - **[sidra-fetcher](../ibge/sidra-fetcher.md)** — SDK SIDRA detalhado.
-- **[tddata](../tesouro/tddata.md)** — análise Tesouro Direto.
+- **[tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)** — análise Tesouro Direto.
 - **[pdet-data](../trabalho/pdet-data.md)** — RAIS/CAGED.
 - **[Cálculo de Retornos](../tesouro/calculo-retornos.md)** — matemática por trás de yield real, duration, FIFO.
 - **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — padrão multi-fonte ELT.

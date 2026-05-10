@@ -198,6 +198,6 @@ Principais métodos: `select`, `assign`, `melt`, `transpose`, `insert`, `drop_ro
 ## Saiba Mais
 
 - **[Visão Geral do Tesouro](index.md)** — Todas as ferramentas do Tesouro (Finanças)
-- **[tddata](tddata.md)** — Microdados do Tesouro Direto e análise de portfólio
+- **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — Microdados do Tesouro Direto e análise de portfólio
 - **[Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)** — Fonte oficial
 - **[API do Tesouro Nacional](https://apiapex.tesouro.gov.br/)** — API de metadados de publicações
