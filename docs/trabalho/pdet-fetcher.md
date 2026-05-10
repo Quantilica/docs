@@ -245,6 +245,6 @@ Para um ano RAIS completo (~10 GB descomprimido):
 
 ## Saiba Mais
 
-- **[Dados de Comércio Exterior](../comex/comexdown.md)** — Estatísticas comerciais
+- **[Dados de Comércio Exterior](../comex/comex-fetcher.md)** — Estatísticas comerciais
 - **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema
 - **[PDET Oficial](http://pdet.mte.gov.br/microdados-rais-e-caged)** — Fonte governamental

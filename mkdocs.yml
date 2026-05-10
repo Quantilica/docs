@@ -45,7 +45,7 @@ nav:
       - Mercado de Trabalho:
           - trabalho/index.md
           - pdet-fetcher: trabalho/pdet-fetcher.md
-      - Comércio Exterior: comex/comexdown.md
+      - Comércio Exterior: comex/comex-fetcher.md
       - Saúde Pública: saude/datasus-fetcher.md
       - Clima & Meio Ambiente: clima/inmet-fetcher.md
 

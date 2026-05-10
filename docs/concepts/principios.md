@@ -27,14 +27,14 @@ Fontes de dados governamentais brasileiros são diversas e fragmentadas. Forçar
 - `sidra-fetcher` é otimizada para a API REST do IBGE com concorrência assíncrona.
 - `pdet-fetcher` é otimizada para CSVs massivos da RAIS/CAGED com processamento vetorial Polars.
 - `datasus-fetcher` é otimizada para a infraestrutura FTP legada do DATASUS com crawling multithreaded.
-- `comexdown` é otimizada para arquivos GB do Siscomex com streaming chunked sem dependências externas.
+- `comex-fetcher` é otimizada para arquivos GB do Siscomex com streaming chunked sem dependências externas.
 
 Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a otimização local.
 
 ### Como aplicamos
 
 ```
-sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher            comexdown
+sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher            comex-fetcher
 ├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
@@ -86,7 +86,7 @@ Infraestrutura legada é instável. Ferramentas que caem em falhas transitórias
 
 - **Auto-retry com backoff exponencial**: falhas transitórias são retentadas 3-5 vezes com delays crescentes (`tenacity`).
 - **Smart resume**: se um download falha a 70%, execuções subsequentes resumem dali, não do começo.
-- **Resiliência SSL**: lidamos com certificados governamentais expirados/mal configurados (`comexdown`).
+- **Resiliência SSL**: lidamos com certificados governamentais expirados/mal configurados (`comex-fetcher`).
 - **Idempotência baseada em tamanho**: comparamos tamanho remoto vs. local; pulamos se idêntico (`datasus-fetcher`).
 - **Validação na fonte**: detectamos corrupção/truncamento imediatamente, antes de transformações caras.
 - **Tolerância a falha parcial**: continuamos com dados parciais (registrados), em vez de abortar tudo.
@@ -102,7 +102,7 @@ Rate limiting (429)         Throttling integrado + delay
 Resposta malformada         Validação + verificação de schema
 API lenta                   Paginação em batch + opção async
 Falha parcial               Continue com dados parciais (registrados)
-Certificado SSL ruim        Configuração explícita (comexdown)
+Certificado SSL ruim        Configuração explícita (comex-fetcher)
 Truncamento silencioso      Validação de tamanho/checksum na fonte
 ```
 
@@ -167,8 +167,8 @@ Escolhas ruins aqui prendem você em infraestrutura lenta e cara. Toda ferrament
 - **Concorrência multithreaded** onde aplicável (`datasus-fetcher`: 6-10× speedup).
 - **Async/await** onde aplicável (`sidra-fetcher`: 3× em harvest de metadata).
 - **Processamento vetorial Polars** onde aplicável (`pdet-fetcher`: 10× vs. Pandas).
-- **Cache + verificações de idempotência** (`comexdown`: 57× em re-runs).
-- **Streaming/chunked** para arquivos grandes (`comexdown`: memória O(1)).
+- **Cache + verificações de idempotência** (`comex-fetcher`: 57× em re-runs).
+- **Streaming/chunked** para arquivos grandes (`comex-fetcher`: memória O(1)).
 - **Formatos colunares** (Parquet: 88% compressão vs. CSV).
 
 ### Volumes típicos
@@ -200,13 +200,13 @@ result = df.filter(pl.col("state") == "SP").collect()
 
 ```python
 from pathlib import Path
-import comexdown
+import comex_fetcher
 
 # Primeira execução: transmite os CSVs do SECEX em chunks de 8 KiB
-comexdown.get_year(Path("./DATA"), year=2023)
+comex_fetcher.get_year(Path("./DATA"), year=2023)
 
 # Segunda execução: HEAD detecta Last-Modified == mtime local; GET é pulado
-comexdown.get_year(Path("./DATA"), year=2023)
+comex_fetcher.get_year(Path("./DATA"), year=2023)
 # Re-execuções custam apenas um round-trip HEAD por arquivo quando nada mudou.
 ```
 
