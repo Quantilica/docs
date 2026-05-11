@@ -1,6 +1,19 @@
+---
+title: rtn-fetcher — Resultado do Tesouro Nacional em Python
+description: Baixa, lê e normaliza a planilha Excel do RTN (24+ abas, células mescladas, hierarquia implícita) em tabela longa com expansão de contas pronta para análise.
+---
+
 # rtn-fetcher — Resultado do Tesouro Nacional (RTN) Brasileiro
 
 **rtn-fetcher** é um pacote Python que baixa, extrai e normaliza o *Resultado do Tesouro Nacional* (RTN) — relatório mensal de resultados fiscais federais do Brasil. Transforma as pastas de trabalho Excel com múltiplas abas do Tesouro em tabelas de formato longo limpo com expansão hierárquica de contas, prontas para análise ou carregamento em warehouse.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **Headers não estão em linha fixa.** Cada uma das 24+ abas tem cabeçalho em linhas diferentes, frequentemente com células mescladas. O leitor detecta dinamicamente; não tente `header=0`.
+    - **Hierarquia de contas é implícita.** Código `1.2.3` exige a existência de `1` e `1.2` — o `rtn-fetcher` expande em uma tabela de dimensão separada.
+    - **Unidades mudam por aba.** Abas `1.x` em milhões de R$; abas `2.x-A` em fração do PIB; aba `1.2-B` deflacionada por IPCA. Confira `unit` antes de somar.
+    - **Períodos misturados.** Mensal, trimestral, anual — em colunas diferentes na mesma planilha. O leitor separa em `year`/`month` ou `year`/`quarter`.
+    - **Abas 3.1 e 3.2 não são suportadas.** Layout comparativo com headers multi-nível — ainda não normalizado.
 
 ## O Que É
 

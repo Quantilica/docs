@@ -1,8 +1,22 @@
+---
+title: datasus-fetcher — Microdados do SUS via FTP, em paralelo
+description: Crawler multithread para os 113 datasets do DATASUS (SIM, SINASC, SIH, SIA, CNES, SINAN). 320+ GB cobrindo 1979 até hoje, com retomada e versionamento.
+---
+
 # Saúde Pública (Saúde)
 
 Dados de vigilância de saúde brasileira do DATASUS (Departamento de Dados de Saúde).
 
-**datasus-fetcher** é um crawler concorrente multithreaded engenhosamente projetado para os microdados massivos do Sistema Único de Saúde (SUS) do Brasil hospedados em servidores FTP legados.
+**datasus-fetcher** é um crawler concorrente multithreaded projetado para os microdados massivos do Sistema Único de Saúde (SUS) do Brasil hospedados em servidores FTP legados.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **`.dbc` não é `.dbf`.** É um formato proprietário compactado do DATASUS. Para abrir em Python, use `pyreaddbc` (ou converta com [`quantilica-io`](../fundacoes/quantilica-io.md)).
+    - **Nome de arquivo carrega significado.** `RDSP2001.dbc` = AIH Reduzido, SP, 2020, mês 01. O `datasus-fetcher` parseia isso para filtrar antes de baixar — não tente regex manual.
+    - **FTP cai. Muito.** O servidor `ftp.datasus.gov.br` tem janelas de instabilidade quase diárias, especialmente em horário comercial. O retry é automático, mas reduza `--threads` se cair direto.
+    - **Volume é colossal.** Baixar tudo são 320+ GB. Sempre filtre por `--start`/`--end` e/ou `--regions` no primeiro recorte; aumente depois.
+    - **Atualizações retroativas acontecem.** O DATASUS republica arquivos antigos quando há correção. O versionamento data o arquivo no nome e arquiva o antigo — confira o diretório `archive/` antes de assumir que sua cópia é a última.
+    - **Dicionário de dados está em PDFs.** Use o subcomando `docs` para baixar os dicionários junto com os microdados — sem eles, codificações como `RACACOR=4` são opacas.
 
 Muito mais que um simples cliente de dados, ele entende a taxonomia complexa dos sistemas de saúde brasileiros (SIHSUS, SIM, SINASC, SIA, etc.) e abstrai a ineficiência da infraestrutura FTP legada em um pipeline de rede de alto desempenho e tolerante a falhas.
 

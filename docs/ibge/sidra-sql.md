@@ -1,6 +1,20 @@
+---
+title: sidra-sql — Data warehouse PostgreSQL para dados do SIDRA
+description: Motor ETL com plugin architecture, bulk load via COPY, star schema dimensional e SCD Type II para revisões silenciosas do IBGE.
+---
+
 # sidra-sql
 
 **Infraestrutura avançada de ETL e Data Warehousing para dados SIDRA do IBGE.**
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **O IBGE revisa dados sem aviso.** PIB Q3 2020 publicado em janeiro de 2021 pode estar diferente em 2026. O `sidra-sql` usa SCD Type II (`ativo`, `modificacao`) — nunca sobrescreve, sempre acrescenta. Queries com `WHERE modificacao <= 'YYYY-MM-DD' AND ativo = TRUE` reproduzem qualquer snapshot histórico.
+    - **Códigos de tabela são strings.** `"1620"`, não `1620`. Inteiro causa `404` silencioso.
+    - **`unnest_classifications = true` é uma arma carregada.** Tabelas com 6 classificações fazem cross-product explosivo. Comece com `false` e expanda só quando souber o volume.
+    - **`INSERT` linha-a-linha leva horas.** O motor usa `COPY FROM STDIN` + tabela de staging — 400k linhas/s em hardware comum. Não tente "otimizar" via SQLAlchemy ORM.
+    - **Períodos têm formatos heterogêneos.** Mensal `202301`, trimestral `202301`, anual `2023`, plurianual `2020-2023`. A dimensão `periodo` já normaliza com `ano`, `mes`, `trimestre`, `data_inicio`, `data_fim` — joine pela coluna que faz sentido.
+    - **`config.ini` lê do CWD.** Se você roda de outro diretório, ele falha sem mensagem clara. `os.chdir()` ou caminho absoluto.
 
 ![sidra-sql banner](../assets/banner.png)
 

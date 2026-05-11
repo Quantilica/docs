@@ -1,8 +1,22 @@
+---
+title: inmet-fetcher — Dados meteorológicos do BDMEP/INMET em Parquet
+description: Baixa o BDMEP em paralelo, trata encoding latin-1, limpa cabeçalhos inconsistentes e exporta Parquet/CSV com colunas em snake_case e datetime nativo.
+---
+
 # Clima e Ambiente
 
 Dados meteorológicos e ambientais brasileiros do INMET (Instituto Nacional de Meteorologia).
 
 **inmet-fetcher** fornece acesso à rede abrangente de estações meteorológicas históricas do Brasil, habilitando pesquisa climática, análise agrícola, estudos de hidrologia e monitoramento ambiental.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **Encoding é `latin-1`.** Os ZIPs anuais vêm em `latin-1` com BOM intermitente. O reader corrige automaticamente; `pl.read_csv(..., encoding='utf-8')` quebra.
+    - **Cabeçalho não é estável entre anos.** Algumas estações têm linhas extras de metadados antes do header; outras têm separador `,` em vez de `;`. O parser detecta — não tente `header=0` cego.
+    - **`-9999` é nulo.** Sentinela usada pelo INMET para "sem leitura". O reader converte para `null`; não calcule média sem filtrar.
+    - **`data` e `hora` vêm separados.** Em colunas distintas. O reader combina em `datetime` nativo via `data + hora`.
+    - **Estações são automáticas e convencionais.** Códigos `A###` são automáticas (horárias); os demais são convencionais. Não tente joinar séries de tipos diferentes sem reamostrar.
+    - **Cobertura é desigual.** Antes de 2008 a rede de automáticas era pequena. Para séries longas, use as convencionais ou aceite o gap.
 
 ## Visão Geral
 

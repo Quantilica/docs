@@ -1,6 +1,22 @@
+---
+title: sidra-fetcher — Cliente Python para a API SIDRA do IBGE
+description: SDK Python para extrair dados e metadados da API IBGE/SIDRA. Cliente sync e async, parsing de períodos, construtor de URL tipado, retry resiliente.
+---
+
 # sidra-fetcher
 
 SDK avançado para extração programática da API SIDRA IBGE.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    Coisas que a API do IBGE não conta no README — mas que você descobre no segundo dia:
+
+    - **URLs posicionais e crípticas.** `/t/1620/n1/all/v/116/p/all/d/m` não é auto-explicativo. Use sempre `Parametro` ou `parameter_from_url()`, nunca concatene strings.
+    - **Períodos não têm formato único.** `"202301"` é mensal; `"2023"` é anual; `"jan-fev-mar 2023"` é trimestre móvel. O `sidra-fetcher` detecta automaticamente via `Periodo.frequencia` (`mensal`, `trimestral`, `trimestre_movel`, `semestral`, `anual`, `plurianual`).
+    - **Tabelas grandes estouram em uma única chamada.** PIB municipal, PAM, Censo: itere período por período com `get_sidra_url_request_period`. Tudo de uma vez retorna `503` ou trunca silenciosamente.
+    - **Classificações fazem cross-product.** Uma tabela com 3 classificações × 10 categorias cada vira 1000 combinações por linha de dado. Filtre `classificacoes` no `Parametro`, não no cliente.
+    - **Metadados mudam pouco; dados mudam silenciosamente.** Cacheie metadados em disco (`save_agregado`/`load_agregado`); re-extraia os valores e compare com o manifesto SHA-256.
+    - **Rate limit não documentado.** Horário comercial brasileiro é o pior; rode em batch à noite ou use `AsyncSidraClient` com `asyncio.Semaphore` para limitar a concorrência.
 
 ## O Que É
 

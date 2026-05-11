@@ -1,8 +1,22 @@
+---
+title: comex-fetcher — Comércio exterior do Brasil via Siscomex
+description: Downloader resiliente para os arquivos GB do Siscomex (importação e exportação). Idempotência temporal, streaming chunked, tolerância a SSL ruim.
+---
+
 # Comércio Exterior (Comex)
 
 Dados de importação/exportação brasileira do Siscomex (Sistema Integrado de Comércio Exterior).
 
-**comex-fetcher** é um agente de extração resiliente de rede para dados Siscomex — engenhosamente projetado para lidar com infraestrutura governamental legada com downloads idempotentes e eficiência streaming.
+**comex-fetcher** é um agente de extração resiliente de rede para dados Siscomex — projetado para lidar com a infraestrutura governamental legada com downloads idempotentes e eficiência streaming.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **Arquivos em escala de GB.** Cada arquivo anual de NCM 4-dígitos passa fácil de 1 GB. Use sempre o reader em chunks; `pd.read_csv` cru estoura memória.
+    - **SSL frequentemente quebrado.** O servidor do Siscomex tem cadeia de certificados incompleta em janelas curtas. O `comex-fetcher` tem fallback configurável.
+    - **Schema NCM vs NBM.** NCM cobre 1997+; NBM cobre 1989–1996 com colunas diferentes. Não confunda o dataset histórico com o atual.
+    - **Códigos auxiliares são tabelas separadas.** País, UF, via de transporte, URF — 20+ tabelas de código. Sem juntar essas dimensões, "valor" sozinho não diz nada.
+    - **Idempotência é temporal, não por hash.** Arquivos do mesmo período não são re-baixados; mas se o Siscomex republicar com correção, você precisa forçar re-download.
+    - **Mês corrente é parcial.** O Siscomex publica o mês fechado por volta do dia 15 do mês seguinte. Não tire conclusões de séries com o último ponto incompleto.
 
 ## O Desafio
 
