@@ -20,10 +20,22 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 - **[Yield Curve em 10 linhas](yield-curve.md)** — DI, Selic, IPCA+ — a curva inteira com Altair. Só `tesouro-direto-fetcher`.
 
+### Saúde pública
+
+- **[Mortalidade infantil × cobertura SUS por município](mortalidade-sus.md)** — SIM, SINASC, CNES e população do SIDRA em uma única tabela municipal. `datasus-fetcher` + `sidra-fetcher`.
+
+### Clima
+
+- **[Estiagem no Nordeste — 30 anos de INMET](estiagem-nordeste.md)** — série climática histórica, tendência por UF. Só `inmet-fetcher`.
+
 ### Engenharia de dados
 
 - **[Balança comercial em uma query DuckDB](balanca-duckdb.md)** — `comex-fetcher` baixa GBs, DuckDB consulta direto o Parquet sem carregar em memória.
 
+### Reprodutibilidade
+
+- **[Reproduzir um paper de 2019 — Time Travel](time-travel.md)** — usar manifesto SHA-256 + SCD Type II do `sidra-sql` para defender um número exato anos depois.
+
 ---
 
-Mais receitas serão adicionadas ao longo do tempo (Saúde × Demografia, Clima × Agricultura, Comércio × Trabalho). Quer ver uma específica? Abra issue no repositório de docs.
+Quer ver uma receita específica? Abra issue no repositório de docs.

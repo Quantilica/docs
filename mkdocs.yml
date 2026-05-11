@@ -84,8 +84,22 @@ nav:
       - cookbook/index.md
       - Curva de Phillips brasileira: cookbook/curva-phillips.md
       - Yield Curve em 10 linhas: cookbook/yield-curve.md
+      - Mortalidade infantil × SUS: cookbook/mortalidade-sus.md
+      - Estiagem no Nordeste: cookbook/estiagem-nordeste.md
       - Balança comercial em DuckDB: cookbook/balanca-duckdb.md
+      - Time Travel — paper de 2019: cookbook/time-travel.md
       - Análise Econômica Multi-Fonte: cookbook/analise-economica-multi-fonte.md
+
+  - Por persona:
+      - personas/index.md
+      - Analista macroeconômico: personas/analista-macro.md
+      - Cientista de saúde pública: personas/cientista-saude.md
+      - Engenheiro de dados: personas/engenheiro-dados.md
+      - Pesquisador acadêmico: personas/pesquisador.md
+
+  - Status das fontes: status.md
+  - Contribuir: contribuir.md
+  - Changelog: changelog.md
 
 plugins:
   - search:
