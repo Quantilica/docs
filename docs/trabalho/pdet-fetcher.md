@@ -1,8 +1,22 @@
-# pdet-fetcher: Buscador de Microdados de Mercado de Trabalho Brasileiro
+---
+title: pdet-fetcher — Microdados RAIS e CAGED em Polars
+description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mensais) do PDET. Polars-native, CSV ragged-tolerant, bulk-convert para Parquet.
+---
+
+# pdet-fetcher — Microdados de Mercado de Trabalho Brasileiro
 
 **pdet-fetcher** é um pacote Python para buscar, ler e converter microdados de PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — plataforma oficial de estatísticas de trabalho do Brasil mantida pelo Ministério do Trabalho e Previdência Social.
 
 Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluindo CAGED legado até 2019 e CAGED redesenhado 2020+. Output é DataFrames Polars, com utilitários para bulk-convert de arquivos brutos para Parquet.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **CAGED mudou em 2020.** Schema, separadores e colunas diferentes entre `caged` (até 2019), `caged-ajustes` e `caged-2020`. Use o dataset certo no `convert`.
+    - **CSVs são "ragged".** Linhas com número variável de colunas, separador `;`, encoding `latin-1`. O reader já conserta, mas `pl.read_csv` cru vai falhar.
+    - **Arquivos vêm em `.7z`.** Você precisa do CLI `7z` no `PATH`. Sem ele, `convert` falha com erro de subprocesso.
+    - **RAIS é gigante.** Vínculos por ano ultrapassam 50M linhas e ~5 GB. Processe em chunks por UF ou por ano; nunca carregue tudo em memória.
+    - **`-9999` significa nulo em algumas colunas.** O `pdet-fetcher` aplica os mapeamentos via metadados por coluna; verifique se sua análise não conta `-9999` como número real.
+    - **FTP cai com frequência.** `fetch` faz retry, mas em horário de pico (manhã útil) pode ser melhor rodar à noite ou em fim de semana.
 
 ## Recursos Principais
 

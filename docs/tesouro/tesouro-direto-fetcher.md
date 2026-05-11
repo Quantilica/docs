@@ -1,6 +1,19 @@
-# tesouro-direto-fetcher - Baixar, Analisar e Plotar Dados do Tesouro Direto Brasileiro
+---
+title: tesouro-direto-fetcher — Tesouro Direto em Python
+description: Download, leitura e visualização de dados históricos do Tesouro Direto via API CKAN (Tesouro Transparente). Leitores especializados por dataset e gráficos prontos com Altair.
+---
 
-**tesouro-direto-fetcher** é um poderoso pacote Python projetado para simplificar o processo de download, leitura e visualização de dados históricos do programa Tesouro Direto brasileiro. Alavanca a API CKAN oficial (Tesouro Transparente) para buscar os datasets mais atualizados.
+# tesouro-direto-fetcher — Baixar, Analisar e Plotar Dados do Tesouro Direto Brasileiro
+
+**tesouro-direto-fetcher** é um pacote Python que simplifica o download, a leitura e a visualização de dados históricos do programa Tesouro Direto brasileiro. Alavanca a API CKAN oficial (Tesouro Transparente) para buscar os datasets mais atualizados.
+
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **Nome de arquivo carrega timestamp.** Cada download fica como `taxas-...@20251230T102010.csv`. Não tente um nome estável — passe um diretório de destino e use `glob` para encontrar o mais recente.
+    - **Um dataset, vários CSVs.** Preços, estoque, investidores, operações são datasets CKAN separados. Use o `reader.read_prices`, `read_stock`, `read_investors` — não tente um único parser genérico.
+    - **Datas vêm em pt-BR.** `dd/mm/aaaa` com decimal `,`. Os leitores já tratam isso; se você ler com `pl.read_csv` cru, vai apanhar.
+    - **Licença GPL-3.0.** Este é o único pacote da Quantilica que não é MIT. Se você for embarcar em produto fechado, atente.
+    - **`asyncio.run` reinicia event loop.** Em Jupyter, prefira `await downloader.download(...)` direto na célula com `nest_asyncio` ou use o CLI.
 
 ## Recursos
 

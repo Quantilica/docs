@@ -1,10 +1,22 @@
+---
+title: sidra-pipelines — Catálogo de pipelines ETL para sidra-sql
+description: Mais de 30 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, PEVS, PNAD, Censo). Wide-format, variáveis como colunas, plug-and-play com sidra-sql.
+---
+
 # sidra-pipelines
 
 **Catálogo oficial de pipelines ETL pré-construídos para o motor sidra-sql.**
 
+!!! warning "Pegadinhas da fonte oficial"
+
+    - **IDs de tabela SIDRA mudam.** Quando o IBGE descontinua uma tabela e publica outra equivalente, o pipeline quebra silenciosamente com `404`. Os pipelines do catálogo são versionados — atualize com `sidra-sql plugin update std`.
+    - **Wide format ≠ long format.** Os pipelines pivotam variáveis para colunas (`valor`, `ano`, `id_municipio`, `variavel`, `unidade`). Se você esperava long format puro, transforme com `UNPIVOT` ou Polars.
+    - **Primeiras execuções são longas.** Censo, PAM municipal, PPM rebanhos têm milhões de linhas. Use `--start-period` / `--end-period` no `fetch.toml` para começar pequeno.
+    - **Pipelines de agropecuária têm sazonalidade IBGE.** PAM publica entre setembro e dezembro do ano seguinte; PPM entre outubro e janeiro. Rodar fora dessa janela retorna o ano anterior.
+
 ## O Que É
 
-`sidra-pipelines` é a biblioteca padrão de 14 pipelines de dados production-ready para o motor `sidra-sql`. É um único repositório Git contendo definições TOML + SQL declarativas para os datasets IBGE mais comumente usados.
+`sidra-pipelines` é o catálogo padrão de pipelines de dados production-ready para o motor `sidra-sql` — atualmente com 30+ pipelines cobrindo IBGE de ponta a ponta. É um único repositório Git contendo definições TOML + SQL declarativas para os datasets IBGE mais comumente usados.
 
 Em vez de escrever suas próprias definições de pipeline, instale este catálogo e execute extrações pré-construídas com um único comando CLI:
 
@@ -39,7 +51,7 @@ graph TD
 
 ## Pipelines Incluídos
 
-O catálogo cobre 14 datasets brasileiros essenciais de economia, demografia e agricultura:
+O catálogo cobre datasets brasileiros essenciais de economia, demografia, agricultura, indústria, comércio e serviços. A lista canônica está em [`manifest.toml`](https://github.com/Quantilica/sidra-pipelines/blob/main/manifest.toml); a tabela abaixo destaca os pipelines mais usados:
 
 ### 📊 Economia e Preços
 
