@@ -594,6 +594,10 @@ def main():
 - `datasus-fetcher` — implementação de referência
 - `tesouro-direto-fetcher` — migrado neste padrão
 - `comex-fetcher` — migrado neste padrão
+- `inmet-fetcher` — migrado neste padrão
+- `rtn-fetcher` — migrado neste padrão
+- `pdet-fetcher` — migrado neste padrão
+- `sidra-fetcher` — migrado neste padrão (somente comandos de metadados; sem download)
 
 ---
 
