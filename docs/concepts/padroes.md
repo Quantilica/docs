@@ -593,6 +593,7 @@ def main():
 
 - `datasus-fetcher` — implementação de referência
 - `tesouro-direto-fetcher` — migrado neste padrão
+- `comex-fetcher` — migrado neste padrão
 
 ---
 
