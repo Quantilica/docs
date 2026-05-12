@@ -34,6 +34,24 @@ graph TD
 
 A plataforma é organizada em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas — o que ela deve e o que ela **não** deve fazer.
 
+## Fundações Técnicas
+
+A infraestrutura da Quantilica repousa sobre o princípio da **Neutralidade de Domínio**. O pacote `quantilica-core` não possui conhecimento sobre fontes específicas (SIDRA, DATASUS, etc); ele lida exclusivamente com abstrações técnicas.
+
+A fundação é dividida em dois pilares para equilibrar leveza e poder:
+
+1.  **`quantilica-core` (Infraestrutura de I/O):** Base estável e sem dependências binárias pesadas. Contém clientes HTTP/FTP resilientes, gerenciamento de manifestos (proveniência) e interface de storage.
+2.  **`quantilica-io` (Data Access Layer):** Camada analítica que depende do Polars. Responsável por leitura multi-formato, conversão otimizada para Parquet e contratos de dados (schemas).
+
+### Tipos de Pacotes no Ecossistema
+
+| Tipo | Padrão Esperado | Exemplos |
+| :--- | :--- | :--- |
+| **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `datasus-fetcher` |
+| **Pipeline** | Motor ETL + definições TOML/SQL | `sidra-sql`, `sidra-pipelines` |
+| **Data Package** | Download + Transformação + Export | `rtn-fetcher`, `inmet-fetcher` |
+| **CLI Host** | CLI unificada com descoberta por entry points | `quantilica-cli` |
+
 ## Camadas e responsabilidades
 
 ### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comex-fetcher`, `datasus-fetcher`, `inmet-fetcher`)
