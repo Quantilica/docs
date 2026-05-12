@@ -12,6 +12,7 @@ Este guia cobre oito padrões táticos usados em todas as ferramentas da platafo
 | [Validação na fonte](#validacao-na-fonte) | Resiliência, Sem Mágica |
 | [Gestão de memória para arquivos grandes](#memoria-arquivos-grandes) | Performance |
 | [Documentação e reprodutibilidade](#documentacao-reprodutibilidade) | Reprodutibilidade, Sem Mágica |
+| [UX de CLI: progresso vs. logs](#cli-ux) | Sem Mágica |
 
 ---
 
@@ -524,6 +525,77 @@ logger.info("Salvo em output.parquet")
 
 ---
 
+## UX de CLI: progresso vs. logs {#cli-ux}
+
+**Definição:** CLIs de fetchers exibem barras de progresso tqdm por padrão. O flag `--verbose` troca para logs estruturados, sem atalho `-v`.
+
+### Por quê?
+
+- **Progresso é o padrão**: quem roda o CLI interativamente quer saber "quantos arquivos faltam", não timestamps de log.
+- **Logs para debugging**: operadores e pipelines automatizados precisam de texto estruturado, não de barras ANSI.
+- **Um flag, dois modos**: evita estados inconsistentes onde logs e barras se misturam no terminal.
+
+### Padrão: barra de contagem de arquivos por dataset
+
+Usando `quantilica_core.progress.batch_progress` e suprimindo o logger para `WARNING`:
+
+```python
+# downloader.py
+from quantilica_core.progress import batch_progress
+
+async def download(dest_dir, dataset_id, show_progress=True):
+    resources = await get_dataset_resources(dataset_id)
+    remote = _to_remote_resources(resources, repo)
+
+    if show_progress:
+        with batch_progress(dataset_id, total=len(remote)) as pbar:
+            def _on_file_done(result):
+                pbar.update(1)
+            return await download_resources(..., on_file_done=_on_file_done)
+
+    # modo verbose: log_step + logger.info
+    with log_step(logger, "download-dataset", dataset_id=dataset_id):
+        ...
+```
+
+```python
+# cli.py
+parser.add_argument(
+    "--verbose",
+    action="store_true",
+    default=False,
+    help="Exibir logs detalhados em vez de barra de progresso",
+)
+
+def main():
+    ...
+    configure_cli_logging(verbose=args.verbose)
+    if not args.verbose:
+        logging.getLogger("<package>").setLevel(logging.WARNING)
+    asyncio.run(run_download(args, show_progress=not args.verbose))
+```
+
+### Comportamento esperado
+
+| Invocação | Saída |
+|---|---|
+| `fetcher download` | `prices \| 3/7 arquivo [00:10, ...]` |
+| `fetcher download --verbose` | `2025-01-10T14:22:01 INFO ... download-dataset start` |
+
+### Regras do padrão
+
+- **`--verbose` sem shorthand `-v`**: evita conflito com flags globais em wrappers.
+- **Modo padrão silencia INFO**: `logging.getLogger("<pacote>").setLevel(logging.WARNING)` — erros e warnings ainda aparecem.
+- **`batch_progress` de `quantilica_core.progress`**: não crie barras tqdm diretamente no CLI.
+- **`on_file_done` callback**: atualize a barra conforme cada arquivo termina (incluindo skips), não apenas no final.
+
+### Fetchers que adotam este padrão
+
+- `datasus-fetcher` — implementação de referência
+- `tesouro-direto-fetcher` — migrado neste padrão
+
+---
+
 ## Checklist resumo
 
 Quando construir pipelines com a plataforma:
@@ -536,6 +608,7 @@ Quando construir pipelines com a plataforma:
 - [ ] **Valide**: cheque qualidade imediatamente após buscar.
 - [ ] **Memória**: stream ou chunk para arquivos grandes.
 - [ ] **Documente**: registre transformações e metadados.
+- [ ] **CLI UX**: barra de progresso por padrão; `--verbose` para logs.
 
 ---
 
