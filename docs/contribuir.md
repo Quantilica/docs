@@ -92,12 +92,11 @@ Releases saem sem cadência fixa — quando funcionalidade está pronta e testad
 
 ## Governança
 
-A Quantilica opera sob modelo BDFL — veja [`GOVERNANCE.md`](https://github.com/Quantilica/.github/blob/main/GOVERNANCE.md) para o detalhe. Conforme o projeto crescer em contribuidores, a intenção é migrar para governança comunitária com comitê técnico (Fase 4 do [Roadmap](https://github.com/Quantilica/.github/blob/main/STRATEGY.md)).
+A Quantilica opera sob modelo BDFL — veja [`GOVERNANCE.md`](https://github.com/Quantilica/.github/blob/main/GOVERNANCE.md) para o detalhe. Conforme o projeto crescer em contribuidores, a intenção é migrar para governança comunitária com comitê técnico (Fase 4 do [Roadmap](roadmap.md)).
 
 ## Licenças
 
-- Maioria dos pacotes: **MIT**.
-- Exceção: **`tesouro-direto-fetcher`** é **GPL-3.0**.
+- Todos os pacotes: **MIT**.
 
 Ao contribuir, você concorda em licenciar seu código sob a licença do pacote em questão.
 

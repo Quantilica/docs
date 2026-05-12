@@ -101,7 +101,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 - **Python 3.12+**, `uv` para ambientes e dependências.
 - **`hatchling`** como build system, **`ruff`** para lint/format, **`pytest`** para testes.
 - **Parquet + Polars** como destino analítico padrão.
-- **MIT** para quase tudo (GPL-3.0 só no `tesouro-direto-fetcher`).
+- **MIT** para todos os pacotes.
 - Distribuição via `git+https://` para quase tudo; **`datasus-fetcher`** publicado no PyPI.
 
 Veja os [Princípios de Design](concepts/principios.md) para o detalhe completo, ou pule direto para o [Quickstart](quickstart.md).
@@ -116,4 +116,4 @@ Encontrou um fetcher quebrado porque o governo mudou um endpoint? Quer sugerir u
 - **Nova fonte de dados** → use o template *Feature Request* no GitHub.
 - **Receita de cruzamento** → PR no `docs/` com um novo arquivo em `cookbook/`.
 
-Os padrões técnicos estão em [CONTRIBUTING.md](https://github.com/Quantilica/.github/blob/main/CONTRIBUTING.md) e em [DOCUMENTATION.md](https://github.com/Quantilica/.github/blob/main/DOCUMENTATION.md).
+Os padrões técnicos estão em [Contribuir](contribuir.md) e em [Padrões de Escrita](normas/escrita.md).

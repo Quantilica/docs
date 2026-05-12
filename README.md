@@ -49,4 +49,4 @@ Coloque em `docs/assets/og-image.png` uma imagem 1200×630 com o logo e a taglin
 - Idioma: português brasileiro. Identificadores, flags de CLI e nomes de função permanecem em inglês.
 - Sem emoji decorativo em títulos e prosa.
 - Toda página nova deve ter front-matter com `title` e `description` para SEO e Open Graph.
-- Veja [`.github/DOCUMENTATION.md`](https://github.com/Quantilica/.github/blob/main/DOCUMENTATION.md) para o padrão de READMEs dos repositórios.
+- Veja [Padrões de Escrita](docs/normas/escrita.md) para o padrão de READMEs dos repositórios.

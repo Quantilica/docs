@@ -38,7 +38,7 @@ Renomeação dos repositórios para o padrão `<fonte>-fetcher`:
 | `inmet-bdmep-data` | **`inmet-fetcher`** |
 | `pdet-data` | **`pdet-fetcher`** |
 
-Detalhes do racional em [`STRATEGY.md`](https://github.com/Quantilica/.github/blob/main/STRATEGY.md).
+Detalhes do racional em [Roadmap](roadmap.md).
 
 ## 2025 — `quantilica-core` lançado
 

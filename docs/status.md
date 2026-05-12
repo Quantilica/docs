@@ -5,7 +5,7 @@ description: Estado de saúde conhecido das fontes oficiais que a Quantilica con
 
 # Status das fontes oficiais
 
-> **Página em construção.** A Fase 2 do [Roadmap Estratégico](https://github.com/Quantilica/.github/blob/main/STRATEGY.md) prevê health checks automáticos por cron job, com alertas via GitHub Issues quando uma fonte oficial cair. Até lá, esta página é mantida manualmente.
+> **Página em construção.** A Fase 2 do [Roadmap Estratégico](roadmap.md) prevê health checks automáticos por cron job, com alertas via GitHub Issues quando uma fonte oficial cair. Até lá, esta página é mantida manualmente.
 
 ## O que esta página é
 

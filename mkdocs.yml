@@ -47,11 +47,14 @@ theme:
 
 nav:
   - Início: index.md
+  - Roadmap: roadmap.md
   - Começar em 5 minutos: quickstart.md
 
   - Conceitos:
       - concepts/index.md
       - Arquitetura da Plataforma: concepts/arquitetura.md
+      - Convenções de Armazenamento: concepts/storage.md
+      - Arquitetura de CLI: concepts/cli.md
       - Princípios de Design: concepts/principios.md
       - Padrões Práticos: concepts/padroes.md
       - Parquet + Polars: concepts/parquet-polars.md
@@ -96,6 +99,10 @@ nav:
       - Cientista de saúde pública: personas/cientista-saude.md
       - Engenheiro de dados: personas/engenheiro-dados.md
       - Pesquisador acadêmico: personas/pesquisador.md
+
+  - Desenvolvimento:
+      - Padronização de Versão: normas/python.md
+      - Padrões de Escrita: normas/escrita.md
 
   - Status das fontes: status.md
   - Contribuir: contribuir.md
