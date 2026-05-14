@@ -59,7 +59,7 @@ dados/raw/sidra/
 | `ftp` | Cliente FTP resiliente para fontes legadas (DATASUS, etc.) |
 | `retry` | Lógica configurável para falhas de rede e erros transientes |
 | `storage` | `LocalStorage` para artefatos brutos e processados, com escrita atômica |
-| `manifests` | `DownloadManifest`, `ExecutionManifest` — rastreabilidade SHA-256 |
+| `manifests` | `DownloadManifest`, `DatasetManifest`, `RunManifest` — rastreabilidade SHA-256 |
 | `metadata` | `MetadataCatalog`, `Source`, `Dataset` — interoperabilidade entre coletores |
 | `logging` | `get_logger`, `log_step` — logging estruturado padronizado |
 | `exceptions` | Hierarquia comum: `FetchError`, `ParseError`, `StorageError` |

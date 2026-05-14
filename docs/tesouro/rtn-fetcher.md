@@ -52,7 +52,7 @@ As abas `3.1` e `3.2` usam um layout comparativo de publicação atual com heade
 
 ## Instalação
 
-Requer Python 3.13+.
+Requer Python 3.12+.
 
 ```bash
 pip install git+https://github.com/Quantilica/rtn-fetcher.git

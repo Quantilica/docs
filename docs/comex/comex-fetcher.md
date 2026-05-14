@@ -65,7 +65,7 @@ Monitorar países concorrentes e tendências de acesso ao mercado.
 pip install git+https://github.com/Quantilica/comex-fetcher.git
 ```
 
-**Requisitos:** Python 3.10+
+**Requisitos:** Python 3.12+
 
 ## CLI
 

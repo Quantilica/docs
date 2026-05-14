@@ -15,7 +15,7 @@ Base estável e leve. Sem dependências binárias pesadas.
 
 - `http`/`ftp`: clients resilientes com retry e manifestos.
 - `storage`: `LocalStorage` com escrita atômica.
-- `manifests`: rastreabilidade SHA-256 (`DownloadManifest`, `ExecutionManifest`).
+- `manifests`: rastreabilidade SHA-256 (`DownloadManifest`, `DatasetManifest`, `RunManifest`).
 - `metadata`: modelos genéricos para catálogos.
 - `logging` + `exceptions`: padrões consistentes em toda a stack.
 
@@ -46,3 +46,7 @@ A divisão `core` / `io` deixa cada camada com responsabilidade única:
 | `quantilica-io` | core + Polars + PyArrow | pesado | quem processa para análise |
 
 Veja a [Arquitetura do Ecossistema](../concepts/arquitetura.md) para o desenho completo das camadas.
+
+## E o host de CLI?
+
+[`quantilica-cli`](quantilica-cli.md) é o ponto de entrada unificado do ecossistema: descobre fetchers instalados via entry points e os monta como subcomandos. Não é uma fundação no sentido de "todo coletor depende dela" — é um **host** que consome os fetchers. Foi incluído na seção Fundações por afinidade arquitetural (compartilha o mesmo padrão de design domain-neutral).
