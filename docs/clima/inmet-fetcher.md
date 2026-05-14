@@ -132,7 +132,7 @@ stations = inmet.read_stations(data_dir)
 print(stations[["codigo_wmo", "estacao", "uf", "latitude", "longitude", "altitude"]])
 ```
 
-Assistentes de nível inferior também expostos: `inmet.read_zipfile(path, uf=..., station=..., start=..., end=...)`, `inmet.find_zipfiles(data_dir, years)`, `inmet.read_metadata(file)`, `inmet.read_station_data(file)`.
+Assistentes de nível inferior também disponíveis em `inmet_fetcher.reader`: `read_zipfile(path, uf=..., station=..., start=..., end=...)`, `find_zipfiles(data_dir, years)`, `read_metadata(file)`, `read_station_data(file)`. Importe-os via `from inmet_fetcher.reader import read_zipfile, find_zipfiles, read_metadata, read_station_data`.
 
 ## Fonte de Dados
 
