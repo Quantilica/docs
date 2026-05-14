@@ -6,11 +6,13 @@ Como o Ecossistema Quantilica é organizado e como as partes se conectam. Esta p
 
 ```mermaid
 graph TD
-    Sources["Fontes de Dados Governamentais<br/>(IBGE, Tesouro, Trabalho, Comércio, Saúde, Clima)"]
+    Sources["Fontes de Dados Governamentais<br/>(IBGE, Tesouro/STN, BCB, Trabalho, Comércio, Saúde, Clima)"]
 
     Sources -->|IBGE SIDRA| SF["sidra-fetcher"]
     Sources -->|IBGE SIDRA| SQL["sidra-sql"]
     Sources -->|Tesouro Direto| TD["tesouro-direto-fetcher"]
+    Sources -->|RTN/STN| RTN["rtn-fetcher"]
+    Sources -->|BCB SGS| BCB["bcb-sgs-fetcher"]
     Sources -->|RAIS/CAGED| PD["pdet-fetcher"]
     Sources -->|Siscomex| CX["comex-fetcher"]
     Sources -->|DATASUS| DS["datasus-fetcher"]
@@ -19,6 +21,8 @@ graph TD
     SF --> Processing["Processamento & Transformação<br/>(Polars vetorial / Pandas)"]
     SQL --> Processing
     TD --> Processing
+    RTN --> Processing
+    BCB --> Processing
     PD --> Processing
     CX --> Processing
     DS --> Processing
@@ -47,14 +51,14 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
 | Tipo | Padrão Esperado | Exemplos |
 | :--- | :--- | :--- |
-| **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `datasus-fetcher` |
+| **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `datasus-fetcher`, `bcb-sgs-fetcher` |
 | **Pipeline** | Motor ETL + definições TOML/SQL | `sidra-sql`, `sidra-pipelines` |
 | **Data Package** | Download + Transformação + Export | `rtn-fetcher`, `inmet-fetcher` |
 | **CLI Host** | CLI unificada com descoberta por entry points | `quantilica-cli` |
 
 ## Camadas e responsabilidades
 
-### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`, `comex-fetcher`, `datasus-fetcher`, `inmet-fetcher`)
+### Extração (`sidra-fetcher`, `tesouro-direto-fetcher`, `rtn-fetcher`, `bcb-sgs-fetcher`, `pdet-fetcher`, `comex-fetcher`, `datasus-fetcher`, `inmet-fetcher`)
 
 Obter dados de APIs/FTPs governamentais com confiabilidade.
 
