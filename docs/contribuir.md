@@ -42,7 +42,7 @@ Todos os repositórios da Quantilica seguem o mesmo padrão. Consulte o [`ARCHIT
 
 | Item | Regra |
 |---|---|
-| Linguagem | Python 3.12+ (3.13+ em alguns pacotes — confira `pyproject.toml`) |
+| Linguagem | Python 3.12+ |
 | Ambiente | `uv` para deps e venv |
 | Build | `hatchling` |
 | Lint/format | `ruff` |

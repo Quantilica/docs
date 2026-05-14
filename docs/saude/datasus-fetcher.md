@@ -78,7 +78,7 @@ Quantificar carga de doença usando datasets completos de SINASC (registros de n
 - **Retries automáticos** — até 3 tentativas em erros FTP transitórios
 - **Versionamento de arquivo** — armazena cada versão baixada com nome com data; arquiva antigas automaticamente
 - **Documentação & tabelas auxiliares** — baixa livros de códigos e tabelas de referência junto aos dados
-- **Sem dependências externas** — Python 3.10+ puro
+- **Sem dependências externas** — Python 3.12+ puro
 
 ## Instalação
 

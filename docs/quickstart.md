@@ -9,7 +9,7 @@ Três caminhos prontos para baixar e analisar um dataset público real, do zero.
 
 ## Pré-requisitos
 
-- **Python 3.12+** (`sidra-fetcher` exige 3.13+).
+- **Python 3.12+**
 - **[uv](https://github.com/astral-sh/uv)** para gerenciar ambientes (recomendado).
 
 ```bash
