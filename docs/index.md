@@ -11,7 +11,7 @@ hide:
   <img src="assets/logo.png" alt="Logo Quantilica" width="160" height="160">
 </div>
 
-**Quantilica** é uma plataforma aberta de coletores Python para os dados públicos brasileiros — IBGE, Tesouro Nacional, DATASUS, INMET, CAGED, RAIS, Comex e adjacentes. Uma ferramenta especializada por fonte, todas seguindo os mesmos princípios: resiliência, proveniência e Parquet tipado na saída.
+**Quantilica** é um ecossistema aberto de coletores Python para os dados públicos brasileiros — IBGE, Tesouro Nacional, DATASUS, INMET, CAGED, RAIS, Comex e adjacentes. Uma ferramenta especializada por fonte, todas seguindo os mesmos princípios: resiliência, proveniência e Parquet tipado na saída.
 
 [Comece em 5 minutos →](quickstart.md){ .md-button .md-button--primary }
 [Ver o Cookbook](cookbook/index.md){ .md-button }
@@ -78,7 +78,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 - **[Quickstart](quickstart.md)** — instala, baixa um dataset real, plota um gráfico. Três caminhos: IBGE, Tesouro, Saúde.
 
 ### Aprofundar
-1. **[Arquitetura da Plataforma](concepts/arquitetura.md)** — como as partes se conectam.
+1. **[Arquitetura do Ecossistema](concepts/arquitetura.md)** — como as partes se conectam.
 2. **[Princípios de Design](concepts/principios.md)** — por que o sistema tem essa forma.
 3. **[Padrões Práticos](concepts/padroes.md)** — receitas táticas que materializam os princípios.
 4. **[Parquet + Polars](concepts/parquet-polars.md)** — o formato e a biblioteca que sustentam tudo.

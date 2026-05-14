@@ -52,7 +52,7 @@ nav:
 
   - Conceitos:
       - concepts/index.md
-      - Arquitetura da Plataforma: concepts/arquitetura.md
+      - Arquitetura do Ecossistema: concepts/arquitetura.md
       - Convenções de Armazenamento: concepts/storage.md
       - Arquitetura de CLI: concepts/cli.md
       - Princípios de Design: concepts/principios.md

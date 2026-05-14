@@ -1,8 +1,8 @@
 # Conceitos Transversais
 
-Quatro páginas formam a coluna conceitual da plataforma. Leia em ordem se você é novo; consulte por referência caso já conheça o sistema.
+Quatro páginas formam a coluna conceitual do ecossistema. Leia em ordem se você é novo; consulte por referência caso já conheça o sistema.
 
-## [Arquitetura da Plataforma](arquitetura.md)
+## [Arquitetura do Ecossistema](arquitetura.md)
 
 Como as partes se conectam: as quatro camadas (extração, processamento, armazenamento, análise), o modelo ELT, padrões de deployment (local, batch, streaming, multi-fonte) e características de performance.
 
@@ -22,7 +22,7 @@ Os oito padrões táticos que materializam os princípios em código: idempotên
 
 ## [Parquet + Polars](parquet-polars.md)
 
-Tutorial dedicado ao formato e biblioteca centrais da plataforma. Mostra workflows eficientes para datasets de 100MB a 100GB+, com exemplos cobrindo SIDRA, RAIS e Tesouro.
+Tutorial dedicado ao formato e biblioteca centrais do ecossistema. Mostra workflows eficientes para datasets de 100MB a 100GB+, com exemplos cobrindo SIDRA, RAIS e Tesouro.
 
 **Leia quando** for processar volumes grandes ou converter CSVs herdados.
 
@@ -30,7 +30,7 @@ Tutorial dedicado ao formato e biblioteca centrais da plataforma. Mostra workflo
 
 ## Matriz de decisão rápida
 
-| Necessidade | Ferramenta da plataforma |
+| Necessidade | Ferramenta do ecossistema |
 |---|---|
 | Dados macroeconômicos IBGE | `sidra-fetcher`, `sidra-sql` |
 | Títulos do Tesouro brasileiro | `tesouro-direto-fetcher`, `rtn-fetcher` |

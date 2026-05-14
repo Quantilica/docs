@@ -66,39 +66,42 @@ Acesse dados meteorológicos históricos oficiais do Brasil com:
 pip install git+https://github.com/dankkom/inmet-fetcher.git
 ```
 
-**Requisitos:** Python 3.10+
+**Requisitos:** Python 3.12+
 
 ## CLI
 
-Instala o comando `inmet` com três subcomandos: `fetch`, `read`, `stations`.
+Instala o comando `inmet-fetcher` com três subcomandos: `fetch`, `read`, `stations`.
+
+O flag `--verbose` é global e deve vir antes do subcomando:
+`inmet-fetcher --verbose fetch 2023`.
 
 ### Baixar anos brutos
 
 ```bash
 # Ano único
-inmet-fetcher fetch 2023 --data-dir ./data
+inmet-fetcher fetch 2023 -o ./data
 
 # Intervalo
-inmet-fetcher fetch 2000:2024 --data-dir ./data --workers 8
+inmet-fetcher fetch 2000:2024 -o ./data --workers 8
 ```
 
 ### Ler & exportar
 
 ```bash
 # Tudo para Parquet
-inmet-fetcher read --data-dir ./data --output all.parquet
+inmet-fetcher read -o ./data --save-as all.parquet
 
 # Filtrar por UF e ano, exportar CSV
-inmet-fetcher read --data-dir ./data --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+inmet-fetcher read -o ./data --years 2022:2023 --uf SP,RJ --save-as sp_rj.csv --format csv
 
 # Estação única, intervalo de data
-inmet-fetcher read --data-dir ./data --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+inmet-fetcher read -o ./data --station A701 --start 2020-01-01 --end 2020-12-31 --save-as a701.parquet
 ```
 
 ### Catálogo de estações
 
 ```bash
-inmet-fetcher stations --data-dir ./data --output estacoes.csv
+inmet-fetcher stations -o ./data --save-as estacoes.csv
 ```
 
 ## API Python
@@ -186,4 +189,4 @@ pytest
 ## Saiba Mais
 
 - **[Dados de Saúde Pública](../saude/datasus-fetcher.md)** — Sistemas de vigilância em saúde
-- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — Design do sistema
+- **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — Design do sistema

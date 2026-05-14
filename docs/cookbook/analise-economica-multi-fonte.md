@@ -219,4 +219,4 @@ wages_real.write_parquet("data/wages_real.parquet")
 - **[tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)** — análise Tesouro Direto.
 - **[pdet-fetcher](../trabalho/pdet-fetcher.md)** — RAIS/CAGED.
 - **[Cálculo de Retornos](../tesouro/calculo-retornos.md)** — matemática por trás de yield real, duration, FIFO.
-- **[Arquitetura da Plataforma](../concepts/arquitetura.md)** — padrão multi-fonte ELT.
+- **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — padrão multi-fonte ELT.

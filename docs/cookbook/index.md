@@ -5,7 +5,7 @@ description: Recipes prontas em Python combinando IBGE, Tesouro, DATASUS, INMET,
 
 # Cookbook
 
-Receitas que combinam múltiplos domínios da plataforma para resolver problemas analíticos reais. Cada receita é auto-contida, com código executável e referências cruzadas aos pacotes e conceitos relevantes.
+Receitas que combinam múltiplos domínios do ecossistema para resolver problemas analíticos reais. Cada receita é auto-contida, com código executável e referências cruzadas aos pacotes e conceitos relevantes.
 
 O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a prática: ferramentas independentes, sem acoplamento, compostas em pipelines analíticos coerentes.
 

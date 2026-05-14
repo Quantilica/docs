@@ -1,6 +1,6 @@
 # Princípios de Design
 
-A Plataforma Brasileira de Dados Públicos é construída sobre cinco princípios que orientam cada ferramenta — de `sidra-fetcher` a `datasus-fetcher`. Entendê-los ajuda a usar as ferramentas com eficácia e a estendê-las para necessidades próprias.
+O Ecossistema Quantilica é construído sobre cinco princípios que orientam cada ferramenta — de `sidra-fetcher` a `datasus-fetcher`. Entendê-los ajuda a usar as ferramentas com eficácia e a estendê-las para necessidades próprias.
 
 > **Construa para o mundo real.** Dados governamentais são bagunçados. APIs são instáveis. Redes são lentas. Não assuma perfeição: trate falhas, valide dados, registre decisões. Torne usuários produtivos, não frustrados.
 
@@ -403,12 +403,12 @@ Os princípios não são independentes — reforçam-se mutuamente:
 - **Sem Mágica** + **Resiliência**: erros explícitos permitem o usuário decidir como reagir.
 - **Reprodutibilidade** + **Sem Mágica**: linhagem em JSON é rastreabilidade *e* transparência.
 
-Quando você constrói em cima destas ferramentas, siga os mesmos princípios em seu código. O resultado é uma plataforma de dados rápida, confiável, transparente e mantenível.
+Quando você constrói em cima destas ferramentas, siga os mesmos princípios em seu código. O resultado é um ecossistema de dados rápido, confiável, transparente e mantenível.
 
 ---
 
 ## Saiba mais
 
-- [Arquitetura da Plataforma](arquitetura.md) — como os componentes se conectam.
+- [Arquitetura do Ecossistema](arquitetura.md) — como os componentes se conectam.
 - [Padrões Práticos](padroes.md) — as receitas táticas que materializam estes princípios em código.
 - [Parquet + Polars](parquet-polars.md) — o tutorial específico sobre o formato/biblioteca centrais.

@@ -7,7 +7,7 @@ description: Os dois pacotes que sustentam todo o ecossistema — infraestrutura
 
 Cada coletor da Quantilica é especializado para a sua fonte. Mas **todos compartilham as mesmas duas fundações**, que entregam o comportamento técnico comum: rede resiliente, armazenamento atômico, proveniência criptográfica e conversão Parquet tipada.
 
-Essa separação não é cosmética. Ela é a razão pela qual a plataforma escala sem virar monolito.
+Essa separação não é cosmética. Ela é a razão pela qual o ecossistema escala sem virar monolito.
 
 ## `quantilica-core` — infraestrutura de I/O
 
@@ -45,4 +45,4 @@ A divisão `core` / `io` deixa cada camada com responsabilidade única:
 | `quantilica-core` | stdlib + `httpx` | leve | todo coletor, todo usuário |
 | `quantilica-io` | core + Polars + PyArrow | pesado | quem processa para análise |
 
-Veja a [Arquitetura da Plataforma](../concepts/arquitetura.md) para o desenho completo das camadas.
+Veja a [Arquitetura do Ecossistema](../concepts/arquitetura.md) para o desenho completo das camadas.

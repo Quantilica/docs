@@ -80,43 +80,6 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 
 ---
 
-## Template para Aplicações Web (apps `-db`)
-
-```markdown
-# <package-name>: <descrição curta>
-
-![License: MIT](...) ![Python](...)
-
-<2-3 frases: o que é, qual fonte de dados, quem usa>
-
----
-
-## Instalação
-
-## Configuração
-
-## Pipeline de Dados   ← apenas se o pacote inclui CLI de ingestão de dados
-
-## Desenvolvimento
-
-## Licença
-```
-
-A seção `## Configuração` deve conter uma tabela com todas as variáveis de ambiente (obrigatórias e opcionais):
-
-```markdown
-## Configuração
-
-| Variável | Obrigatório | Descrição |
-|---|---|---|
-| `MYAPP_DATABASE_URI` | Sim | DSN PostgreSQL |
-| `MYAPP_SECRET_KEY` | Sim | Chave de sessão Flask (mín. 32 caracteres) |
-| `MYAPP_DATABASE_SCHEMA` | Não | Schema PostgreSQL (padrão: `myapp`) |
-| `MYAPP_REDIS_URL` | Não | URL Redis para cache |
-```
-
----
-
 ## Seções Obrigatórias
 
 ### `## Instalação`

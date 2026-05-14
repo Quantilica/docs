@@ -12,7 +12,7 @@ SIDRA é a fonte mais rica do Brasil, mas consumi-la em escala enfrenta três ob
 
 ## Dois stacks: Exploração vs. Produção
 
-A plataforma fornece **dois stacks complementares** para SIDRA — escolha baseado em maturidade do pipeline e requisitos.
+O ecossistema fornece **dois stacks complementares** para SIDRA — escolha baseado em maturidade do pipeline e requisitos.
 
 ### Stack 1 — Exploração (`sidra-fetcher`)
 
@@ -52,7 +52,7 @@ graph LR
 
 ## Princípios em ação
 
-Como o domínio IBGE concretiza os princípios da plataforma:
+Como o domínio IBGE concretiza os princípios do ecossistema:
 
 - **[Resiliência](../concepts/principios.md#resiliência)** — `sidra-fetcher` aplica `tenacity` com backoff exponencial em metadados; `sidra-sql` é idempotente, pode ser re-executado em pipelines parcialmente bem-sucedidos.
 - **[Performance](../concepts/principios.md#performance)** — `AsyncSidraClient` paraleliza com `asyncio.gather`; `sidra-sql` usa `COPY FROM STDIN` para bulk load 400k+ rows/s.

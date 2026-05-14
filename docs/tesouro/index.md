@@ -5,7 +5,7 @@ O Tesouro Nacional brasileiro publica dois tipos muito diferentes de dados:
 - **Microdados de renda fixa** via Tesouro Direto — preços, yields, operações de compra/venda, estoques, investidores.
 - **Agregados fiscais** via *Resultado do Tesouro Nacional* (RTN) — receitas, despesas e resultado primário do Governo Federal.
 
-A plataforma cobre ambos com pacotes dedicados.
+O ecossistema cobre ambos com pacotes dedicados.
 
 ## O desafio
 
