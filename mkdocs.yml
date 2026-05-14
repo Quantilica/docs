@@ -1,7 +1,7 @@
 site_name: Quantilica — Dados Públicos Brasileiros
 site_description: Ferramentas resilientes em Python para extrair, normalizar e analisar dados públicos brasileiros — IBGE, Tesouro, DATASUS, INMET, CAGED, RAIS, Comex.
 site_author: Quantilica
-site_url: https://docs.quantilica.io
+site_url: https://docs.quantilica.com
 
 repo_url: https://github.com/Quantilica
 repo_name: Quantilica
