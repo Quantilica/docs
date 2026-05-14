@@ -346,31 +346,36 @@ def validate_downloaded_file(expected_size_bytes: int, path: Path) -> None:
 # datasus-fetcher já faz isso para você; aplique o padrão em pipelines próprios.
 ```
 
-### Padrão: validação de schema
+### Padrão: validação de schema com `DataContract`
+
+Em vez de escrever validação ad-hoc, declare um `DataContract` (do `quantilica-io`) e use-o em dois pontos: `cast()` na ingestão para travar tipos, `validate()` em testes para detectar regressões.
 
 ```python
 import polars as pl
+from quantilica_io.schema import DataContract, Field
 
-def validate_rais_schema(df: pl.DataFrame) -> bool:
-    required = {
-        "year": pl.Int32,
-        "employee_id": pl.Utf8,
-        "salary": pl.Float64,
-        "state": pl.Utf8,
-    }
-    for col, dtype in required.items():
-        if col not in df.columns:
-            raise ValueError(f"Coluna ausente: {col}")
-        if df.schema[col] != dtype:
-            raise ValueError(
-                f"Tipo incorreto para {col}: "
-                f"esperado {dtype}, obtido {df.schema[col]}"
-            )
-    return True
+RAIS_CONTRACT = DataContract(
+    dataset_id="rais-vinculos",
+    fields=[
+        Field(name="year", dtype=pl.Int32),
+        Field(name="employee_id", dtype=pl.Utf8),
+        Field(name="salary", dtype=pl.Float64),
+        Field(name="state", dtype=pl.Utf8),
+    ],
+)
 
-df = pl.read_parquet("rais_2023.parquet")
-validate_rais_schema(df)
+# Em testes: falha cedo se a fonte mudar
+def test_rais_schema_did_not_drift():
+    df = pl.read_parquet("rais_2023.parquet")
+    RAIS_CONTRACT.validate(df)  # ValueError/TypeError em mudança
+
+# Em pipelines: trava tipos antes de gravar
+df = pl.read_csv("rais_2023.csv")
+df = RAIS_CONTRACT.cast(df)
+df.write_parquet("rais_2023.parquet")
 ```
+
+Os fetchers que parsam dados (`inmet`, `rtn`, `bcb-sgs`) já expõem seus próprios contratos — ver [`quantilica-io`](../fundacoes/quantilica-io.md#data-contracts).
 
 ### Padrão: validação de contagem de linhas
 

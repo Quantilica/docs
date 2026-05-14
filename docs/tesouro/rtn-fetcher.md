@@ -128,6 +128,31 @@ write_table_to_csv(accounts, Path("output/rtn_1_2_accounts.csv"))
 
 `read_sheet(filepath, sheet_name)` retorna uma tupla `(data, accounts)` de instâncias `Tbl` — a tabela de fatos em formato longo e a dimensão de hierarquia de contas.
 
+### Gravar Parquet com proveniência
+
+Para saída tipada e com manifesto embutido no header, use `write_table_to_parquet`. Ele aplica o `DataContract` da planilha (via `build_contract`) e escreve via `quantilica-io`:
+
+```python
+from pathlib import Path
+from quantilica_core.manifests import DownloadManifest
+from rtn_fetcher import read_sheet, write_table_to_parquet
+
+filepath = Path("data/rtn_202412301200.xlsx")
+data, _ = read_sheet(filepath, "2.1")
+
+manifest = DownloadManifest.from_file(
+    source_id="tesouro-nacional",
+    dataset_id="rtn",
+    url="http://sisweb.tesouro.gov.br/apex/cosis/thot/link/rtn/serie-historica",
+    file_path=filepath,
+    producer="rtn-fetcher",
+)
+write_table_to_parquet(data, Path("output/rtn_2_1.parquet"), "2.1",
+                      manifest=manifest)
+```
+
+O contrato é derivado de `SHEET_CONFIGS[sheet]`: `year` para anuais, `year/month` para mensais, `year/quarter` para trimestrais. Veja [Data Contracts](../fundacoes/quantilica-io.md#data-contracts).
+
 ### Ler cada aba suportada
 
 ```python

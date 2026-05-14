@@ -134,6 +134,28 @@ print(stations[["codigo_wmo", "estacao", "uf", "latitude", "longitude", "altitud
 
 Assistentes de nível inferior também disponíveis em `inmet_fetcher.reader`: `read_zipfile(path, uf=..., station=..., start=..., end=...)`, `find_zipfiles(data_dir, years)`, `read_metadata(file)`, `read_station_data(file)`. Importe-os via `from inmet_fetcher.reader import read_zipfile, find_zipfiles, read_metadata, read_station_data`.
 
+### Gravar Parquet com schema validado
+
+Para saída tipada e proveniência embarcada no header do Parquet, use `write_to_parquet` — ele aplica `BDMEP_CONTRACT.cast()` antes de gravar:
+
+```python
+import inmet_fetcher as inmet
+from quantilica_core.manifests import DownloadManifest
+
+df = inmet.read(Path("./data"), years=[2023])
+
+manifest = DownloadManifest.from_file(
+    source_id="inmet",
+    dataset_id="bdmep",
+    url="https://portal.inmet.gov.br/uploads/dadoshistoricos/2023.zip",
+    file_path="./data/bdmep/2023/inmet-bdmep_2023@20240101.zip",
+    producer="inmet-fetcher",
+)
+inmet.write_to_parquet(df, "output/bdmep_2023.parquet", manifest=manifest)
+```
+
+`BDMEP_CONTRACT` declara as 26 colunas esperadas (17 medições + 9 de metadata da estação). Veja [Data Contracts](../fundacoes/quantilica-io.md#data-contracts).
+
 ## Fonte de Dados
 
 - **Portal**: https://portal.inmet.gov.br/dadoshistoricos
