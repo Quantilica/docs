@@ -36,6 +36,9 @@ Cada pacote de fetcher (ex: `comex-fetcher`, `sidra-fetcher`) deve seguir esta e
 | `datasus-fetcher` | Sim | Sim | **Padronizado** |
 | `pdet-fetcher` | Sim | Sim | **Padronizado** |
 | `rtn-fetcher` | Sim | Sim | **Padronizado** |
+| `tesouro-direto-fetcher` | Sim | Sim | **Padronizado** |
+| `inmet-fetcher` | Sim | Sim | **Padronizado** |
+| `bcb-sgs-fetcher` | Sim | Sim | **Padronizado** |
 
 ## 4. Diretrizes para Novos Fetchers
 
