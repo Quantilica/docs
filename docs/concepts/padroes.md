@@ -1,6 +1,6 @@
 # Padrões Práticos
 
-Este guia cobre oito padrões táticos usados em todas as ferramentas da plataforma. Cada padrão materializa um ou mais [Princípios de Design](principios.md) em código real. Seguindo-os, seus pipelines ficam mais rápidos, confiáveis e fáceis de manter.
+Este guia cobre oito padrões táticos usados em todas as ferramentas do ecossistema. Cada padrão materializa um ou mais [Princípios de Design](principios.md) em código real. Seguindo-os, seus pipelines ficam mais rápidos, confiáveis e fáceis de manter.
 
 | Padrão | Princípio principal |
 |---|---|
@@ -603,7 +603,7 @@ def main():
 
 ## Checklist resumo
 
-Quando construir pipelines com a plataforma:
+Quando construir pipelines com o ecossistema:
 
 - [ ] **Idempotente**: verifique antes de baixar/processar.
 - [ ] **Concorrente**: async/multithreaded para I/O.
@@ -620,5 +620,5 @@ Quando construir pipelines com a plataforma:
 ## Saiba mais
 
 - [Princípios de Design](principios.md) — por que estes padrões existem.
-- [Arquitetura da Plataforma](arquitetura.md) — como os padrões se encaixam no sistema.
+- [Arquitetura do Ecossistema](arquitetura.md) — como os padrões se encaixam no sistema.
 - [Parquet + Polars](parquet-polars.md) — tutorial focado no formato/biblioteca centrais.

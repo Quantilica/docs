@@ -482,19 +482,64 @@ load_dados(engine, storage, data_files)
 
 ### CLI
 
+#### Executar pipelines
+
 ```
-sidra-sql run <alias> <pipeline-id> [--force-metadata]
+sidra-sql run <alias> [pipeline_id] [--force-metadata]
 ```
 
-Executar um pipeline de um plugin instalado. `--force-metadata` re-busca metadados da
-tabela SIDRA mesmo se já estiverem em cache.
+Executa pipeline(s) de um plugin instalado. Omita `pipeline_id` para executar todos os pipelines do plugin. `--force-metadata` re-busca metadados da tabela SIDRA mesmo se já estiverem em cache.
+
+```
+sidra-sql run-path <path> [--force-metadata]
+```
+
+Executa um pipeline diretamente a partir de um diretório, sem plugin registrado.
+
+```
+sidra-sql transform <alias> <pipeline_id>
+```
+
+Executa apenas a etapa de transformação SQL de um pipeline (sem fetch nem load).
+
+#### Gerenciar plugins
 
 ```
 sidra-sql plugin install <url> [--alias ALIAS]
 sidra-sql plugin update [alias]
 sidra-sql plugin remove <alias>
 sidra-sql plugin list
+sidra-sql plugin validate [alias] [--plugin-dir PATH]
 ```
+
+```
+sidra-sql plugin scaffold <name>
+    [-d/--description TEXT]
+    [--version TEXT]          # padrão: 1.0.0
+    [-o/--output-dir PATH]    # padrão: diretório atual
+    [--git-init/--no-git-init]  # padrão: --git-init
+```
+
+Cria a estrutura de arquivos (`manifest.toml`, `fetch.toml`, `transform.toml`, `.sql`, `README.md`) para um novo plugin, com `git init` opcional.
+
+```
+sidra-sql plugin add-pipeline <pipeline_id>
+    [-d/--description TEXT]
+    [-p/--path PATH]          # caminho relativo ao plugin (padrão: pipeline_id)
+    [--plugin-dir PATH]       # diretório raiz do plugin (padrão: diretório atual)
+```
+
+Adiciona um novo pipeline a um plugin existente, atualizando `manifest.toml`.
+
+#### Configuração
+
+```
+sidra-sql config set <section.option> <value> [--global]
+sidra-sql config get <section.option>
+sidra-sql config list [--global] [--local]
+```
+
+Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local. Com `--global`, usa `~/.config/sidra-sql/config.ini`. O `config list` sem flags mostra a visão mesclada (local sobrescreve global).
 
 ---
 

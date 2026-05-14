@@ -17,7 +17,7 @@ uv add "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git"
 
 ## Anatomia de um download Quantilica
 
-Os três blocos de construção que todo coletor da plataforma usa:
+Os três blocos de construção que todo coletor do ecossistema usa:
 
 ```python
 from quantilica_core.http import HttpClient
@@ -82,7 +82,7 @@ Com o core, esses são problemas resolvidos uma vez para sempre. O fetcher fica 
 3. **Estabilidade** — alta cobertura de testes em toda a infraestrutura.
 4. **DX** — APIs tipadas e tratamento de erro consistente em toda a organização.
 
-Veja também os [Princípios de Design](../concepts/principios.md) da plataforma como um todo.
+Veja também os [Princípios de Design](../concepts/principios.md) do ecossistema como um todo.
 
 ## Repositório
 

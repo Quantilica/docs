@@ -1,6 +1,6 @@
 # Parquet + Polars
 
-Tutorial dedicado ao formato (Parquet) e biblioteca (Polars) que formam a espinha do processamento na plataforma. Os exemplos usam datasets dos três principais domínios — IBGE/SIDRA, RAIS/CAGED e Tesouro Direto — para mostrar que os mesmos padrões servem volumes muito diferentes.
+Tutorial dedicado ao formato (Parquet) e biblioteca (Polars) que formam a espinha do processamento no ecossistema. Os exemplos usam datasets dos três principais domínios — IBGE/SIDRA, RAIS/CAGED e Tesouro Direto — para mostrar que os mesmos padrões servem volumes muito diferentes.
 
 ## Por que Parquet?
 
@@ -419,5 +419,5 @@ df.write_parquet("rais_fixed.parquet")
 ## Saiba mais
 
 - [Padrões Práticos](padroes.md) — `Parquet em vez de CSV`, `Lazy evaluation`, `Memória para arquivos grandes`.
-- [Princípios de Design](principios.md#performance) — por que Parquet é o default da plataforma.
+- [Princípios de Design](principios.md#performance) — por que Parquet é o default do ecossistema.
 - [Documentação Polars](https://pola-rs.github.io/) — referência oficial.

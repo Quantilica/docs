@@ -17,7 +17,7 @@ Você publica em journals, defende tese, ou produz nota técnica que será lida 
 
 ## Por onde começar
 
-1. **5 minutos:** leia [Proveniência & Manifestos](../concepts/proveniencia.md). É o coração metodológico da plataforma para o seu caso de uso.
+1. **5 minutos:** leia [Proveniência & Manifestos](../concepts/proveniencia.md). É o coração metodológico do ecossistema para o seu caso de uso.
 2. **15 minutos:** baixe um dataset (Quickstart [IBGE](../quickstart.md) ou [Saúde](../quickstart.md)) e abra o `.manifest.json` que ficou ao lado. É exatamente isso que você anexa ao apêndice de replicação.
 3. **30 minutos:** se você trabalha com IBGE, suba `sidra-sql` em PostgreSQL e familiarize-se com o padrão SCD II — `WHERE modificacao <= '2024-01-15' AND ativo = TRUE` reproduz um snapshot histórico exato.
 

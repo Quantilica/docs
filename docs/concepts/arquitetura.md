@@ -1,6 +1,6 @@
-# Arquitetura da Plataforma
+# Arquitetura do Ecossistema
 
-Como a Plataforma Brasileira de Dados Públicos é organizada e como as partes se conectam. Esta página descreve a forma do sistema; os [Princípios de Design](principios.md) explicam **por que** ele tem essa forma.
+Como o Ecossistema Quantilica é organizado e como as partes se conectam. Esta página descreve a forma do sistema; os [Princípios de Design](principios.md) explicam **por que** ele tem essa forma.
 
 ## Visão de sistema
 
@@ -32,7 +32,7 @@ graph TD
     PG --> Analytics
 ```
 
-A plataforma é organizada em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas — o que ela deve e o que ela **não** deve fazer.
+O ecossistema é organizado em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas — o que ela deve e o que ela **não** deve fazer.
 
 ## Fundações Técnicas
 
@@ -75,7 +75,7 @@ Obter dados de APIs/FTPs governamentais com confiabilidade.
 
 Transformação rápida e flexível.
 
-- **Polars** — arquivos grandes, transformações complexas, lazy evaluation. Default da plataforma.
+- **Polars** — arquivos grandes, transformações complexas, lazy evaluation. Default do ecossistema.
 - **Pandas** — integração com bibliotecas estatísticas, funções customizadas, datasets menores.
 
 ### Armazenamento (Parquet, PostgreSQL)
@@ -96,11 +96,11 @@ Persistência eficiente e confiável.
 
 ### Análise (Jupyter, R, dashboards)
 
-A camada que consome o resto. Fora do escopo da plataforma — você pluga sua ferramenta de BI/ciência de dados favorita nos arquivos Parquet ou no PostgreSQL.
+A camada que consome o resto. Fora do escopo do ecossistema — você pluga sua ferramenta de BI/ciência de dados favorita nos arquivos Parquet ou no PostgreSQL.
 
 ## ETL vs. ELT
 
-A plataforma adota predominantemente **ELT** (Extract → Load → Transform), não ETL clássico.
+O ecossistema adota predominantemente **ELT** (Extract → Load → Transform), não ETL clássico.
 
 ```mermaid
 graph LR
@@ -110,7 +110,7 @@ graph LR
     D --> E[Análise]
 ```
 
-| | ETL clássico | ELT (escolha da plataforma) |
+| | ETL clássico | ELT (escolha do ecossistema) |
 |---|---|---|
 | Onde transforma | Antes de armazenar | Depois de armazenar |
 | Dados brutos | Descartados após transformação | Preservados |
@@ -151,7 +151,7 @@ gdp = pl.read_parquet("gdp_raw.parquet").with_columns(
 
 ## Padrões de deployment
 
-A plataforma suporta quatro padrões principais de deployment, do mais simples ao mais complexo.
+O ecossistema suporta quatro padrões principais de deployment, do mais simples ao mais complexo.
 
 ### 1. Local development
 

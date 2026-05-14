@@ -26,7 +26,7 @@ Você é responsável pela infraestrutura que serve os analistas. Constrói pipe
 - **[Modularidade](../concepts/principios.md#modularidade)** — cada fetcher tem suas próprias deps e retry. Sem mega-fetcher.
 - **[Resiliência](../concepts/principios.md#resiliência)** — backoff exponencial, retomada, idempotência.
 - **[Proveniência & Manifestos](../concepts/proveniencia.md)** — SHA-256 ao lado de cada artefato, embarcado em Parquet.
-- **[Parquet + Polars](../concepts/parquet-polars.md)** — o formato analítico padrão da plataforma.
+- **[Parquet + Polars](../concepts/parquet-polars.md)** — o formato analítico padrão do ecossistema.
 
 ## Padrões que escalam
 
