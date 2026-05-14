@@ -64,6 +64,7 @@ nav:
       - fundacoes/index.md
       - quantilica-core: fundacoes/quantilica-core.md
       - quantilica-io: fundacoes/quantilica-io.md
+      - quantilica-cli: fundacoes/quantilica-cli.md
 
   - Domínios & Ferramentas:
       - IBGE (Macroeconomia):
