@@ -1,11 +1,11 @@
 ---
-title: Changelog da plataforma Quantilica
+title: Changelog do ecossistema Quantilica
 description: Marcos importantes do ecossistema Quantilica — novos pacotes, mudanças de API, migrações de nomenclatura e marcos de documentação.
 ---
 
 # Changelog
 
-Marcos importantes da plataforma como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
+Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
 ## 2026-05 — Reescrita do portal de documentação
 
@@ -16,15 +16,10 @@ Marcos importantes da plataforma como um todo. Cada pacote mantém seu próprio 
 - Páginas por persona: analista macro, cientista de saúde, engenheiro de dados, pesquisador acadêmico.
 - Open Graph + Twitter Cards via `overrides/main.html` (sem dep extra).
 
-## 2026-Q1 — `quantilica-io` em desenvolvimento
+## 2026-Q1 — `quantilica-io` lançado
 
 - Camada analítica iniciada: reader multi-formato, writer Parquet com proveniência embarcada.
 - Plano completo em [`QUANTILICA_IO_PLAN.md`](https://github.com/Quantilica/.github/blob/main/QUANTILICA_IO_PLAN.md).
-
-## 2026 — `quantilica-web` consolidado
-
-- Pacote `quantilica-web` (closed-source) extraindo a infraestrutura comum dos 4 apps Flask de metadados (`bcb-sgs-metadata-db`, `datasus-metadata-db`, `ibge-sidra-metadata-db`, `tddata-db`).
-- 30/30 testes passando.
 
 ## 2025-Q4 — Harmonização de nomenclatura
 

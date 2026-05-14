@@ -1,18 +1,18 @@
 # Visão Estratégica e Roadmap
 
-Este documento detalha o roadmap para transformar a Quantilica de uma coleção de ferramentas de extração em uma infraestrutura de referência para dados abertos no Brasil.
+Visão estratégica do Ecossistema Quantilica para dados abertos brasileiros.
 
 ---
 
 ## 🚀 Visão de Futuro
 
-A Quantilica deve se posicionar como uma **Data Platform hospedada com SDK aberto**. O valor do projeto reside na conveniência de fornecer dados públicos prontos para consumo analítico, abstraindo a instabilidade das fontes oficiais.
+A Quantilica é um **ecossistema de dados aberto com SDK**. O valor do projeto reside na conveniência de fornecer dados públicos prontos para consumo analítico, abstraindo a instabilidade das fontes oficiais.
 
 ---
 
 ## 🗺️ Roadmap de Execução Detalhado
 
-O desenvolvimento da Quantilica está estruturado em ciclos incrementais que movem a organização de um conjunto de utilitários para uma plataforma de dados resiliente.
+O desenvolvimento da Quantilica está estruturado em ciclos incrementais que definem a direção técnica e de produto do ecossistema.
 
 ### Fase 1: Unificação e Experiência do Desenvolvedor (DX)
 *Objetivo: Reduzir a fricção de entrada para novos usuários e padronizar o consumo das ferramentas.*
@@ -54,12 +54,10 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que mov
     *   Desenvolver o `State Store` para rastrear fatias (partições) já baixadas.
     *   Lógica de download incremental (delta) para economizar banda e tempo em datasets volumosos.
 
-### Fase 4: Produto e Plataforma
+### Fase 4: Produto e Ecossistema
 *Objetivo: Oferecer conveniência máxima e dados pré-processados.*
 
-1.  **Unified Portal**:
-    *   Interface web para busca global em todas as fontes, visualização de amostras de dados e download direto de arquivos Parquet processados.
-2.  **Sustentabilidade**:
+1.  **Sustentabilidade**:
     *   Estabelecer modelos de apoio e governança comunitária para garantir a longevidade do projeto.
 
 ---

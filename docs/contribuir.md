@@ -1,11 +1,11 @@
 ---
 title: Contribuir com a Quantilica
-description: Como reportar bugs, sugerir novas fontes, enviar PRs, ou propor receitas para o Cookbook. Padrões técnicos e editoriais da plataforma.
+description: Como reportar bugs, sugerir novas fontes, enviar PRs, ou propor receitas para o Cookbook. Padrões técnicos e editoriais do ecossistema.
 ---
 
 # Contribuir
 
-Quantilica é uma plataforma aberta. Bugs em fetcher, novas fontes de dados, receitas do Cookbook, correções de doc — tudo é bem-vindo.
+Quantilica é um ecossistema aberto. Bugs em fetcher, novas fontes de dados, receitas do Cookbook, correções de doc — tudo é bem-vindo.
 
 ## Os três caminhos mais comuns
 
@@ -92,7 +92,7 @@ Releases saem sem cadência fixa — quando funcionalidade está pronta e testad
 
 ## Governança
 
-A Quantilica opera sob modelo BDFL — veja [`GOVERNANCE.md`](https://github.com/Quantilica/.github/blob/main/GOVERNANCE.md) para o detalhe. Conforme o projeto crescer em contribuidores, a intenção é migrar para governança comunitária com comitê técnico (Fase 4 do [Roadmap](roadmap.md)).
+A Quantilica opera sob modelo BDFL — veja [`GOVERNANCE.md`](https://github.com/Quantilica/.github/blob/main/GOVERNANCE.md) para o detalhe. Conforme o projeto crescer em contribuidores, a intenção é migrar para governança comunitária com comitê técnico.
 
 ## Licenças
 
