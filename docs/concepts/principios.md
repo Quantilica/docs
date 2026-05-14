@@ -38,9 +38,9 @@ sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher           
 ├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
-datasus-fetcher        inmet-fetcher
-├─ stdlib only         ├─ httpx, pandas, pyarrow
-└─ no cross-deps       └─ no cross-deps
+datasus-fetcher        inmet-fetcher              rtn-fetcher            bcb-sgs-fetcher
+├─ stdlib only         ├─ httpx, pandas, pyarrow  ├─ httpx, openpyxl     ├─ httpx, beautifulsoup4
+└─ no cross-deps       └─ no cross-deps           └─ no cross-deps       └─ no cross-deps
 ```
 
 - Sem dependências internas compartilhadas entre ferramentas.
