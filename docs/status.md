@@ -5,8 +5,6 @@ description: Estado de saúde conhecido das fontes oficiais que a Quantilica con
 
 # Status das fontes oficiais
 
-> **Página em construção.** A Fase 2 do [Roadmap Estratégico](roadmap.md) prevê health checks automáticos por cron job, com alertas via GitHub Issues quando uma fonte oficial cair. Até lá, esta página é mantida manualmente.
-
 ## O que esta página é
 
 Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os fetchers da Quantilica consomem. Útil para:

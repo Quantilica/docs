@@ -53,17 +53,13 @@ Isso é **time travel real**: meses depois, você consegue provar exatamente qua
 ## Princípios
 
 1. **Reuso de boilerplate** — a lógica de lidar com `latin-1` e separador `;` do governo brasileiro é escrita **uma vez**.
-2. **Interoperabilidade Parquet** — todos os arquivos gerados pela plataforma seguem o mesmo padrão, permitindo SQL via DuckDB sobre múltiplos datasets sem conflito de tipos.
+2. **Interoperabilidade Parquet** — todos os arquivos gerados pelo ecossistema seguem o mesmo padrão, permitindo SQL via DuckDB sobre múltiplos datasets sem conflito de tipos.
 3. **Proveniência embarcada** — o arquivo Parquet é auto-suficiente. Não precisa de um JSON ao lado para provar de onde veio.
 
 Veja também:
 
 - [Parquet + Polars](../concepts/parquet-polars.md) — o porquê do formato.
 - [Princípios de Design](../concepts/principios.md) — Reprodutibilidade e Sem Mágica.
-
-## Status
-
-> Em desenvolvimento ativo. A API pode evoluir. Veja o [plano de implementação](https://github.com/Quantilica/.github/blob/main/QUANTILICA_IO_PLAN.md) para detalhes.
 
 ## Repositório
 
