@@ -7,6 +7,13 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-05 — Novos pacotes de infraestrutura e integração analítica
+
+- **`quantilica-cloud`** lançado: plugin CLI para sincronizar manifestos de download com o catálogo na nuvem. Registrado via `quantilica.commands`; acessível como `quantilica cloud login/sync/status`. Offline-first por design.
+- **`quantilica-catalog`** lançado: modelo de observação canônico (star schema) com adaptadores para BCB-SGS, RTN, INMET, Tesouro Direto e SIDRA. Resolve o cruzamento multi-fonte com um único `JOIN` em `indicator_id + geo_id + date`.
+- **`quantilica-io` integrado nos fetchers**: `bcb-sgs-fetcher`, `rtn-fetcher` e `inmet-fetcher` agora exportam Parquet tipado via `save_parquet` / `write_to_parquet` com `DataContract` e manifesto embutido no header.
+- **`bcb-sgs-fetcher` padronizado** para as convenções do workspace: logging estruturado, `HttpClient` em `data.py`, `ScraperClient` mantido com httpx direto por precisar de sessão stateful.
+
 ## 2026-05 — Reescrita do portal de documentação
 
 - Portal reestruturado com narrativa de três atos no `index.md`.
