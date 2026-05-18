@@ -17,14 +17,14 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 
 | Fonte | Status atual | Última verificação | Observações |
 |---|---|---|---|
-| **IBGE SIDRA** (`apisidra.ibge.gov.br`) | ✅ estável | 2026-05-10 | Rate limit não documentado; preferir horário não-comercial |
-| **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-05-10 | Janelas curtas de 502 em manutenção |
-| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-05-10 | Cai frequentemente em horário comercial; reduzir `--threads` |
-| **Tesouro Transparente CKAN** | ✅ estável | 2026-05-10 | Dataset com timestamp no nome |
-| **INMET BDMEP** | ✅ estável | 2026-05-10 | ZIPs por ano; latin-1; valores `-9999` |
-| **Siscomex** (Comex) | ⚠️ instável | 2026-05-10 | SSL ruim em janelas curtas; arquivos GB |
-| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-10 | Cai com frequência; CAGED schema diferente em 2020+ |
-| **Tesouro Nacional RTN** | ✅ estável | 2026-05-10 | Excel multi-aba publicado mensalmente |
+| **IBGE SIDRA** (`apisidra.ibge.gov.br`) | ✅ estável | 2026-05-17 | Rate limit não documentado; preferir horário não-comercial |
+| **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-05-17 | Janelas curtas de 502 em manutenção |
+| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai frequentemente em horário comercial; reduzir `--threads` |
+| **Tesouro Transparente CKAN** | ✅ estável | 2026-05-17 | Dataset com timestamp no nome |
+| **INMET BDMEP** | ✅ estável | 2026-05-17 | ZIPs por ano; latin-1; valores `-9999` |
+| **Siscomex** (Comex) | ⚠️ instável | 2026-05-17 | SSL ruim em janelas curtas; arquivos GB |
+| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai com frequência; CAGED schema diferente em 2020+ |
+| **Tesouro Nacional RTN** | ✅ estável | 2026-05-17 | Excel multi-aba publicado mensalmente |
 
 **Legenda:**
 - ✅ **Estável** — funciona sem intervenção; eventuais 502 curtos são normais.
@@ -56,4 +56,4 @@ Encontrou uma fonte fora do ar que esta página marca como estável (ou o contr�
 
 ---
 
-*Última atualização manual desta página: 2026-05-10.*
+*Última atualização manual desta página: 2026-05-17.*
