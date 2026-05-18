@@ -106,6 +106,7 @@ nav:
   - Desenvolvimento:
       - Padronização de Versão: normas/python.md
       - Padrões de Escrita: normas/escrita.md
+      - Padronização de CLI: normas/cli-fetchers.md
 
   - Status das fontes: status.md
   - Contribuir: contribuir.md
