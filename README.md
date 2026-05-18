@@ -1,6 +1,6 @@
 # Quantilica — Documentação
 
-Portal público da Quantilica (`docs.quantilica.io`), construído com [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+Portal público da Quantilica (`docs.quantilica.com`), construído com [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
 
 ## Desenvolvimento local
 
@@ -9,7 +9,7 @@ uv sync
 uv run mkdocs serve
 ```
 
-Site disponível em `http://127.0.0.1:8000`.
+Site disponível em `https://docs.quantilica.com/`.
 
 ## Estrutura
 

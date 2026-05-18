@@ -3,7 +3,7 @@ site_description: Ferramentas resilientes em Python para extrair, normalizar e a
 site_author: Quantilica
 site_url: https://docs.quantilica.com
 
-repo_url: https://github.com/Quantilica
+repo_url: https://github.com/Quantilica/docs
 repo_name: Quantilica
 edit_uri: ""
 
@@ -65,6 +65,8 @@ nav:
       - quantilica-core: fundacoes/quantilica-core.md
       - quantilica-io: fundacoes/quantilica-io.md
       - quantilica-cli: fundacoes/quantilica-cli.md
+      - quantilica-cloud: fundacoes/quantilica-cloud.md
+      - quantilica-catalog: fundacoes/quantilica-catalog.md
 
   - Domínios & Ferramentas:
       - IBGE (Macroeconomia):
