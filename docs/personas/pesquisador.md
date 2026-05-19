@@ -21,6 +21,33 @@ Você publica em journals, defende tese, ou produz nota técnica que será lida 
 2. **15 minutos:** baixe um dataset (Quickstart [IBGE](../quickstart.md) ou [Saúde](../quickstart.md)) e abra o `.manifest.json` que ficou ao lado. É exatamente isso que você anexa ao apêndice de replicação.
 3. **30 minutos:** se você trabalha com IBGE, suba `sidra-sql` em PostgreSQL e familiarize-se com o padrão SCD II — `WHERE modificacao <= '2024-01-15' AND ativo = TRUE` reproduz um snapshot histórico exato.
 
+### Auditar uma análise pelo manifesto
+
+```python
+import json
+from pathlib import Path
+
+# Manifesto gerado automaticamente ao lado de cada download
+manifest = json.loads(Path("data/ipca.manifest.json").read_text())
+
+print(manifest["sha256"])        # hash SHA-256 do arquivo original
+print(manifest["source_url"])    # URL exata e versionada da fonte
+print(manifest["downloaded_at"]) # timestamp do download
+print(manifest["producer"])      # pacote que gerou o dado
+print(manifest["producer_version"])  # versão do produtor
+
+# Cole esses valores no apêndice de replicação do paper
+```
+
+```sql
+-- Reproduzir snapshot histórico exato (sidra-sql SCD Type II)
+SELECT *
+FROM sidra.fato_observacao
+WHERE pipeline_id = 'ipca'
+  AND modificacao <= '2024-01-15'  -- data de corte do paper
+  AND ativo = TRUE;
+```
+
 ## O conceito que importa para você
 
 > **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — toda transformação é determinística e auditável. Manifesto SHA-256, hash embarcado no Parquet, dimensão `modificacao` preservada no warehouse. É a infraestrutura mínima para que outro pesquisador, em outra década, refaça seus números sem chamar você.

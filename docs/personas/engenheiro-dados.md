@@ -21,6 +21,27 @@ Você é responsável pela infraestrutura que serve os analistas. Constrói pipe
 2. **15 minutos:** rode um pipeline declarativo via `sidra-sql plugin install ... --alias std && sidra-sql run std ipca`. Isso é o "fim do túnel" — pipelines como TOML versionado.
 3. **30 minutos:** monte a receita **[Balança comercial em DuckDB](../cookbook/balanca-duckdb.md)** — `comex-fetcher` para baixar, DuckDB para consultar Parquet sem RAM.
 
+### Pipeline IPCA em 1 comando
+
+```bash
+# Instalar catálogo padrão de pipelines IBGE
+sidra-sql plugin install sidra-pipelines --alias std
+
+# Rodar pipeline IPCA → baixa, normaliza, carrega em PostgreSQL
+sidra-sql run std ipca
+```
+
+```python
+# Verificar manifesto de execução gerado automaticamente
+import json
+from pathlib import Path
+
+manifests = list(Path("manifests/").glob("*.execution.json"))
+latest = json.loads(manifests[-1].read_text())
+print(latest["rows_loaded"], "linhas carregadas")
+print(latest["sha256"])  # hash do arquivo de origem
+```
+
 ## Os conceitos que importam para você
 
 - **[Modularidade](../concepts/principios.md#modularidade)** — cada fetcher tem suas próprias deps e retry. Sem mega-fetcher.
