@@ -35,7 +35,7 @@ O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo 
 - Normalização de unidades (milhões de R$ → reais; % do PIB preservado como fração)
 - Período dividido em colunas `year` / `month` ou `year` / `quarter`
 - Hierarquia de contas retornada como tabela de dimensão separada
-- CLI para fetch e exportação Excel/SQLite
+- CLI com `sync` (todas as publicações), `latest` (série histórica) e `export` (Excel/SQLite)
 
 ## Abas Suportadas
 
@@ -64,37 +64,62 @@ Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
 
 ## Interface de Linha de Comando
 
-O pacote instala um comando `rtn-fetcher` com subcomandos `fetch` e `export`:
+O pacote instala um comando `rtn-fetcher` com os subcomandos `sync`, `latest` e `export`:
 
 ```bash
 rtn-fetcher --help
+rtn-fetcher --version
 
-# Operações de fetch
-rtn-fetcher fetch metadata          # Construir metadata.json da página de publicações
-rtn-fetcher fetch download          # Baixar arquivos listados em metadata.json
-rtn-fetcher fetch latest            # Baixar a pasta de trabalho RTN mais recente
+# Sincronizar todas as publicações RTN
+rtn-fetcher sync
 
-# Operações de export
-rtn-fetcher export excel            # Exportar para uma pasta de trabalho Excel formatada
-rtn-fetcher export sqlite           # Exportar para um banco de dados SQLite
+# Baixar apenas o arquivo da série histórica mais recente
+rtn-fetcher latest
+
+# Exportar dados para outros formatos
+rtn-fetcher export excel
+rtn-fetcher export sqlite
 ```
 
-### Opções de Buscar
+### `sync` — sincronização completa
+
+Busca metadados da página de publicações do Tesouro Nacional, identifica todos os links de download e baixa os arquivos ainda ausentes no diretório local. Os metadados HTML são cacheados em `<output>/metadata.html`; na próxima execução o cache é reutilizado automaticamente.
 
 ```bash
-rtn-fetcher fetch metadata --dest data --force
-rtn-fetcher fetch download --metadata data/metadata.json --concurrency 8
-rtn-fetcher fetch latest   --dest data
+rtn-fetcher sync -o /data/rtn              # Diretório de destino (padrão: /data/rtn)
+rtn-fetcher sync --force                   # Refaz o fetch de metadados mesmo se já existe
+rtn-fetcher sync --concurrency 8           # Até 8 downloads simultâneos (padrão: 4)
+rtn-fetcher sync --dry-run                 # Lista os arquivos sem baixar
+rtn-fetcher sync --metadata metadata.json  # Usa JSON de metadados existente (offline)
+rtn-fetcher --verbose sync                 # Exibe logs detalhados
 ```
 
-### Opções de Export
+### `export` — exportação
+
+Ambos os subcomandos baixam automaticamente a pasta de trabalho mais recente se nenhum `--file` for fornecido, e escrevem todas as abas suportadas junto com a dimensão de hierarquia de contas.
 
 ```bash
-rtn-fetcher export excel  --data-dir data --output rtn_data.xlsx
-rtn-fetcher export sqlite --data-dir data --output rtn_data.db
+rtn-fetcher export excel --save-as rtn_data.xlsx
+rtn-fetcher export sqlite --save-as rtn_data.db
+
+# Usar arquivo local já baixado (sem nova requisição de rede)
+rtn-fetcher export excel  --file rtn@20250101T120000.xlsx --save-as rtn_data.xlsx
+rtn-fetcher export sqlite --file rtn@20250101T120000.xlsx --save-as rtn_data.db
+
+# Sobrescrever banco SQLite existente sem confirmação
+rtn-fetcher export sqlite --save-as rtn_data.db --force
 ```
 
-Ambos os comandos `export` baixam a pasta de trabalho mais recente e escrevem todas as abas suportadas junto com a dimensão de hierarquia de contas.
+### Via `quantilica-cli`
+
+Quando instalado no mesmo ambiente que `quantilica-cli`, o rtn-fetcher é descoberto automaticamente via entry point:
+
+```bash
+quantilica fetch rtn sync
+quantilica fetch rtn latest
+quantilica fetch rtn export excel
+quantilica fetch rtn export sqlite
+```
 
 ## API Python
 
