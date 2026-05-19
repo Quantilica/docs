@@ -305,6 +305,40 @@ A camada de armazenamento é deliberadamente **agnóstica** — Parquet e Postgr
 
 ---
 
+## Arquitetura de CLI
+
+Cada fetcher pode ser usado como biblioteca Python, como ferramenta standalone ou como plugin integrado no hub central (`quantilica-cli`). Para suportar esses três casos sem sobrecarregar o usuário com dependências desnecessárias, o ecossistema adota uma **CLI Híbrida**:
+
+### CLI Nativa (Leve)
+
+- **Arquivo:** `src/<package_name>/cli.py`
+- **Tecnologia:** `argparse` (biblioteca padrão do Python).
+- **Dependências:** apenas `quantilica-core` e bibliotecas padrão.
+- **Objetivo:** garantir que o pacote funcione em ambientes restritos, mantendo `pyproject.toml` limpo.
+
+### Plugin para CLI Unificada (Rico)
+
+- **Arquivo:** `src/<package_name>/plugin.py`
+- **Tecnologia:** `typer` e `rich` (fornecidos pelo host, não declarados como dep do fetcher).
+- **Objetivo:** UX superior com tabelas coloridas, painéis e subcomandos quando usada via `quantilica-cli`.
+
+### Estado atual
+
+| Projeto | CLI Nativa (`argparse`) | Plugin Typer (`plugin.py`) |
+| :--- | :---: | :---: |
+| `comex-fetcher` | Sim | Sim |
+| `sidra-fetcher` | Sim | Sim |
+| `datasus-fetcher` | Sim | Sim |
+| `pdet-fetcher` | Sim | Sim |
+| `rtn-fetcher` | Sim | Sim |
+| `tesouro-direto-fetcher` | Sim | Sim |
+| `inmet-fetcher` | Sim | Sim |
+| `bcb-sgs-fetcher` | Sim | Sim |
+
+Para diretrizes detalhadas de implementação, veja [Padronização de CLI](../normas/cli-fetchers.md).
+
+---
+
 ## Saiba mais
 
 - [Princípios de Design](principios.md) — por que o sistema é assim.
