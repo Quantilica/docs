@@ -19,7 +19,27 @@ Você trabalha com microdados do SUS — mortalidade (SIM), nascimentos (SINASC)
 
 1. **5 minutos:** baixe o SIH-RD para SP nos últimos 3 anos via [Quickstart aba Saúde](../quickstart.md).
 2. **15 minutos:** liste todos os 113 datasets do DATASUS com `datasus-fetcher list-datasets`. Veja a estrutura antes de comprometer disco.
-3. **30 minutos:** combine mortalidade do SIM com população do SIDRA para taxa por 100k habitantes — receita a publicar; até lá, use o [Cookbook](../cookbook/index.md) como referência.
+3. **30 minutos:** combine mortalidade do SIM com população do SIDRA para taxa por 100k habitantes — receita em [Mortalidade infantil × SUS](../cookbook/mortalidade-sus.md).
+
+### SIH-RD para SP em 3 linhas de CLI
+
+```bash
+# Listar datasets disponíveis
+datasus-fetcher list-datasets
+
+# Baixar internações hospitalares para SP, 2022–2023
+datasus-fetcher fetch sih-rd --regions sp --start 2022-01 --end 2023-12 -o /data/datasus
+
+# Converter .dbc para Parquet (leitura 10× mais rápida)
+datasus-fetcher convert sih-rd -o /data/datasus/parquet
+```
+
+```python
+# Leitura após conversão
+import polars as pl
+df = pl.read_parquet("/data/datasus/parquet/sih-rd/**/*.parquet")
+print(df.shape)  # (linhas, colunas)
+```
 
 ## O conceito que importa para você
 

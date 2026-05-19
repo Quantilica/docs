@@ -21,6 +21,28 @@ Você acompanha PIB, IPCA, desemprego, juros e câmbio. Tira gráficos para reun
 2. **15 minutos:** rode a receita **[Curva de Phillips brasileira](../cookbook/curva-phillips.md)** — IPCA × PNAD-C mensal, gráfico pronto.
 3. **30 minutos:** monte o painel multi-fonte da receita **[Análise Econômica Multi-Fonte](../cookbook/analise-economica-multi-fonte.md)** — IBGE + Tesouro + emprego em um único fluxo.
 
+### IPCA em 10 linhas
+
+```python
+from sidra_fetcher import SidraClient
+from sidra_fetcher.sidra import Parametro, Formato, Precisao
+import polars as pl
+
+param = Parametro(
+    agregado="1737",               # IPCA mensal por componente
+    territorios={"1": ["all"]},    # Brasil
+    variaveis=["2266"],            # variação mensal (%)
+    periodos=[],
+    classificacoes={},
+    formato=Formato.A,
+    decimais={"": Precisao.M},
+)
+with SidraClient(timeout=60) as client:
+    df = pl.DataFrame(client.get(param.url()))
+
+print(df.select(["D2N", "V"]).tail(12))  # últimos 12 meses
+```
+
 ## O conceito que importa para você
 
 > **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — o IBGE revisa séries históricas com frequência. Sem proveniência, o número do relatório de janeiro não bate com o número da auditoria de junho. Saiba como o manifesto SHA-256 resolve isso na página [Proveniência](../concepts/proveniencia.md).
