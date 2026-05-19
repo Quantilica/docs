@@ -5,6 +5,8 @@ description: Guia completo e normativo para escrever a interface de linha de com
 
 # Padronização de CLI para Fetchers
 
+> Esta é a referência do **contribuidor**: como implementar convenções de CLI e armazenamento num fetcher. Para entender como os arquivos são organizados como **usuário final**, veja [Convenções de Armazenamento](../concepts/storage.md).
+
 Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher deve implementar: a **CLI nativa leve** (`cli.py`, argparse) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich).
 
 Seguir este guia garante comportamento consistente entre fetchers, integração correta com `quantilica-cli` e UX homogênea para o usuário final.
