@@ -45,11 +45,11 @@ Não há flag `force_refresh` — para re-buscar, delete o arquivo local primeir
 
 ```sh
 # datasus-fetcher compara tamanho remoto vs. local e pula correspondências
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
+datasus-fetcher sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 
 # Re-execução após interrupção: arquivos completos são pulados
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
+datasus-fetcher sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
@@ -70,7 +70,7 @@ finally:
 
 ```sh
 # Visualize o que datasus-fetcher baixaria antes de confirmar
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
+datasus-fetcher sync -o ./data sim-do-cid10 \
     --start 2018 --end 2023 --regions sp \
     --dry-run
 # Imprime nomes de arquivo + tamanhos + total — zero bytes transferidos
@@ -111,7 +111,7 @@ agregados = asyncio.run(fetch_multiple_metadata())
 
 ```sh
 # 5 fetchers FTP concorrentes
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
+datasus-fetcher sync -o ./data sim-do-cid10 \
     --start 2018 --end 2023 \
     --threads 5
 
@@ -140,7 +140,7 @@ fetcher.download_data(
 
 ```bash
 # 1ª execução baixa tudo; execuções posteriores buscam só o que mudou.
-comex-fetcher trade 2014:2023 -o ./DATA
+comex-fetcher sync 2014:2023 -o ./DATA
 ```
 
 ```python
@@ -198,7 +198,7 @@ df = pl.read_parquet(
 
 ```bash
 # pdet-fetcher: descompacta cada .7z, faz parse com schema por-ano, escreve Parquet
-pdet-fetcher convert ./raw ./parquet
+pdet-fetcher convert -i ./raw -o ./parquet
 ```
 
 ```python
@@ -289,7 +289,7 @@ by_sector = (
 `datasus-fetcher` retenta cada transferência FTP até 3× em erros transitórios antes de desistir do arquivo — outras threads continuam. Para um batch long-running sobreviver a falhas intermitentes, basta re-executar o comando; a verificação de idempotência por tamanho retoma de onde parou.
 
 ```sh
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
+datasus-fetcher sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
@@ -494,9 +494,7 @@ parquet_path.with_suffix(".metadata.json").write_text(json.dumps(metadata, inden
 
 ```sh
 # Baixar dados + livros de códigos + tabelas auxiliares juntos
-datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
-datasus-fetcher docs --data-dir ./docs sim
-datasus-fetcher aux  --data-dir ./aux  sim
+datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
 Nomes de arquivo `.dbc` codificam `dataset_uf_period_YYYYMMDD`, então múltiplas revisões DATASUS coexistem em disco. `datasus-fetcher archive --archive-data-dir ./archive` rotaciona versões antigas sem perdê-las.
@@ -584,8 +582,8 @@ def main():
 
 | Invocação | Saída |
 |---|---|
-| `fetcher download` | `prices \| 3/7 arquivo [00:10, ...]` |
-| `fetcher download --verbose` | `2025-01-10T14:22:01 INFO ... download-dataset start` |
+| `fetcher sync` | `prices \| 3/7 arquivo [00:10, ...]` |
+| `fetcher sync --verbose` | `2025-01-10T14:22:01 INFO ... sync-dataset start` |
 
 ### Regras do padrão
 

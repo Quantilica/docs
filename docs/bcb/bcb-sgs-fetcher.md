@@ -51,41 +51,49 @@ bcb-sgs = "bcb_sgs_fetcher.plugin:app"
 
 ## CLI
 
-Os três comandos estão disponíveis tanto pelo CLI standalone quanto pelo `quantilica-cli`.
+Os comandos são agrupados em `series` (operações por série) e `catalogo`
+(catálogo de metadados), disponíveis tanto pelo CLI standalone quanto pelo
+`quantilica-cli`.
 
 === "quantilica-cli"
 
     ```bash
     # Dados históricos de câmbio USD/BRL (série 1, diária)
-    quantilica fetch bcb-sgs fetch 1 -f D -o ./dados
+    quantilica fetch bcb-sgs series sync 1 -f D -o ./dados
 
     # Dados da taxa SELIC mensal
-    quantilica fetch bcb-sgs fetch 11 -f M -o ./dados
+    quantilica fetch bcb-sgs series sync 11 -f M -o ./dados
 
     # Metadados de uma série
-    quantilica fetch bcb-sgs metadata 433 -o ./dados
+    quantilica fetch bcb-sgs series metadata 433 -o ./dados
 
     # Buscar séries por texto
-    quantilica fetch bcb-sgs search "câmbio dólar"
+    quantilica fetch bcb-sgs series search "câmbio dólar"
+
+    # Sincronizar o catálogo completo de metadados
+    quantilica fetch bcb-sgs catalogo sync
     ```
 
 === "CLI standalone"
 
     ```bash
     # Dados históricos de câmbio USD/BRL (série 1, diária)
-    bcb-sgs-fetcher fetch 1 --frequency D --output ./dados
+    bcb-sgs-fetcher series sync 1 --frequency D --output ./dados
 
     # Dados da taxa SELIC mensal
-    bcb-sgs-fetcher fetch 11 --frequency M --output ./dados
+    bcb-sgs-fetcher series sync 11 --frequency M --output ./dados
 
     # Metadados de uma série
-    bcb-sgs-fetcher metadata 433 --output ./dados
+    bcb-sgs-fetcher series metadata 433 --output ./dados
 
     # Buscar séries por texto
-    bcb-sgs-fetcher search "câmbio dólar"
+    bcb-sgs-fetcher series search "câmbio dólar"
+
+    # Sincronizar o catálogo completo de metadados
+    bcb-sgs-fetcher catalogo sync
     ```
 
-### Opções do comando `fetch`
+### Opções do comando `series sync`
 
 | Opção | Padrão | Descrição |
 |---|---|---|
@@ -244,7 +252,7 @@ Algumas séries de referência do SGS/BCB:
 | 7478 | Taxa de câmbio — Livre — EUR/BRL (compra) | Diária |
 | 13522 | IPCA — Variação acumulada em 12 meses | Mensal |
 
-Para descobrir outros IDs, use `bcb-sgs-fetcher search "<termo>"` ou acesse o portal SGS diretamente.
+Para descobrir outros IDs, use `bcb-sgs-fetcher series search "<termo>"` ou acesse o portal SGS diretamente.
 
 ---
 
@@ -267,9 +275,9 @@ Essa estratégia garante o histórico completo sem depender de limites documenta
 
 ## Armazenamento
 
-O comando `fetch` salva os dados no arquivo `{output}/series_{series_id}.json`.
+O comando `series sync` salva os dados no arquivo `{output}/series_{series_id}.json`.
 
-O comando `metadata` usa um subdiretório particionado por mês:
+O comando `series metadata` usa um subdiretório particionado por mês:
 
 ```
 {output}/

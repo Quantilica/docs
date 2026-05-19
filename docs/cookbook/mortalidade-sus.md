@@ -31,13 +31,13 @@ uv add "datasus-fetcher" "sidra-fetcher @ git+https://github.com/Quantilica/sidr
 
 ```bash
 # Óbitos
-datasus-fetcher data --data-dir ./dados sim --start 2022 --end 2022 --regions sp
+datasus-fetcher sync -o ./dados sim --start 2022 --end 2022 --regions sp
 
 # Nascidos vivos
-datasus-fetcher data --data-dir ./dados sinasc --start 2022 --end 2022 --regions sp
+datasus-fetcher sync -o ./dados sinasc --start 2022 --end 2022 --regions sp
 
 # Cadastro de estabelecimentos
-datasus-fetcher data --data-dir ./dados cnes-st --start 2022-12 --end 2022-12 --regions sp
+datasus-fetcher sync -o ./dados cnes-st --start 2022-12 --end 2022-12 --regions sp
 ```
 
 ### 2. Baixar população do SIDRA
@@ -130,7 +130,7 @@ print(painel.sort("tmi_por_1000", descending=True).head(20))
 ## Pegadinhas
 
 - **Códigos de município truncados.** SIM/SINASC usam 6 dígitos; SIDRA usa 7 (com dígito verificador). Você pode truncar ou expandir — escolha um lado.
-- **`IDADE` em SIM é codificada.** Não é número direto. Consulte o dicionário (`datasus-fetcher docs sim`) antes de filtrar.
+- **`IDADE` em SIM é codificada.** Não é número direto. Consulte o dicionário (`datasus-fetcher sync sim --docs`) antes de filtrar.
 - **CNES é foto mensal.** O dataset `cnes-st` mostra o estabelecimento no mês específico. Para série, baixe vários meses e use `MAX(competencia)` por município.
 - **Mortalidade infantil é volátil em municípios pequenos.** Para municípios com <100 nascidos/ano, a taxa flutua absurdamente. Agregue por microrregião ou suavize com média móvel trianual.
 

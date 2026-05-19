@@ -71,7 +71,7 @@ from pathlib import Path
 from tesouro_direto_fetcher import reader
 from tesouro_direto_fetcher.constants import Column as C, BondType
 
-# Ler CSV de preços baixado com `tesouro-direto-fetcher download --dataset prices`
+# Ler CSV de preços baixado com `tesouro-direto-fetcher sync --dataset prices`
 prices = reader.read_prices(next(Path("./data").glob("taxas-dos-titulos*.csv")))
 
 # Escolher um título: NTN-B (Tesouro IPCA+ com Juros Semestrais) vencendo 2027-05-15

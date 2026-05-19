@@ -24,9 +24,8 @@ uv add "comex-fetcher @ git+https://github.com/Quantilica/comex-fetcher.git" duc
 ### 1. Baixar e converter para Parquet
 
 ```bash
-# Importações e exportações dos últimos 5 anos
-comex-fetcher fetch imp exp --start 2020 --end 2024 --data-dir ./dados
-comex-fetcher convert ./dados --output ./parquet --format parquet
+# Importações e exportações dos últimos 5 anos (+ tabelas de códigos)
+comex-fetcher sync 2020:2024 -o ./dados
 ```
 
 Você fica com algo como:

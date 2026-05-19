@@ -70,19 +70,19 @@ pip install git+https://github.com/dankkom/inmet-fetcher.git
 
 ## CLI
 
-Instala o comando `inmet-fetcher` com três subcomandos: `fetch`, `read`, `stations`.
+Instala o comando `inmet-fetcher` com três subcomandos: `sync`, `read`, `stations`.
 
 O flag `--verbose` é global e deve vir antes do subcomando:
-`inmet-fetcher --verbose fetch 2023`.
+`inmet-fetcher --verbose sync 2023`.
 
 ### Baixar anos brutos
 
 ```bash
 # Ano único
-inmet-fetcher fetch 2023 -o ./data
+inmet-fetcher sync 2023 -o ./data
 
 # Intervalo
-inmet-fetcher fetch 2000:2024 -o ./data --workers 8
+inmet-fetcher sync 2000:2024 -o ./data --workers 8
 ```
 
 ### Ler & exportar

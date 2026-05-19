@@ -32,11 +32,11 @@ graph LR
 
 ### Stack 2 — Produção (Pipeline `tesouro-direto-fetcher` + Parquet/PostgreSQL)
 
-Para análise diária recorrente: scheduler chama `tesouro-direto-fetcher download` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
+Para análise diária recorrente: scheduler chama `tesouro-direto-fetcher sync` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
 
 ```mermaid
 graph LR
-    A[CKAN Tesouro] --> B[tesouro-direto-fetcher download<br/>scheduled]
+    A[CKAN Tesouro] --> B[tesouro-direto-fetcher sync<br/>scheduled]
     B --> C[CSVs Parquet]
     C --> D[(PostgreSQL)]
     D --> E[Power BI / Metabase]

@@ -37,17 +37,20 @@ pip install git+https://github.com/Quantilica/pdet-fetcher.git
 
 ## CLI
 
-O pacote instala o comando `pdet-fetcher` (também disponível como `python -m pdet_fetcher`) com quatro subcomandos:
+O pacote instala o comando `pdet-fetcher` (também disponível como `python -m pdet_fetcher`) com cinco subcomandos:
 
 ```text
 pdet-fetcher <subcommand> [args]
 
 Subcomandos:
-  fetch    DEST_DIR              Baixa todo arquivo RAIS e CAGED (data + docs) para DEST_DIR
-  list     DEST_DIR              Lista arquivos remotos que ainda não estão presentes localmente
-  convert  DATA_DIR DEST_DIR     Descomprime os arquivos brutos e escreve arquivos Parquet
-  columns  DATA_DIR DATASET [-o OUT_DIR]
-                                 Dumpa headers de coluna por arquivo para um dataset para CSV
+  sync     [DATASETS...] [-o DIR]   Sincroniza RAIS e CAGED (data + docs). Sem
+                                    DATASETS, baixa rais, caged e caged-2020.
+  list     [-o DIR]                 Lista arquivos remotos ainda ausentes localmente
+  convert  -i DATA_DIR [-o DIR]     Descomprime os arquivos brutos e escreve Parquet
+  columns  DATASET -i DATA_DIR [-o OUT_DIR]
+                                    Dumpa headers de coluna por arquivo para CSV
+  pipeline [DATASETS...] [-o DIR] [--parquet-dir DIR]
+                                    Pipeline completo: sync -> convert
 ```
 
 `DATASET` para `columns` aceita: `rais-vinculos`, `rais-estabelecimentos`, `caged`, `caged-ajustes`, `caged-2020`.
@@ -57,7 +60,7 @@ Subcomandos:
 ### 1. Baixar todos os dados
 
 ```bash
-pdet-fetcher fetch ./data
+pdet-fetcher sync -o ./data
 ```
 
 Python equivalente:
@@ -86,7 +89,7 @@ finally:
 ### 2. Converter arquivos brutos para Parquet
 
 ```bash
-pdet-fetcher convert ./data ./parquet
+pdet-fetcher convert -i ./data -o ./parquet
 ```
 
 ```python
@@ -158,7 +161,7 @@ balance = (
 ### 5. Extrair schema por arquivo
 
 ```bash
-pdet-fetcher columns ./data rais-vinculos -o ./schemas
+pdet-fetcher columns rais-vinculos -i ./data -o ./schemas
 ```
 
 ```python

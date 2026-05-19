@@ -123,11 +123,11 @@ with SidraClient(timeout=60) as client:
 
 ```sh
 # Primeira execução: baixa tudo
-datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
+datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023
 
 # Re-execução após falha parcial: tamanho remoto é comparado ao local;
 # apenas arquivos faltantes ou com mismatch são re-buscados.
-datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
+datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023
 ```
 
 ### Filosofia de tratamento de erro
@@ -235,9 +235,7 @@ Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se 
 
 ```sh
 # Microdados + livros de códigos + tabelas de referência
-datasus-fetcher data --data-dir ./data sim-do-cid10 --start 2023 --end 2023
-datasus-fetcher docs --data-dir ./docs sim
-datasus-fetcher aux  --data-dir ./aux  sim
+datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
 Cada `.dbc` baixado é nomeado `dataset_uf_periodo_YYYYMMDD.dbc`, então múltiplas revisões do DATASUS coexistem no disco. `datasus-fetcher archive` move versões antigas para auditoria.

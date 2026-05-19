@@ -24,7 +24,7 @@ uv add "inmet-fetcher @ git+https://github.com/Quantilica/inmet-fetcher.git" pol
 ### 1. Baixar 30 anos em paralelo
 
 ```bash
-inmet-fetcher fetch 1995:2024 --data-dir ./dados --workers 8
+inmet-fetcher sync 1995:2024 -o ./dados --workers 8
 ```
 
 O `--workers 8` paraleliza os downloads anuais. Para 30 ZIPs, fica em poucos minutos numa conexão razoável.

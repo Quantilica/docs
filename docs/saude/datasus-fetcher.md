@@ -97,7 +97,7 @@ pipx install datasus-fetcher
 Baixar SIH-RD (Admissões Hospitalares) para São Paulo, Rio de Janeiro e Minas Gerais de 2020 a 2023:
 
 ```bash
-datasus-fetcher data --data-dir /caminho/para/dados sih-rd \
+datasus-fetcher sync sih-rd -o /caminho/para/dados \
     --start 2020-01 \
     --end 2023-12 \
     --regions sp rj mg
@@ -106,81 +106,59 @@ datasus-fetcher data --data-dir /caminho/para/dados sih-rd \
 Baixar todos os datasets (aviso: 320+ GB total):
 
 ```bash
-datasus-fetcher data --data-dir /caminho/para/dados
+datasus-fetcher sync -o /caminho/para/dados
 ```
 
 ## Referência de Comando
 
-datasus-fetcher expõe cinco subcomandos:
+datasus-fetcher expõe três subcomandos: `sync`, `list` e `archive`.
 
-### `data` — Baixar arquivos de microdados
+### `sync` — Baixar arquivos de microdados
 
 ```bash
-datasus-fetcher data --data-dir <DIR> [DATASETS...] [OPTIONS]
+datasus-fetcher sync [DATASETS...] -o <DIR> [OPTIONS]
 ```
 
 | Argumento | Descrição |
 |---|---|
 | `DATASETS` | Um ou mais códigos de dataset (ex. `sih-rd cnes-st`). Omita para baixar todos os datasets. |
-| `--data-dir DIR` | **Obrigatório.** Diretório local onde os arquivos serão armazenados. |
+| `-o, --output DIR` | Diretório local onde os arquivos serão armazenados (padrão: `/data/datasus`). |
 | `--start PERIOD` | Início do filtro de data. Formato: `YYYY` ou `YYYY-MM`. |
 | `--end PERIOD` | Fim do filtro de data. Formato: `YYYY` ou `YYYY-MM`. |
 | `--regions UF ...` | Um ou mais códigos de estado em minúscula (ex. `sp rj mg ba`). |
 | `-t, --threads N` | Número de threads de download concorrentes (padrão: `2`). |
+| `--docs` | Também baixar a documentação oficial dos datasets. |
+| `--aux` | Também baixar as tabelas de referência auxiliares. |
 | `--dry-run` | Lista os arquivos que seriam baixados (com tamanhos e totais) sem baixá-los. |
 
 **Exemplos:**
 
 ```bash
 # Notificações de dengue de SINAN — todos os anos, todos os estados
-datasus-fetcher data --data-dir ./data sinan-deng
+datasus-fetcher sync sinan-deng -o ./data
 
 # Estabelecimentos CNES para todo o Nordeste, a partir de 2015
-datasus-fetcher data --data-dir ./data cnes-st \
+datasus-fetcher sync cnes-st -o ./data \
     --start 2015-01 \
     --regions al ba ce ma pb pe pi rn se
 
-# Registros de morte SIM (ICD-10) de 2000 a 2023
-datasus-fetcher data --data-dir ./data sim-do-cid10 \
-    --start 2000 --end 2023
+# Registros de morte SIM (ICD-10) de 2000 a 2023, com docs e tabelas auxiliares
+datasus-fetcher sync sim-do-cid10 -o ./data \
+    --start 2000 --end 2023 --docs --aux
 
 # Acelere downloads com mais threads paralelas
-datasus-fetcher data --data-dir ./data sih-rd --threads 4
+datasus-fetcher sync sih-rd -o ./data --threads 4
 ```
 
-### `list-datasets` — Inspecionar datasets disponíveis
+### `list` — Inspecionar datasets disponíveis
 
 Conecta ao servidor FTP do DATASUS e imprime contagens de arquivo, tamanhos e intervalos de data para cada dataset:
 
 ```bash
-datasus-fetcher list-datasets
+datasus-fetcher list
 
 # Inspecionar apenas datasets específicos
-datasus-fetcher list-datasets sih-rd sia-pa cnes-pf
-```
-
-### `docs` — Baixar arquivos de documentação
-
-Baixa arquivos de documentação oficial (dicionários de dados, livros de códigos) para cada sistema:
-
-```bash
-# Baixar docs para sistemas específicos
-datasus-fetcher docs --data-dir ./docs sih cnes sia sim sinan
-
-# Baixar docs para todos os sistemas
-datasus-fetcher docs --data-dir ./docs
-```
-
-### `aux` — Baixar tabelas de referência auxiliares
-
-Baixa tabelas de lookup/referência (códigos ICD, códigos de município, tabelas de procedimentos, códigos de ocupação, etc.):
-
-```bash
-# Baixar tabelas auxiliares para sistemas específicos
-datasus-fetcher aux --data-dir ./aux sih cnes
-
-# Baixar tabelas auxiliares para todos os sistemas
-datasus-fetcher aux --data-dir ./aux
+datasus-fetcher list sih-rd sia-pa cnes-pf
 ```
 
 ### `archive` — Mover versões antigas de arquivo para um arquivo
@@ -189,7 +167,7 @@ DATASUS periodicamente atualiza seus arquivos. datasus-fetcher armazena cada ver
 
 ```bash
 datasus-fetcher archive \
-    --data-dir ./data \
+    -o ./data \
     --archive-data-dir ./data-archive
 ```
 
@@ -240,7 +218,7 @@ datasus-fetcher suporta **113 datasets** em todos esses sistemas:
 Para uma lista completa com contagens de arquivo e intervalos de datas, use:
 
 ```bash
-datasus-fetcher list-datasets
+datasus-fetcher list
 ```
 
 ## Códigos de Estados Brasileiros

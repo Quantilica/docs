@@ -51,27 +51,30 @@ O pacote instala um comando `tesouro-direto-fetcher` com três subcomandos:
 tesouro-direto-fetcher <command> [options]
 
 Comandos:
-  download [-o OUTPUT_DIR] [--dataset DATASET]
-        Baixar um dataset CKAN. DATASET ∈ {prices, operations, investors,
-        stock, buybacks, sales, all}. Padrão: prices.
-  info     [-o OUTPUT_DIR] [--dataset DATASET]
-        Imprimir recursos, tamanhos, Last-Modified, e se cada arquivo seria
-        baixado — sem escrever nada.
-  convert  FILE [--type {prices,operations,investors,stock,buybacks,sales,maturities,infer}]
-        Converter um CSV baixado para Parquet. `--type infer` (padrão) detecta
-        o dataset do nome do arquivo. Requer os extras `analysis`.
+  sync     [-o OUTPUT_DIR] [--dataset DATASET] [--dry-run]
+        Sincronizar um dataset CKAN. DATASET ∈ {prices, operations, investors,
+        stock, buybacks, sales, all}. Padrão: all.
+        --dry-run imprime recursos, tamanhos e Last-Modified sem escrever nada.
+  convert  DATA_DIR
+        Converter os CSVs mais recentes para Parquet. Requer os extras
+        `analysis`.
+  pipeline [-o OUTPUT_DIR] [--dataset DATASET]
+        Pipeline completo: sync → convert.
 ```
 
-`OUTPUT_DIR` padrão é `data`.
+`OUTPUT_DIR` padrão é `/data/tesouro-direto`.
 
 ```bash
-# Inspecionar, baixar, converter
-tesouro-direto-fetcher info     --dataset prices -o ./data
-tesouro-direto-fetcher download --dataset prices -o ./data
-tesouro-direto-fetcher convert  ./data/taxas-dos-titulos-ofertados-pelo-tesouro-direto@*.csv
+# Inspecionar (dry-run), sincronizar, converter
+tesouro-direto-fetcher sync --dataset prices --dry-run -o ./data
+tesouro-direto-fetcher sync --dataset prices -o ./data
+tesouro-direto-fetcher convert ./data
 
-# Baixar cada dataset
-tesouro-direto-fetcher download --dataset all -o ./data
+# Sincronizar todos os datasets (padrão)
+tesouro-direto-fetcher sync -o ./data
+
+# Pipeline completo
+tesouro-direto-fetcher pipeline -o ./data
 ```
 
 ### O `tesouro-direto-fetcher` Pacote Python
