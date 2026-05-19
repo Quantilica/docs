@@ -1,6 +1,8 @@
 # Convenções de Armazenamento — Fetchers
 
-Este documento define os padrões de nomenclatura de arquivos, estrutura de pastas e interface CLI adotados por todos os pacotes fetcher da Quantilica. Novos fetchers e alterações em fetchers existentes devem seguir estas convenções.
+Esta página cobre a perspectiva do **usuário final**: como os arquivos são nomeados, como as pastas são organizadas e como a flag `-o` funciona. Para a perspectiva do **contribuidor** (como implementar essas convenções num novo fetcher), veja [Padronização de CLI](../normas/cli-fetchers.md).
+
+Este documento define os padrões de nomenclatura de arquivos, estrutura de pastas e interface CLI adotados por todos os pacotes fetcher da Quantilica.
 
 ---
 
@@ -124,50 +126,7 @@ Categorias adicionais (documentação, dados processados, etc.) são responsabil
 
 Documentação e tabelas auxiliares são agrupadas pelo **sistema** (ex: `sih`, `cnes`), não pelo subsistema (ex: `sih-rd`, `cnes-dc`), pois um mesmo conjunto de documentos cobre todos os subsistemas de um sistema. O prefixo `_` faz essas pastas aparecerem antes das pastas de dados em qualquer ordenação alfabética e evita nomes reservados do Windows (como `aux`).
 
-**inmet-fetcher**
-```
-{output}/
-└── bdmep/
-    ├── 2022/
-    │   └── inmet-bdmep_2022@20240101.zip
-    └── 2023/
-        └── inmet-bdmep_2023@20240101.zip
-```
-
-**pdet-fetcher**
-```
-{output}/
-├── caged/
-│   └── 2021/
-│       └── caged_202101@20210415.csv.gz
-├── caged-ajuste/
-├── rais-vinculos/
-│   └── 2023/
-│       └── rais-vinculos_2023-SP@20240115.csv.gz
-├── rais-estabelecimentos/
-└── _documentacao/
-    ├── caged/
-    └── rais-vinculos/
-```
-
-**rtn-fetcher**
-```
-{output}/
-├── metadata.html
-├── metadata.json
-├── 2024-01/
-│   └── publicacao.pdf
-└── rtn@20240315T101500.xlsx
-```
-
-**tesouro-direto-fetcher**
-```
-{output}/
-├── taxas-dos-titulos-ofertados-pelo-tesouro-direto/
-│   └── taxas-dos-titulos-...@20240315T101530.csv
-├── operacoes-do-tesouro-direto/
-└── estoque-do-tesouro-direto/
-```
+Para a estrutura detalhada de todos os demais pacotes (`inmet-fetcher`, `pdet-fetcher`, `rtn-fetcher`, `tesouro-direto-fetcher`), veja a seção de exemplos em [Padronização de CLI](../normas/cli-fetchers.md).
 
 ---
 
