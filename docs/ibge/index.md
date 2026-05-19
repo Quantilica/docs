@@ -50,16 +50,7 @@ graph LR
 - **[sidra-sql](sidra-sql.md)** — motor ETL com plugins TOML (`fetch.toml` + `transform.toml` + `transform.sql`), bulk load `COPY`, schema relacional 5-tabelas, SCD Type II.
 - **[sidra-pipelines](sidra-pipelines.md)** — catálogo pré-construído de pipelines production-ready (PIB, IPCA, população, agricultura). Deploy one-command via `sidra-sql run std <pipeline>`.
 
-## Princípios em ação
-
-Como o domínio IBGE concretiza os princípios do ecossistema:
-
-- **[Resiliência](../concepts/principios.md#resiliência)** — `sidra-fetcher` aplica `tenacity` com backoff exponencial em metadados; `sidra-sql` é idempotente, pode ser re-executado em pipelines parcialmente bem-sucedidos.
-- **[Performance](../concepts/principios.md#performance)** — `AsyncSidraClient` paraleliza com `asyncio.gather`; `sidra-sql` usa `COPY FROM STDIN` para bulk load 400k+ rows/s.
-- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — a classe `Parametro` torna cada parâmetro de URL nomeado e visível; pipelines TOML declarativos não escondem comportamento em código.
-- **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — SCD Type II preserva revisões IBGE; qualquer snapshot histórico pode ser reconstruído.
-
-Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Auto-retry](../concepts/padroes.md#auto-retry).
+Os [Princípios de Design](../concepts/principios.md) do ecossistema — Resiliência, Performance, Reprodutibilidade, Sem Mágica — se aplicam diretamente aqui. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Auto-retry](../concepts/padroes.md#auto-retry).
 
 ## Próximos passos
 

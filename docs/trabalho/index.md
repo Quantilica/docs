@@ -44,14 +44,7 @@ graph LR
 
 Para o tutorial de Parquet + Polars (não específico de RAIS, aplicável a qualquer dataset grande), veja **[Parquet + Polars](../concepts/parquet-polars.md)** em Conceitos.
 
-## Princípios em ação
-
-- **[Performance](../concepts/principios.md#performance)** — processamento vetorial Polars é 10× Pandas; Parquet comprime CSV em ~88%.
-- **[Resiliência](../concepts/principios.md#resiliência)** — `pdet-fetcher fetch` é idempotente: re-rodar pula `.7z` já presentes; FTP intermitente é tolerável.
-- **[Reprodutibilidade](../concepts/principios.md#reprodutibilidade)** — schemas por-ano são tipados e documentados; conversão é determinística.
-- **[Sem Mágica](../concepts/principios.md#sem-mágica)** — `pdet-fetcher convert` faz exatamente isto: descompacta, parseia, escreve. Sem caching escondido, sem flags surpresa.
-
-Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
+Os [Princípios de Design](../concepts/principios.md) do ecossistema — especialmente Performance e Sem Mágica — são centrais aqui: Polars 10× Pandas, conversão determinística, sem caching escondido. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
 
 ## Estrutura de dados
 
