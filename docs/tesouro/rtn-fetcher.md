@@ -35,7 +35,7 @@ O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo 
 - Normalização de unidades (milhões de R$ → reais; % do PIB preservado como fração)
 - Período dividido em colunas `year` / `month` ou `year` / `quarter`
 - Hierarquia de contas retornada como tabela de dimensão separada
-- CLI com `sync` (todas as publicações), `latest` (série histórica) e `export` (Excel/SQLite)
+- CLI com `sync` (todas as publicações; `--latest` para a série histórica), `export` (Excel/SQLite) e `pipeline` (sync → export)
 
 ## Abas Suportadas
 
@@ -64,7 +64,7 @@ Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
 
 ## Interface de Linha de Comando
 
-O pacote instala um comando `rtn-fetcher` com os subcomandos `sync`, `latest` e `export`:
+O pacote instala um comando `rtn-fetcher` com os subcomandos `sync`, `export` e `pipeline`:
 
 ```bash
 rtn-fetcher --help
@@ -74,11 +74,14 @@ rtn-fetcher --version
 rtn-fetcher sync
 
 # Baixar apenas o arquivo da série histórica mais recente
-rtn-fetcher latest
+rtn-fetcher sync --latest
 
 # Exportar dados para outros formatos
 rtn-fetcher export excel
 rtn-fetcher export sqlite
+
+# Pipeline completo (sync → export)
+rtn-fetcher pipeline --format excel
 ```
 
 ### `sync` — sincronização completa
@@ -91,6 +94,7 @@ rtn-fetcher sync --force                   # Refaz o fetch de metadados mesmo se
 rtn-fetcher sync --concurrency 8           # Até 8 downloads simultâneos (padrão: 4)
 rtn-fetcher sync --dry-run                 # Lista os arquivos sem baixar
 rtn-fetcher sync --metadata metadata.json  # Usa JSON de metadados existente (offline)
+rtn-fetcher sync --latest                  # Apenas a série histórica mais recente
 rtn-fetcher --verbose sync                 # Exibe logs detalhados
 ```
 
@@ -116,9 +120,10 @@ Quando instalado no mesmo ambiente que `quantilica-cli`, o rtn-fetcher é descob
 
 ```bash
 quantilica fetch rtn sync
-quantilica fetch rtn latest
+quantilica fetch rtn sync --latest
 quantilica fetch rtn export excel
 quantilica fetch rtn export sqlite
+quantilica fetch rtn pipeline --format sqlite
 ```
 
 ## API Python

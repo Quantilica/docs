@@ -203,7 +203,7 @@ wages_real.write_parquet("data/wages_real.parquet")
 ## O que esta receita demonstra
 
 - **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`) sem dependências cruzadas, compostos em camada do usuário.
-- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-fetcher fetch` pula `.7z` já baixados.
+- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-fetcher sync` pula `.7z` já baixados.
 - **Performance**: tudo em Polars com lazy evaluation; mesmo cobrindo 14 anos da RAIS (~700M registros), agregações finais rodam em segundos.
 - **Reprodutibilidade**: cada estágio salva um Parquet intermediário, então re-análises não exigem re-fetch.
 

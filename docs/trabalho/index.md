@@ -20,19 +20,19 @@ Para análise pontual de um ou poucos anos. Após uma conversão inicial dos bru
 
 ```mermaid
 graph LR
-    A[FTP MTE] --> B[pdet-fetcher fetch<br/>raw .7z]
+    A[FTP MTE] --> B[pdet-fetcher sync<br/>raw .7z]
     B --> C[pdet-fetcher convert<br/>→ Parquet]
     C --> D[Polars / Jupyter<br/>análise ad-hoc]
 ```
 
 ### Stack 2 — Produção (Pipeline `pdet-fetcher` agendado)
 
-Para pipelines diários/mensais que produzem artefatos versionados. RAIS é anual (release dezembro do ano seguinte); CAGED é mensal com 3 semanas de atraso. Agende `pdet-fetcher fetch` + `convert` para rodar quando novos arquivos saem; resultados são idempotentes (re-rodar não custa nada).
+Para pipelines diários/mensais que produzem artefatos versionados. RAIS é anual (release dezembro do ano seguinte); CAGED é mensal com 3 semanas de atraso. Agende `pdet-fetcher pipeline` (sync → convert) para rodar quando novos arquivos saem; resultados são idempotentes (re-rodar não custa nada).
 
 ```mermaid
 graph LR
     A[FTP MTE] --> B[scheduler<br/>cron / Airflow]
-    B --> C[pdet-fetcher fetch + convert]
+    B --> C[pdet-fetcher pipeline]
     C --> D[Parquet versionado]
     D --> E[(PostgreSQL<br/>opcional)]
     E --> F[BI / dashboards]

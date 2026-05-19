@@ -7,6 +7,30 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-05 — Padronização das CLIs dos fetchers (breaking change)
+
+Unificação do vocabulário de subcomandos das CLIs dos fetchers. **Mudança
+incompatível**: scripts, cron jobs e contêineres que chamam os comandos
+antigos precisam ser atualizados.
+
+- **`sync` é o verbo único de download.** Substitui `trade` (comex), `fetch`
+  (bcb-sgs, pdet), `data` (datasus) e `download` (tesouro-direto). `rtn` e
+  `inmet` já usavam `sync`. Por padrão o `sync` baixa **tudo**, com seleção
+  opcional de datasets.
+- **Comandos fundidos.** Pré-visualização agora é a flag `--dry-run` do `sync`
+  (substitui o comando `info` do tesouro-direto); o `all` do comex foi
+  absorvido pelo `sync` sem argumentos; `docs`/`aux` do datasus viraram flags
+  `--docs`/`--aux` do `sync`; o `latest` do rtn virou `sync --latest`.
+- **Grupos aninhados.** `bcb-sgs` reorganizado em `series` (operações por
+  série) e `catalogo` (catálogo de metadados — `catalogo sync` é o antigo
+  `pipeline`); `sidra` agrupa `list pesquisas` / `list agregados`.
+- **Novo subcomando `pipeline`** (`sync` → `convert`/`export`) em `rtn`,
+  `pdet` e `tesouro-direto`.
+- **`pdet-fetcher`** passou a ter `cli.py` próprio (antes a CLI nativa vivia
+  em `__main__.py`).
+- Norma atualizada em [Padronização de CLI para Fetchers](normas/cli-fetchers.md)
+  com o vocabulário canônico de subcomandos.
+
 ## 2026-05 — Novos pacotes de infraestrutura e integração analítica
 
 - **`quantilica-cloud`** lançado: plugin CLI para sincronizar manifestos de download com o catálogo na nuvem. Registrado via `quantilica.commands`; acessível como `quantilica cloud login/sync/status`. Offline-first por design.

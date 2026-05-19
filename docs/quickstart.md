@@ -98,9 +98,8 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
     ```
 
     ```bash
-    datasus-fetcher data \
-        --data-dir ./dados \
-        sih-rd \
+    datasus-fetcher sync sih-rd \
+        -o ./dados \
         --start 2022-01 \
         --end 2024-12 \
         --regions sp \
@@ -125,8 +124,8 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
     ```
 
     ```bash
-    inmet-fetcher fetch 2020:2024 --data-dir ./dados --workers 4
-    inmet-fetcher read --data-dir ./dados --uf SP,RJ --output sudeste.parquet
+    inmet-fetcher sync 2020:2024 -o ./dados --workers 4
+    inmet-fetcher read -o ./dados --uf SP,RJ --save-as sudeste.parquet
     ```
 
     Saída esperada: ZIPs anuais baixados, dados unificados em `sudeste.parquet` com colunas em `snake_case`, `datetime` nativo e valores nulos limpos.

@@ -41,6 +41,35 @@ O `quantilica-cli` descobre plugins dinamicamente via entry points — nunca dec
 - **UX superior no hub**: quando carregado via `quantilica-cli`, o ambiente já tem Typer e Rich disponíveis. O `plugin.py` usa isso sem declarar dependência.
 - **Automação vs. interativo**: `cli.py` é adequada para cron jobs e scripts; `plugin.py` serve quem usa o terminal interativamente.
 
+### 1.2 Vocabulário canônico de subcomandos
+
+Para que a CLis sejam previsíveis, todo fetcher usa o **mesmo verbo** para a
+mesma intenção. Cada fetcher implementa apenas o subconjunto que faz sentido
+para sua fonte, mas nunca inventa um nome alternativo para um verbo já
+existente nesta tabela:
+
+| Verbo | Significado | Default |
+|---|---|---|
+| `sync` | Baixar/atualizar os dados da fonte; idempotente (pula o que já está atualizado) | baixa **tudo**; aceita seleção opcional via argumento posicional ou `--dataset` |
+| `list` | Listar o que está disponível remotamente (datasets, tabelas, pesquisas) | — |
+| `info` | Exibir metadados de **uma** entidade específica | — |
+| `convert` | Converter dados brutos para Parquet/formato analítico | — |
+| `export` | Exportar para formatos externos (Excel, SQLite) | — |
+| `pipeline` | Encadear `sync` → `convert`/`export` com cabeçalhos de passo e resumo | — |
+
+Regras de ouro:
+
+- **`sync` é o verbo de download.** Nunca use `download`, `fetch`, `trade`,
+  `data` ou outro sinônimo para "baixar os dados da fonte".
+- **`sync` baixa tudo por padrão.** A seleção de datasets é sempre opcional —
+  omitir o argumento significa "sincronizar o conjunto completo".
+- **Pré-visualização é uma flag, não um comando.** Use `--dry-run` no `sync`;
+  não crie um comando `info`/`status` separado só para listar o que seria
+  baixado. `info` é reservado para metadados de uma entidade.
+- **Agrupe quando houver mais de um eixo semântico.** Veja §3.5 — fetchers como
+  o `bcb-sgs` separam operações por série (`series sync`, `series metadata`) das
+  operações de catálogo (`catalogo sync`, `catalogo metadata-bulk`).
+
 ---
 
 ## 2. CLI nativa — `cli.py`
@@ -124,14 +153,16 @@ Todas as CLIs nativas devem implementar as seguintes opções de forma consisten
 
 ### 2.3 Subcomandos recomendados
 
-Não há uma lista fechada de subcomandos, pois cada fetcher tem semântica própria. Entretanto, alguns padrões são recorrentes:
+Os subcomandos seguem o **vocabulário canônico** definido em §1.2. A `cli.py`
+nativa deve expor exatamente os mesmos verbos que o `plugin.py` do fetcher:
 
 | Subcomando | Quando usar |
 |---|---|
-| `download` / `fetch` | Baixar o conjunto principal de dados |
+| `sync` | Baixar o conjunto principal de dados (tudo por padrão) |
 | `list` | Listar o que está disponível (datasets, anos, etc.) |
 | `convert` | Converter de formato bruto para Parquet/JSON |
-| `info` | Exibir metadados sem baixar |
+| `export` | Exportar para formatos externos (Excel, SQLite) |
+| `info` | Exibir metadados de uma entidade |
 | `pipeline` | Executar fluxo completo (vários passos encadeados) |
 | `search` | Busca livre em índice ou catálogo remoto |
 
@@ -184,7 +215,7 @@ quantilica
     ├── pdet       ← pdet_fetcher.plugin:app
     ├── rtn        ← rtn_fetcher.plugin:app
     ├── sidra      ← sidra_fetcher.plugin:app
-    └── tesouro-direto ← tesouro_direto_fetcher.plugin:app
+    └── td         ← tesouro_direto_fetcher.plugin:app
 ```
 
 Cada nó da árvore é um `typer.Typer` exportado por `plugin.py` e descoberto via entry point.
@@ -295,36 +326,40 @@ Regras:
 
 ### 3.5 Subcommands aninhados
 
-Para fetchers com muitos comandos agrupados por função, use `typer.Typer` aninhado:
+Para fetchers com mais de um eixo semântico, use `typer.Typer` aninhado. O
+`bcb-sgs` separa operações **por série** das operações de **catálogo**:
 
 ```python
-app = typer.Typer(help="Resultado do Tesouro Nacional (RTN).")
-fetch_sub = typer.Typer(help="Buscar metadados e baixar arquivos RTN.")
-export_sub = typer.Typer(help="Exportar dados RTN para diferentes formatos.")
-app.add_typer(fetch_sub, name="fetch")
-app.add_typer(export_sub, name="export")
+app = typer.Typer(help="Dados do SGS/BCB (séries temporais).")
+series_sub = typer.Typer(help="Operações por série.")
+catalogo_sub = typer.Typer(help="Catálogo de metadados do SGS/BCB.")
+app.add_typer(series_sub, name="series")
+app.add_typer(catalogo_sub, name="catalogo")
 
-@fetch_sub.command("metadata")
-def cmd_metadata(...) -> None:
-    """Buscar metadados HTML e gerar metadata.json."""
+@series_sub.command("sync")
+def cmd_series_sync(...) -> None:
+    """Baixar dados de uma série temporal."""
     ...
 
-@export_sub.command("excel")
-def cmd_export_excel(...) -> None:
-    """Exportar dados RTN para Excel."""
+@catalogo_sub.command("sync")
+def cmd_catalogo_sync(...) -> None:
+    """Sincronizar o catálogo completo de metadados (vários passos)."""
     ...
 ```
 
 Isso produz:
 
 ```
-quantilica fetch rtn fetch metadata
-quantilica fetch rtn fetch download
-quantilica fetch rtn export excel
-quantilica fetch rtn export sqlite
+quantilica fetch bcb-sgs series sync 433
+quantilica fetch bcb-sgs series metadata 433
+quantilica fetch bcb-sgs catalogo sync
+quantilica fetch bcb-sgs catalogo metadata-bulk
 ```
 
-Use subcommands aninhados quando há mais de dois grupos semânticos distintos. Para fetchers simples (3-6 comandos), um único nível é suficiente.
+Note que o verbo `sync` se repete em cada grupo — sempre com o mesmo
+significado ("trazer o local em linha com o remoto"), apenas em escopos
+diferentes. Use subcommands aninhados quando há mais de um grupo semântico
+distinto. Para fetchers simples (3-6 comandos), um único nível é suficiente.
 
 ### 3.6 Registro no `pyproject.toml`
 
@@ -1066,16 +1101,16 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 | Padrão | Fetcher de referência | Arquivo |
 |---|---|---|
-| Pipeline completo com Rule + Progress + resumo | `bcb-sgs-fetcher` | `plugin.py :: pipeline_cmd` |
+| Pipeline completo com Rule + Progress + resumo | `bcb-sgs-fetcher` | `plugin.py :: pipeline_cmd` (comando `catalogo sync`) |
 | Callbacks `on_progress` / `on_grupo` / `on_page` | `bcb-sgs-fetcher` | `bulk.py` |
 | `_setup_logging` com `RichHandler` | `bcb-sgs-fetcher` | `plugin.py :: _setup_logging` |
-| Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list_datasets` |
-| `console.status` em conexão FTP | `pdet-fetcher` | `plugin.py :: cmd_fetch` |
-| Subcommands aninhados (`fetch_sub`, `export_sub`) | `rtn-fetcher` | `plugin.py` |
+| Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
+| `console.status` em conexão FTP | `pdet-fetcher` | `plugin.py :: cmd_sync` |
+| Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
 | Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: _expand_years` |
 | Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: info` |
-| `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_data` |
-| `console.status` com `--force` | `rtn-fetcher` | `plugin.py :: cmd_metadata` |
+| `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_sync` |
+| Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |
 | `_print_info` como helper de tabela reutilizável | `tesouro-direto-fetcher` | `plugin.py :: _print_info` |
 | `console.rule` para divisores de seção | `tesouro-direto-fetcher` | `plugin.py :: cmd_info` |
 

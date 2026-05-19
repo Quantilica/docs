@@ -73,16 +73,14 @@ pip install git+https://github.com/Quantilica/comex-fetcher.git
 comex-fetcher <command> [args]
 
 Comandos:
-  trade YEARS [-exp] [-imp] [-mun] [-o PATH]
-        Baixar transações comerciais para um ano, um intervalo (2018:2023), ou 'completo'.
-        -exp / -imp restringem a direção; padrão baixa ambas.
-        -mun adiciona arquivos no nível municipal (1997+).
-  table [TABLES...] [-o PATH]
-        Baixar tabelas de códigos auxiliares. 'all' baixa cada tabela.
-        Execute sem argumentos para imprimir a lista de tabelas disponíveis.
-  all   [-y] [-o PATH]
-        Baixar TUDO (todos os anos, todas as tabelas, todos os datasets). Pede
-        confirmação a menos que -y seja fornecido.
+  sync [YEARS...] [-exp] [-imp] [-mun] [--no-tables] [--tables-only] [--dry-run] [-o PATH]
+        Sincronizar transações comerciais e tabelas auxiliares.
+        Sem YEARS, baixa todos os anos desde 1989; aceita anos (2023) e
+        intervalos (2018:2023). -exp / -imp restringem a direção; padrão
+        baixa ambas. -mun adiciona arquivos no nível municipal (1997+).
+        --no-tables pula as tabelas; --tables-only baixa apenas as tabelas;
+        --dry-run lista sem baixar.
+  list  Listar as tabelas de códigos auxiliares disponíveis.
 ```
 
 `PATH` padrão é `data/secex-comex`.
@@ -90,22 +88,26 @@ Comandos:
 ### Exemplos
 
 ```bash
-# Exportações + importações para 2023
-comex-fetcher trade 2023 -o ./DATA
+# Exportações + importações para 2023 (+ tabelas auxiliares)
+comex-fetcher sync 2023 -o ./DATA
 
 # Apenas importações, 2018–2023, com breakdown municipal
-comex-fetcher trade 2018:2023 -imp -mun -o ./DATA
+comex-fetcher sync 2018:2023 -imp -mun -o ./DATA
 
-# Arquivo de história completa única (todos os anos agrupados por SECEX)
-comex-fetcher trade complete -o ./DATA
+# Listar sem baixar
+comex-fetcher sync --dry-run 2023 -o ./DATA
 
-# Tabelas auxiliares
-comex-fetcher table all -o ./DATA          # cada tabela
-comex-fetcher table ncm pais uf -o ./DATA  # tabelas específicas
-comex-fetcher table                        # listar tabelas disponíveis
+# Apenas as tabelas auxiliares de códigos
+comex-fetcher sync --tables-only -o ./DATA
 
-# Tudo (longa duração, multi-GB)
-comex-fetcher all -y -o ./DATA
+# Apenas as transações, sem tabelas
+comex-fetcher sync 2023 --no-tables -o ./DATA
+
+# Listar tabelas auxiliares disponíveis
+comex-fetcher list
+
+# Tudo (longa duração, multi-GB): todos os anos + todas as tabelas
+comex-fetcher sync -o ./DATA
 ```
 
 ## API Python
@@ -164,7 +166,7 @@ Helpers de baixo nível em `comex_fetcher.download`: `download_file(url, output,
 
 `ncm`, `sh`, `cuci`, `cgce`, `isic`, `siit`, `fat-agreg`, `unidade`, `ppi`, `ppe`, `grupo`, `pais`, `pais-bloco`, `uf`, `uf-mun`, `via`, `urf`, `isic-cuci`, `nbm`, `ncm-nbm`.
 
-Execute `comex-fetcher table` (sem args) para imprimir a lista atual com descrições.
+Execute `comex-fetcher list` para imprimir a lista atual com descrições.
 
 ## Layout em Disco
 

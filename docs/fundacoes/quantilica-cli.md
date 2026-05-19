@@ -47,8 +47,9 @@ Exemplos:
 
 ```bash
 quantilica fetch comex --help
-quantilica fetch sidra agregado 1737
-quantilica fetch bcb-sgs series 432 --start 2010-01-01
+quantilica fetch comex sync 2023
+quantilica fetch sidra info 1737
+quantilica fetch bcb-sgs series sync 432
 ```
 
 ### Versão
