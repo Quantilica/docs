@@ -47,17 +47,15 @@ theme:
 
 nav:
   - Início: index.md
-  - Roadmap: roadmap.md
   - Começar em 5 minutos: quickstart.md
 
   - Conceitos:
       - concepts/index.md
-      - Arquitetura do Ecossistema: concepts/arquitetura.md
-      - Convenções de Armazenamento: concepts/storage.md
-      - Arquitetura de CLI: concepts/cli.md
       - Princípios de Design: concepts/principios.md
+      - Arquitetura do Ecossistema: concepts/arquitetura.md
       - Padrões Práticos: concepts/padroes.md
       - Parquet + Polars: concepts/parquet-polars.md
+      - Convenções de Armazenamento: concepts/storage.md
       - Proveniência & Manifestos: concepts/proveniencia.md
 
   - Fundações:
@@ -110,8 +108,9 @@ nav:
       - Padrões de Escrita: normas/escrita.md
       - Padronização de CLI: normas/cli-fetchers.md
 
-  - Status das fontes: status.md
   - Contribuir: contribuir.md
+  - Status das fontes: status.md
+  - Roadmap: roadmap.md
   - Changelog: changelog.md
 
 plugins:
