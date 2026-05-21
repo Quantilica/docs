@@ -1,47 +1,43 @@
-# Build output
-/site/
-
-# Python
+# Build / packaging
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+build/
+dist/
 
-# Virtual environments
+# Virtual envs e caches do uv
 .venv/
-venv/
-ENV/
-env/
+.uv-cache/
+# uv.lock é versionado em apps (deploy reproduzível)
 
-# IDE
+# Caches de teste / lint / tipos
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Cobertura
+.coverage
+.coverage.*
+htmlcov/
+
+# Build de docs (mkdocs / sphinx)
+site/
+docs/_build/
+
+# Editor / IDE / OS
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
 .DS_Store
 Thumbs.db
+*.swp
 
-# Python version
-.python-version
+# Logs e env locais
+*.log
+.env
+.env.local
 
 # Claude
 .claude/
+
+# Específico do repo
+.python-version
