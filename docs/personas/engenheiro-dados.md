@@ -18,17 +18,17 @@ Você é responsável pela infraestrutura que serve os analistas. Constrói pipe
 ## Por onde começar
 
 1. **5 minutos:** leia a [Arquitetura](../concepts/arquitetura.md). Entenda como `-fetcher`, `-sql` e `-pipelines` se conectam.
-2. **15 minutos:** rode um pipeline declarativo via `sidra-sql plugin install ... --alias std && sidra-sql run std ipca`. Isso é o "fim do túnel" — pipelines como TOML versionado.
+2. **15 minutos:** rode um pipeline declarativo via `sidra-sql plugin install ... --alias std && sidra-sql run std snipc`. Isso é o "fim do túnel" — pipelines como TOML versionado.
 3. **30 minutos:** monte a receita **[Balança comercial em DuckDB](../cookbook/balanca-duckdb.md)** — `comex-fetcher` para baixar, DuckDB para consultar Parquet sem RAM.
 
-### Pipeline IPCA em 1 comando
+### Pipeline de inflação em 1 comando
 
 ```bash
 # Instalar catálogo padrão de pipelines IBGE
 sidra-sql plugin install sidra-pipelines --alias std
 
-# Rodar pipeline IPCA → baixa, normaliza, carrega em PostgreSQL
-sidra-sql run std ipca
+# Rodar pipeline SNIPC → baixa, normaliza e carrega INPC, IPCA e IPCA-15 em PostgreSQL
+sidra-sql run std snipc
 ```
 
 ```python

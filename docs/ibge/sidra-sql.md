@@ -81,7 +81,7 @@ Modelagem relacional estrita separa metadados de fatos:
 
 **Tabelas de Dimensão:**
 
-- `sidra_tabela`: Metadados brutos em formato `JSONB` (preserva estrutura IBGE)
+- `tabela_sidra`: Metadados brutos em formato `JSONB` (preserva estrutura IBGE)
 - `localidade`: Malha territorial (Brasil, estados, municípios, regiões)
 - `periodo`: Dimensão de tempo com níveis apropriados de agregação
 - `dimensao`: Cruzamentos de classificações (categorias × variáveis)
@@ -97,7 +97,7 @@ erDiagram
     localidade ||--o{ dados : localidade_id
     dimensao ||--o{ dados : dimensao_id
     periodo ||--o{ dados : periodo_id
-    sidra_tabela ||--o{ dados : sidra_tabela_id
+    tabela_sidra ||--o{ dados : tabela_sidra_id
 
     localidade {
         bigint id PK
@@ -116,7 +116,7 @@ erDiagram
     }
     dados {
         bigint id PK
-        text sidra_tabela_id FK
+        text tabela_sidra_id FK
         bigint localidade_id FK
         bigint dimensao_id FK
         integer periodo_id FK
@@ -143,12 +143,12 @@ Lógica de negócio isolada de código:
 ```toml
 # fetch.toml - Definir pipelines sem codificar
 [[tabelas]]
-sidra_tabela = "1620"
+tabela_sidra = "1620"
 variables = ["116"]                    # Variável PIB
 territories = {6 = []}                 # Total Brasil
 
 [[tabelas]]
-sidra_tabela = "1737"
+tabela_sidra = "1737"
 variables = ["63"]                     # Inflação IPCA
 territories = {1 = [], 3 = []}        # Níveis 1 & 3
 ```
@@ -247,13 +247,13 @@ Define a fetch pipeline:
 ```toml
 # pipelines/economic/fetch.toml
 [[tabelas]]
-sidra_tabela = "1620"
+tabela_sidra = "1620"
 variables = ["116"]
 territories = {6 = []}
 unnest_classifications = true
 
 [[tabelas]]
-sidra_tabela = "1737"
+tabela_sidra = "1737"
 variables = ["63"]
 territories = {1 = [], 3 = []}
 ```
@@ -262,10 +262,11 @@ Define a transform:
 
 ```toml
 # pipelines/economic/transform.toml
-[table]
+[[table]]
 name = "economic_indicators"
 schema = "analytics"
 strategy = "replace"
+sql = "transform.sql"
 ```
 
 ```sql
@@ -320,7 +321,7 @@ with Fetcher(config, storage=storage, max_workers=4) as fetcher:
 
     # 2. BAIXAR arquivos de dados para armazenamento local
     data_files = fetcher.download_table(
-        sidra_tabela="1620",
+        tabela_sidra="1620",
         territories={"6": []},  # Total Brasil
         variables=["116"],
     )
@@ -348,14 +349,14 @@ IBGE frequentemente publica revisões de dados. Warehouse preserva histórico ao
 -- 1. Marcar versão antiga como inativa
 UPDATE ibge_sidra.dados
 SET ativo = FALSE
-WHERE sidra_tabela_id = '1620'
+WHERE tabela_sidra_id = '1620'
   AND localidade_id = 6
   AND periodo_id = 123
   AND ativo = TRUE;
 
 -- 2. Inserir nova versão
 INSERT INTO ibge_sidra.dados
-  (sidra_tabela_id, localidade_id, dimensao_id, periodo_id, v, modificacao, ativo)
+  (tabela_sidra_id, localidade_id, dimensao_id, periodo_id, v, modificacao, ativo)
 VALUES
   ('1620', 6, 1, 123, '1234.89', '2026-01-15', TRUE);
 ```
@@ -378,7 +379,7 @@ with engine.connect() as conn:
     rows = conn.execute(
         select(Dados).where(
             and_(
-                Dados.sidra_tabela_id == "1620",
+                Dados.tabela_sidra_id == "1620",
                 Dados.modificacao <= snapshot_date,
                 Dados.ativo == True,
             )
@@ -397,7 +398,7 @@ with engine.connect() as conn:
     history = conn.execute(
         select(Dados).where(
             and_(
-                Dados.sidra_tabela_id == "1620",
+                Dados.tabela_sidra_id == "1620",
                 Dados.localidade_id == 6,
                 Dados.periodo_id == 123,
             )
@@ -581,14 +582,14 @@ with Fetcher(config, storage=storage, max_workers=4) as fetcher:
 
 | Método | Propósito |
 |--------|-----------|
-| `fetcher.fetch_metadata(sidra_tabela)` | Buscar metadados completos da tabela (territórios, períodos, variáveis) |
-| `fetcher.download_table(sidra_tabela, territories, variables, classifications)` | Baixar todos os períodos; retorna lista de `{"filepath": Path, "modificacao": str}` |
+| `fetcher.fetch_metadata(tabela_sidra)` | Buscar metadados completos da tabela (territórios, períodos, variáveis) |
+| `fetcher.download_table(tabela_sidra, territories, variables, classifications)` | Baixar todos os períodos; retorna lista de `{"filepath": Path, "modificacao": str}` |
 
 Parâmetros de `download_table`:
 
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-------------|
-| `sidra_tabela` | str | Código da tabela SIDRA |
+| `tabela_sidra` | str | Código da tabela SIDRA |
 | `territories` | dict[str, list[str]] | Nível territorial → códigos (lista vazia = todos) |
 | `variables` | list[str] \| None | Códigos de variáveis; `None` = todos |
 | `classifications` | dict[str, list[str]] \| None | Classificação → códigos de categorias |
@@ -674,13 +675,13 @@ load_dados(engine, storage, data_files)  # bulk load via COPY FROM STDIN
 
 ```toml
 [[tabelas]]
-sidra_tabela = "1620"          # código da tabela SIDRA (obrigatório)
+tabela_sidra = "1620"          # código da tabela SIDRA (obrigatório)
 variables = ["116"]             # códigos de variáveis; omitir para todas
 territories = {6 = []}          # {nível: [códigos]}; lista vazia = todas
 unnest_classifications = true   # expandir todos os cross-produtos de categorias
 
 [[tabelas]]
-sidra_tabela = "1737"
+tabela_sidra = "1737"
 variables = ["63"]
 territories = {1 = [], 3 = []}
 split_variables = true          # uma requisição por variável (evita limites SIDRA)
@@ -691,7 +692,7 @@ classifications = {81 = ["allxt"]}
 
 | Campo | Tipo | Obrigatório | Descrição |
 |-------|------|------------|----------|
-| `sidra_tabela` | str | ✅ | Código da tabela SIDRA |
+| `tabela_sidra` | str | ✅ | Código da tabela SIDRA |
 | `territories` | dict[str, list] | ✅ | Nível territorial → códigos de unidade |
 | `variables` | list[str] | | Códigos de variáveis (padrão: todas) |
 | `classifications` | dict[str, list] | | Classificação → códigos de categorias |
@@ -701,10 +702,11 @@ classifications = {81 = ["allxt"]}
 ### `transform.toml` — Configuração de Transformação
 
 ```toml
-[table]
+[[table]]
 name = "pib_municipal"          # nome da tabela/view alvo
 schema = "analytics"            # schema alvo
 strategy = "replace"            # "replace" (tabela) ou "view"
+sql = "transform.sql"           # arquivo .sql pareado
 description = "PIB Municipal"
 primary_key = ["municipio_id", "ano"]
 indexes = [
@@ -724,8 +726,7 @@ version = "1.0.0"
 [[pipeline]]
 id = "pib_municipal"
 description = "PIB Municipal da tabela SIDRA 5938 IBGE"
-fetch = "pib_municipal/fetch.toml"
-transform = "pib_municipal/transform.toml"
+path = "pib_municipal"
 ```
 
 ---
@@ -734,7 +735,7 @@ transform = "pib_municipal/transform.toml"
 
 ### Tabelas de Banco de Dados (schema: `ibge_sidra`)
 
-**`sidra_tabela`** — Registro de tabela SIDRA
+**`tabela_sidra`** — Registro de tabela SIDRA
 
 | Coluna | Tipo | Descrição |
 |--------|------|----------|
@@ -790,7 +791,7 @@ Constraint único: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
 | Coluna | Tipo | Descrição |
 |--------|------|----------|
 | `id` | bigint PK | Auto-incremento |
-| `sidra_tabela_id` | text FK | → `sidra_tabela.id` |
+| `tabela_sidra_id` | text FK | → `tabela_sidra.id` |
 | `localidade_id` | bigint FK | → `localidade.id` |
 | `dimensao_id` | bigint FK | → `dimensao.id` |
 | `periodo_id` | integer FK | → `periodo.id` |
@@ -798,7 +799,7 @@ Constraint único: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
 | `ativo` | boolean | Flag de registro ativo (SCD) |
 | `v` | text | Valor de dados |
 
-Constraint único: `(sidra_tabela_id, localidade_id, dimensao_id, periodo_id)`
+Constraint único: `(tabela_sidra_id, localidade_id, dimensao_id, periodo_id)`
 
 ### Exemplo de Consulta Analítica
 
@@ -820,7 +821,7 @@ query = (
     .where(
         Dados.ativo == True,
         Localidade.nc == "N3",          # estados
-        Dados.sidra_tabela_id == "1620",
+        Dados.tabela_sidra_id == "1620",
     )
     .order_by(Periodo.codigo.desc())
 )
@@ -863,12 +864,12 @@ Performance no mundo real em hardware padrão (8-core, 16 GB RAM):
 ```toml
 # pipelines/annual_snapshot/fetch.toml
 [[tabelas]]
-sidra_tabela = "1620"
+tabela_sidra = "1620"
 variables = ["116"]
 territories = {6 = [], 3 = []}
 
 [[tabelas]]
-sidra_tabela = "1737"
+tabela_sidra = "1737"
 variables = ["63"]
 territories = {1 = []}
 ```

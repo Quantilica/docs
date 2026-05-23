@@ -65,7 +65,7 @@ FROM ibge_sidra.dados d
 JOIN ibge_sidra.localidade l ON d.localidade_id = l.id
 JOIN ibge_sidra.periodo    p ON d.periodo_id    = p.id
 JOIN ibge_sidra.dimensao   dim ON d.dimensao_id = dim.id
-WHERE d.sidra_tabela_id = '5938'              -- PIB municipal
+WHERE d.tabela_sidra_id = '5938'              -- PIB municipal
   AND d.modificacao <= DATE '2019-12-15'      -- ↪ sua data de corte
   AND d.ativo = TRUE                          -- ↪ versão vigente naquela data
   AND p.ano BETWEEN 2010 AND 2017
@@ -84,7 +84,7 @@ WITH original AS (
     FROM ibge_sidra.dados d
     JOIN ibge_sidra.localidade l ON d.localidade_id = l.id
     JOIN ibge_sidra.periodo    p ON d.periodo_id    = p.id
-    WHERE d.sidra_tabela_id = '5938'
+    WHERE d.tabela_sidra_id = '5938'
       AND d.modificacao <= DATE '2019-12-15'
       AND d.ativo = TRUE
 ),
@@ -93,7 +93,7 @@ atual AS (
     FROM ibge_sidra.dados d
     JOIN ibge_sidra.localidade l ON d.localidade_id = l.id
     JOIN ibge_sidra.periodo    p ON d.periodo_id    = p.id
-    WHERE d.sidra_tabela_id = '5938'
+    WHERE d.tabela_sidra_id = '5938'
       AND d.ativo = TRUE
 )
 SELECT

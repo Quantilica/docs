@@ -1,6 +1,6 @@
 ---
 title: sidra-pipelines — Catálogo de pipelines ETL para sidra-sql
-description: Mais de 30 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, PEVS, PNAD, Censo). Wide-format, variáveis como colunas, plug-and-play com sidra-sql.
+description: 20 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, PEVS, PNAD, Censo). Wide-format, variáveis como colunas, plug-and-play com sidra-sql.
 ---
 
 # sidra-pipelines
@@ -16,14 +16,14 @@ description: Mais de 30 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, 
 
 ## O Que É
 
-`sidra-pipelines` é o catálogo padrão de pipelines de dados production-ready para o motor `sidra-sql` — atualmente com 30+ pipelines cobrindo IBGE de ponta a ponta. É um único repositório Git contendo definições TOML + SQL declarativas para os datasets IBGE mais comumente usados.
+`sidra-pipelines` é o catálogo padrão de pipelines de dados production-ready para o motor `sidra-sql` — atualmente com 20 pipelines cobrindo IBGE de ponta a ponta. É um único repositório Git contendo definições TOML + SQL declarativas para os datasets IBGE mais comumente usados.
 
 Em vez de escrever suas próprias definições de pipeline, instale este catálogo e execute extrações pré-construídas com um único comando CLI:
 
 ```bash
 sidra-sql run std pib_municipal    # PIB dos Municípios
-sidra-sql run std ipca             # Inflação (IPCA)
-sidra-sql run std ppm_rebanhos     # Rebanhos (PPM)
+sidra-sql run std snipc            # Inflação (INPC, IPCA, IPCA-15)
+sidra-sql run std ppm              # Pesquisa Pecuária Municipal (PPM)
 ```
 
 Sem código para escrever. Sem configuração para gerenciar. Apenas dados.
@@ -34,8 +34,8 @@ Sem código para escrever. Sem configuração para gerenciar. Apenas dados.
 graph TD
     subgraph Repo [Repositório sidra-pipelines]
         R1[manifest.toml - registro]
-        R2[14 diretórios - pipelines]
-        R3[Cada um com: fetch.toml + transform.sql]
+        R2[20 pipelines]
+        R3[Cada um: fetch.toml + transform.toml + .sql]
     end
 
     Repo -- sidra-sql plugin install --> Motor
@@ -58,29 +58,25 @@ O catálogo cobre datasets brasileiros essenciais de economia, demografia, agric
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
 | `pib_municipal` | **PIB por Município** | 5938 | `analytics.pib_municipal` |
-| `ipca` | **IPCA** (Inflação do consumidor) | 7060, 1419, ... | `analytics.ipca` |
-| `ipca15` | **IPCA-15** (Inflação de meio de mês) | 7062, 1705, ... | `analytics.ipca15` |
-| `inpc` | **INPC** (Inflação do trabalhador) | 7063, 1100, ... | `analytics.inpc` |
+| `contas_nacionais_trimestral` | **Contas Nacionais Trimestrais** | 5932, 1620, 1846, ... | `analytics.cnt_taxas`, `cnt_indices`, `cnt_valores`, ... |
+| `snipc` | **Inflação** — INPC, IPCA e IPCA-15 | 22, 58, 7060, 7063, 7062, 1736, 1737, 3065, ... | `analytics.inpc`, `ipca`, `ipca15`, `inflacao`, `inflacao_numero_indice`, `inflacao_difusao`, `inflacao_hierarquia_subitem` |
+| `ipp` | **IPP** (Preços ao Produtor) | 6904, 6903, 6723 | `analytics.ipp_categoria_economica`, `ipp_cnae`, `ipp_grupo_industrial` |
+| `pmc` | **PMC** (Comércio) / `pms` (Serviços) | 8880, 5906, ... | `analytics.pmc_agregado`, `pms_agregado`, ... |
 
 ### 👥 Demografia
 
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
-| `estimativa_populacao` | **Estimativas de População** | 6579 | `analytics.estimativa_populacao` |
-| `censo_populacao` | **Censo (Censo Demográfico)** | 200 | `analytics.censo_populacao` |
-| `contagem_populacao` | **Contagem de População** | 305, 793 | `analytics.contagem_populacao` |
+| `populacao` | **População** — censo, contagem e estimativas | 200, 305, 793, 4709, 6579 | `analytics.censo_populacao`, `contagem_populacao`, `estimativa_populacao`, `populacao` |
 
 ### 🌾 Agricultura & Silvicultura
 
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
-| `pam_lavouras_temporarias` | **PAM** (Cultivos temporários) | 839, 1000, ... | `analytics.pam_lavouras_temporarias` |
-| `pam_lavouras_permanentes` | **PAM** (Cultivos permanentes) | 1613 | `analytics.pam_lavouras_permanentes` |
-| `ppm_rebanhos` | **PPM** (Rebanhos) | 73, 3939 | `analytics.ppm_rebanhos` |
-| `ppm_producao` | **PPM** (Produção animal) | 74, 3940 | `analytics.ppm_producao` |
-| `ppm_exploracao` | **PPM** (Aquicultura) | 94, 95 | `analytics.ppm_exploracao` |
-| `pevs_producao` | **PEVS** (Produção florestal/madeira) | 289, 291 | `analytics.pevs_producao` |
-| `pevs_area_florestal` | **PEVS** (Área florestal) | 5930 | `analytics.pevs_area_florestal` |
+| `pam` | **PAM** (Produção Agrícola Municipal) | 839, 1000, 1001, 1002, 1612, 1613 | `analytics.pam_lavouras_temporarias`, `pam_lavouras_permanentes` |
+| `ppm` | **PPM** (Pesquisa Pecuária Municipal) | 73, 74, 94, 95, 3939, 3940 | `analytics.ppm_rebanhos`, `ppm_producao`, `ppm_exploracao` |
+| `pevs` | **PEVS** (Extração Vegetal e Silvicultura) | 289, 291, 5930 | `analytics.pevs_producao`, `pevs_area_florestal` |
+| `lspa` | **LSPA** (Produção Agrícola) | 6588 | `analytics.lspa` |
 
 ## Instalação
 
@@ -159,8 +155,8 @@ ORDER BY id_municipio, ano DESC;
 ### Executar Todos os Pipelines
 
 ```bash
-# Baixar e transformar todos 14 datasets
-for pipeline in pib_municipal ipca inpc estimativa_populacao ppm_rebanhos pam_lavouras_temporarias pevs_producao; do
+# Baixar e transformar vários datasets
+for pipeline in pib_municipal snipc populacao ppm pam pevs; do
     sidra-sql run std $pipeline
 done
 ```
@@ -175,20 +171,21 @@ Especifica quais tabelas e variáveis SIDRA baixar:
 
 ```toml
 [[tabelas]]
-sidra_tabela = "5938"           # ID da tabela de PIB
-variables    = ["37"]           # Variável de PIB
-territories  = {6 = ["all"]}   # Todos os municípios
+tabela_sidra = "5938"      # ID da tabela de PIB
+variables    = ["37"]      # Variável de PIB
+territories  = {6 = []}    # Lista vazia = todos os municípios
 ```
 
 ### transform.toml
 
-Configura a tabela analítica de saída:
+Declara uma ou mais tabelas analíticas de saída (uma entrada `[[table]]` por tabela):
 
 ```toml
-[table]
+[[table]]
 name        = "pib_municipal"
 schema      = "analytics"
 strategy    = "replace"
+sql         = "transform.sql"
 description = "PIB a preços correntes, anual por município"
 primary_key = ["ano", "id_municipio"]
 ```
@@ -208,7 +205,7 @@ FROM dados d
 JOIN periodo    p   ON d.periodo_id    = p.id
 JOIN dimensao   dim ON d.dimensao_id   = dim.id
 JOIN localidade l   ON d.localidade_id = l.id
-WHERE d.sidra_tabela_id = '5938'
+WHERE d.tabela_sidra_id = '5938'
   AND d.ativo = true;
 ```
 
@@ -229,17 +226,18 @@ Encontre o ID de tabela SIDRA em [sidra.ibge.gov.br](https://sidra.ibge.gov.br),
 
 ```toml
 [[tabelas]]
-sidra_tabela = "XXXX"
+tabela_sidra = "XXXX"
 variables    = ["YY"]
-territories  = {6 = ["all"]}
+territories  = {6 = []}
 ```
 
 ### 3. Escrever transform.toml
 
 ```toml
-[table]
+[[table]]
 name   = "meu_indicador"
 schema = "analytics"
+sql    = "transform.sql"
 ```
 
 ### 4. Escrever transform.sql
@@ -256,8 +254,7 @@ Na raiz do repositório:
 [[pipeline]]
 id          = "meu_novo_indicador"
 description = "Meu indicador customizado"
-fetch       = "meu-novo-indicador/fetch.toml"
-transform   = "meu-novo-indicador/transform.toml"
+path        = "meu-novo-indicador"
 ```
 
 ### 6. Testar e Enviar
@@ -298,9 +295,9 @@ Cache hit para dados inalterados = conclusão quase instantânea.
 Rastreie o desempenho macroeconômico do Brasil em tempo real:
 
 ```sql
-SELECT periodo, variavel, valor
+SELECT periodo, item, variacao, peso
 FROM analytics.ipca
-WHERE periodo >= '202401'
+WHERE periodo >= '2024-01-01'
 ORDER BY periodo DESC;
 ```
 
