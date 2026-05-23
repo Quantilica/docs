@@ -7,6 +7,17 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-05 — bcb-sgs-fetcher: remoção do suporte a Parquet (breaking change)
+
+Reforço da separação de camadas: o fetcher volta a ser um **adaptador de fonte puro**.
+
+- **`bcb-sgs-fetcher` (v0.4.0)** removeu `save_parquet`, `points_to_dataframe` e
+  `SGS_CONTRACT` (módulos `writer`/`schema` deletados) e o extra `[parquet]`. A saída passa
+  a ser apenas JSON/dataclasses; deps base só `quantilica-core` + scraping.
+- **`bcb-sgs-sql`** continua lendo Parquet na Via B (papel da camada de ETL) e passou a
+  declarar `polars` como dependência direta (depende do `bcb-sgs-fetcher` base, @v0.4.0).
+- `rtn-fetcher` e `inmet-fetcher` **não** foram afetados — seguem exportando Parquet tipado.
+
 ## 2026-05 — Padronização das CLIs dos fetchers (breaking change)
 
 Unificação do vocabulário de subcomandos das CLIs dos fetchers. **Mudança

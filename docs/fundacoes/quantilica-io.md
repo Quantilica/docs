@@ -118,10 +118,16 @@ Para validações de valor, combine `DataContract` com Polars expressions ou Pyd
 | Fetcher | Contrato | Local |
 |---|---|---|
 | `inmet-fetcher` | `BDMEP_CONTRACT` | `inmet_fetcher.schema` |
-| `bcb-sgs-fetcher` | `SGS_CONTRACT` | `bcb_sgs_fetcher.schema` |
 | `rtn-fetcher` | `build_contract(sheet, cfg)` (varia por planilha) | `rtn_fetcher.schema` |
 
-Os writers Parquet desses fetchers (`write_to_parquet`, `save_parquet`, `write_table_to_parquet`) aplicam o `cast()` automaticamente antes de gravar.
+Os writers Parquet desses fetchers (`write_to_parquet`, `write_table_to_parquet`) aplicam o `cast()` automaticamente antes de gravar.
+
+!!! note "bcb-sgs-fetcher"
+
+    O `bcb-sgs-fetcher` é um adaptador de fonte puro (JSON) e **não** embute Parquet
+    nem `DataContract`. A serialização das séries do SGS fica a cargo da camada de ETL
+    ([`bcb-sgs-sql`](../bcb/bcb-sgs-sql.md)). O exemplo `SGS_CONTRACT` acima é apenas
+    ilustrativo de como definir um contrato.
 
 ## Quando NÃO usar
 

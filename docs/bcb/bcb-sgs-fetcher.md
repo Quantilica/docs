@@ -289,28 +289,12 @@ O comando `series metadata` usa um subdiretório particionado por mês:
 
 Todos os arquivos são escritos atomicamente via `quantilica_core.files`.
 
-### Parquet com schema validado
+!!! note "Saída em Parquet?"
 
-Além do JSON padrão, é possível serializar `list[SeriesPoint]` em Parquet tipado via `save_parquet`. Os pontos passam por `SGS_CONTRACT` (`series_id: Int64`, `date: Date`, `value: Float64`, `date_end: Date`) e o manifesto é embutido no header:
-
-```python
-from bcb_sgs_fetcher import SgsDataClient, save_parquet
-from quantilica_core.manifests import DownloadManifest
-
-with SgsDataClient() as client:
-    points = client.fetch_series_data(series_id=11)
-
-manifest = DownloadManifest.from_content(
-    source_id="bcb",
-    dataset_id="sgs",
-    url="https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json",
-    content=b"",  # ou os bytes brutos da resposta para sha256 real
-    producer="bcb-sgs-fetcher",
-)
-save_parquet(points, "output/series_11.parquet", manifest=manifest)
-```
-
-`Decimal` é convertido para `Float64` na conversão. Veja [Data Contracts](../fundacoes/quantilica-io.md#data-contracts).
+    O `bcb-sgs-fetcher` produz apenas **JSON / dataclasses** — é um adaptador de
+    fonte. A serialização em Parquet tipado fica a cargo da camada de ETL: o
+    [`bcb-sgs-sql`](bcb-sgs-sql.md) carrega as séries em PostgreSQL e materializa
+    saídas analíticas.
 
 ---
 
@@ -328,6 +312,7 @@ save_parquet(points, "output/series_11.parquet", manifest=manifest)
 
 ## Saiba Mais
 
+- [bcb-sgs-sql](bcb-sgs-sql.md) — carrega estas séries em PostgreSQL com histórico de revisões (o "Stack 2" de produção)
 - [Arquitetura de CLI](../concepts/cli.md) — como fetchers se integram ao `quantilica-cli`
 - [Manifestos & proveniência](../concepts/proveniencia.md) — rastreamento de origem dos dados
 - [Convenções de armazenamento](../concepts/storage.md) — layout de diretórios e escrita atômica

@@ -13,6 +13,7 @@ graph TD
     Sources -->|Tesouro Direto| TD["tesouro-direto-fetcher"]
     Sources -->|RTN/STN| RTN["rtn-fetcher"]
     Sources -->|BCB SGS| BCB["bcb-sgs-fetcher"]
+    Sources -->|BCB SGS| BCBSQL["bcb-sgs-sql"]
     Sources -->|RAIS/CAGED| PD["pdet-fetcher"]
     Sources -->|Siscomex| CX["comex-fetcher"]
     Sources -->|DATASUS| DS["datasus-fetcher"]
@@ -23,6 +24,7 @@ graph TD
     TD --> Processing
     RTN --> Processing
     BCB --> Processing
+    BCBSQL --> Processing
     PD --> Processing
     CX --> Processing
     DS --> Processing
@@ -52,7 +54,7 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 | Tipo | Padrão Esperado | Exemplos |
 | :--- | :--- | :--- |
 | **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `datasus-fetcher`, `bcb-sgs-fetcher` |
-| **Pipeline** | Motor ETL + definições TOML/SQL | `sidra-sql`, `sidra-pipelines` |
+| **Pipeline** | Motor ETL + definições TOML/SQL | `sidra-sql`, `bcb-sgs-sql`, `sidra-pipelines` |
 | **Data Package** | Download + Transformação + Export | `rtn-fetcher`, `inmet-fetcher` |
 | **CLI Host** | CLI unificada com descoberta por entry points | `quantilica-cli` |
 

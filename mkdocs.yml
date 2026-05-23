@@ -78,7 +78,9 @@ nav:
           - rtn-fetcher: tesouro/rtn-fetcher.md
           - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Banco Central (BCB):
+          - bcb/index.md
           - bcb-sgs-fetcher: bcb/bcb-sgs-fetcher.md
+          - bcb-sgs-sql: bcb/bcb-sgs-sql.md
       - Mercado de Trabalho:
           - trabalho/index.md
           - pdet-fetcher: trabalho/pdet-fetcher.md

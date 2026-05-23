@@ -33,6 +33,7 @@ Tutorial dedicado ao formato e biblioteca centrais do ecossistema. Mostra workfl
 | Necessidade | Ferramenta do ecossistema |
 |---|---|
 | Dados macroeconômicos IBGE | `sidra-fetcher`, `sidra-sql` |
+| Indicadores macroeconômicos BCB (SGS) | `bcb-sgs-fetcher`, `bcb-sgs-sql` |
 | Títulos do Tesouro brasileiro | `tesouro-direto-fetcher`, `rtn-fetcher` |
 | Emprego e mercado de trabalho | `pdet-fetcher` |
 | Fluxos de comércio (import/export) | `comex-fetcher` |

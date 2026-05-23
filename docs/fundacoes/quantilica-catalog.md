@@ -55,7 +55,7 @@ from quantilica_catalog.adapters.sidra import to_observations as sidra_obs
 import polars as pl
 
 # BCB-SGS → observações canônicas (sem geo_id — série nacional)
-df_sgs = pl.read_parquet("series_433.parquet")  # formato SGS_CONTRACT
+df_sgs = pl.read_parquet("series_433.parquet")  # colunas series_id/date/value
 obs = sgs_obs(df_sgs)
 # indicator_id="bcb-sgs:433", geo_id=null
 ```

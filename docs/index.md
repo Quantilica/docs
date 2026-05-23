@@ -67,6 +67,8 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[comex-fetcher](comex/comex-fetcher.md)** | Siscomex com SSL ruim, arquivos GB, downtime governamental |
 | **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, 320+ GB de microdados |
 | **[inmet-fetcher](clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
+| **[bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
+| **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-io](fundacoes/quantilica-io.md)** | Parquet tipado com proveniência injetada no header |
 | **[quantilica-cloud](fundacoes/quantilica-cloud.md)** | Sincronização opt-in de manifestos com o catálogo na nuvem |
