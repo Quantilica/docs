@@ -855,7 +855,6 @@ Performance no mundo real em hardware padrão (8-core, 16 GB RAM):
 |---------|--------|-------|-----------|
 | IPCA mensal | 3.2M | 8s | 400k linhas/sec |
 | PIB trimestral | 50k | <1s | — |
-| RAIS anual | 60M | 2.5m | 400k linhas/sec |
 
 ## Melhores Práticas para Governança de Dados
 

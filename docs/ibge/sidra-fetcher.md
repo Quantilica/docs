@@ -534,7 +534,7 @@ Se você estiver coletando metadados de dezenas de agregados, o `AsyncSidraClien
 
 ### 4. Stream Período por Período para Tabelas Gigantes
 
-Tabelas como RAIS, Censo e PAM municipal possuem milhões de linhas. Itere os períodos individualmente e persista cada pedaço (chunk); nunca carregue a tabela inteira na memória.
+Tabelas como Censo e PAM municipal possuem milhões de linhas. Itere os períodos individualmente e persista cada pedaço (chunk); nunca carregue a tabela inteira na memória.
 
 ## Depuração (Debugging)
 
