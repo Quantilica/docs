@@ -11,7 +11,7 @@ SDK avançado para extração programática da API SIDRA IBGE.
 
     Coisas que a API do IBGE não conta no README — mas que você descobre no segundo dia:
 
-    - **URLs posicionais e crípticas.** `/t/1620/n1/all/v/116/p/all/d/m` não é auto-explicativo. Use sempre `Parametro` ou `parameter_from_url()`, nunca concatene strings.
+    - **URLs crípticas, em pares identificador/valor.** `/t/1620/n1/all/v/116/p/all/d/m` usa prefixos de letra (`t`=tabela, `n`=nível territorial, `v`=variável, `p`=período…), não posições fixas — mas continua ilegível à primeira vista. Use sempre `Parametro` ou `parameter_from_url()`, nunca concatene strings.
     - **Períodos não têm formato único.** `"202301"` é mensal; `"2023"` é anual; `"jan-fev-mar 2023"` é trimestre móvel. O `sidra-fetcher` detecta automaticamente via `Periodo.frequencia` (`mensal`, `trimestral`, `trimestre_movel`, `semestral`, `anual`, `plurianual`).
     - **Tabelas grandes estouram em uma única chamada.** PIB municipal, PAM, Censo: itere período por período com `get_sidra_url_request_period`. Tudo de uma vez retorna `503` ou trunca silenciosamente.
     - **Classificações fazem cross-product.** Uma tabela com 3 classificações × 10 categorias cada vira 1000 combinações por linha de dado. Filtre `classificacoes` no `Parametro`, não no cliente.
@@ -38,13 +38,13 @@ Os servidores governamentais frequentemente sofrem sobrecarga, resultando em:
 
 ### 2. Complexidade de Parâmetros
 
-A API do SIDRA utiliza estruturas de URL posicionais crípticas:
+A API do SIDRA monta as URLs como uma sequência de **pares identificador/valor** — cada parâmetro é prefixado por uma letra (`t`=tabela, `n`=nível territorial, `v`=variável, `p`=período, `c`=classificação, `d`=decimais, `h`=cabeçalho, `f`=formato). Os pares são auto-descritos, mas o resultado é críptico:
 
 ```
 /t/1737/n1/all/n3/all/v/2265/p/all/d/m
 ```
 
-A construção manual de URLs via concatenação de strings é propensa a erros e difícil de manter.
+A construção manual de URLs via concatenação de strings é propensa a erros e difícil de manter. (A ordem dos pares não muda o significado de cada parâmetro; ela apenas define a numeração das dimensões — D1, D2, D3… — na resposta.)
 
 **O `sidra-fetcher` foi arquitetado especificamente para mitigar ambos os gargalos:**
 
