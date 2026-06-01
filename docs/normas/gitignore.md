@@ -103,3 +103,30 @@ git commit -m "chore: padronizar .gitignore (template lib); deixar uv.lock untra
 ```
 
 O arquivo `uv.lock` permanece em disco — apenas deixa de ser rastreado pelo git.
+
+---
+
+## 6. `.gitignore` por pacote vs. workspace
+
+Pacotes membros do workspace **não precisam de `.gitignore` próprio** se seu diretório está coberto pelo `.gitignore` da raiz do workspace. A ausência de `.gitignore` em um subdiretório é uma decisão intencional, não uma omissão.
+
+O `.gitignore` raiz do workspace já lista os padrões do template canônico (`__pycache__/`, `.venv/`, `.ruff_cache/`, etc.) e aplica a todos os subdiretórios via herança normal do git.
+
+### Quando criar `.gitignore` próprio no pacote
+
+Crie `.gitignore` no diretório do pacote apenas em um destes casos:
+
+1. **O pacote tem entradas específicas** não cobertas pelo `.gitignore` raiz (ex: `data/`, `output/`, `*.sqlite`). Nesse caso, o `.gitignore` local contém **apenas** o bloco `# Específico do repo` — não replica o template inteiro.
+
+2. **O pacote é (ou será) desenvolvido fora do workspace** como repo standalone. Nesse caso, inclui o template completo.
+
+### Exemplo: `.gitignore` com apenas entradas locais
+
+```gitignore
+# Específico do repo
+data/
+output/
+*.sqlite
+```
+
+O template base não é replicado — o workspace root já o cobre.

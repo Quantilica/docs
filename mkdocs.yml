@@ -110,6 +110,7 @@ nav:
       - Padrões de Escrita: normas/escrita.md
       - Padronização de CLI: normas/cli-fetchers.md
       - Padronização de .gitignore: normas/gitignore.md
+      - Padronização de pyproject.toml: normas/pyproject.md
 
   - Contribuir: contribuir.md
   - Status das fontes: status.md
