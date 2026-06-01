@@ -150,7 +150,7 @@ if __name__ == "__main__":
 Regras:
 
 - A função que constrói o parser deve se chamar **`get_parser()`** — não `set_parser()`, não `get_args()`. Isso permite que testes e outros módulos obtenham o parser sem parsear argv.
-- `main()` deve aceitar `argv: list[str] | None = None` para testabilidade via `main(["sync", ...])`. Omitir é tolerado em fetchers legados, mas impede testes unitários de CLI.
+- `main()` deve aceitar `argv: list[str] | None = None` para testabilidade via `main(["sync", ...])`. É obrigatório em todos os fetchers — omitir impede testes unitários de CLI.
 
 ### 2.2 Opções padronizadas
 
@@ -223,12 +223,13 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     configure_cli_logging(verbose=args.verbose)
     if not args.verbose:
-        # Suprime log_step (INFO) do core sem afetar outros loggers do sistema
-        logging.getLogger("quantilica").setLevel(logging.WARNING)
+        # Suprime log_step (INFO) do core e logs de rastreamento do fetcher
+        logging.getLogger("quantilica_core").setLevel(logging.WARNING)
+        logging.getLogger("<pacote_fetcher>").setLevel(logging.WARNING)
     args.func(args)
 ```
 
-O namespace `"quantilica"` cobre tanto `quantilica_core.*` quanto o próprio fetcher (todos os loggers criados com `get_logger(__name__)` herdam deste namespace). Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
+Onde `<pacote_fetcher>` é o nome do pacote do fetcher (ex: `"comex_fetcher"`, `"pdet_fetcher"`). São necessários dois `setLevel` porque `quantilica_core.*` usa o namespace `"quantilica_core"` e cada fetcher usa o namespace do seu próprio pacote — `get_logger(__name__)` retorna `logging.getLogger(name)` sem prefixo adicional. Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
 
 ---
 
@@ -1001,42 +1002,44 @@ def cmd_data(
 
 ## 10. Expansão de anos e intervalos
 
-Fetchers que aceitam anos como argumento devem suportar o formato de intervalo `INICIO:FIM`:
+Fetchers que aceitam anos como argumento devem suportar o formato de intervalo `INICIO:FIM`. Para evitar a duplicação manual de código, o ecossistema fornece utilitários no `quantilica-core` para lidar com essa expansão de maneira homogênea:
+
+### 10.1 No Plugin Typer (`plugin.py`)
+
+Use a função **`expand_years_cli`** importada de `quantilica_core.cli`. Ela faz a expansão utilizando `expand_year_range` internamente e imprime avisos amigáveis no console compartilhado caso encontre algum formato inválido:
 
 ```python
-def _expand_years(years: list[str]) -> list[int]:
-    result = []
-    for arg in years:
-        if ":" in arg:
-            try:
-                start, end = map(int, arg.split(":"))
-                step = 1 if start <= end else -1
-                result.extend(range(start, end + step, step))
-            except ValueError:
-                console.print(f"[yellow]Aviso:[/yellow] intervalo inválido '{arg}'")
-        else:
-            try:
-                result.append(int(arg))
-            except ValueError:
-                console.print(f"[yellow]Aviso:[/yellow] ano inválido '{arg}'")
-    return result
+from quantilica_core.cli import expand_years_cli
+
+@app.command("sync")
+def cmd_sync(
+    years: Annotated[
+        list[str] | None,
+        typer.Argument(help="Anos (ex: 2020) ou intervalos (2018:2020)"),
+    ] = None,
+) -> None:
+    """Sincronizar dados."""
+    # Retorna os anos informados ou expande a faixa padrão caso 'years' seja nulo
+    years_list = expand_years_cli(years, default_range="2018:2026", console=console)
+    for year in years_list:
+        get_year(year=year, ...)
 ```
 
-Uso no Typer:
+### 10.2 Na CLI nativa (`cli.py`)
+
+Na CLI nativa standalone (que não depende de `rich`), utilize diretamente a função **`expand_year_range`** de `quantilica_core.dates`. Como ela pode lançar `ValueError` para intervalos ou anos inválidos, capture e trate a exceção exibindo uma mensagem no stderr:
 
 ```python
-@app.command("trade")
-def trade(
-    years: Annotated[
-        list[str],
-        typer.Argument(help="Anos (ex: 2020), intervalos (2018:2020) ou 'complete'"),
-    ],
-) -> None:
-    """Baixar dados de transações comerciais."""
-    if years == ["complete"]:
-        get_complete(...)
-        return
-    for year in _expand_years(years):
+from quantilica_core.dates import expand_year_range
+
+def _cmd_sync(args: argparse.Namespace) -> None:
+    try:
+        years = expand_year_range(*args.years) if args.years else expand_year_range("2018:2026")
+    except ValueError as exc:
+        print(f"Erro: formato de ano/intervalo inválido. {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    for year in years:
         get_year(year=year, ...)
 ```
 
@@ -1157,9 +1160,9 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] `--verbose` sem atalho `-v`.
 - [ ] Subcomandos com `add_subparsers(dest="command", required=True)` **ou** `parser.set_defaults(func=lambda _: parser.print_help())` (§2.1).
 - [ ] Função de construção do parser nomeada **`get_parser()`** (não `set_parser`, não `get_args`).
-- [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade.
+- [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade (obrigatório).
 - [ ] `main()` chama `configure_cli_logging(verbose=args.verbose)` antes de qualquer I/O.
-- [ ] Se exibir progresso: `logging.getLogger("quantilica").setLevel(logging.WARNING)` quando `not verbose` (§2.6).
+- [ ] Se exibir progresso: `logging.getLogger("quantilica_core").setLevel(logging.WARNING)` e `logging.getLogger("<pacote_fetcher>").setLevel(logging.WARNING)` quando `not verbose` (§2.6).
 - [ ] Erros fatais escrevem em `stderr` e encerram com `sys.exit(1)`.
 - [ ] Entry point declarado em `[project.scripts]`.
 
@@ -1197,13 +1200,13 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | `ProgressCallback` per-file + `_file_callback` | `comex-fetcher` | `plugin.py` |
 | `on_done(filename, result)` callback pós-arquivo | `rtn-fetcher` | `plugin.py :: _sync_publications` |
 | `console.status` + `asyncio.run()` para downloads async | `tesouro-direto-fetcher` | `plugin.py :: cmd_sync` |
-| `getLogger("quantilica").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: _cmd_sync` |
-| `parser.set_defaults(func=print_help)` sem `required=True` | `bcb-sgs-fetcher` | `cli.py :: set_parser` |
+| `getLogger("quantilica_core"/"<pacote>").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: main` |
+| `parser.set_defaults(func=print_help)` sem `required=True` | `bcb-sgs-fetcher` | `cli.py :: get_parser` |
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
 | Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: _expand_years` |
-| Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: info` |
+| Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: cmd_info` |
 | `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_sync` |
 | Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |
 | `_print_info` como helper de tabela reutilizável | `tesouro-direto-fetcher` | `plugin.py :: _print_info` |
