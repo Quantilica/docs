@@ -31,7 +31,7 @@ Todo fetcher Quantilica expõe **dois pontos de entrada CLI** com responsabilida
 | Ativado por | `<pacote>-fetcher [comando]` | `quantilica fetch <fonte> [comando]` |
 | Propósito | Instalação leve, scripting, pipelines | Experiência interativa, UX rica |
 | Registro | `[project.scripts]` | `[project.entry-points."quantilica.fetchers"]` |
-| Colorido / progresso | Não | Sim |
+| Colorido / progresso | Rich: Não; tqdm: opcional (via core) | Sim |
 
 O `quantilica-cli` descobre plugins dinamicamente via entry points — nunca declara fetchers como dependências diretas. Isso mantém o hub leve e desacoplado.
 
@@ -56,6 +56,12 @@ existente nesta tabela:
 | `convert` | Converter dados brutos para Parquet/formato analítico | — |
 | `export` | Exportar para formatos externos (Excel, SQLite) | — |
 | `pipeline` | Encadear `sync` → `convert`/`export` com cabeçalhos de passo e resumo | — |
+| `search` | Busca livre em índice ou catálogo remoto | — |
+| `archive` | Mover arquivos desatualizados para diretório de histórico | — |
+| `periods` | Listar os períodos disponíveis para uma entidade específica | — |
+
+!!! note "Verbos de domínio"
+    Verbos específicos do pacote são permitidos além desta tabela (ex: `archive` no `datasus-fetcher`, `periods` no `sidra-fetcher`). A regra é nunca reutilizar um verbo da tabela com semântica diferente.
 
 Regras de ouro:
 
@@ -99,6 +105,9 @@ def get_parser() -> argparse.ArgumentParser:
         version=f"%(prog)s {__version__}",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+    # Alternativa quando não há subcomando padrão óbvio:
+    # parser.set_defaults(func=lambda _: parser.print_help())
+    # (sem required=True; mostra ajuda se nenhum subcomando for passado)
 
     # --- subcomando: download ---
     dl = subparsers.add_parser("download", help="Baixar dados.")
@@ -137,6 +146,11 @@ def _cmd_download(args: argparse.Namespace) -> None:
 if __name__ == "__main__":
     main()
 ```
+
+Regras:
+
+- A função que constrói o parser deve se chamar **`get_parser()`** — não `set_parser()`, não `get_args()`. Isso permite que testes e outros módulos obtenham o parser sem parsear argv.
+- `main()` deve aceitar `argv: list[str] | None = None` para testabilidade via `main(["sync", ...])`. Omitir é tolerado em fetchers legados, mas impede testes unitários de CLI.
 
 ### 2.2 Opções padronizadas
 
@@ -197,6 +211,25 @@ def _cmd_download(args):
 - Nunca use `raise SystemExit(1)` diretamente em funções de negócio — reserve para o nível de CLI.
 - Não suprima exceções silenciosamente. Se não souber o que fazer com uma exceção, deixe propagar.
 
+### 2.6 Silenciar logs INFO quando exibindo progresso
+
+`configure_cli_logging(verbose=False)` define o nível raiz em `INFO`. Isso faz com que mensagens internas do core (como `log_step` em `quantilica_core.http`) apareçam no terminal e corrompam a saída de barras tqdm.
+
+Quando `cli.py` exibe progresso (barra tqdm ou output limpo), adicione após `configure_cli_logging`:
+
+```python
+def main(argv: list[str] | None = None) -> None:
+    parser = get_parser()
+    args = parser.parse_args(argv)
+    configure_cli_logging(verbose=args.verbose)
+    if not args.verbose:
+        # Suprime log_step (INFO) do core sem afetar outros loggers do sistema
+        logging.getLogger("quantilica").setLevel(logging.WARNING)
+    args.func(args)
+```
+
+O namespace `"quantilica"` cobre tanto `quantilica_core.*` quanto o próprio fetcher (todos os loggers criados com `get_logger(__name__)` herdam deste namespace). Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
+
 ---
 
 ## 3. Plugin para `quantilica-cli` — `plugin.py`
@@ -220,6 +253,8 @@ quantilica
 
 Cada nó da árvore é um `typer.Typer` exportado por `plugin.py` e descoberto via entry point.
 
+O `plugin.py` pode importar funções auxiliares de `cli.py` quando ambos compartilham lógica de negócio que não pertence a um módulo separado (ex: helpers de exportação Excel/SQLite no `rtn-fetcher`). Isso não é acoplamento indevido — `cli.py` funciona como módulo de lógica reutilizável enquanto `plugin.py` cuida da apresentação Rich.
+
 ### 3.2 Cabeçalho obrigatório
 
 ```python
@@ -227,16 +262,14 @@ Cada nó da árvore é um `typer.Typer` exportado por `plugin.py` e descoberto v
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from rich.console import Console
-from rich.logging import RichHandler
+from quantilica_core.cli import get_console, setup_rich_logging
 
 app = typer.Typer(help="<Descrição curta do fetcher.>")
-console = Console()
+console = get_console()
 
 _DEFAULT_OUTPUT = Path("/data/<fonte>")
 ```
@@ -245,62 +278,45 @@ Regras:
 
 - O docstring do módulo deve ser exatamente `"""Typer plugin for quantilica-cli integration."""`.
 - `app` deve ser o nome do objeto `typer.Typer` exportado (é o que o entry point aponta).
-- `console = Console()` deve ser instanciado no topo do módulo — todos os comandos compartilham a mesma instância.
+- `console = get_console()` deve ser instanciado no topo do módulo — todos os comandos compartilham a mesma instância. `get_console()` retorna um console global compartilhado pelo processo, garantindo intercalamento correto entre logs e barras de progresso.
 - `_DEFAULT_OUTPUT` define o caminho padrão de saída do fetcher. Deve ser `/data/<fonte>` para consistência com a convenção de montagem Docker do ecossistema.
 - Não importe `typer` ou `rich` no `pyproject.toml` do fetcher — essas dependências são fornecidas pelo host `quantilica-cli`.
 
-### 3.3 `_setup_logging` — o ponto central de logging
+### 3.3 `setup_rich_logging` — o ponto central de logging
 
-Cada `plugin.py` deve definir a seguinte função e chamá-la no início de cada comando:
-
-```python
-def _setup_logging(verbose: bool) -> None:
-    """Configura logging via RichHandler para não quebrar barras de progresso.
-
-    verbose=False → WARNING apenas (sem poluição de INFO no terminal).
-    verbose=True  → DEBUG via Rich console (intercalado corretamente).
-    """
-    level = logging.DEBUG if verbose else logging.WARNING
-    logging.basicConfig(
-        level=level,
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[RichHandler(console=console, show_path=False)],
-        force=True,
-    )
-```
-
-E em cada comando:
+Cada `plugin.py` deve chamar `setup_rich_logging` de `quantilica_core.cli` como primeira linha de cada comando:
 
 ```python
-@app.command("download")
-def cmd_download(
+@app.command("sync")
+def cmd_sync(
     verbose: Annotated[bool, typer.Option("--verbose", help="Logs detalhados")] = False,
 ) -> None:
     """..."""
-    _setup_logging(verbose)
+    setup_rich_logging(verbose, console=console)
     ...
 ```
 
-#### Por que `_setup_logging` e não `configure_cli_logging`?
+`setup_rich_logging` configura o logging via `RichHandler` apontando para o mesmo `console` das barras de progresso, garantindo intercalamento correto:
 
-`quantilica_core.configure_cli_logging(verbose=False)` configura o nível para `INFO`. Isso faz com que todos os `logger.info()` internos do fetcher — incluindo logs de cada requisição HTTP — apareçam no terminal e **quebrem a renderização das barras de progresso Rich**, pois são escritos diretamente no stderr sem coordenação com o Rich.
-
-`_setup_logging` resolve isso em duas frentes:
-
-1. **Nível padrão = `WARNING`**: por padrão, somente avisos e erros são exibidos. O terminal fica limpo para o Rich renderizar.
-2. **`RichHandler` com `console=console`**: quando `--verbose` é ativado, os logs passam pelo mesmo objeto `Console` que as barras de progresso. O Rich gerencia o intercalamento e nenhum log quebra o layout.
-
-| Situação | Comportamento esperado |
+| Situação | Comportamento |
 |---|---|
-| Sem `--verbose` (padrão) | Apenas `WARNING` e `ERROR`; barras de progresso limpas |
-| Com `--verbose` | `DEBUG` completo, formatado via `RichHandler`, intercalado com progress |
+| `verbose=False` (padrão) | Apenas `WARNING` e `ERROR`; terminal limpo para Rich renderizar |
+| `verbose=True` | `DEBUG` completo, formatado pelo `RichHandler`, intercalado com `Progress` |
+
+#### Por que não `configure_cli_logging`?
+
+`configure_cli_logging(verbose=False)` configura o nível para `INFO` com um handler padrão de stderr. Isso faz com que mensagens internas (como `log_step` em `quantilica_core.http`) apareçam no terminal e **corrompam barras de progresso Rich**, pois escrevem diretamente no stderr sem coordenação com o `Console`.
+
+`setup_rich_logging` resolve em duas frentes:
+
+1. **Nível padrão = `WARNING`** — sem ruído de INFO no terminal.
+2. **`RichHandler(console=console)`** — quando `--verbose`, logs passam pelo mesmo objeto `Console` que as barras de progresso.
 
 ### 3.4 Estrutura de um comando completo
 
 ```python
-@app.command("download")
-def cmd_download(
+@app.command("sync")
+def cmd_sync(
     output: Annotated[
         Path,
         typer.Option("-o", "--output", help="Diretório de saída"),
@@ -310,7 +326,7 @@ def cmd_download(
     ] = False,
 ) -> None:
     """Baixar dados do <fonte>."""
-    _setup_logging(verbose)
+    setup_rich_logging(verbose, console=console)
     with console.status("[cyan]Baixando dados...[/cyan]"):
         resultado = _chamar_logica_de_negocio()
     console.print(f"[green]✓[/green] Concluído: [bold]{resultado}[/bold]")
@@ -497,6 +513,52 @@ with Progress(
     bulk.fetch_arvore_grupos(..., on_grupo=on_grupo)
 ```
 
+#### Dois níveis simultâneos com `Live + Group`
+
+Para fetchers que baixam N arquivos grandes em sequência, exiba uma barra de itens (overall) e uma barra de bytes do arquivo atual ao mesmo tempo usando `Live + Group`:
+
+```python
+from rich.console import Group
+from rich.live import Live
+from quantilica_core.cli import make_batch_progress, make_download_progress
+from quantilica_core.http import ProgressCallback
+from rich.progress import Progress, TaskID
+
+def _file_callback(
+    file_progress: Progress,
+    task_id: TaskID,
+    description: str,
+) -> ProgressCallback:
+    """Retorna ProgressCallback que alimenta uma task Rich de bytes."""
+    def callback(downloaded: int, total_bytes: int) -> None:
+        if downloaded == 0 and total_bytes == 0:   # sinal de retry
+            file_progress.reset(task_id)
+            file_progress.update(task_id, description=description, visible=True)
+            return
+        if total_bytes:
+            file_progress.update(task_id, total=total_bytes)
+        file_progress.update(task_id, completed=downloaded)
+    return callback
+
+# No comando:
+overall = make_batch_progress(console)
+file_prog = make_download_progress(console)
+overall_task = overall.add_task("[cyan]Iniciando...[/cyan]", total=total)
+file_task = file_prog.add_task("", total=None, visible=False)
+
+ok = 0
+with Live(Group(overall, file_prog), console=console, refresh_per_second=10):
+    for year in years_list:
+        overall.update(overall_task, description=f"[cyan]{year}[/cyan]")
+        cb = _file_callback(file_prog, file_task, str(year))
+        get_year(data_dir=output, year=year, progress=cb)
+        file_prog.update(file_task, visible=False)
+        ok += 1
+        overall.update(overall_task, advance=1, description=f"[green]{ok}✓[/green]")
+```
+
+`make_batch_progress` e `make_download_progress` são fornecidas por `quantilica_core.cli` e já usam o console correto. `ProgressCallback = Callable[[int, int], None]` é definida em `quantilica_core.http`. Veja o `comex-fetcher plugin.py :: sync` como referência.
+
 ### 4.4 `Table` — exibição de dados tabulares
 
 ```python
@@ -583,6 +645,8 @@ console.print(Rule("[bold]Passo 2/4: Séries desativadas[/bold]"))
 
 Substitui os antigos `typer.echo("=== Passo N/4 ===")`.
 
+`console.rule("[bold]texto[/bold]")` é equivalente a `console.print(Rule("[bold]texto[/bold]"))` e pode ser preferido pela brevidade.
+
 ### 4.7 Mensagens de resultado padronizadas
 
 Mensagem de sucesso simples:
@@ -638,20 +702,38 @@ Quando a lógica de negócio (em `bulk.py` ou equivalente) executa N iterações
 
 ### 5.2 Assinaturas padrão
 
+O ecossistema usa três famílias de callback, escolhidas pelo tipo de operação:
+
+| Família | Assinatura | Quando usar | Referência |
+|---|---|---|---|
+| **Bulk por item** | `on_progress(processed, total, ok, failed, skipped)` | N itens homogêneos com contadores ok/falha/skip | `bcb-sgs-fetcher bulk.py` |
+| **Por grupo/página** | `on_grupo(nome, done, total)` / `on_page(page, n_pages)` | Operações com total descoberto ao vivo | `bcb-sgs-fetcher bulk.py` |
+| **Por bytes de arquivo** | `ProgressCallback = (downloaded, total_bytes)` | Download de arquivo único; integra com `download_with_manifest(progress=cb)` | `comex-fetcher plugin.py` |
+| **Pós-arquivo** | `on_done(filename, result)` com `result ∈ {"ok","skipped","failed"}` | N downloads paralelos onde cada arquivo reporta seu resultado ao terminar | `rtn-fetcher plugin.py` |
+
 ```python
 from collections.abc import Callable
+from quantilica_core.http import ProgressCallback  # Callable[[int, int], None]
 
-# Progresso por item (N itens com total conhecido)
+# Bulk por item (N itens com total conhecido)
 on_progress: Callable[[int, int, int, int, int], None] | None = None
 # args: (processed, total, ok, failed, skipped)
 
-# Progresso por grupo (com total descoberto ao vivo)
+# Por grupo (com total descoberto ao vivo)
 on_grupo: Callable[[str, int, int], None] | None = None
 # args: (nome_grupo, done, total)
 
-# Progresso por página
+# Por página
 on_page: Callable[[int, int], None] | None = None
 # args: (page, n_pages)
+
+# Por bytes de arquivo (integra com HttpClient.download_with_manifest)
+progress: ProgressCallback | None = None
+# args: (downloaded_bytes, total_bytes); total_bytes=0 quando Content-Length ausente
+
+# Pós-arquivo
+on_done: Callable[[str, str], None] | None = None
+# args: (filename, result) onde result ∈ {"ok", "skipped", "failed"}
 ```
 
 ### 5.3 Implementação na lógica de negócio
@@ -857,7 +939,7 @@ Fetchers com fluxos de trabalho longos (ex: arvore-grupos → series-desativadas
 @app.command("pipeline")
 def pipeline_cmd(...) -> None:
     """Pipeline completo de metadados (4 passos)."""
-    _setup_logging(verbose)
+    setup_rich_logging(verbose, console=console)
     results: dict[str, str] = {}
 
     # Passo 1
@@ -1016,6 +1098,9 @@ def fetch_bulk(ids, on_progress=None):
             on_progress(i, len(ids), ok, failed, skipped)
 ```
 
+!!! note "Padrão legado: `show_progress: bool`"
+    Vários fetchers ainda passam `show_progress=not verbose` para funções internas que gerenciam sua própria barra tqdm. Isso é tolerável quando a função não expõe callback, mas é o padrão legado. Ao escrever nova lógica, prefira sempre a assinatura de callback (`on_progress`, `ProgressCallback`, `on_done`) — veja §5.2. Ao refatorar código legado, substitua o flag por callback antes de adicionar `plugin.py`.
+
 ### 11.5 `configure_cli_logging` no `plugin.py`
 
 ```python
@@ -1023,8 +1108,9 @@ def fetch_bulk(ids, on_progress=None):
 from quantilica_core.logging import configure_cli_logging
 configure_cli_logging(verbose=verbose)
 
-# ✅ Use _setup_logging definido localmente
-_setup_logging(verbose)
+# ✅ Use setup_rich_logging de quantilica_core.cli
+from quantilica_core.cli import setup_rich_logging
+setup_rich_logging(verbose, console=console)
 ```
 
 ### 11.6 Declarar `typer` ou `rich` nas dependências do fetcher
@@ -1069,8 +1155,11 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] `--version` com `action="version"` lendo de `__version__`.
 - [ ] `-o`/`--output` com padrão `/data/<fonte>`.
 - [ ] `--verbose` sem atalho `-v`.
-- [ ] Subcomandos com `add_subparsers(dest="command", required=True)`.
+- [ ] Subcomandos com `add_subparsers(dest="command", required=True)` **ou** `parser.set_defaults(func=lambda _: parser.print_help())` (§2.1).
+- [ ] Função de construção do parser nomeada **`get_parser()`** (não `set_parser`, não `get_args`).
+- [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade.
 - [ ] `main()` chama `configure_cli_logging(verbose=args.verbose)` antes de qualquer I/O.
+- [ ] Se exibir progresso: `logging.getLogger("quantilica").setLevel(logging.WARNING)` quando `not verbose` (§2.6).
 - [ ] Erros fatais escrevem em `stderr` e encerram com `sys.exit(1)`.
 - [ ] Entry point declarado em `[project.scripts]`.
 
@@ -1078,17 +1167,17 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 - [ ] Docstring `"""Typer plugin for quantilica-cli integration."""`.
 - [ ] `app = typer.Typer(help="...")` no topo.
-- [ ] `console = Console()` compartilhado por todos os comandos.
+- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica_core.cli`).
 - [ ] `_DEFAULT_OUTPUT = Path("/data/<fonte>")`.
-- [ ] Função `_setup_logging(verbose)` com `RichHandler(console=console)`.
-- [ ] Cada comando chama `_setup_logging(verbose)` como primeira linha.
+- [ ] Cada comando chama `setup_rich_logging(verbose, console=console)` como primeira linha.
+- [ ] Funções de comando nomeadas `cmd_<verbo>` (ex: `cmd_sync`, `cmd_list`).
 - [ ] Nenhum `typer.echo()` — apenas `console.print()`.
 - [ ] Nenhum `print()` direto.
 - [ ] `-o`/`--output` presente em todo comando que salva arquivos.
 - [ ] `--verbose` presente em todo comando que faz I/O de rede.
 - [ ] Operações únicas de rede usam `console.status(...)`.
-- [ ] Operações bulk usam `Progress` com `console=console`.
-- [ ] Callbacks (`on_progress`, `on_grupo`, `on_page`) separam display de lógica.
+- [ ] Operações bulk usam `Progress` com `console=console` (ou `Live + Group` para dois níveis — §4.3).
+- [ ] Callbacks (`on_progress`, `on_grupo`, `on_page`, `ProgressCallback`, `on_done`) separam display de lógica (§5.2).
 - [ ] Mensagens de sucesso usam `[green]✓[/green]`.
 - [ ] Erros usam `[red]Erro:[/red]` + `raise typer.Exit(code=1)`.
 - [ ] Avisos usam `[yellow]Aviso:[/yellow]`.
@@ -1103,16 +1192,23 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 |---|---|---|
 | Pipeline completo com Rule + Progress + resumo | `bcb-sgs-fetcher` | `plugin.py :: pipeline_cmd` (comando `catalogo sync`) |
 | Callbacks `on_progress` / `on_grupo` / `on_page` | `bcb-sgs-fetcher` | `bulk.py` |
-| `_setup_logging` com `RichHandler` | `bcb-sgs-fetcher` | `plugin.py :: _setup_logging` |
+| `setup_rich_logging` — logging sem quebrar barras de progresso | `bcb-sgs-fetcher` | `plugin.py :: fetch` (qualquer comando) |
+| `Live + Group` — duas barras simultâneas (itens + bytes) | `comex-fetcher` | `plugin.py :: sync` |
+| `ProgressCallback` per-file + `_file_callback` | `comex-fetcher` | `plugin.py` |
+| `on_done(filename, result)` callback pós-arquivo | `rtn-fetcher` | `plugin.py :: _sync_publications` |
+| `console.status` + `asyncio.run()` para downloads async | `tesouro-direto-fetcher` | `plugin.py :: cmd_sync` |
+| `getLogger("quantilica").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: _cmd_sync` |
+| `parser.set_defaults(func=print_help)` sem `required=True` | `bcb-sgs-fetcher` | `cli.py :: set_parser` |
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
-| `console.status` em conexão FTP | `pdet-fetcher` | `plugin.py :: cmd_sync` |
+| `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
 | Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: _expand_years` |
 | Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: info` |
 | `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_sync` |
 | Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |
 | `_print_info` como helper de tabela reutilizável | `tesouro-direto-fetcher` | `plugin.py :: _print_info` |
-| `console.rule` para divisores de seção | `tesouro-direto-fetcher` | `plugin.py :: cmd_info` |
+| `console.rule` / `console.print(Rule(...))` para seção | `tesouro-direto-fetcher` | `plugin.py :: cmd_pipeline` |
+| Importar helpers de `cli.py` no `plugin.py` | `rtn-fetcher` | `plugin.py` (importa de `cli.py`) |
 
 ---
 
