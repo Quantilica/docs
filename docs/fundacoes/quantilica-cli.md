@@ -5,7 +5,7 @@ description: CLI unificada do Ecossistema Quantilica — descobre e despacha par
 
 # `quantilica-cli`
 
-CLI unificada que serve como ponto de entrada único para todos os fetchers do Ecossistema Quantilica. Descobre fetchers instalados via entry point `quantilica.fetchers` e os monta como subcomandos sob `quantilica fetch <fonte>`. Não tem dependência direta de nenhum fetcher — você instala apenas os pacotes que vai usar.
+CLI unificada que serve como ponto de entrada único para todos os fetchers do Ecossistema Quantilica. Descobre fetchers instalados via entry point `quantilica.fetchers` e os monta como subcomandos diretos na raiz (`quantilica <fonte>`). Não tem dependência direta de nenhum fetcher — você instala apenas os pacotes que vai usar.
 
 A arquitetura híbrida (argparse no fetcher + Typer no plugin) está descrita em detalhes em [Arquitetura de CLI](../concepts/cli.md). Esta página foca em **como usar** o `quantilica-cli` no dia-a-dia.
 
@@ -33,23 +33,23 @@ O `quantilica-cli` detecta automaticamente cada fetcher instalado.
 quantilica list-sources
 ```
 
-Imprime uma tabela com todos os fetchers descobertos via entry points, no formato `quantilica fetch <nome>`. Se nada estiver instalado, sugere instalar um fetcher.
+Imprime uma tabela com todos os fetchers descobertos via entry points, no formato `quantilica <nome>`. Se nada estiver instalado, sugere instalar um fetcher.
 
 ### Executar um fetcher
 
 ```bash
-quantilica fetch <fonte> [opções...]
+quantilica <fonte> [opções...]
 ```
 
-Cada `<fonte>` corresponde ao nome do entry point declarado pelo fetcher (ex.: `comex`, `sidra`, `datasus`, `bcb-sgs`, `td`, `rtn`, `pdet`, `inmet`). As opções e subcomandos disponíveis são definidos pelo próprio plugin Typer do fetcher — use `quantilica fetch <fonte> --help` para vê-las.
+Cada `<fonte>` corresponde ao nome do entry point declarado pelo fetcher (ex.: `comex`, `sidra`, `datasus`, `bcb-sgs`, `td`, `rtn`, `pdet`, `inmet`). As opções e subcomandos disponíveis são definidos pelo próprio plugin Typer do fetcher — use `quantilica <fonte> --help` para vê-las.
 
 Exemplos:
 
 ```bash
-quantilica fetch comex --help
-quantilica fetch comex sync 2023
-quantilica fetch sidra info 1737
-quantilica fetch bcb-sgs series sync 432
+quantilica comex --help
+quantilica comex sync 2023
+quantilica sidra info 1737
+quantilica bcb-sgs series sync 432
 ```
 
 ### Versão
@@ -68,7 +68,7 @@ Cada fetcher do ecossistema registra seu plugin Typer no `pyproject.toml`:
 comex = "comex_fetcher.plugin:app"
 ```
 
-Na inicialização, `quantilica-cli` itera os entry points do grupo `quantilica.fetchers`, importa o `typer.Typer` exportado por cada um e o monta sob `quantilica fetch <nome>`. Falhas de carga são reportadas como aviso (não derrubam a CLI).
+Na inicialização, `quantilica-cli` itera os entry points do grupo `quantilica.fetchers`, importa o `typer.Typer` exportado por cada um e o monta diretamente na raiz como `quantilica <nome>`. Falhas de carga são reportadas como aviso (não derrubam a CLI).
 
 Para registrar um novo fetcher como plugin:
 

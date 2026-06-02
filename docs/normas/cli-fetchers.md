@@ -28,7 +28,7 @@ Todo fetcher Quantilica expõe **dois pontos de entrada CLI** com responsabilida
 |---|---|---|
 | Framework | `argparse` (stdlib) | `typer` + `rich` |
 | Dependências extras | Nenhuma | `typer`, `rich` (fornecidos pelo host) |
-| Ativado por | `<pacote>-fetcher [comando]` | `quantilica fetch <fonte> [comando]` |
+| Ativado por | `<pacote>-fetcher [comando]` | `quantilica <fonte> [comando]` |
 | Propósito | Instalação leve, scripting, pipelines | Experiência interativa, UX rica |
 | Registro | `[project.scripts]` | `[project.entry-points."quantilica.fetchers"]` |
 | Colorido / progresso | Rich: Não; tqdm: opcional (via core) | Sim |
@@ -109,16 +109,16 @@ def get_parser() -> argparse.ArgumentParser:
     # parser.set_defaults(func=lambda _: parser.print_help())
     # (sem required=True; mostra ajuda se nenhum subcomando for passado)
 
-    # --- subcomando: download ---
-    dl = subparsers.add_parser("download", help="Baixar dados.")
-    dl.add_argument(
+    # --- subcomando: sync ---
+    sync = subparsers.add_parser("sync", help="Baixar/atualizar dados.")
+    sync.add_argument(
         "-o",
         "--output",
         metavar="DIR",
         default="/data/<fonte>",
         help="Diretório de saída (padrão: /data/<fonte>).",
     )
-    dl.add_argument(
+    sync.add_argument(
         "--verbose",
         action="store_true",
         default=False,
@@ -135,11 +135,11 @@ def main(argv: list[str] | None = None) -> None:
     from quantilica_core.logging import configure_cli_logging
     configure_cli_logging(verbose=args.verbose)
 
-    if args.command == "download":
-        _cmd_download(args)
+    if args.command == "sync":
+        _cmd_sync(args)
 
 
-def _cmd_download(args: argparse.Namespace) -> None:
+def _cmd_sync(args: argparse.Namespace) -> None:
     ...
 
 
@@ -367,10 +367,10 @@ def cmd_catalogo_sync(...) -> None:
 Isso produz:
 
 ```
-quantilica fetch bcb-sgs series sync 433
-quantilica fetch bcb-sgs series metadata 433
-quantilica fetch bcb-sgs catalogo sync
-quantilica fetch bcb-sgs catalogo metadata-bulk
+quantilica bcb-sgs series sync 433
+quantilica bcb-sgs series metadata 433
+quantilica bcb-sgs catalogo sync
+quantilica bcb-sgs catalogo metadata-bulk
 ```
 
 Note que o verbo `sync` se repete em cada grupo — sempre com o mesmo
@@ -401,7 +401,7 @@ bcb-sgs = "bcb_sgs_fetcher.plugin:app"
 sidra = "sidra_fetcher.plugin:app"
 ```
 
-O `<nome-curto>` é o que o usuário digitará: `quantilica fetch <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
+O `<nome-curto>` é o que o usuário digitará: `quantilica <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
 
 ---
 
@@ -975,13 +975,13 @@ def pipeline_cmd(...) -> None:
 Fetchers com datasets grandes devem implementar `--dry-run` ou um subcomando `list`/`info` que exibe o que seria baixado sem fazer download efetivo:
 
 ```python
-@app.command("data")
-def cmd_data(
+@app.command("sync")
+def cmd_sync(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Listar sem baixar")
     ] = False,
 ) -> None:
-    """Baixar dados brutos."""
+    """Baixar/atualizar dados da fonte."""
     if dry_run:
         # Mostra tabela de arquivos e tamanhos
         t = Table(show_header=True, header_style="bold")
@@ -1205,7 +1205,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
-| Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: _expand_years` |
+| Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: expand_years_cli` |
 | Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: cmd_info` |
 | `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_sync` |
 | Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |

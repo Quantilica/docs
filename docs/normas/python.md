@@ -50,14 +50,14 @@ No `Typer`, a versão pode ser exposta via callback ou no construtor do `Typer`.
 import typer
 from . import __version__
 
-app = typer.Typer(
-    help=f"Meu CLI v{__version__}"
-)
+app = typer.Typer(help="<Descrição curta do fetcher.>")
+
 
 def version_callback(value: bool):
     if value:
         print(f"meu-cli {__version__}")
         raise typer.Exit()
+
 
 @app.callback()
 def main(

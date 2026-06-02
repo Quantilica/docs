@@ -119,11 +119,11 @@ rtn-fetcher export sqlite --save-as rtn_data.db --force
 Quando instalado no mesmo ambiente que `quantilica-cli`, o rtn-fetcher é descoberto automaticamente via entry point:
 
 ```bash
-quantilica fetch rtn sync
-quantilica fetch rtn sync --latest
-quantilica fetch rtn export excel
-quantilica fetch rtn export sqlite
-quantilica fetch rtn pipeline --format sqlite
+quantilica rtn sync
+quantilica rtn sync --latest
+quantilica rtn export excel
+quantilica rtn export sqlite
+quantilica rtn pipeline --format sqlite
 ```
 
 ## API Python

@@ -131,11 +131,15 @@ MIT — veja [LICENSE](LICENSE).
 
 | Pacote | Tipo | Idioma | Badges |
 |---|---|---|---|
+| `bcb-sgs-fetcher` | Data Package | PT | ✓ |
+| `bcb-sgs-sql` | Motor ETL | PT | ✓ |
 | `comex-fetcher` | Data Package | PT | ✓ |
 | `datasus-fetcher` | Data Package | PT | ✓ |
 | `inmet-fetcher` | Data Package | PT | ✓ |
 | `pdet-fetcher` | Data Package | PT | ✓ |
+| `quantilica-catalog` | Infraestrutura | PT | ✓ |
 | `quantilica-cli` | CLI | PT | ✓ |
+| `quantilica-cloud` | Plugin CLI | PT | ✓ |
 | `quantilica-core` | Infraestrutura | PT | ✓ |
 | `quantilica-io` | Infraestrutura | PT | ✓ |
 | `rtn-fetcher` | Data Package | PT | ✓ |
@@ -146,4 +150,4 @@ MIT — veja [LICENSE](LICENSE).
 
 ---
 
-*Atualizado em: 12 de maio de 2026*
+*Atualizado em: 2 de junho de 2026*

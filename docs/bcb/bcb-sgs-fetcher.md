@@ -59,19 +59,19 @@ Os comandos são agrupados em `series` (operações por série) e `catalogo`
 
     ```bash
     # Dados históricos de câmbio USD/BRL (série 1, diária)
-    quantilica fetch bcb-sgs series sync 1 -f D -o ./dados
+    quantilica bcb-sgs series sync 1 -f D -o ./dados
 
     # Dados da taxa SELIC mensal
-    quantilica fetch bcb-sgs series sync 11 -f M -o ./dados
+    quantilica bcb-sgs series sync 11 -f M -o ./dados
 
     # Metadados de uma série
-    quantilica fetch bcb-sgs series metadata 433 -o ./dados
+    quantilica bcb-sgs series metadata 433 -o ./dados
 
     # Buscar séries por texto
-    quantilica fetch bcb-sgs series search "câmbio dólar"
+    quantilica bcb-sgs series search "câmbio dólar"
 
     # Sincronizar o catálogo completo de metadados
-    quantilica fetch bcb-sgs catalogo sync
+    quantilica bcb-sgs catalogo sync
     ```
 
 === "CLI standalone"

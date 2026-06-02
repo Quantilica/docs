@@ -79,7 +79,7 @@ Não coloque esse arquivo no controle de versão.
 
 ## Como está registrado
 
-`quantilica-cloud` usa o grupo de entry points `quantilica.commands` (não `quantilica.fetchers`), por isso os comandos aparecem na raiz do CLI como `quantilica cloud`, e não como `quantilica fetch cloud`:
+`quantilica-cloud` usa o grupo de entry points `quantilica.commands` (não `quantilica.fetchers`). Ambos os grupos montam na raiz do CLI — a distinção é semântica (ferramentas de fonte vs. comandos de plataforma), não estrutural:
 
 ```toml
 [project.entry-points."quantilica.commands"]
