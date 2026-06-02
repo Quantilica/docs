@@ -20,7 +20,7 @@ Esta receita mostra como a infraestrutura Quantilica resolve isso com **dois mec
 ## Setup
 
 ```bash
-uv add "sidra-sql @ git+https://github.com/Quantilica/sidra-sql.git" "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git"
+uv add "sidra-sql @ git+https://github.com/Quantilica/sidra-sql.git"
 ```
 
 Assume que você já tem `sidra-sql` rodando com o pipeline `pib_municipal` carregado (veja [sidra-pipelines](../ibge/sidra-pipelines.md)).
@@ -32,20 +32,26 @@ Assume que você já tem `sidra-sql` rodando com o pipeline `pib_municipal` carr
 Você guardou (deveria ter guardado) o `.manifest.json` ao lado do paper:
 
 ```python
-from quantilica_core.manifests import DownloadManifest
+import json
+import hashlib
+from pathlib import Path
 
-manifest = DownloadManifest.read_json("paper-2019/pib-municipal.json.manifest.json")
+data = json.loads(
+    Path("paper-2019/pib-municipal.json.manifest.json").read_text(encoding="utf-8")
+)
 
-print(manifest.sha256)         # 'a3f9...'
-print(manifest.downloaded_at)  # '2019-12-15T14:23:01Z'
-print(manifest.url)            # endpoint exato com parâmetros
-print(manifest.producer)       # 'sidra-fetcher@0.3.1'
+print(data["sha256"])      # 'a3f9...'
+print(data["fetched_at"])  # '2019-12-15T14:23:01Z'
+print(data["url"])         # endpoint exato com parâmetros
+print(data["producer"])    # 'sidra-fetcher'
 ```
 
 Se você ainda tem o arquivo bruto, confirme o hash:
 
 ```python
-if manifest.verify("paper-2019/pib-municipal.json"):
+content = Path("paper-2019/pib-municipal.json").read_bytes()
+computed = hashlib.sha256(content).hexdigest()
+if computed == data["sha256"]:
     print("Arquivo idêntico ao da publicação.")
 ```
 

@@ -28,6 +28,7 @@ from datetime import date
 import polars as pl
 import altair as alt
 from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher.constants import Column as C
 
 dest = Path("./dados")
 asyncio.run(
@@ -41,8 +42,8 @@ csv = max(dest.glob("taxas-*.csv"), key=lambda p: p.stat().st_mtime)
 df = reader.read_prices(csv)
 
 snapshot = (
-    df.filter(pl.col("Data Base") == pl.lit(date(2026, 5, 9)))
-      .select("Tipo Titulo", "Data Vencimento", "Taxa Compra Manha")
+    df.filter(pl.col(C.REFERENCE_DATE.value) == pl.lit(date(2026, 5, 9)))
+      .select(C.BOND_TYPE.value, C.MATURITY_DATE.value, C.BUY_YIELD.value)
       .drop_nulls()
 )
 
@@ -50,10 +51,10 @@ chart = (
     alt.Chart(snapshot.to_pandas())
     .mark_line(point=True)
     .encode(
-        x=alt.X("Data Vencimento:T", title="Vencimento"),
-        y=alt.Y("Taxa Compra Manha:Q", title="Taxa contratada (% a.a.)"),
-        color="Tipo Titulo:N",
-        tooltip=["Tipo Titulo", "Data Vencimento", "Taxa Compra Manha"],
+        x=alt.X(f"{C.MATURITY_DATE.value}:T", title="Vencimento"),
+        y=alt.Y(f"{C.BUY_YIELD.value}:Q", title="Taxa contratada (% a.a.)"),
+        color=f"{C.BOND_TYPE.value}:N",
+        tooltip=[C.BOND_TYPE.value, C.MATURITY_DATE.value, C.BUY_YIELD.value],
     )
     .properties(width=700, height=400, title="Curva de juros do Tesouro Direto — 2026-05-09")
 )

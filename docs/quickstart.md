@@ -78,7 +78,7 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
     csv = next(dest.glob("taxas-*.csv"))
     df = reader.read_prices(csv)
 
-    chart = plot.plot_prices(df, bond_type="Tesouro Selic")
+    chart = plot.plot_prices(df, bond_type="Tesouro Selic", variable="buy_yield")
     chart.save("selic.html")
     ```
 

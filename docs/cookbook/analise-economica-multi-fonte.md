@@ -29,7 +29,7 @@ Para `pdet-fetcher`, é necessário ter o binário `7z` no `PATH` (descompressã
 
 ```python
 import polars as pl
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 # IPCA: tabela 1737, variável 2266 (variação mensal)
@@ -49,7 +49,7 @@ with SidraClient(timeout=60) as client:
 ipca = (
     pl.DataFrame(rows)
     .select([
-        pl.col("D2C").alias("month_str"),  # YYYYMM
+        pl.col("D3C").alias("month_str"),  # YYYYMM
         pl.col("V").cast(pl.Float64, strict=False).alias("ipca_pct"),
     ])
     .with_columns(
@@ -84,6 +84,8 @@ async def fetch_treasury():
 asyncio.run(fetch_treasury())
 
 # Ler CSV de preços/taxas em DataFrame Polars tipado
+from tesouro_direto_fetcher.constants import Column as C
+
 prices_csv = next(Path("data/tesouro").glob("taxas-dos-titulos*.csv"))
 prices = reader.read_prices(prices_csv)
 
@@ -91,13 +93,13 @@ prices = reader.read_prices(prices_csv)
 yields_monthly = (
     prices.lazy()
     .with_columns([
-        pl.col("data_base").dt.truncate("1mo").alias("month"),
+        pl.col(C.REFERENCE_DATE.value).dt.truncate("1mo").alias("month"),
     ])
-    .filter(pl.col("tipo_titulo").is_in(["Tesouro IPCA+", "Tesouro Prefixado"]))
-    .group_by(["month", "tipo_titulo"])
-    .agg(pl.col("taxa_compra_manha").mean().alias("yield_avg"))
+    .filter(pl.col(C.BOND_TYPE.value).is_in(["Tesouro IPCA+", "Tesouro Prefixado"]))
+    .group_by(["month", C.BOND_TYPE.value])
+    .agg(pl.col(C.BUY_YIELD.value).mean().alias("yield_avg"))
     .collect()
-    .pivot(values="yield_avg", index="month", on="tipo_titulo")
+    .pivot(values="yield_avg", index="month", on=C.BOND_TYPE.value)
     .rename({
         "Tesouro IPCA+": "yield_real_ntnb",
         "Tesouro Prefixado": "yield_nominal_ltn",
