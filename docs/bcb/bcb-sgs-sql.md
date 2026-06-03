@@ -312,15 +312,13 @@ TransformRunner(config, Path("pipelines/precos/transform.toml")).run()
 
 ```python
 from bcb_sgs_sql.config import Config
-from bcb_sgs_sql.storage import Storage
 from bcb_sgs_sql import database, sgs
 
 config = Config()
 engine = database.get_engine(config)
 database.create_all(engine)
-storage = Storage.default(config)
 
-with sgs.Fetcher(storage, max_workers=4) as fetcher:
+with sgs.Fetcher(config.data_dir, max_workers=4) as fetcher:
     series_ids = [433, 13522]
 
     # 1. Metadados (catálogo + temas)

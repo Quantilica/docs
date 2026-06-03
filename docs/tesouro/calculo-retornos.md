@@ -76,7 +76,7 @@ prices = reader.read_prices(next(Path("./data").glob("taxas-dos-titulos*.csv")))
 
 # Escolher um título: NTN-B (Tesouro IPCA+ com Juros Semestrais) vencendo 2027-05-15
 bond = prices.filter(
-    (pl.col(C.BOND_TYPE.value) == BondType.NTNB.value)
+    (pl.col(C.BOND_TYPE.value) == BondType.IPCA_WITH_SEMESTRAL_INTEREST.value)
     & (pl.col(C.MATURITY_DATE.value) == date(2027, 5, 15))
 ).sort(C.REFERENCE_DATE.value).tail(1).row(0, named=True)
 

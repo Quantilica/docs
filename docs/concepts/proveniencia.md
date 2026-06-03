@@ -60,11 +60,17 @@ A maioria dos coletores Quantilica faz isso por baixo dos panos — você não p
 ## Lendo um manifesto para verificar integridade
 
 ```python
-from quantilica_core.manifests import DownloadManifest
+import hashlib
+import json
+from pathlib import Path
 
-manifest = DownloadManifest.read_json("dados/raw/sidra/agregado-1705.manifest.json")
+data = json.loads(Path("dados/raw/sidra/agregado-1705.manifest.json").read_text())
 
-if manifest.verify("dados/raw/sidra/agregado-1705.json"):
+digest = hashlib.sha256(
+    Path("dados/raw/sidra/agregado-1705.json").read_bytes()
+).hexdigest()
+
+if digest == data["sha256"]:
     print("Arquivo íntegro.")
 else:
     print("Hash mudou — re-baixe.")
@@ -77,16 +83,16 @@ O caso clássico: você publicou um relatório em janeiro de 2024 usando uma ver
 Com proveniência embarcada, isso é determinístico:
 
 ```python
-from quantilica_io.writer import to_parquet
-from quantilica_core.manifests import DownloadManifest
+import json
+from pathlib import Path
 
 # Você guardou o manifesto da análise original
-manifest = DownloadManifest.read_json("relatorio-2024/pib.csv.manifest.json")
+data = json.loads(Path("relatorio-2024/pib.csv.manifest.json").read_text())
 
 # A versão exata que alimentou a análise
-print(manifest.sha256)        # 'e3b0c4...'
-print(manifest.downloaded_at) # '2024-01-15T...'
-print(manifest.url)           # endpoint exato + parâmetros
+print(data["sha256"])        # 'e3b0c4...'
+print(data["fetched_at"])    # '2024-01-15T...'
+print(data["url"])           # endpoint exato + parâmetros
 
 # Re-baixe se quiser, ou apenas confirme que o arquivo no disco bate
 ```
@@ -98,11 +104,18 @@ Para análises críticas, **versionar o `.manifest.json` no git** ao lado do có
 O [`quantilica-io`](../fundacoes/quantilica-io.md) leva a ideia um passo adiante: ao converter para Parquet, ele injeta o manifesto no **header key-value do próprio arquivo**.
 
 ```python
+import json
+from pathlib import Path
+import polars as pl
 from quantilica_core.manifests import DownloadManifest
 from quantilica_io.writer import to_parquet
 
-manifest = DownloadManifest.read_json("dados/raw/dataset.csv.manifest.json")
-to_parquet(manifest, "dados/processed/dataset.parquet")
+data = json.loads(Path("dados/raw/dataset.csv.manifest.json").read_text())
+manifest = DownloadManifest(**{k: v for k, v in data.items()
+                               if k in DownloadManifest.__dataclass_fields__})
+
+df = pl.read_csv("dados/raw/dataset.csv")
+to_parquet(df, "dados/processed/dataset.parquet", manifest=manifest)
 ```
 
 O `dataset.parquet` resultante é auto-suficiente: meses depois, qualquer leitor compatível com PyArrow consegue extrair de onde veio aquele dado, sem depender de arquivos vizinhos.
@@ -110,9 +123,10 @@ O `dataset.parquet` resultante é auto-suficiente: meses depois, qualquer leitor
 ```python
 import pyarrow.parquet as pq
 
-table = pq.read_table("dados/processed/dataset.parquet")
-print(table.schema.metadata)
-# {b'quantilica.source_id': b'ibge', b'quantilica.sha256': b'e3b0c4...', ...}
+pf = pq.ParquetFile("dados/processed/dataset.parquet")
+meta = {k.decode(): v.decode() for k, v in pf.metadata.metadata.items()}
+print(meta)
+# {'quantilica.source_id': 'ibge', 'quantilica.sha256': 'e3b0c4...', ...}
 ```
 
 ## Detecção de mudança silenciosa

@@ -51,8 +51,9 @@ datasus-fetcher        inmet-fetcher              rtn-fetcher            bcb-sgs
 
 ```python
 import asyncio
-from sidra_fetcher import AsyncSidraClient
-from pdet_fetcher.fetch import connect, fetch_rais
+from sidra_fetcher.fetcher import AsyncSidraClient
+from pathlib import Path
+from pdet_fetcher.fetch import fetch_rais
 from tesouro_direto_fetcher.analytics import calculate_portfolio_monthly_returns
 
 async def multi_source_analysis(my_transactions):
@@ -60,9 +61,8 @@ async def multi_source_analysis(my_transactions):
     async with AsyncSidraClient(timeout=60) as sidra:
         agregado = await sidra.get_agregado(1620)
 
-    # 2. RAIS labor data via FTP
-    ftp = connect()
-    rais = fetch_rais(ftp, dest_dir="raw/rais")
+    # 2. RAIS labor data via FTP (fetch_rais gerencia a conexão internamente)
+    rais = fetch_rais(dest_dir=Path("raw/rais"))
 
     # 3. Tesouro portfolio returns
     returns = calculate_portfolio_monthly_returns(my_transactions)
@@ -109,7 +109,7 @@ Truncamento silencioso      Validação de tamanho/checksum na fonte
 ### Exemplo: retry automático
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 
 # tenacity faz 3 tentativas com backoff exponencial
 with SidraClient(timeout=60) as client:
@@ -269,11 +269,13 @@ out.with_suffix(".lineage.json").write_text(json.dumps(lineage, indent=2))
 # ✅ Seguro re-executar — sobrescreve previsivelmente
 df.write_parquet("output.parquet")
 
-# ❌ Perigoso — segunda execução acumula duplicatas
-df.write_parquet("output_append.parquet", append=True)
+# ❌ Perigoso — acumula duplicatas sem controle
+# (Polars não tem write_parquet com append; o padrão abaixo simula o risco)
+existing = pl.read_parquet("output.parquet")
+pl.concat([existing, df]).write_parquet("output.parquet")  # sem deduplication
 
 # ✅ Quando precisa acumular: deduplique explicitamente
-combined = pl.concat([existing, new]).unique()
+combined = pl.concat([existing, df]).unique()
 combined.write_parquet("output.parquet")
 ```
 
@@ -315,7 +317,7 @@ df = fetch_gdp()  # De onde? Atualizado quando? Cacheado?
 
 # ✅ Explícito: cada parâmetro é nomeado e visível
 import polars as pl
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 param = Parametro(

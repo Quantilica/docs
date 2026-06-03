@@ -131,7 +131,7 @@ Datasets brasileiros são grandes e fontes governamentais publicam revisões com
 
 ```python
 import polars as pl
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 # EXTRACT & LOAD: armazenar linhas brutas do SIDRA
@@ -253,10 +253,13 @@ graph TD
 Combinando IBGE + Tesouro num pipeline ELT canônico:
 
 ```python
+import asyncio
+from pathlib import Path
 import polars as pl
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
-from tesouro_direto_fetcher.converter import convert_to_parquet
+from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher.constants import Column as C
 
 # 1. EXTRACT: cada ferramenta usa seu próprio padrão de acesso
 gdp_param = Parametro(
@@ -269,27 +272,45 @@ gdp_param = Parametro(
     decimais={"": Precisao.M},
 )
 with SidraClient(timeout=60) as client:
-    gdp = pl.DataFrame(client.get(gdp_param.url()))
+    gdp_rows = client.get(gdp_param.url())
 
-convert_to_parquet(src_dir="raw/tesouro", dest_dir="data/tesouro", dataset_type="precos")
-bonds = pl.read_parquet("data/tesouro/precos.parquet")
+tesouro_dir = Path("raw/tesouro")
+asyncio.run(downloader.download(
+    dest_dir=tesouro_dir,
+    dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
+))
+bonds_csv = max(tesouro_dir.glob("taxas-*.csv"), key=lambda p: p.stat().st_mtime)
+bonds = reader.read_prices(bonds_csv)
 
-# 2. TRANSFORM: Polars vetorizado
-combined = gdp.join(bonds, on="date", how="inner").with_columns([
-    pl.col("V").cast(pl.Float64, strict=False).pct_change().alias("gdp_growth"),
-    pl.col("yield").pct_change().alias("yield_change"),
-])
+# 2. TRANSFORM: Polars vetorizado, cada fonte em seu próprio frame
+gdp = (
+    pl.DataFrame(gdp_rows[1:])  # linha 0 é cabeçalho descritivo
+    .select(
+        pl.col("D3C").alias("periodo"),
+        pl.col("V").cast(pl.Float64, strict=False).alias("pib"),
+    )
+    .drop_nulls("pib")
+)
+
+bonds_monthly = (
+    bonds
+    .with_columns(pl.col(C.REFERENCE_DATE.value).dt.truncate("1mo").alias("month"))
+    .group_by("month")
+    .agg(pl.col(C.BUY_YIELD.value).mean().alias("yield_avg"))
+    .sort("month")
+)
 
 # 3. LOAD: dois destinos coexistindo (Parquet + PostgreSQL)
-combined.write_parquet("gdp_bonds_analysis.parquet")
-combined.write_database(
-    "gdp_bonds",
+gdp.write_parquet("gdp_sidra.parquet")
+bonds_monthly.write_parquet("bonds_monthly.parquet")
+bonds_monthly.write_database(
+    "bonds_monthly",
     connection="postgresql://user:pass@host/db",
     if_table_exists="replace",
 )
 
 # 4. ANALYZE
-print(combined.select(pl.corr("gdp_growth", "yield_change")))
+print(bonds_monthly.select(pl.col("yield_avg").mean()))
 ```
 
 ## Integração com ferramentas externas

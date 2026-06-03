@@ -50,7 +50,7 @@ A construção manual de URLs via concatenação de strings é propensa a erros 
 
 ```python
 # Construir requisição SIDRA declarativamente, sem concatenação de strings
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 param = Parametro(
@@ -141,7 +141,7 @@ Total: ~2 segundos (3x mais rápido)
 
 ```python
 import asyncio
-from sidra_fetcher import AsyncSidraClient
+from sidra_fetcher.fetcher import AsyncSidraClient
 
 async def fetch_macro_metadata():
     """Busca metadados para os agregados de PIB, VAB e Investimento concorrentemente."""
@@ -160,7 +160,7 @@ print(f"{pib.nome}: {len(pib.periodos)} períodos, {len(pib.localidades)} locali
 ## Exemplo Rápido (Síncrono)
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 with SidraClient(timeout=60) as client:
@@ -271,7 +271,7 @@ rows = fetch_with_retry(client, param.url())
 ### `SidraClient(timeout=60)` — Cliente Síncrono
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 
 with SidraClient(timeout=60) as client:
     ...
@@ -300,7 +300,7 @@ Use como um gerenciador de contexto (`with SidraClient(...) as client:`) para ga
 ### `AsyncSidraClient(timeout=60)` — Cliente Assíncrono
 
 ```python
-from sidra_fetcher import AsyncSidraClient
+from sidra_fetcher.fetcher import AsyncSidraClient
 import asyncio
 
 async def main():
@@ -411,7 +411,7 @@ agregado = load_agregado("agregado_1620.json")
 ### Descobrir Variáveis e Períodos de uma Tabela
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 
 with SidraClient() as client:
     agregado = client.get_agregado_metadados(1620)
@@ -431,7 +431,7 @@ with SidraClient() as client:
 ### Construir uma Requisição de Dados a partir de uma URL Web do SIDRA
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import parameter_from_url
 
 # Copiado de sidra.ibge.gov.br
@@ -447,7 +447,7 @@ with SidraClient() as client:
 Para tabelas grandes, busque um período por vez para limitar o uso de memória:
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao, get_sidra_url_request_period
 
 base = Parametro(
@@ -472,7 +472,7 @@ with SidraClient() as client:
 
 ```python
 import asyncio
-from sidra_fetcher import AsyncSidraClient
+from sidra_fetcher.fetcher import AsyncSidraClient
 
 async def harvest(table_ids):
     async with AsyncSidraClient(timeout=60) as client:
@@ -501,7 +501,7 @@ Os metadados mudam com pouca frequência. Salve-os uma vez e recarregue do disco
 
 ```python
 from pathlib import Path
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.reader import save_agregado, load_agregado
 
 cache = Path("agregado_1620.json")
@@ -545,7 +545,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sidra_fetcher").setLevel(logging.DEBUG)
 
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 with SidraClient() as client:
     rows = client.get("https://apisidra.ibge.gov.br/values/t/1620/n1/all/v/116/p/all/d/m")
 # Registra a URL, duração da requisição e tamanho da resposta

@@ -68,22 +68,18 @@ Python equivalente:
 ```python
 from pathlib import Path
 from pdet_fetcher import (
-    connect,
     fetch_rais, fetch_rais_docs,
     fetch_caged, fetch_caged_docs,
     fetch_caged_2020, fetch_caged_2020_docs,
 )
 
-ftp = connect()
-try:
-    fetch_rais(ftp=ftp, dest_dir=Path("./data"))
-    fetch_rais_docs(ftp=ftp, dest_dir=Path("./data"))
-    fetch_caged(ftp=ftp, dest_dir=Path("./data"))
-    fetch_caged_docs(ftp=ftp, dest_dir=Path("./data"))
-    fetch_caged_2020(ftp=ftp, dest_dir=Path("./data"))
-    fetch_caged_2020_docs(ftp=ftp, dest_dir=Path("./data"))
-finally:
-    ftp.close()
+dest = Path("./data")
+fetch_rais(dest_dir=dest)
+fetch_rais_docs(dest_dir=dest)
+fetch_caged(dest_dir=dest)
+fetch_caged_docs(dest_dir=dest)
+fetch_caged_2020(dest_dir=dest)
+fetch_caged_2020_docs(dest_dir=dest)
 ```
 
 ### 2. Converter arquivos brutos para Parquet
@@ -217,13 +213,12 @@ Importável diretamente de `pdet_fetcher`:
 
 | Função | Propósito |
 |---|---|
-| `connect()` | Abrir conexão FTP em `ftp.mtps.gov.br`. |
-| `list_rais(ftp)`, `list_rais_docs(ftp)` | Iterar metadata de arquivos RAIS / docs. |
-| `list_caged(ftp)`, `list_caged_docs(ftp)` | Iterar arquivos CAGED legado / docs. |
-| `list_caged_2020(ftp)`, `list_caged_2020_docs(ftp)` | Iterar arquivos CAGED Novo / docs. |
-| `fetch_rais(ftp, dest_dir)`, `fetch_rais_docs(...)` | Baixar dados RAIS / docs. |
-| `fetch_caged(ftp, dest_dir)`, `fetch_caged_docs(...)` | Baixar dados CAGED legado / docs. |
-| `fetch_caged_2020(ftp, dest_dir)`, `fetch_caged_2020_docs(...)` | Baixar dados CAGED Novo / docs. |
+| `list_rais()`, `list_rais_docs()` | Iterar metadata de arquivos RAIS / docs disponíveis. |
+| `list_caged()`, `list_caged_docs()` | Iterar arquivos CAGED legado / docs. |
+| `list_caged_2020()`, `list_caged_2020_docs()` | Iterar arquivos CAGED Novo / docs. |
+| `fetch_rais(dest_dir)`, `fetch_rais_docs(dest_dir)` | Baixar dados RAIS / docs. |
+| `fetch_caged(dest_dir)`, `fetch_caged_docs(dest_dir)` | Baixar dados CAGED legado / docs. |
+| `fetch_caged_2020(dest_dir)`, `fetch_caged_2020_docs(dest_dir)` | Baixar dados CAGED Novo / docs. |
 | `convert_rais(data_dir, dest_dir)` | Descompactar + ler + escrever Parquet para cada arquivo RAIS. |
 | `convert_caged(data_dir, dest_dir)` | Mesmo para cada arquivo CAGED (legado + 2020+). |
 | `extract_columns_for_dataset(...)` | Dumpar headers por arquivo para um glob de dataset. |

@@ -55,10 +55,11 @@ df = pl.read_parquet(
     columns=["employee_id", "salary", "sector"]
 )
 
-# Com filtro pushdown
-df = pl.read_parquet(
-    "rais_2023.parquet",
-    filters=[("state", "==", "SP")]
+# Com filtro pushdown (use scan_parquet para predicate pushdown real)
+df = (
+    pl.scan_parquet("rais_2023.parquet")
+    .filter(pl.col("state") == "SP")
+    .collect()
 )
 ```
 
@@ -92,12 +93,12 @@ result = query.collect()
 ```python
 import polars as pl
 
-# collect(streaming=True) processa em chunks — uso baixo de memória
+# collect(engine="streaming") processa em chunks — uso baixo de memória
 result = (
     pl.scan_parquet("rais_2023.parquet")
     .group_by("state")
     .agg(pl.col("salary").mean())
-    .collect(streaming=True)
+    .collect(engine="streaming")
 )
 ```
 
@@ -126,17 +127,21 @@ gdp = gdp.with_columns(
 
 ```python
 import polars as pl
+from tesouro_direto_fetcher.constants import Column as C
 
 prices = pl.read_parquet("data/tesouro/precos.parquet")
 
-# Yield médio por título nos últimos 252 dias úteis
+# Yield médio por título nos últimos 365 dias
 yield_curve = (
     prices.lazy()
-    .filter(pl.col("data_base") >= pl.col("data_base").max() - pl.duration(days=365))
-    .group_by("titulo")
+    .filter(
+        pl.col(C.REFERENCE_DATE.value)
+        >= pl.col(C.REFERENCE_DATE.value).max() - pl.duration(days=365)
+    )
+    .group_by(C.BOND_TYPE.value)
     .agg([
-        pl.col("taxa_compra_manha").mean().alias("yield_avg"),
-        pl.col("preco_compra_manha").last().alias("preco_atual"),
+        pl.col(C.BUY_YIELD.value).mean().alias("yield_avg"),
+        pl.col(C.BUY_PRICE.value).last().alias("preco_atual"),
     ])
     .sort("yield_avg")
     .collect()
@@ -376,7 +381,7 @@ df = pl.read_parquet("huge_file.parquet")
 df = pl.read_parquet("huge_file.parquet", filters=[("state", "==", "SP")])
 
 # ✅ Ou lazy + streaming
-df = pl.scan_parquet("huge_file.parquet").filter(pl.col("state") == "SP").collect(streaming=True)
+df = pl.scan_parquet("huge_file.parquet").filter(pl.col("state") == "SP").collect(engine="streaming")
 ```
 
 ### Queries lentas

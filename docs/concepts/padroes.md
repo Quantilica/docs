@@ -57,13 +57,9 @@ datasus-fetcher sync -o ./data sim-do-cid10 \
 
 ```python
 from pathlib import Path
-from pdet_fetcher import connect, fetch_rais
+from pdet_fetcher import fetch_rais
 
-ftp = connect()
-try:
-    fetch_rais(ftp=ftp, dest_dir=Path("./raw"))  # idempotente: pula .7z já presentes
-finally:
-    ftp.close()
+fetch_rais(dest_dir=Path("./raw"))  # idempotente: pula .7z já presentes
 ```
 
 ### Padrão: dry-run antes de bulk downloads
@@ -92,7 +88,7 @@ datasus-fetcher sync -o ./data sim-do-cid10 \
 
 ```python
 import asyncio
-from sidra_fetcher import AsyncSidraClient
+from sidra_fetcher.fetcher import AsyncSidraClient
 
 async def fetch_multiple_metadata():
     async with AsyncSidraClient(timeout=60) as client:
@@ -313,7 +309,7 @@ def with_retry(func, max_retries=3, backoff_factor=2):
     raise last_exception
 
 # Exemplo: envolver chamada SIDRA
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 client = SidraClient()
 result = with_retry(lambda: client.get_agregado(1620), max_retries=5)
 ```
@@ -432,7 +428,7 @@ result = (
     pl.scan_parquet("rais_2023.parquet")
     .group_by("state")
     .agg(pl.col("salary").mean())
-    .collect(streaming=True)
+    .collect(engine="streaming")
 )
 ```
 

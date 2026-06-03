@@ -115,14 +115,10 @@ print(f"Yields: {len(yields_monthly)} meses")
 
 ```python
 from pathlib import Path
-from pdet_fetcher import connect, fetch_rais, convert_rais
+from pdet_fetcher import fetch_rais, convert_rais
 
 # Fetch + convert idempotentes; primeira execução leva tempo, demais são quase instantâneas
-ftp = connect()
-try:
-    fetch_rais(ftp=ftp, dest_dir=Path("data/rais/raw"))
-finally:
-    ftp.close()
+fetch_rais(dest_dir=Path("data/rais/raw"))
 
 convert_rais(Path("data/rais/raw"), Path("data/rais/parquet"))
 

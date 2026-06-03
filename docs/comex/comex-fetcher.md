@@ -128,19 +128,15 @@ comex_fetcher.get_year(data_dir, year=2023, imp=True, mun=True) # importações,
 # Dados comerciais antigos baseados em NBM (1989–1996)
 comex_fetcher.get_year_nbm(data_dir, year=1995)
 
-# Arquivos históricos completos (um arquivo por direção, todos os anos)
-comex_fetcher.get_complete(data_dir)
-comex_fetcher.get_complete(data_dir, exp=True, mun=True)
-
 # Tabela de códigos auxiliares
 comex_fetcher.get_table(data_dir, table="ncm")
 comex_fetcher.get_table(data_dir, table="pais")
 
-# Tudo
+# Tudo (tabelas auxiliares + todas as séries anuais disponíveis)
 comex_fetcher.download_all(data_dir)
 ```
 
-Helpers de baixo nível em `comex_fetcher.download`: `download_file(url, output, retry=3, blocksize=8192)`, `remote_is_more_recent(headers, dest)`, `get_file_metadata(url)`.
+Helper de baixo nível em `comex_fetcher.download`: `download_file(url, output, retry=3, blocksize=8192)`.
 
 ## Datasets
 
