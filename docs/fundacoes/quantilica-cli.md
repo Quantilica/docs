@@ -7,7 +7,7 @@ description: CLI unificada do Ecossistema Quantilica — descobre e despacha par
 
 CLI unificada que serve como ponto de entrada único para todos os fetchers do Ecossistema Quantilica. Descobre fetchers instalados via entry point `quantilica.fetchers` e os monta como subcomandos diretos na raiz (`quantilica <fonte>`). Não tem dependência direta de nenhum fetcher — você instala apenas os pacotes que vai usar.
 
-A arquitetura híbrida (argparse no fetcher + Typer no plugin) está descrita em detalhes em [Arquitetura de CLI](../concepts/cli.md). Esta página foca em **como usar** o `quantilica-cli` no dia-a-dia.
+A arquitetura híbrida (argparse no fetcher + Typer no plugin) está descrita em detalhes em [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli). Esta página foca em **como usar** o `quantilica-cli` no dia-a-dia.
 
 ## Instalação
 
@@ -76,9 +76,9 @@ Para registrar um novo fetcher como plugin:
 2. Declare o entry point no `pyproject.toml` do pacote.
 3. Reinstale (`uv pip install -e .`) — o plugin aparece automaticamente no próximo `quantilica list-sources`.
 
-A diretriz é que `typer` e `rich` **não** apareçam em `[project].dependencies` do fetcher — são fornecidas pelo host `quantilica-cli`. Veja [Arquitetura de CLI](../concepts/cli.md) para a justificativa.
+A diretriz é que `typer` e `rich` **não** apareçam em `[project].dependencies` do fetcher — são fornecidas pelo host `quantilica-cli`. Veja [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) para a justificativa.
 
 ## Saiba mais
 
-- [Arquitetura de CLI](../concepts/cli.md) — racional da CLI híbrida e estado de padronização de cada fetcher
+- [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) — racional da CLI híbrida e estado de padronização de cada fetcher
 - [Arquitetura do Ecossistema](../concepts/arquitetura.md) — como `quantilica-cli` se encaixa no quadro geral

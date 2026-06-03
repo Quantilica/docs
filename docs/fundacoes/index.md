@@ -38,14 +38,9 @@ A ponte entre arquivos brutos e ativos analíticos prontos.
 
 Um cientista de dados que só quer baixar séries do SIDRA não deveria precisar instalar 50 MB de binários do Polars e do Arrow para isso. E uma equipe de engenharia construindo um data lake não deveria ter que reimplementar `to_parquet()` em cada fetcher.
 
-A divisão `core` / `io` deixa cada camada com responsabilidade única:
+A divisão `core` (I/O leve de rede/disco) e `io` (processamento pesado com Polars/PyArrow) garante que cada camada tenha uma responsabilidade única, evitando desperdício de recursos e dependências desnecessárias.
 
-| Camada | Depende de | Tamanho | Para quem |
-|---|---|---|---|
-| `quantilica-core` | stdlib + `httpx` | leve | todo coletor, todo usuário |
-| `quantilica-io` | core + Polars + PyArrow | pesado | quem processa para análise |
-
-Veja a [Arquitetura do Ecossistema](../concepts/arquitetura.md) para o desenho completo das camadas.
+Veja o desenho completo na [Arquitetura do Ecossistema](../concepts/arquitetura.md).
 
 ## E o host de CLI?
 
@@ -67,10 +62,10 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 
 ## Visão geral das camadas de infraestrutura
 
-| Camada | Pacote | Depende de | Para quem |
-|---|---|---|---|
-| I/O resiliente | `quantilica-core` | stdlib + httpx | todo coletor |
-| Analítica | `quantilica-io` | core + Polars + PyArrow | quem processa para análise |
-| CLI | `quantilica-cli` | core | quem usa a linha de comando |
-| Nuvem | `quantilica-cloud` | core + cli (runtime) | quem quer sincronizar manifestos |
-| Catálogo | `quantilica-catalog` | io + Polars | quem cruza múltiplas fontes |
+| Camada | Pacote | Depende de | Tamanho | Para quem |
+|---|---|---|---|---|
+| I/O resiliente | `quantilica-core` | stdlib + httpx | Leve | Todo coletor, todo usuário |
+| Analítica | `quantilica-io` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
+| CLI unificada | `quantilica-cli` | core | Leve | Quem interage via linha de comando |
+| Nuvem (Sincronização) | `quantilica-cloud` | core + cli (runtime) | Leve | Quem quer sincronizar manifestos locais |
+| Catálogo unificado | `quantilica-catalog` | io + Polars | Pesado | Quem cruza dados de múltiplas fontes |

@@ -33,11 +33,13 @@ O **SGS** (Sistema Gerenciador de Séries Temporais) é o repositório oficial d
 ## Instalação
 
 ```bash
-# Workspace Quantilica
-uv add bcb-sgs-fetcher
+pip install git+https://github.com/Quantilica/bcb-sgs-fetcher.git
+```
 
-# Uso com quantilica-cli (plugin registrado automaticamente)
-uv add quantilica-cli bcb-sgs-fetcher
+Com [uv](https://github.com/astral-sh/uv):
+
+```bash
+uv add "git+https://github.com/Quantilica/bcb-sgs-fetcher.git"
 ```
 
 O pacote registra o subcomando `bcb-sgs` na CLI do Quantilica via entry point:
@@ -313,7 +315,7 @@ Todos os arquivos são escritos atomicamente via `quantilica_core.files`.
 ## Saiba Mais
 
 - [bcb-sgs-sql](bcb-sgs-sql.md) — carrega estas séries em PostgreSQL com histórico de revisões (o "Stack 2" de produção)
-- [Arquitetura de CLI](../concepts/cli.md) — como fetchers se integram ao `quantilica-cli`
+- [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) — como fetchers se integram ao `quantilica-cli`
 - [Manifestos & proveniência](../concepts/proveniencia.md) — rastreamento de origem dos dados
 - [Convenções de armazenamento](../concepts/storage.md) — layout de diretórios e escrita atômica
 - [Cookbook — Análise econômica multi-fonte](../cookbook/analise-economica-multi-fonte.md)

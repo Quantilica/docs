@@ -1217,7 +1217,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 ## Saiba mais
 
-- [Arquitetura de CLI e Estratégia de Dependências](../concepts/cli.md) — visão arquitetural de alto nível.
+- [Arquitetura de CLI e Estratégia de Dependências](../concepts/arquitetura.md#arquitetura-de-cli) — visão arquitetural de alto nível.
 - [quantilica-cli](../fundacoes/quantilica-cli.md) — como o hub descobre e monta os plugins.
 - [Padrões Práticos — UX de CLI](../concepts/padroes.md#cli-ux) — padrão progresso vs. logs.
 - [Padronização de Versão](python.md) — como expor `__version__` em argparse e Typer.

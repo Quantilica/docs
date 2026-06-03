@@ -4,13 +4,13 @@ Visão estratégica do Ecossistema Quantilica para dados abertos brasileiros.
 
 ---
 
-## 🚀 Visão de Futuro
+## Visão de Futuro
 
 A Quantilica é um **ecossistema de dados aberto com SDK**. O valor do projeto reside na conveniência de fornecer dados públicos prontos para consumo analítico, abstraindo a instabilidade das fontes oficiais.
 
 ---
 
-## 🗺️ Roadmap de Execução Detalhado
+## Roadmap de Execução Detalhado
 
 O desenvolvimento da Quantilica está estruturado em ciclos incrementais que definem a direção técnica e de produto do ecossistema.
 
@@ -62,7 +62,7 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
 
 ---
 
-## 📣 Marketing e Branding
+## Marketing e Branding
 
 Transformar a Quantilica em referência para a comunidade analítica brasileira:
 
@@ -73,7 +73,7 @@ Transformar a Quantilica em referência para a comunidade analítica brasileira:
 
 ---
 
-## ⚖️ Governança e Comunidade
+## Governança e Comunidade
 *   **Sustentabilidade:** Avaliar modelos de apoio (GitHub Sponsors) para custear a infraestrutura de hospedagem de dados.
 *   **Open Collective:** Transparência financeira para possíveis contribuições futuras.
 

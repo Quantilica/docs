@@ -132,20 +132,15 @@ Para a estrutura detalhada de todos os demais pacotes (`inmet-fetcher`, `pdet-fe
 
 ## Interface CLI
 
-Todos os fetchers expõem o diretório de saída pelo argumento `-o` / `--output`.
+Todos os fetchers expõem o diretório de saída pelo argumento `-o` / `--output` com um valor padrão de `/data/<fonte>`.
 
-### Especificação
+Para especificações detalhadas sobre a implementação desse argumento, as opções do parser e regras adicionais de interface, consulte o guia de [Padronização de CLI](../normas/cli-fetchers.md).
 
-| Propriedade | Valor |
-|---|---|
-| Nomes | `-o`, `--output` |
-| Tipo | `Path` (via `type=Path` no argparse) |
-| Padrão | `Path("/data/<fonte>")` |
-| Obrigatoriedade | Opcional (o padrão é suficiente para uso imediato) |
+### Padrões de Diretório por Pacote
 
-### Padrões por pacote
+Abaixo estão definidos os diretórios de saída padrão (`default` de `--output`) adotados por cada fetcher:
 
-| Pacote | Default de `--output` |
+| Pacote | Diretório Padrão (`--output`) |
 |---|---|
 | `comex-fetcher` | `/data/secex-comex` |
 | `datasus-fetcher` | `/data/datasus` |
@@ -153,23 +148,6 @@ Todos os fetchers expõem o diretório de saída pelo argumento `-o` / `--output
 | `pdet-fetcher` | `/data/pdet` |
 | `rtn-fetcher` | `/data/rtn` |
 | `tesouro-direto-fetcher` | `/data/tesouro-direto` |
-
-### Implementação
-
-```python
-parser.add_argument(
-    "-o", "--output",
-    type=Path,
-    default=Path("/data/secex-comex"),
-    help="Diretório de saída.",
-)
-```
-
-### Notas
-
-- Comandos que recebem um diretório de **entrada** (leitura de arquivos já baixados) devem usar `--input` ou argumento posicional — nunca reutilizar `--output` para esse fim.
-- Subcomandos de uma mesma CLI devem todos aceitar `--output` com o mesmo default; não é necessário repetir o default em cada subcomando se o parser raiz o define.
-- O argumento `--archive-dir` do `datasus-fetcher` (diretório de arquivamento de versões antigas) é um segundo diretório de saída para operação específica — mantém nome próprio sem conflitar com `--output`.
 
 ---
 

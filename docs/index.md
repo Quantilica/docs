@@ -79,7 +79,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 ## Por onde começar
 
 ### Em 5 minutos
-- **[Quickstart](quickstart.md)** — instala, baixa um dataset real, plota um gráfico. Três caminhos: IBGE, Tesouro, Saúde.
+- **[Quickstart](quickstart.md)** — instala, baixa um dataset real, plota um gráfico. Quatro caminhos prontos: IBGE, Tesouro, Saúde e Clima.
 
 ### Aprofundar
 1. **[Arquitetura do Ecossistema](concepts/arquitetura.md)** — como as partes se conectam.

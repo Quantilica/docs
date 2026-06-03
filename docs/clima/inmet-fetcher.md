@@ -63,7 +63,7 @@ Acesse dados meteorológicos históricos oficiais do Brasil com:
 ## Instalação
 
 ```bash
-pip install git+https://github.com/dankkom/inmet-fetcher.git
+pip install git+https://github.com/Quantilica/inmet-fetcher.git
 ```
 
 **Requisitos:** Python 3.12+

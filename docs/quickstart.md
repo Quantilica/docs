@@ -1,11 +1,11 @@
 ---
 title: Quickstart — Dados públicos brasileiros em 5 minutos
-description: Instale uma ferramenta Quantilica, baixe um dataset real e analise. Três caminhos prontos para IBGE, Tesouro e Saúde.
+description: Instale uma ferramenta Quantilica, baixe um dataset real e analise. Quatro caminhos prontos para IBGE, Tesouro, Saúde e Clima.
 ---
 
 # Comece em 5 minutos
 
-Três caminhos prontos para baixar e analisar um dataset público real, do zero. Escolha o domínio mais próximo do seu trabalho — todos seguem o mesmo padrão.
+Quatro caminhos prontos para baixar e analisar um dataset público real, do zero. Escolha o domínio mais próximo do seu trabalho — todos seguem o mesmo padrão.
 
 ## Pré-requisitos
 

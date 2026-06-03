@@ -53,7 +53,7 @@ graph TD
 
 O catálogo cobre datasets brasileiros essenciais de economia, demografia, agricultura, indústria, comércio e serviços. A lista canônica está em [`manifest.toml`](https://github.com/Quantilica/sidra-pipelines/blob/main/manifest.toml); a tabela abaixo destaca os pipelines mais usados:
 
-### 📊 Economia e Preços
+### Economia e Preços
 
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
@@ -63,13 +63,13 @@ O catálogo cobre datasets brasileiros essenciais de economia, demografia, agric
 | `ipp` | **IPP** (Preços ao Produtor) | 6904, 6903, 6723 | `analytics.ipp_categoria_economica`, `ipp_cnae`, `ipp_grupo_industrial` |
 | `pmc` | **PMC** (Comércio) / `pms` (Serviços) | 8880, 5906, ... | `analytics.pmc_agregado`, `pms_agregado`, ... |
 
-### 👥 Demografia
+### Demografia
 
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
 | `populacao` | **População** — censo, contagem e estimativas | 200, 305, 793, 4709, 6579 | `analytics.censo_populacao`, `contagem_populacao`, `estimativa_populacao`, `populacao` |
 
-### 🌾 Agricultura & Silvicultura
+### Agricultura & Silvicultura
 
 | ID do Pipeline | Pesquisa | Tabela SIDRA | Tabela de Output |
 |---|---|---|---|
@@ -290,7 +290,7 @@ Cache hit para dados inalterados = conclusão quase instantânea.
 
 ## Casos de Uso
 
-### 📈 Monitoramento Econômico
+### Monitoramento Econômico
 
 Rastreie o desempenho macroeconômico do Brasil em tempo real:
 
@@ -301,7 +301,7 @@ WHERE periodo >= '2024-01-01'
 ORDER BY periodo DESC;
 ```
 
-### 📊 Relatórios Analíticos
+### Relatórios Analíticos
 
 Construa dashboards em Power BI, Metabase ou Superset:
 
@@ -315,7 +315,7 @@ Tabelas analíticas prontas para importação BI imediata:
 └── ... (8 mais)
 ```
 
-### 🔬 Pesquisa Acadêmica
+### Pesquisa Acadêmica
 
 Baixe dados históricos limpos e normalizados:
 
@@ -324,7 +324,7 @@ SELECT * FROM analytics.censo_populacao
 WHERE ano IN (1991, 2000, 2010, 2020);
 ```
 
-### 🌾 Análise Agrícola
+### Análise Agrícola
 
 Analise produção agrícola e rebanhos:
 
