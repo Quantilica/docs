@@ -5,7 +5,7 @@ description: Como a Quantilica garante reprodutibilidade de longo prazo via mani
 
 # Proveniência & Manifestos
 
-> Dados públicos brasileiros são vivos. Eles são revisados, republicados, corrigidos — às vezes de forma silenciosa. Sem proveniência criptográfica, nenhuma análise sobrevive ao seu próprio aniversário.
+> Dados públicos brasileiros são vivos. Eles são revisados, republicados, corrigidos — às vezes silenciosamente. Sem proveniência criptográfica, nenhuma análise sobrevive ao seu próprio aniversário.
 
 Toda ferramenta Quantilica que baixa um arquivo também escreve, ao lado, um **manifesto** — um JSON pequeno com SHA-256, URL de origem, timestamp e o nome do *producer*. É o mecanismo que sustenta dois compromissos:
 
@@ -34,17 +34,9 @@ Nada de mágico. É um par `(arquivo, hash)` carimbado com tempo e origem.
 
 ## Escrevendo um manifesto
 
+A maioria dos coletores escreve o manifesto automaticamente. Para construir um à mão, siga a sequência em [`quantilica-core` — Anatomia de um download](../fundacoes/quantilica-core.md#anatomia-de-um-download-quantilica). O passo-chave é:
+
 ```python
-from quantilica_core.http import HttpClient
-from quantilica_core.storage import LocalStorage
-from quantilica_core.manifests import DownloadManifest
-
-client = HttpClient(attempts=3)
-storage = LocalStorage("dados/raw")
-
-response = client.get("https://servicodados.ibge.gov.br/api/v3/agregados/1705/metadados")
-stat = storage.write_bytes("sidra/agregado-1705.json", response.content)
-
 manifest = DownloadManifest.from_file(
     source_id="ibge",
     dataset_id="sidra-1705",
@@ -54,8 +46,6 @@ manifest = DownloadManifest.from_file(
 )
 manifest.write_json(stat.path.with_suffix(".manifest.json"))
 ```
-
-A maioria dos coletores Quantilica faz isso por baixo dos panos — você não precisa montar o manifesto à mão.
 
 ## Lendo um manifesto para verificar integridade
 

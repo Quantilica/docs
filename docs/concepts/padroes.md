@@ -1,6 +1,6 @@
 # Padrões Práticos
 
-Este guia cobre oito padrões táticos usados em todas as ferramentas do ecossistema. Cada padrão materializa um ou mais [Princípios de Design](principios.md) em código real. Seguindo-os, seus pipelines ficam mais rápidos, confiáveis e fáceis de manter.
+Este guia cobre nove padrões usados em todas as ferramentas do ecossistema. Cada padrão materializa um ou mais [Princípios de Design](principios.md) em código real. Seguindo-os, seus pipelines ficam mais rápidos, confiáveis e fáceis de manter.
 
 | Padrão | Princípio principal |
 |---|---|
@@ -81,7 +81,7 @@ datasus-fetcher sync -o ./data sim-do-cid10 \
 ### Por quê?
 
 - **Network I/O é lenta**: uma requisição pode levar 1 s. Enquanto espera resposta, você pode iniciar mais 5.
-- **Speedup massivo**: 4-10× mais rápido que sequencial.
+- **Speedup**: 4-10× mais rápido que sequencial.
 - **Speedup gratuito**: não exige hardware mais rápido — só melhor uso dos recursos.
 
 ### Padrão: async/await para APIs REST

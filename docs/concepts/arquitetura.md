@@ -38,7 +38,7 @@ graph TD
     PG --> Analytics
 ```
 
-O ecossistema é organizado em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas — o que ela deve e o que ela **não** deve fazer.
+O ecossistema é organizado em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas.
 
 ## Fundações Técnicas
 
@@ -227,16 +227,11 @@ graph TD
 
 ### Compressão Parquet
 
-| Dataset | CSV bruto | Parquet | Compressão |
-|---|---|---|---|
-| RAIS 2023 | ~850 MB | ~100 MB | 88% |
-| Tesouro (20 anos) | ~5 MB | ~1 MB | 80% |
-| CAGED mensal | ~50 MB | ~6 MB | 88% |
-| Siscomex anual | ~500 MB | ~50 MB | 90% |
+Compressão típica: 80-90% vs. CSV — RAIS 2023 de 850 MB cabe em 100 MB de Parquet. Volumes completos em [Parquet + Polars](parquet-polars.md#por-que-parquet).
 
 ### Escalabilidade
 
-**Para a maioria dos casos** (até bilhões de linhas):
+Parquet em disco e Polars escalam bem sem infraestrutura adicional:
 
 - Parquet em disco escala para TBs facilmente.
 - Polars processa arquivos maiores que a RAM via streaming.

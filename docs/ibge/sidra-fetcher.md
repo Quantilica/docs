@@ -5,7 +5,7 @@ description: SDK Python para extrair dados e metadados da API IBGE/SIDRA. Client
 
 # sidra-fetcher
 
-SDK avançado para extração programática da API SIDRA IBGE.
+Cliente Python para a API SIDRA do IBGE — sync e async, retry automático, URL tipada.
 
 !!! warning "Pegadinhas da fonte oficial"
 
@@ -18,15 +18,9 @@ SDK avançado para extração programática da API SIDRA IBGE.
     - **Metadados mudam pouco; dados mudam silenciosamente.** Cacheie metadados em disco (`save_agregado`/`load_agregado`); re-extraia os valores e compare com o manifesto SHA-256.
     - **Rate limit não documentado.** Horário comercial brasileiro é o pior; rode em batch à noite ou use `AsyncSidraClient` com `asyncio.Semaphore` para limitar a concorrência.
 
-## O Que É
-
-O **`sidra-fetcher`** é um SDK Python de nível de produção projetado para extração robusta de dados e metadados do Sistema IBGE de Recuperação Automática (SIDRA).
-
-Ele serve como uma camada de infraestrutura de rede entre os servidores do IBGE e as aplicações de ciência de dados: oferecendo modelos de metadados tipados, abstração de URL via classe `Parametro` e clientes HTTP resilientes (síncrono + assíncrono) com tentativas automáticas (retries).
-
 ## Problema que Resolve
 
-O SIDRA é uma das fontes de dados mais ricas do Brasil — contendo desde inflação (IPCA) até demografia do Censo. No entanto, consumir esses dados em escala encontra **dois gargalos severos de engenharia**:
+O SIDRA tem metadados tipados, abstração de URL via `Parametro`, e clientes HTTP resilientes (síncrono + assíncrono) — é uma das fontes mais ricas do Brasil, cobrindo desde inflação (IPCA) até demografia do Censo. Consumir esses dados em escala encontra **dois gargalos**:
 
 ### 1. Instabilidade de Rede
 

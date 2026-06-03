@@ -369,41 +369,13 @@ summary.write_parquet("caged_2024_summary.parquet")
 
 **Problema:** o arquivo não cabe em RAM.
 
-**Solução:** filtragem na leitura ou streaming lazy.
-
-```python
-import polars as pl
-
-# ❌ Carrega tudo
-df = pl.read_parquet("huge_file.parquet")
-
-# ✅ Filtra na leitura
-df = pl.read_parquet("huge_file.parquet", filters=[("state", "==", "SP")])
-
-# ✅ Ou lazy + streaming
-df = pl.scan_parquet("huge_file.parquet").filter(pl.col("state") == "SP").collect(engine="streaming")
-```
+**Solução:** veja [Streaming para volumes maiores que a RAM](#streaming-para-volumes-maiores-que-a-ram) — `scan_parquet` com `collect(engine="streaming")` resolve o caso mais comum.
 
 ### Queries lentas
 
 **Problema:** query mais lenta que o esperado.
 
-**Solução:** lazy evaluation expõe otimizações.
-
-```python
-import polars as pl
-
-# ❌ Eager (executa imediatamente, sem otimização global)
-df = pl.read_parquet("file.parquet")
-result = df.filter(pl.col("state") == "SP")
-
-# ✅ Lazy (otimiza primeiro)
-result = (
-    pl.scan_parquet("file.parquet")
-    .filter(pl.col("state") == "SP")
-    .collect()
-)
-```
+**Solução:** veja [Lazy evaluation: o caso de uso central](#lazy-evaluation-o-caso-de-uso-central).
 
 ### Tipos errados no Parquet escrito
 

@@ -66,7 +66,7 @@ dados/raw/sidra/
 
 ## Por que isso importa
 
-**Você nunca tem que reimplementar isso.** Sem `quantilica-core`, cada fetcher precisaria:
+Sem `quantilica-core`, cada fetcher precisaria:
 
 - Escrever seu próprio retry com backoff.
 - Lidar com falhas parciais de download (arquivo truncado no disco).
