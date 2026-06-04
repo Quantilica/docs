@@ -12,7 +12,7 @@ Você é responsável pela infraestrutura que serve os analistas. Constrói pipe
 | Dor | A ferramenta |
 |---|---|
 | Cada nova fonte exigia retry, manifesto, logging e exceção customizada | **[`quantilica-core`](../fundacoes/quantilica-core.md)** |
-| Encoding inconsistente, schemas mutantes, falta de tipagem na ingestão | **[`quantilica-io`](../fundacoes/quantilica-io.md)** (Data Contracts) |
+| Encoding inconsistente, schemas mutantes, falta de tipagem na ingestão | **[`quantilica-analytics`](../fundacoes/quantilica-analytics.md)** (Data Contracts) |
 | Carregar SIDRA em PostgreSQL com revisões preservadas (SCD II) | **[`sidra-sql`](../ibge/sidra-sql.md)** |
 
 ## Por onde começar
@@ -60,6 +60,6 @@ print(latest["sha256"])  # hash do arquivo de origem
 ## Caminho de aprofundamento
 
 - [`quantilica-core` — anatomia de um download](../fundacoes/quantilica-core.md)
-- [`quantilica-io` — Parquet com proveniência embarcada](../fundacoes/quantilica-io.md)
+- [`quantilica-analytics` — Parquet com proveniência embarcada](../fundacoes/quantilica-analytics.md)
 - [`sidra-sql` — warehouse + SCD II](../ibge/sidra-sql.md)
 - [Padrões Práticos](../concepts/padroes.md) — receitas táticas para casos comuns.

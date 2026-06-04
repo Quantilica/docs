@@ -20,7 +20,7 @@ Extrair e processar os microdados de saúde do Brasil envolve superar sérias ba
 
 - Para começar a baixar dados de saúde: vá para **[datasus-fetcher](datasus-fetcher.md)**.
 - Para cruzar óbitos infantis com dados de saneamento e população: veja o cookbook **[Mortalidade infantil × SUS](../cookbook/mortalidade-sus.md)**.
-- Para entender como converter os arquivos `.dbc` em Parquet: veja a documentação do **[quantilica-io](../fundacoes/quantilica-io.md)**.
+- Para entender como converter os arquivos `.dbc` em Parquet: veja a documentação do **[quantilica-analytics](../fundacoes/quantilica-analytics.md)**.
 
 ## Recursos externos
 

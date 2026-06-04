@@ -83,7 +83,7 @@ Não coloque esse arquivo no controle de versão.
 
 ```toml
 [project.entry-points."quantilica.commands"]
-cloud = "quantilica_cloud.plugin:app"
+cloud = "quantilica.cloud.plugin:app"
 ```
 
 ## Módulos

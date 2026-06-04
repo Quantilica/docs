@@ -8,7 +8,7 @@ Este documento define os padrões de nomenclatura de arquivos, estrutura de past
 
 ## Nomenclatura de Arquivos
 
-O nome de cada arquivo baixado incorpora um timestamp extraído do servidor de origem (cabeçalho `Last-Modified` ou equivalente). A função `stamp_filename()` de `quantilica_core.storage` implementa o padrão.
+O nome de cada arquivo baixado incorpora um timestamp extraído do servidor de origem (cabeçalho `Last-Modified` ou equivalente). A função `stamp_filename()` de `quantilica.core.storage` implementa o padrão.
 
 ### Formato
 
@@ -41,7 +41,7 @@ Quando o servidor não retorna timestamp, o arquivo é salvo sem `@` — sem inv
 ### Implementação
 
 ```python
-from quantilica_core.storage import stamp_filename
+from quantilica.core.storage import stamp_filename
 
 # Precisão date (padrão)
 stamp_filename("exp_2023", "csv", date(2024, 3, 15))
@@ -78,7 +78,7 @@ O diretório raiz (`{output}`) é o único caminho fornecido pelo usuário. A es
 ### API do quantilica-core
 
 ```python
-from quantilica_core.storage import BaseDataRepository
+from quantilica.core.storage import BaseDataRepository
 
 class FooRepository(BaseDataRepository):
     def file_path(self, dataset_id: str, filename: str) -> Path:

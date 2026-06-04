@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = get_parser()
     args = parser.parse_args(argv)
 
-    from quantilica_core.logging import configure_cli_logging
+    from quantilica.core.logging import configure_cli_logging
     configure_cli_logging(verbose=args.verbose)
 
     if args.command == "sync":
@@ -213,7 +213,7 @@ def _cmd_download(args):
 
 ### 2.6 Silenciar logs INFO quando exibindo progresso
 
-`configure_cli_logging(verbose=False)` define o nível raiz em `INFO`. Isso faz com que mensagens internas do core (como `log_step` em `quantilica_core.http`) apareçam no terminal e corrompam a saída de barras tqdm.
+`configure_cli_logging(verbose=False)` define o nível raiz em `INFO`. Isso faz com que mensagens internas do core (como `log_step` em `quantilica.core.http`) apareçam no terminal e corrompam a saída de barras tqdm.
 
 Quando `cli.py` exibe progresso (barra tqdm ou output limpo), adicione após `configure_cli_logging`:
 
@@ -224,12 +224,12 @@ def main(argv: list[str] | None = None) -> None:
     configure_cli_logging(verbose=args.verbose)
     if not args.verbose:
         # Suprime log_step (INFO) do core e logs de rastreamento do fetcher
-        logging.getLogger("quantilica_core").setLevel(logging.WARNING)
+        logging.getLogger("quantilica.core").setLevel(logging.WARNING)
         logging.getLogger("<pacote_fetcher>").setLevel(logging.WARNING)
     args.func(args)
 ```
 
-Onde `<pacote_fetcher>` é o nome do pacote do fetcher (ex: `"comex_fetcher"`, `"pdet_fetcher"`). São necessários dois `setLevel` porque `quantilica_core.*` usa o namespace `"quantilica_core"` e cada fetcher usa o namespace do seu próprio pacote — `get_logger(__name__)` retorna `logging.getLogger(name)` sem prefixo adicional. Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
+Onde `<pacote_fetcher>` é o nome do pacote do fetcher (ex: `"comex_fetcher"`, `"pdet_fetcher"`). São necessários dois `setLevel` porque `quantilica.core.*` usa o namespace `"quantilica.core"` e cada fetcher usa o namespace do seu próprio pacote — `get_logger(__name__)` retorna `logging.getLogger(name)` sem prefixo adicional. Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
 
 ---
 
@@ -267,7 +267,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from quantilica_core.cli import get_console, setup_rich_logging
+from quantilica.core.cli import get_console, setup_rich_logging
 
 app = typer.Typer(help="<Descrição curta do fetcher.>")
 console = get_console()
@@ -285,7 +285,7 @@ Regras:
 
 ### 3.3 `setup_rich_logging` — o ponto central de logging
 
-Cada `plugin.py` deve chamar `setup_rich_logging` de `quantilica_core.cli` como primeira linha de cada comando:
+Cada `plugin.py` deve chamar `setup_rich_logging` de `quantilica.core.cli` como primeira linha de cada comando:
 
 ```python
 @app.command("sync")
@@ -306,7 +306,7 @@ def cmd_sync(
 
 #### Por que não `configure_cli_logging`?
 
-`configure_cli_logging(verbose=False)` configura o nível para `INFO` com um handler padrão de stderr. Isso faz com que mensagens internas (como `log_step` em `quantilica_core.http`) apareçam no terminal e **corrompam barras de progresso Rich**, pois escrevem diretamente no stderr sem coordenação com o `Console`.
+`configure_cli_logging(verbose=False)` configura o nível para `INFO` com um handler padrão de stderr. Isso faz com que mensagens internas (como `log_step` em `quantilica.core.http`) apareçam no terminal e **corrompam barras de progresso Rich**, pois escrevem diretamente no stderr sem coordenação com o `Console`.
 
 `setup_rich_logging` resolve em duas frentes:
 
@@ -521,8 +521,8 @@ Para fetchers que baixam N arquivos grandes em sequência, exiba uma barra de it
 ```python
 from rich.console import Group
 from rich.live import Live
-from quantilica_core.cli import make_batch_progress, make_download_progress
-from quantilica_core.http import ProgressCallback
+from quantilica.core.cli import make_batch_progress, make_download_progress
+from quantilica.core.http import ProgressCallback
 from rich.progress import Progress, TaskID
 
 def _file_callback(
@@ -558,7 +558,7 @@ with Live(Group(overall, file_prog), console=console, refresh_per_second=10):
         overall.update(overall_task, advance=1, description=f"[green]{ok}✓[/green]")
 ```
 
-`make_batch_progress` e `make_download_progress` são fornecidas por `quantilica_core.cli` e já usam o console correto. `ProgressCallback = Callable[[int, int], None]` é definida em `quantilica_core.http`. Veja o `comex-fetcher plugin.py :: sync` como referência.
+`make_batch_progress` e `make_download_progress` são fornecidas por `quantilica.core.cli` e já usam o console correto. `ProgressCallback = Callable[[int, int], None]` é definida em `quantilica.core.http`. Veja o `comex-fetcher plugin.py :: sync` como referência.
 
 ### 4.4 `Table` — exibição de dados tabulares
 
@@ -714,7 +714,7 @@ O ecossistema usa três famílias de callback, escolhidas pelo tipo de operaçã
 
 ```python
 from collections.abc import Callable
-from quantilica_core.http import ProgressCallback  # Callable[[int, int], None]
+from quantilica.core.http import ProgressCallback  # Callable[[int, int], None]
 
 # Bulk por item (N itens com total conhecido)
 on_progress: Callable[[int, int, int, int, int], None] | None = None
@@ -1006,10 +1006,10 @@ Fetchers que aceitam anos como argumento devem suportar o formato de intervalo `
 
 ### 10.1 No Plugin Typer (`plugin.py`)
 
-Use a função **`expand_years_cli`** importada de `quantilica_core.cli`. Ela faz a expansão utilizando `expand_year_range` internamente e imprime avisos amigáveis no console compartilhado caso encontre algum formato inválido:
+Use a função **`expand_years_cli`** importada de `quantilica.core.cli`. Ela faz a expansão utilizando `expand_year_range` internamente e imprime avisos amigáveis no console compartilhado caso encontre algum formato inválido:
 
 ```python
-from quantilica_core.cli import expand_years_cli
+from quantilica.core.cli import expand_years_cli
 
 @app.command("sync")
 def cmd_sync(
@@ -1027,10 +1027,10 @@ def cmd_sync(
 
 ### 10.2 Na CLI nativa (`cli.py`)
 
-Na CLI nativa standalone (que não depende de `rich`), utilize diretamente a função **`expand_year_range`** de `quantilica_core.dates`. Como ela pode lançar `ValueError` para intervalos ou anos inválidos, capture e trate a exceção exibindo uma mensagem no stderr:
+Na CLI nativa standalone (que não depende de `rich`), utilize diretamente a função **`expand_year_range`** de `quantilica.core.dates`. Como ela pode lançar `ValueError` para intervalos ou anos inválidos, capture e trate a exceção exibindo uma mensagem no stderr:
 
 ```python
-from quantilica_core.dates import expand_year_range
+from quantilica.core.dates import expand_year_range
 
 def _cmd_sync(args: argparse.Namespace) -> None:
     try:
@@ -1108,11 +1108,11 @@ def fetch_bulk(ids, on_progress=None):
 
 ```python
 # ❌ Nível INFO por padrão quebra barras de progresso Rich
-from quantilica_core.logging import configure_cli_logging
+from quantilica.core.logging import configure_cli_logging
 configure_cli_logging(verbose=verbose)
 
-# ✅ Use setup_rich_logging de quantilica_core.cli
-from quantilica_core.cli import setup_rich_logging
+# ✅ Use setup_rich_logging de quantilica.core.cli
+from quantilica.core.cli import setup_rich_logging
 setup_rich_logging(verbose, console=console)
 ```
 
@@ -1162,7 +1162,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] Função de construção do parser nomeada **`get_parser()`** (não `set_parser`, não `get_args`).
 - [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade (obrigatório).
 - [ ] `main()` chama `configure_cli_logging(verbose=args.verbose)` antes de qualquer I/O.
-- [ ] Se exibir progresso: `logging.getLogger("quantilica_core").setLevel(logging.WARNING)` e `logging.getLogger("<pacote_fetcher>").setLevel(logging.WARNING)` quando `not verbose` (§2.6).
+- [ ] Se exibir progresso: `logging.getLogger("quantilica.core").setLevel(logging.WARNING)` e `logging.getLogger("<pacote_fetcher>").setLevel(logging.WARNING)` quando `not verbose` (§2.6).
 - [ ] Erros fatais escrevem em `stderr` e encerram com `sys.exit(1)`.
 - [ ] Entry point declarado em `[project.scripts]`.
 
@@ -1170,7 +1170,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 - [ ] Docstring `"""Typer plugin for quantilica-cli integration."""`.
 - [ ] `app = typer.Typer(help="...")` no topo.
-- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica_core.cli`).
+- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica.core.cli`).
 - [ ] `_DEFAULT_OUTPUT = Path("/data/<fonte>")`.
 - [ ] Cada comando chama `setup_rich_logging(verbose, console=console)` como primeira linha.
 - [ ] Funções de comando nomeadas `cmd_<verbo>` (ex: `cmd_sync`, `cmd_list`).
@@ -1200,7 +1200,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | `ProgressCallback` per-file + `_file_callback` | `comex-fetcher` | `plugin.py` |
 | `on_done(filename, result)` callback pós-arquivo | `rtn-fetcher` | `plugin.py :: _sync_publications` |
 | `console.status` + `asyncio.run()` para downloads async | `tesouro-direto-fetcher` | `plugin.py :: cmd_sync` |
-| `getLogger("quantilica_core"/"<pacote>").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: main` |
+| `getLogger("quantilica.core"/"<pacote>").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: main` |
 | `parser.set_defaults(func=print_help)` sem `required=True` | `bcb-sgs-fetcher` | `cli.py :: get_parser` |
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |

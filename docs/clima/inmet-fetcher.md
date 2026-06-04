@@ -140,7 +140,7 @@ Para saída tipada e proveniência embarcada no header do Parquet, use `write_to
 
 ```python
 import inmet_fetcher as inmet
-from quantilica_core.manifests import DownloadManifest
+from quantilica.core.manifests import DownloadManifest
 
 df = inmet.read(Path("./data"), years=[2023])
 
@@ -154,7 +154,7 @@ manifest = DownloadManifest.from_file(
 inmet.write_to_parquet(df, "output/bdmep_2023.parquet", manifest=manifest)
 ```
 
-`BDMEP_CONTRACT` declara as 26 colunas esperadas (17 medições + 9 de metadata da estação). Veja [Data Contracts](../fundacoes/quantilica-io.md#data-contracts).
+`BDMEP_CONTRACT` declara as 26 colunas esperadas (17 medições + 9 de metadata da estação). Veja [Data Contracts](../fundacoes/quantilica-analytics.md#data-contracts).
 
 ## Fonte de Dados
 

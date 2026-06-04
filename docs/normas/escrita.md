@@ -141,7 +141,7 @@ MIT — veja [LICENSE](LICENSE).
 | `quantilica-cli` | CLI | PT | ✓ |
 | `quantilica-cloud` | Plugin CLI | PT | ✓ |
 | `quantilica-core` | Infraestrutura | PT | ✓ |
-| `quantilica-io` | Infraestrutura | PT | ✓ |
+| `quantilica-analytics` | Infraestrutura | PT | ✓ |
 | `rtn-fetcher` | Data Package | PT | ✓ |
 | `sidra-fetcher` | Client Library | PT | ✓ |
 | `sidra-pipelines` | Catálogo ETL | PT | ✓ |

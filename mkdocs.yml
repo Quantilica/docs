@@ -61,7 +61,7 @@ nav:
   - Fundações:
       - fundacoes/index.md
       - quantilica-core: fundacoes/quantilica-core.md
-      - quantilica-io: fundacoes/quantilica-io.md
+      - quantilica-analytics: fundacoes/quantilica-analytics.md
       - quantilica-cli: fundacoes/quantilica-cli.md
       - quantilica-cloud: fundacoes/quantilica-cloud.md
       - quantilica-catalog: fundacoes/quantilica-catalog.md

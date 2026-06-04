@@ -74,7 +74,7 @@ Novo pacote para carregar séries temporais do BCB SGS no PostgreSQL.
 
 ## 2026-05 — `quantilica-core` 0.3.0: helpers de CLI, FTP monitorado e proveniência expandida
 
-- **`expand_years_cli`** em `quantilica_core.cli`: expande intervalos `INICIO:FIM`
+- **`expand_years_cli`** em `quantilica.core.cli`: expande intervalos `INICIO:FIM`
   com mensagens amigáveis via console Rich — adotado por todos os fetchers com
   argumento de anos.
 - **`MonitoredFTP`**: cliente FTP com idle-timeout e interrupção de transferência
@@ -125,20 +125,20 @@ antigos precisam ser atualizados.
 
 - **`quantilica-cloud`** lançado: plugin CLI para sincronizar manifestos de download com o catálogo na nuvem. Registrado via `quantilica.commands`; acessível como `quantilica cloud login/sync/status`. Offline-first por design.
 - **`quantilica-catalog`** lançado: modelo de observação canônico (star schema) com adaptadores para BCB-SGS, RTN, INMET, Tesouro Direto e SIDRA. Resolve o cruzamento multi-fonte com um único `JOIN` em `indicator_id + geo_id + date`. O modelo geográfico foi posteriormente generalizado (breaking change interna) para suportar múltiplas granularidades geográficas.
-- **`quantilica-io` 0.2.0** acrescentou `read_brazilian_csv`: leitura robusta de CSV com encoding CP-1252/Latin-1, separadores `;`, datas em DD/MM/AAAA e notação decimal brasileira — em uso pelos fetchers que consomem planilhas do governo.
-- **`quantilica-io` integrado nos fetchers**: `bcb-sgs-fetcher`, `rtn-fetcher` e `inmet-fetcher` agora exportam Parquet tipado via `save_parquet` / `write_to_parquet` com `DataContract` e manifesto embutido no header.
+- **`quantilica-analytics` 0.2.0** acrescentou `read_brazilian_csv`: leitura robusta de CSV com encoding CP-1252/Latin-1, separadores `;`, datas em DD/MM/AAAA e notação decimal brasileira — em uso pelos fetchers que consomem planilhas do governo.
+- **`quantilica-analytics` integrado nos fetchers**: `bcb-sgs-fetcher`, `rtn-fetcher` e `inmet-fetcher` agora exportam Parquet tipado via `save_parquet` / `write_to_parquet` com `DataContract` e manifesto embutido no header.
 - **`bcb-sgs-fetcher` padronizado** para as convenções do workspace: logging estruturado, `HttpClient` em `data.py`, `ScraperClient` mantido com httpx direto por precisar de sessão stateful.
 
 ## 2026-05 — Reescrita do portal de documentação
 
 - Portal reestruturado com narrativa de três atos no `index.md`.
-- Nova seção **Fundações** elevando `quantilica-core` e `quantilica-io` à navegação principal.
+- Nova seção **Fundações** elevando `quantilica-core` e `quantilica-analytics` à navegação principal.
 - Página **Proveniência & Manifestos** explicando o desenho de reprodutibilidade.
 - Cookbook expandido para 6+ receitas cobrindo macro, finanças, saúde, clima, engenharia de dados e time travel.
 - Páginas por persona: analista macro, cientista de saúde, engenheiro de dados, pesquisador acadêmico.
 - Open Graph + Twitter Cards via `overrides/main.html` (sem dep extra).
 
-## 2026-Q1 — `quantilica-io` lançado
+## 2026-Q1 — `quantilica-analytics` lançado
 
 - Camada analítica iniciada: reader multi-formato, writer Parquet com proveniência embarcada.
 - Plano completo em [`QUANTILICA_IO_PLAN.md`](https://github.com/Quantilica/.github/blob/main/QUANTILICA_IO_PLAN.md).
@@ -181,7 +181,7 @@ Para releases granulares (PATCH/MINOR/MAJOR), consulte o `CHANGELOG.md` ou as re
 - [sidra-pipelines](https://github.com/Quantilica/sidra-pipelines/releases)
 - [tesouro-direto-fetcher](https://github.com/Quantilica/tesouro-direto-fetcher/releases)
 - [quantilica-core](https://github.com/Quantilica/quantilica-core/releases)
-- [quantilica-io](https://github.com/Quantilica/quantilica-io/releases)
+- [quantilica-analytics](https://github.com/Quantilica/quantilica-analytics/releases)
 - [quantilica-cli](https://github.com/Quantilica/quantilica-cli/releases)
 - [quantilica-catalog](https://github.com/Quantilica/quantilica-catalog/releases)
 - [quantilica-cloud](https://github.com/Quantilica/quantilica-cloud/releases)

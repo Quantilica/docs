@@ -1,9 +1,9 @@
 ---
-title: quantilica-io
+title: quantilica-analytics
 description: Camada analítica da Quantilica — leitura multi-formato, conversão Parquet tipada e proveniência injetada.
 ---
 
-# `quantilica-io`
+# `quantilica-analytics`
 
 Camada de processamento e padronização analítica da Quantilica. Transforma arquivos brutos baixados pelos coletores em ativos analíticos prontos para consumo — Parquet tipado, com proveniência embarcada no próprio header do arquivo.
 
@@ -12,7 +12,7 @@ Camada de processamento e padronização analítica da Quantilica. Transforma ar
 ## Instalação
 
 ```bash
-uv add "quantilica-io @ git+https://github.com/Quantilica/quantilica-io.git"
+uv add "quantilica-analytics @ git+https://github.com/Quantilica/quantilica-analytics.git"
 ```
 
 ## Da bagunça ao Parquet em uma chamada
@@ -20,9 +20,9 @@ uv add "quantilica-io @ git+https://github.com/Quantilica/quantilica-io.git"
 Você baixou um arquivo com um coletor Quantilica. Ao lado dele há um `.manifest.json`. Para converter para Parquet com proveniência preservada:
 
 ```python
-from quantilica_core.manifests import DownloadManifest
-from quantilica_io.reader import SmartReader
-from quantilica_io.writer import to_parquet
+from quantilica.core.manifests import DownloadManifest
+from quantilica.analytics.reader import SmartReader
+from quantilica.analytics.writer import to_parquet
 
 manifest = DownloadManifest.from_file(
     source_id="ibge",
@@ -64,7 +64,7 @@ Um `DataContract` declara as colunas e tipos esperados de um dataset. Serve para
 
 ```python
 import polars as pl
-from quantilica_io.schema import DataContract, Field
+from quantilica.analytics.schema import DataContract, Field
 
 SGS_CONTRACT = DataContract(
     dataset_id="bcb-sgs",
@@ -147,4 +147,4 @@ Veja também:
 
 ## Repositório
 
-[github.com/Quantilica/quantilica-io](https://github.com/Quantilica/quantilica-io) — MIT.
+[github.com/Quantilica/quantilica-analytics](https://github.com/Quantilica/quantilica-analytics) — MIT.

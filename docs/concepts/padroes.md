@@ -344,11 +344,11 @@ def validate_downloaded_file(expected_size_bytes: int, path: Path) -> None:
 
 ### Padrão: validação de schema com `DataContract`
 
-Em vez de escrever validação ad-hoc, declare um `DataContract` (do `quantilica-io`) e use-o em dois pontos: `cast()` na ingestão para travar tipos, `validate()` em testes para detectar regressões.
+Em vez de escrever validação ad-hoc, declare um `DataContract` (do `quantilica-analytics`) e use-o em dois pontos: `cast()` na ingestão para travar tipos, `validate()` em testes para detectar regressões.
 
 ```python
 import polars as pl
-from quantilica_io.schema import DataContract, Field
+from quantilica.analytics.schema import DataContract, Field
 
 RAIS_CONTRACT = DataContract(
     dataset_id="rais-vinculos",
@@ -371,7 +371,7 @@ df = RAIS_CONTRACT.cast(df)
 df.write_parquet("rais_2023.parquet")
 ```
 
-Os fetchers que parsam dados (`inmet`, `rtn`, `bcb-sgs`) já expõem seus próprios contratos — ver [`quantilica-io`](../fundacoes/quantilica-io.md#data-contracts).
+Os fetchers que parsam dados (`inmet`, `rtn`, `bcb-sgs`) já expõem seus próprios contratos — ver [`quantilica-analytics`](../fundacoes/quantilica-analytics.md#data-contracts).
 
 ### Padrão: validação de contagem de linhas
 
@@ -536,11 +536,11 @@ logger.info("Salvo em output.parquet")
 
 ### Padrão: barra de contagem de arquivos por dataset
 
-Usando `quantilica_core.progress.batch_progress` e suprimindo o logger para `WARNING`:
+Usando `quantilica.core.progress.batch_progress` e suprimindo o logger para `WARNING`:
 
 ```python
 # downloader.py
-from quantilica_core.progress import batch_progress
+from quantilica.core.progress import batch_progress
 
 async def download(dest_dir, dataset_id, show_progress=True):
     resources = await get_dataset_resources(dataset_id)
@@ -585,7 +585,7 @@ def main():
 
 - **`--verbose` sem shorthand `-v`**: evita conflito com flags globais em wrappers.
 - **Modo padrão silencia INFO**: `logging.getLogger("<pacote>").setLevel(logging.WARNING)` — erros e warnings ainda aparecem.
-- **`batch_progress` de `quantilica_core.progress`**: não crie barras tqdm diretamente no CLI.
+- **`batch_progress` de `quantilica.core.progress`**: não crie barras tqdm diretamente no CLI.
 - **`on_file_done` callback**: atualize a barra conforme cada arquivo termina (incluindo skips), não apenas no final.
 
 ### Fetchers que adotam este padrão

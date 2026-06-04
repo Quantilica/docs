@@ -48,7 +48,7 @@ print(df.shape)  # (linhas, colunas)
 ## Padrões que economizam tempo
 
 - **Filtre cedo.** Use `--regions sp rj mg` e `--start 2020-01 --end 2023-12` antes de qualquer download massivo. 320 GB começam pequenos quando você sabe o recorte.
-- **`.dbc` precisa de leitor próprio.** Use `pyreaddbc` ou converta para Parquet via [`quantilica-io`](../fundacoes/quantilica-io.md). `pd.read_csv` não abre.
+- **`.dbc` precisa de leitor próprio.** Use `pyreaddbc` ou converta para Parquet via [`quantilica-analytics`](../fundacoes/quantilica-analytics.md). `pd.read_csv` não abre.
 - **Baixe dicionários junto.** `datasus-fetcher sync --docs` traz os PDFs de descrição dos campos — sem eles, códigos como `RACACOR=4` ou `CAUSABAS=I64` são opacos.
 - **Use `--dry-run` antes do download real.** Mostra tamanho total e número de arquivos. Evita surpresa de 50 GB.
 

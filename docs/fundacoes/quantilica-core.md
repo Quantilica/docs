@@ -20,9 +20,9 @@ uv add "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git"
 Os três blocos de construção que todo coletor do ecossistema usa:
 
 ```python
-from quantilica_core.http import HttpClient
-from quantilica_core.storage import LocalStorage
-from quantilica_core.manifests import DownloadManifest
+from quantilica.core.http import HttpClient
+from quantilica.core.storage import LocalStorage
+from quantilica.core.manifests import DownloadManifest
 
 # 1. HTTP resiliente — retry com backoff exponencial e jitter
 client = HttpClient(attempts=3)
@@ -78,7 +78,7 @@ Com o core, esses são problemas resolvidos uma vez para sempre. O fetcher fica 
 ## Princípios
 
 1. **Neutralidade de domínio** — o core nunca sabe que existe IBGE, DATASUS, INMET.
-2. **Leveza** — dependências mínimas no núcleo; integrações pesadas ficam em [`quantilica-io`](quantilica-io.md).
+2. **Leveza** — dependências mínimas no núcleo; integrações pesadas ficam em [`quantilica-analytics`](quantilica-analytics.md).
 3. **Estabilidade** — alta cobertura de testes em toda a infraestrutura.
 4. **DX** — APIs tipadas e tratamento de erro consistente em toda a organização.
 

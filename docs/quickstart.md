@@ -108,7 +108,7 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
 
     Saída esperada: dezenas de arquivos `.dbc` em `./dados/sih-rd/`, com retry automático, verificação de integridade e versionamento por data.
 
-    Para abrir os `.dbc`, use o leitor `pyreaddbc` ou a conversão via [`quantilica-io`](fundacoes/quantilica-io.md).
+    Para abrir os `.dbc`, use o leitor `pyreaddbc` ou a conversão via [`quantilica-analytics`](fundacoes/quantilica-analytics.md).
 
     **Próximos passos:**
 
@@ -143,7 +143,7 @@ Toda ferramenta Quantilica entrega o mesmo conjunto de garantias — você não 
 
 - **Retry automático** com backoff exponencial em qualquer erro de rede.
 - **Proveniência SHA-256** em manifestos `.manifest.json` ao lado de cada arquivo baixado.
-- **Saída tipada** em Parquet (via [`quantilica-io`](fundacoes/quantilica-io.md)) ou dataclasses Python.
+- **Saída tipada** em Parquet (via [`quantilica-analytics`](fundacoes/quantilica-analytics.md)) ou dataclasses Python.
 - **Logging estruturado** consistente em toda a stack.
 - **Idempotência** — rodar duas vezes não baixa duas vezes.
 

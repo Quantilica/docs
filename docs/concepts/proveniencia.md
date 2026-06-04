@@ -91,14 +91,14 @@ Para análises críticas, **versionar o `.manifest.json` no git** ao lado do có
 
 ## Proveniência embarcada em Parquet
 
-O [`quantilica-io`](../fundacoes/quantilica-io.md) leva a ideia um passo adiante: ao converter para Parquet, ele injeta o manifesto no **header key-value do próprio arquivo**.
+O [`quantilica-analytics`](../fundacoes/quantilica-analytics.md) leva a ideia um passo adiante: ao converter para Parquet, ele injeta o manifesto no **header key-value do próprio arquivo**.
 
 ```python
 import json
 from pathlib import Path
 import polars as pl
-from quantilica_core.manifests import DownloadManifest
-from quantilica_io.writer import to_parquet
+from quantilica.core.manifests import DownloadManifest
+from quantilica.analytics.writer import to_parquet
 
 data = json.loads(Path("dados/raw/dataset.csv.manifest.json").read_text())
 manifest = DownloadManifest(**{k: v for k, v in data.items()
@@ -131,5 +131,5 @@ Quando você re-roda um pipeline e o `sha256` do novo download não bate com o d
 
 - **[Princípios de Design — Reprodutibilidade](principios.md#reprodutibilidade)** — o princípio que justifica esse desenho.
 - **[`quantilica-core`](../fundacoes/quantilica-core.md)** — onde os manifestos vivem.
-- **[`quantilica-io`](../fundacoes/quantilica-io.md)** — injeção em Parquet.
+- **[`quantilica-analytics`](../fundacoes/quantilica-analytics.md)** — injeção em Parquet.
 - **[`sidra-sql`](../ibge/sidra-sql.md)** — proveniência em nível de linha via SCD Type II no warehouse.

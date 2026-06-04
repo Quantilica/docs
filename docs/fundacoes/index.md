@@ -21,7 +21,7 @@ Base estável e leve. Sem dependências binárias pesadas.
 
 → [Documentação completa](quantilica-core.md)
 
-## `quantilica-io` — camada analítica
+## `quantilica-analytics` — camada analítica
 
 A ponte entre arquivos brutos e ativos analíticos prontos.
 
@@ -30,7 +30,7 @@ A ponte entre arquivos brutos e ativos analíticos prontos.
 - Data Contracts: validação de schema na ingestão.
 - Proveniência injetada no header do Parquet — time travel real.
 
-→ [Documentação completa](quantilica-io.md)
+→ [Documentação completa](quantilica-analytics.md)
 
 ---
 
@@ -65,7 +65,7 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 | Camada | Pacote | Depende de | Tamanho | Para quem |
 |---|---|---|---|---|
 | I/O resiliente | `quantilica-core` | stdlib + httpx | Leve | Todo coletor, todo usuário |
-| Analítica | `quantilica-io` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
+| Analítica | `quantilica-analytics` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
 | CLI unificada | `quantilica-cli` | core | Leve | Quem interage via linha de comando |
 | Nuvem (Sincronização) | `quantilica-cloud` | core + cli (runtime) | Leve | Quem quer sincronizar manifestos locais |
 | Catálogo unificado | `quantilica-catalog` | io + Polars | Pesado | Quem cruza dados de múltiplas fontes |

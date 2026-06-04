@@ -47,7 +47,7 @@ A infraestrutura da Quantilica repousa sobre o princípio da **Neutralidade de D
 A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
 1.  **`quantilica-core` (Infraestrutura de I/O):** Base estável e sem dependências binárias pesadas. Contém clientes HTTP/FTP resilientes, gerenciamento de manifestos (proveniência) e interface de storage.
-2.  **`quantilica-io` (Data Access Layer):** Camada analítica que depende do Polars. Responsável por leitura multi-formato, conversão otimizada para Parquet e contratos de dados (schemas).
+2.  **`quantilica-analytics` (Data Access Layer):** Camada analítica que depende do Polars. Responsável por leitura multi-formato, conversão otimizada para Parquet e contratos de dados (schemas).
 
 ### Tipos de Pacotes no Ecossistema
 

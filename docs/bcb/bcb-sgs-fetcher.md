@@ -289,7 +289,7 @@ O comando `series metadata` usa um subdiretório particionado por mês:
         └── 000001_full.json
 ```
 
-Todos os arquivos são escritos atomicamente via `quantilica_core.files`.
+Todos os arquivos são escritos atomicamente via `quantilica.core.files`.
 
 !!! note "Saída em Parquet?"
 

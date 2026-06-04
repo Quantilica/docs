@@ -160,11 +160,11 @@ write_table_to_csv(accounts, Path("output/rtn_1_2_accounts.csv"))
 
 ### Gravar Parquet com proveniência
 
-Para saída tipada e com manifesto embutido no header, use `write_table_to_parquet`. Ele aplica o `DataContract` da planilha (via `build_contract`) e escreve via `quantilica-io`:
+Para saída tipada e com manifesto embutido no header, use `write_table_to_parquet`. Ele aplica o `DataContract` da planilha (via `build_contract`) e escreve via `quantilica-analytics`:
 
 ```python
 from pathlib import Path
-from quantilica_core.manifests import DownloadManifest
+from quantilica.core.manifests import DownloadManifest
 from rtn_fetcher import read_sheet, write_table_to_parquet
 
 filepath = Path("data/rtn_202412301200.xlsx")
@@ -181,7 +181,7 @@ write_table_to_parquet(data, Path("output/rtn_2_1.parquet"), "2.1",
                       manifest=manifest)
 ```
 
-O contrato é derivado de `SHEET_CONFIGS[sheet]`: `year` para anuais, `year/month` para mensais, `year/quarter` para trimestrais. Veja [Data Contracts](../fundacoes/quantilica-io.md#data-contracts).
+O contrato é derivado de `SHEET_CONFIGS[sheet]`: `year` para anuais, `year/month` para mensais, `year/quarter` para trimestrais. Veja [Data Contracts](../fundacoes/quantilica-analytics.md#data-contracts).
 
 ### Ler cada aba suportada
 

@@ -32,7 +32,7 @@ fact_observation  (o que? quando? onde? quanto?)
 Cada linha responde: *qual foi o valor do indicador X no tempo T no lugar G?*
 
 ```python
-from quantilica_catalog import OBSERVATION_CONTRACT
+from quantilica.catalog import OBSERVATION_CONTRACT
 # Schema: indicator_id (Utf8), date (Date), geo_id (Utf8?),
 #         value (Float64?), date_end (Date?)
 ```
@@ -50,8 +50,8 @@ from quantilica_catalog import OBSERVATION_CONTRACT
 Os adaptadores convertem DataFrames no formato de cada fetcher para o formato canônico:
 
 ```python
-from quantilica_catalog.adapters.bcb_sgs import to_observations as sgs_obs
-from quantilica_catalog.adapters.sidra import to_observations as sidra_obs
+from quantilica.catalog.adapters.bcb_sgs import to_observations as sgs_obs
+from quantilica.catalog.adapters.sidra import to_observations as sidra_obs
 import polars as pl
 
 # BCB-SGS → observações canônicas (sem geo_id — série nacional)
@@ -76,7 +76,7 @@ Adaptadores disponíveis e formato do `indicator_id` gerado:
 ## Dimensão de Indicadores
 
 ```python
-from quantilica_catalog import IndicatorEntry, DataCategory, Frequency, entries_to_frame
+from quantilica.catalog import IndicatorEntry, DataCategory, Frequency, entries_to_frame
 
 entries = [
     IndicatorEntry(
@@ -102,7 +102,7 @@ dim_df = entries_to_frame(entries)
 ### Entidades — `dim_geo_entity`
 
 ```python
-from quantilica_catalog import GeoEntityEntry, GeoType, state_id, municipality_id
+from quantilica.catalog import GeoEntityEntry, GeoType, state_id, municipality_id
 
 entries = [
     GeoEntityEntry(geo_id=state_id("SP"), geo_type=GeoType.TERRITORY, name="São Paulo"),
@@ -127,7 +127,7 @@ entries = [
 ### Hierarquias — `dim_geo_relationship`
 
 ```python
-from quantilica_catalog import GeoRelationshipEntry, RelType, GeoSystem
+from quantilica.catalog import GeoRelationshipEntry, RelType, GeoSystem
 
 rel = GeoRelationshipEntry(
     from_geo_id=municipality_id("3550308"),
@@ -144,7 +144,7 @@ rel = GeoRelationshipEntry(
 ### Códigos externos — `dim_geo_code`
 
 ```python
-from quantilica_catalog import GeoCodeEntry
+from quantilica.catalog import GeoCodeEntry
 
 code = GeoCodeEntry(geo_id=state_id("SP"), system="ibge", code="35")
 ```
@@ -155,7 +155,7 @@ Para criar as tabelas de dimensão geográfica num banco PostgreSQL:
 
 ```python
 from sqlalchemy import text
-from quantilica_catalog.sql.ddl import CREATE_ALL_GEO_TABLES
+from quantilica.catalog.sql.ddl import CREATE_ALL_GEO_TABLES
 
 with engine.connect() as conn:
     conn.execute(text(CREATE_ALL_GEO_TABLES))
@@ -172,7 +172,7 @@ O catálogo faz isso **uma vez**, tornando os dados inter-operáveis por constru
 
 ## Saiba Mais
 
-- [quantilica-io](quantilica-io.md) — os `DataContract`s em que o catálogo se apoia
+- [quantilica-analytics](quantilica-analytics.md) — os `DataContract`s em que o catálogo se apoia
 - [Proveniência & Manifestos](../concepts/proveniencia.md) — rastreabilidade dos dados
 - [Cookbook — Análise econômica multi-fonte](../cookbook/analise-economica-multi-fonte.md)
 

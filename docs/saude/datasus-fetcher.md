@@ -11,7 +11,7 @@ Dados de vigilância de saúde brasileira do DATASUS (Departamento de Dados de S
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **`.dbc` não é `.dbf`.** É um formato proprietário compactado do DATASUS. Para abrir em Python, use `pyreaddbc` (ou converta com [`quantilica-io`](../fundacoes/quantilica-io.md)).
+    - **`.dbc` não é `.dbf`.** É um formato proprietário compactado do DATASUS. Para abrir em Python, use `pyreaddbc` (ou converta com [`quantilica-analytics`](../fundacoes/quantilica-analytics.md)).
     - **Nome de arquivo carrega significado.** `RDSP2001.dbc` = AIH Reduzido, SP, 2020, mês 01. O `datasus-fetcher` parseia isso para filtrar antes de baixar — não tente regex manual.
     - **FTP cai. Muito.** O servidor `ftp.datasus.gov.br` tem janelas de instabilidade quase diárias, especialmente em horário comercial. O retry é automático, mas reduza `--threads` se cair direto.
     - **Volume é colossal.** Baixar tudo são 320+ GB. Sempre filtre por `--start`/`--end` e/ou `--regions` no primeiro recorte; aumente depois.
