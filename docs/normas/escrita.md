@@ -139,7 +139,6 @@ MIT — veja [LICENSE](LICENSE).
 | `pdet-fetcher` | Data Package | PT | ✓ |
 | `quantilica-catalog` | Infraestrutura | PT | ✓ |
 | `quantilica-cli` | CLI | PT | ✓ |
-| `quantilica-cloud` | Plugin CLI | PT | ✓ |
 | `quantilica-core` | Infraestrutura | PT | ✓ |
 | `quantilica-analytics` | Infraestrutura | PT | ✓ |
 | `rtn-fetcher` | Data Package | PT | ✓ |

@@ -123,7 +123,6 @@ antigos precisam ser atualizados.
 
 ## 2026-05 — Novos pacotes de infraestrutura e integração analítica
 
-- **`quantilica-cloud`** lançado: plugin CLI para sincronizar manifestos de download com o catálogo na nuvem. Registrado via `quantilica.commands`; acessível como `quantilica cloud login/sync/status`. Offline-first por design.
 - **`quantilica-catalog`** lançado: modelo de observação canônico (star schema) com adaptadores para BCB-SGS, RTN, INMET, Tesouro Direto e SIDRA. Resolve o cruzamento multi-fonte com um único `JOIN` em `indicator_id + geo_id + date`. O modelo geográfico foi posteriormente generalizado (breaking change interna) para suportar múltiplas granularidades geográficas.
 - **`quantilica-analytics` 0.2.0** acrescentou `read_brazilian_csv`: leitura robusta de CSV com encoding CP-1252/Latin-1, separadores `;`, datas em DD/MM/AAAA e notação decimal brasileira — em uso pelos fetchers que consomem planilhas do governo.
 - **`quantilica-analytics` integrado nos fetchers**: `bcb-sgs-fetcher`, `rtn-fetcher` e `inmet-fetcher` agora exportam Parquet tipado via `save_parquet` / `write_to_parquet` com `DataContract` e manifesto embutido no header.
@@ -184,4 +183,3 @@ Para releases granulares (PATCH/MINOR/MAJOR), consulte o `CHANGELOG.md` ou as re
 - [quantilica-analytics](https://github.com/Quantilica/quantilica-analytics/releases)
 - [quantilica-cli](https://github.com/Quantilica/quantilica-cli/releases)
 - [quantilica-catalog](https://github.com/Quantilica/quantilica-catalog/releases)
-- [quantilica-cloud](https://github.com/Quantilica/quantilica-cloud/releases)

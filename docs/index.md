@@ -71,7 +71,6 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
-| **[quantilica-cloud](fundacoes/quantilica-cloud.md)** | Sincronização opt-in de manifestos com o catálogo na nuvem |
 | **[quantilica-catalog](fundacoes/quantilica-catalog.md)** | Modelo canônico de observações para cruzamento multi-fonte |
 
 ---

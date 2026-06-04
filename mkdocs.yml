@@ -63,7 +63,6 @@ nav:
       - quantilica-core: fundacoes/quantilica-core.md
       - quantilica-analytics: fundacoes/quantilica-analytics.md
       - quantilica-cli: fundacoes/quantilica-cli.md
-      - quantilica-cloud: fundacoes/quantilica-cloud.md
       - quantilica-catalog: fundacoes/quantilica-catalog.md
 
   - Domínios & Ferramentas:

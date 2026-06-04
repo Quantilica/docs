@@ -28,7 +28,7 @@ Em todos os casos, **nunca** versionar `.venv/`, `.uv-cache/` ou outros artefato
 
 ## 3. Template canônico — pacote Python (library / fetcher)
 
-Use este template em pacotes-biblioteca: `quantilica-core`, `quantilica-analytics`, `quantilica-cli`, `quantilica-cloud`, `quantilica-catalog`, e em todos os fetchers (`sidra-fetcher`, `comex-fetcher`, `datasus-fetcher`, etc.).
+Use este template em pacotes-biblioteca: `quantilica-core`, `quantilica-analytics`, `quantilica-cli`, `quantilica-catalog`, e em todos os fetchers (`sidra-fetcher`, `comex-fetcher`, `datasus-fetcher`, etc.).
 
 ```gitignore
 # Build / packaging

@@ -46,12 +46,6 @@ Veja o desenho completo na [Arquitetura do Ecossistema](../concepts/arquitetura.
 
 [`quantilica-cli`](quantilica-cli.md) é o ponto de entrada unificado do ecossistema: descobre fetchers instalados via entry points e os monta como subcomandos. Não é uma fundação no sentido de "todo coletor depende dela" — é um **host** que consome os fetchers. Foi incluído na seção Fundações por afinidade arquitetural (compartilha o mesmo padrão de design domain-neutral).
 
-## `quantilica-cloud` — sincronização com a nuvem
-
-Plugin opt-in que sincroniza os manifestos de download locais com um catálogo na nuvem. Registrado sob `quantilica.commands`, expõe os subcomandos `quantilica cloud login`, `quantilica cloud sync` e `quantilica cloud status`. A coleta de dados nunca depende deste pacote.
-
-→ [Documentação completa](quantilica-cloud.md)
-
 ## `quantilica-catalog` — modelo canônico de observações
 
 Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation` + dimensões de indicador e geográfica) e adaptadores que convertem DataFrames de cada fetcher para esse formato. Torna qualquer `JOIN` entre IBGE, BCB, INMET e demais fontes trivial.
@@ -67,5 +61,4 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 | I/O resiliente | `quantilica-core` | stdlib + httpx | Leve | Todo coletor, todo usuário |
 | Analítica | `quantilica-analytics` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
 | CLI unificada | `quantilica-cli` | core | Leve | Quem interage via linha de comando |
-| Nuvem (Sincronização) | `quantilica-cloud` | core + cli (runtime) | Leve | Quem quer sincronizar manifestos locais |
 | Catálogo unificado | `quantilica-catalog` | io + Polars | Pesado | Quem cruza dados de múltiplas fontes |
