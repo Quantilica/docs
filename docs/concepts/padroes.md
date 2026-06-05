@@ -588,6 +588,10 @@ def main():
 - **`batch_progress` de `quantilica.core.progress`**: não crie barras tqdm diretamente no CLI.
 - **`on_file_done` callback**: atualize a barra conforme cada arquivo termina (incluindo skips), não apenas no final.
 
+Este padrão descreve o *porquê* e a forma geral. As regras completas de implementação —
+estrutura de `cli.py`/`plugin.py`, logging, Rich, registro de entry points e checklist —
+estão na referência do contribuidor [Padronização de CLI para Fetchers](../normas/cli-fetchers.md).
+
 ### Fetchers que adotam este padrão
 
 - `datasus-fetcher` — implementação de referência

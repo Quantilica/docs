@@ -149,20 +149,12 @@ from quantilica.catalog import GeoCodeEntry
 code = GeoCodeEntry(geo_id=state_id("SP"), system="ibge", code="35")
 ```
 
-## DDL PostgreSQL
+## Persistência em PostgreSQL
 
-Para criar as tabelas de dimensão geográfica num banco PostgreSQL:
-
-```python
-from sqlalchemy import text
-from quantilica.catalog.sql.ddl import CREATE_ALL_GEO_TABLES
-
-with engine.connect() as conn:
-    conn.execute(text(CREATE_ALL_GEO_TABLES))
-    conn.commit()
-```
-
-Cria `dim_geo_entity`, `dim_geo_relationship` e `dim_geo_code` com índices otimizados para lookup por código e consultas de hierarquia.
+Para um data warehouse, o pacote fornece o DDL pronto (`CREATE_ALL_GEO_TABLES` em
+`quantilica.catalog.sql.ddl`), que cria as três tabelas de dimensão geográfica —
+`dim_geo_entity`, `dim_geo_relationship` e `dim_geo_code` — com índices otimizados para
+lookup por código e consultas de hierarquia.
 
 ## Por que um modelo canônico?
 

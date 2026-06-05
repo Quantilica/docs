@@ -13,6 +13,13 @@ A curva de juros é o gráfico mais cobiçado da renda fixa brasileira: taxa con
 
 Para uma data escolhida, a curva atual de cada classe de título (Selic, Prefixado, IPCA+). Em uma execução, dá para passar uma série de datas e comparar a evolução da inclinação.
 
+![Yield curve do Tesouro Direto — snapshot](../assets/generated/yield_curve_snapshot.svg)
+
+Séries temporais por vencimento:
+
+![Tesouro Selic — taxa de compra histórica](../assets/generated/yield_curve_selic.svg)
+![Tesouro IPCA+ — taxa de compra histórica](../assets/generated/yield_curve_ipca.svg)
+
 ## Setup
 
 ```bash
@@ -38,11 +45,13 @@ asyncio.run(
     )
 )
 
-csv = max(dest.glob("taxas-*.csv"), key=lambda p: p.stat().st_mtime)
+csv = max(dest.rglob("taxas-*.csv"), key=lambda p: p.stat().st_mtime)
 df = reader.read_prices(csv)
 
+# Usa a data mais recente disponível no dataset
+latest = df[C.REFERENCE_DATE.value].max()
 snapshot = (
-    df.filter(pl.col(C.REFERENCE_DATE.value) == pl.lit(date(2026, 5, 9)))
+    df.filter(pl.col(C.REFERENCE_DATE.value) == latest)
       .select(C.BOND_TYPE.value, C.MATURITY_DATE.value, C.BUY_YIELD.value)
       .drop_nulls()
 )
@@ -56,7 +65,7 @@ chart = (
         color=f"{C.BOND_TYPE.value}:N",
         tooltip=[C.BOND_TYPE.value, C.MATURITY_DATE.value, C.BUY_YIELD.value],
     )
-    .properties(width=700, height=400, title="Curva de juros do Tesouro Direto — 2026-05-09")
+    .properties(width=700, height=400, title=f"Curva de juros do Tesouro Direto — {latest}")
 )
 
 chart.save("curva.html")
@@ -83,4 +92,4 @@ chart.save("curva.html")
 ## Veja também
 
 - [tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)
-- [Cálculo de Retornos](../tesouro/calculo-retornos.md)
+- [Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)

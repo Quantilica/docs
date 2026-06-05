@@ -332,34 +332,11 @@ load_dados(engine, storage, data_files)
 
 ## Governança de Dados: Tratamento de Revisões
 
-IBGE frequentemente publica revisões de dados. Warehouse preserva histórico ao invés de sobrescrever.
-
-### Como Funcionam as Dimensões que Mudam Lentamente (SCD Type II)
-
-**Cenário**: IBGE revisa PIB Q3 2020 em 2026-01-15
-
-```sql
--- Em 2024-01-01 (dados originais ingeridos)
--- dados row: id=1, v='1234.56', modificacao='2024-01-01', ativo=TRUE
-
--- Em 2026-01-15 (revisão IBGE detectada durante re-ingestão)
--- O ON CONFLICT DO NOTHING previne sobrescrita.
--- Nova linha é inserida com modificacao atualizada:
-
--- 1. Marcar versão antiga como inativa
-UPDATE ibge_sidra.dados
-SET ativo = FALSE
-WHERE tabela_sidra_id = '1620'
-  AND localidade_id = 6
-  AND periodo_id = 123
-  AND ativo = TRUE;
-
--- 2. Inserir nova versão
-INSERT INTO ibge_sidra.dados
-  (tabela_sidra_id, localidade_id, dimensao_id, periodo_id, v, modificacao, ativo)
-VALUES
-  ('1620', 6, 1, 123, '1234.89', '2026-01-15', TRUE);
-```
+IBGE frequentemente publica revisões de dados. O warehouse preserva o histórico em vez de
+sobrescrever, via SCD Type II nas colunas `ativo` + `modificacao` — o mecanismo de
+desativar-e-inserir está detalhado em
+[Bulk Load & Versionamento de Revisões](../concepts/bulk-load.md). Na prática, isso permite
+duas consultas:
 
 ### Consultando Snapshots Históricos
 
@@ -412,69 +389,26 @@ for row in history:
 
 ---
 
-## Ingestão Streaming: Análise Profunda de Performance
+## Ingestão Streaming
 
-### Problema: INSERT Tradicional
+A carga usa `COPY FROM STDIN` em **dois passes** (resolve dimensões em memória, depois faz
+o streaming dos fatos para staging) — ~400k linhas/s, 10M linhas em segundos contra horas
+com `INSERT` tradicional. O mecanismo, os diagramas e o comparativo de performance estão
+em [Bulk Load & Versionamento de Revisões](../concepts/bulk-load.md).
 
-```python
-# ❌ Inserção linha-por-linha (abordagem ingênua)
-for row in data_generator():
-    conn.execute(
-        insert(dados).values(
-            localidade_id=row["localidade_id"],
-            dimensao_id=row["dimensao_id"],
-            v=row["v"],
-        )
-    )
-conn.commit()
-
-# Tempo: Dias para 10M linhas
-# RAM: Explode (mantém todas linhas em memória)
-# I/O: Pior possível (milhões de round-trips)
-```
-
-### Solução: Streaming em Dois Passes
-
-```mermaid
-graph TD
-    subgraph P1 [Pass 1: Resolver Dimensões]
-        P1a[Carregar localidade em memória]
-        P1b[Carregar dimensao em memória]
-        P1c[Mapear códigos string → IDs FK numéricos]
-    end
-
-    subgraph P2 [Pass 2: Stream em Lote para Staging]
-        P2a[Abrir túnel PostgreSQL COPY]
-        P2b[Escrever linhas binárias para staging]
-        P2c[UPSERT Atômico: ON CONFLICT DO NOTHING]
-    end
-
-    subgraph P3 [Pass 3: Validar & Promover]
-        P3a[Validação de integridade referencial]
-        P3b[Trocar staging → produção atomicamente]
-    end
-
-    P1 --> P2
-    P2 --> P3
-```
-Tempo: Segundos para 10M linhas
-RAM: Limitada (streaming, não tudo-em-memória)
-I/O: Ótima (túnel único, protocolo binário)
-
-### Exemplo de Uso
+Em código, toda a carga fica atrás de um único helper:
 
 ```python
-from sidra_sql.database import load_dados
+from sidra_sql.database import get_engine, load_dados
 from sidra_sql.storage import Storage
 from sidra_sql.config import Config
-from sidra_sql.database import get_engine
 
 config = Config()
 engine = get_engine(config)
 storage = Storage.default(config)
 
-# data_files is the list returned by Fetcher.download_table()
-load_dados(engine, storage, data_files)
+# data_files é a lista retornada por Fetcher.download_table()
+load_dados(engine, storage, data_files)  # COPY FROM STDIN, two-pass
 ```
 
 ---
@@ -544,128 +478,19 @@ Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local. Com `--globa
 
 ---
 
-### `Config` — Configuração em Tempo de Execução
+### API Python (resumo)
 
-```python
-from sidra_sql.config import Config
+Os pontos de entrada do pacote, na ordem de um ETL. Assinaturas completas no
+[código-fonte do repositório](https://github.com/Quantilica/sidra-sql).
 
-config = Config()  # lê config.ini
-```
-
-Lê `config.ini` do diretório de trabalho atual. Atributos principais:
-
-| Atributo | Chave ini | Descrição |
-|-----------|---------|-------------|
-| `config.data_dir` | `storage.data_dir` | Raiz de armazenamento local para arquivos JSON |
-| `config.db_user` | `database.user` | Usuário PostgreSQL |
-| `config.db_password` | `database.password` | Senha PostgreSQL |
-| `config.db_host` | `database.host` | Host PostgreSQL |
-| `config.db_port` | `database.port` | Porta PostgreSQL |
-| `config.db_name` | `database.dbname` | Nome do banco de dados |
-| `config.db_schema` | `database.schema` | Schema (padrão: `ibge_sidra`) |
-
----
-
-### `Fetcher` — Extração de Dados
-
-```python
-from sidra_sql.sidra import Fetcher
-from sidra_sql.storage import Storage
-
-storage = Storage.default(config)
-
-with Fetcher(config, storage=storage, max_workers=4) as fetcher:
-    ...
-```
-
-**Métodos Principais:**
-
-| Método | Propósito |
-|--------|-----------|
-| `fetcher.fetch_metadata(tabela_sidra)` | Buscar metadados completos da tabela (territórios, períodos, variáveis) |
-| `fetcher.download_table(tabela_sidra, territories, variables, classifications)` | Baixar todos os períodos; retorna lista de `{"filepath": Path, "modificacao": str}` |
-
-Parâmetros de `download_table`:
-
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-------------|
-| `tabela_sidra` | str | Código da tabela SIDRA |
-| `territories` | dict[str, list[str]] | Nível territorial → códigos (lista vazia = todos) |
-| `variables` | list[str] \| None | Códigos de variáveis; `None` = todos |
-| `classifications` | dict[str, list[str]] \| None | Classificação → códigos de categorias |
-
----
-
-### `Storage` — Gerenciamento de Arquivos Locais
-
-```python
-from sidra_sql.storage import Storage
-
-storage = Storage.default(config)         # usa config.data_dir
-storage = Storage("/custom/path")         # raiz explícita
-```
-
-**Métodos Principais:**
-
-| Método | Propósito |
-|--------|-----------|
-| `storage.exists(parameter, modification)` | Verificar se arquivo já foi baixado |
-| `storage.write_data(data, parameter, modification)` | Salvar arquivo de dados JSON |
-| `storage.read_data(filepath)` | Carregar arquivo de dados previamente salvo |
-| `storage.write_metadata(agregado)` | Salvar metadados da tabela JSON |
-| `storage.read_metadata(agregado)` | Carregar metadados da tabela |
-
----
-
-### `TomlScript` — Executor de ETL Declarativo
-
-```python
-from pathlib import Path
-from sidra_sql.toml_runner import TomlScript
-
-script = TomlScript(
-    config,
-    toml_path=Path("pipelines/economic/fetch.toml"),
-    max_workers=4,
-    force_metadata=False,
-)
-script.run()  # baixar + carregar todas as tabelas declaradas no TOML
-```
-
-**Parâmetros:**
-
-| Parâmetro | Tipo | Padrão | Descrição |
-|-----------|------|--------|----------|
-| `config` | Config | | Configuração em tempo de execução |
-| `toml_path` | Path | | Caminho para `fetch.toml` |
-| `max_workers` | int | 4 | Threads de download paralelo |
-| `force_metadata` | bool | False | Re-buscar metadados mesmo se em cache |
-
----
-
-### `TransformRunner` — Executor de Transformação SQL
-
-```python
-from sidra_sql.transform_runner import TransformRunner
-
-runner = TransformRunner(config, toml_path=Path("pipelines/economic/transform.toml"))
-runner.run()
-```
-
-Lê `transform.toml` + arquivo `.sql` pareado. Executa a SELECT SQL e
-materializa o resultado na tabela ou view alvo.
-
----
-
-### `database` — Auxiliares de Banco de Dados de Baixo Nível
-
-```python
-from sidra_sql.database import get_engine, save_agregado, load_dados
-
-engine = get_engine(config)
-save_agregado(engine, metadata)          # upsert metadados de tabela/período/localidade
-load_dados(engine, storage, data_files)  # bulk load via COPY FROM STDIN
-```
+| Símbolo | Papel |
+|---|---|
+| `Config()` | Lê `config.ini` do diretório atual (storage + conexão PostgreSQL) |
+| `Fetcher(config, storage=, max_workers=)` | Extração: `fetch_metadata(tabela)`, `download_table(tabela, territories, variables)` |
+| `Storage.default(config)` | Arquivos JSON locais: `write_data`, `read_data`, `write_metadata` |
+| `TomlScript(config, toml_path)` | ETL declarativo: baixa + carrega as tabelas do `fetch.toml` |
+| `TransformRunner(config, toml_path)` | Executa o `transform.toml` + `.sql` pareado |
+| `get_engine`, `save_agregado`, `load_dados` | Helpers de banco: engine, upsert de metadados, bulk load via COPY |
 
 ---
 
@@ -733,73 +558,12 @@ path = "pib_municipal"
 
 ## Schema Dimensional
 
-### Tabelas de Banco de Dados (schema: `ibge_sidra`)
-
-**`tabela_sidra`** — Registro de tabela SIDRA
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | text PK | Código da tabela SIDRA |
-| `nome` | text | Nome da tabela |
-| `periodicidade` | text | Frequência de atualização |
-| `ultima_atualizacao` | date | Última atualização |
-| `metadados` | jsonb | Objeto de metadados completo |
-
-**`localidade`** — Dimensão territorial
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | bigint PK | Auto-incremento |
-| `nc` | text | Código de nível territorial (ex: `N6`) |
-| `nn` | text | Nome de nível territorial |
-| `d1c` | text | Código de unidade territorial |
-| `d1n` | text | Nome de unidade territorial |
-
-Constraint único: `(nc, d1c)`
-
-**`periodo`** — Dimensão de tempo
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | integer PK | Auto-incremento |
-| `codigo` | text | Código do período |
-| `frequencia` | text | Frequência (mensal, trimestral…) |
-| `literals` | text[] | Rótulos de período brutos |
-| `data_inicio` / `data_fim` | date | Intervalo de datas do período |
-| `ano` / `ano_fim` | integer | Ano(s) |
-| `semestre` | smallint | 1-2 |
-| `trimestre` | smallint | 1-4 |
-| `mes` | smallint | 1-12 |
-
-Constraint único: `(codigo, literals)`
-
-**`dimensao`** — Dimensão variável × classificação
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | bigint PK | Auto-incremento |
-| `mc` | text | ID de unidade de medida |
-| `mn` | text | Nome de unidade de medida |
-| `d2c` / `d2n` | text | Código / nome de variável |
-| `d4c`–`d9c` | text \| null | Códigos de categorias (até 6 classificações) |
-| `d4n`–`d9n` | text \| null | Nomes de categorias |
-
-Constraint único: `(mc, d2c, d4c, d5c, d6c, d7c, d8c, d9c)`
-
-**`dados`** — Tabela de fatos
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | bigint PK | Auto-incremento |
-| `tabela_sidra_id` | text FK | → `tabela_sidra.id` |
-| `localidade_id` | bigint FK | → `localidade.id` |
-| `dimensao_id` | bigint FK | → `dimensao.id` |
-| `periodo_id` | integer FK | → `periodo.id` |
-| `modificacao` | date | Data de publicação IBGE |
-| `ativo` | boolean | Flag de registro ativo (SCD) |
-| `v` | text | Valor de dados |
-
-Constraint único: `(tabela_sidra_id, localidade_id, dimensao_id, periodo_id)`
+O star schema (diagrama acima) vive no schema `ibge_sidra`: três dimensões —
+`localidade` (malha territorial), `periodo` (tempo normalizado com
+`ano`/`mes`/`trimestre`/`data_inicio`/`data_fim`) e `dimensao` (variável × até 6
+classificações) — mais a tabela-fato enxuta `dados` (FKs + `modificacao` + `ativo` + `v`) e
+o registro `tabela_sidra` (metadados em JSONB). As colunas e constraints completas de cada
+tabela estão nos [modelos SQLAlchemy do repositório](https://github.com/Quantilica/sidra-sql).
 
 ### Exemplo de Consulta Analítica
 

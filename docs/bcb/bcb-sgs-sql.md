@@ -344,30 +344,10 @@ database.load_series_data(engine, rows)
 ## Governança de Dados: Histórico sem Auditoria
 
 O BCB revisa valores. O warehouse preserva o histórico em vez de sobrescrever — e **sem**
-uma tabela de auditoria separada.
-
-### Como funciona o soft-versioning
-
-**Cenário**: o valor do IPCA de 2020-01-01 muda numa nova divulgação.
-
-```sql
--- Carga inicial: 1 linha ativa
--- series_data: id=1, series_id=433, date='2020-01-01', value=0.21,
---              loaded_at='2024-01-01', ativo=TRUE
-
--- Nova carga com valor revisado (0.25). database.load_series_data:
--- 1. _DEACTIVATE — desativa a anterior (valor difere)
-UPDATE series_data SET ativo = FALSE
-WHERE series_id = 433 AND date = '2020-01-01'
-  AND date_end IS NOT DISTINCT FROM NULL
-  AND ativo = TRUE AND value IS DISTINCT FROM 0.25;
-
--- 2. _INSERT — insere a revisão como nova linha ativa
-INSERT INTO series_data (series_id, date, date_end, value, loaded_at, ativo)
-VALUES (433, '2020-01-01', NULL, 0.25, now(), TRUE);
-```
-
-Recarregar o mesmo valor é um no-op: nem desativa, nem insere (zero churn).
+uma tabela de auditoria separada — via soft-versioning nas colunas `ativo` + `loaded_at`.
+O mecanismo de detecção-de-mudança (desativar-e-inserir, com no-op em recargas idênticas)
+está detalhado em [Bulk Load & Versionamento de Revisões](../concepts/bulk-load.md). Na
+prática, isso permite duas consultas:
 
 ### Consultando a verdade atual
 
@@ -407,31 +387,15 @@ with engine.connect() as conn:
 
 ---
 
-## Ingestão Streaming: COPY + detecção-de-mudança
+## Ingestão Streaming
 
-### Problema: INSERT tradicional
+Como a série é plana (sem dimensões com FK), a carga é **single-pass**: `COPY FROM STDIN`
+para staging, depois *deactivate-then-insert* (desativar a versão anterior antes de inserir
+a revisão, satisfazendo o índice único parcial). O mecanismo e a comparação com o modelo
+em dois passes do SIDRA estão em
+[Bulk Load & Versionamento de Revisões](../concepts/bulk-load.md).
 
-```python
-# ❌ Inserção linha-por-linha (abordagem ingênua)
-for sid, date, date_end, value in observations:
-    conn.execute(insert(series_data).values(...))
-conn.commit()
-# Lento + I/O de milhões de round-trips
-```
-
-### Solução: COPY para staging, depois deactivate-then-insert
-
-```mermaid
-graph TD
-    S1[COPY observações → _staging_series_data] --> S2[_ENSURE_SERIES: stubs de catálogo]
-    S2 --> S3[_DEACTIVATE: ativa anterior vira FALSE se valor difere]
-    S3 --> S4[_INSERT: linhas novas/alteradas viram ativa]
-```
-
-A ordem importa: desativar **antes** de inserir garante que a chave revisada não tenha
-linha ativa no momento do INSERT, satisfazendo o índice único parcial.
-
-### Exemplo de uso
+Toda a carga fica atrás de um único helper, que retorna a contagem de mudanças:
 
 ```python
 from bcb_sgs_sql import database
@@ -523,143 +487,20 @@ Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local; com `--globa
 
 ---
 
-### `Config` — Configuração em Tempo de Execução
+### API Python (resumo)
 
-```python
-from bcb_sgs_sql.config import Config
+Os pontos de entrada do pacote, agrupados pelas duas vias de acoplamento. Assinaturas
+completas no [código-fonte do repositório](https://github.com/Quantilica/bcb-sgs-sql).
 
-config = Config()  # lê config.ini
-```
-
-| Atributo | Chave ini | Descrição |
-|-----------|---------|-------------|
-| `config.data_dir` | `storage.data_dir` | Raiz de armazenamento local |
-| `config.db_user` | `database.user` | Usuário PostgreSQL |
-| `config.db_password` | `database.password` | Senha PostgreSQL |
-| `config.db_host` | `database.host` | Host PostgreSQL |
-| `config.db_port` | `database.port` | Porta PostgreSQL |
-| `config.db_name` | `database.dbname` | Nome do banco |
-| `config.db_schema` | `database.schema` | Schema (ex.: `bcb_sgs`) |
-
----
-
-### `sgs.Fetcher` — Extração de Dados (Via A)
-
-```python
-from bcb_sgs_sql import sgs
-from bcb_sgs_sql.storage import Storage
-
-storage = Storage.default(config)
-
-with sgs.Fetcher(storage, max_workers=4) as fetcher:
-    ...
-```
-
-**Métodos principais:**
-
-| Método | Propósito |
-|--------|-----------|
-| `fetcher.plan_series(selectors, engine=None)` | Resolve `[[series]]` (ids/themes/frequency) numa lista de IDs |
-| `fetcher.fetch_metadata(series_id, force=False)` | `(SeriesMetadataBasic, SeriesMetadataFull)`, com cache |
-| `fetcher.download_series(series_ids, frequency_by_id=None)` | Baixa observações em paralelo; retorna `list[SeriesPoint]` |
-
----
-
-### `loader` — Carregamento de Arquivos (Via B)
-
-```python
-from pathlib import Path
-from bcb_sgs_sql import loader
-
-loader.load(config, Path("./data/bcb-sgs"), kind="auto")
-```
-
-**Funções principais:**
-
-| Função | Propósito |
-|--------|-----------|
-| `loader.load(config, path, kind="auto", force_load=False)` | Entry point do comando `load` |
-| `loader.load_metadata_dir(config, path)` | Carrega `{id}_basic.json` / `_full.json` + temas |
-| `loader.load_observations(config, files, force_load=False)` | Carrega JSON de observações |
-| `loader.read_json_rows(path)` | Lê tuplas de um JSON (`series_id`/`date`/`value`/`date_end`) |
-| `loader.basic_to_metadata_row(basic, full=None, ...)` | Mapeia dataclass → linha de catálogo |
-
----
-
-### `Storage` — Gerenciamento de Arquivos Locais
-
-```python
-from bcb_sgs_sql.storage import Storage
-
-storage = Storage.default(config)   # usa config.data_dir
-storage = Storage("/custom/path")   # raiz explícita
-```
-
-| Método | Propósito |
-|--------|-----------|
-| `storage.write_series_data(rows, series_id, stamp)` | Salva observações como JSON |
-| `storage.read_series_data(filepath)` | Lê arquivo de observações |
-| `storage.read_series_dir()` | Última versão por série no diretório |
-| `storage.write_metadata(series_id, basic=, full=)` | Salva metadados JSON |
-| `storage.read_basic_metadata(series_id)` / `read_full_metadata` | Lê metadados em cache |
-| `storage.has_basic_metadata(series_id)` | Verifica cache de metadados |
-
----
-
-### `TomlScript` — Executor de ETL Declarativo
-
-```python
-from pathlib import Path
-from bcb_sgs_sql.toml_runner import TomlScript
-
-script = TomlScript(
-    config,
-    toml_path=Path("pipelines/precos/fetch.toml"),
-    max_workers=4,
-    force_metadata=False,
-    force_load=False,
-)
-script.run()  # metadados → observações → carga
-```
-
-| Parâmetro | Tipo | Padrão | Descrição |
-|-----------|------|--------|----------|
-| `config` | Config | | Configuração |
-| `toml_path` | Path | | Caminho para `fetch.toml` |
-| `max_workers` | int | 4 | Threads de download |
-| `force_metadata` | bool | False | Re-buscar metadados em cache |
-| `force_load` | bool | False | Recarregar arquivos já registrados |
-
----
-
-### `TransformRunner` — Executor de Transformação SQL
-
-```python
-from bcb_sgs_sql.transform_runner import TransformRunner
-
-runner = TransformRunner(config, toml_path=Path("pipelines/precos/transform.toml"))
-runner.run()
-```
-
-Lê `transform.toml` + `.sql` pareado; materializa o resultado como tabela (`replace`) ou
-view (`view`). Idêntico ao `sidra-sql`.
-
----
-
-### `database` — Auxiliares de Banco de Dados
-
-```python
-from bcb_sgs_sql import database
-
-engine = database.get_engine(config)
-database.create_all(engine)                          # cria tabelas
-database.upsert_theme_hierarchy(conn, hierarchy)     # árvore de temas (idempotente)
-database.save_series_metadata(engine, rows)          # upsert do catálogo
-database.load_series_data(engine, rows)              # carga soft-versioned via COPY
-database.get_loaded_filenames(engine, names)         # idempotência por arquivo
-```
-
-`load_series_data` retorna `(n_staging, n_inserted, n_deactivated)`.
+| Símbolo | Papel |
+|---|---|
+| `Config()` | Lê `config.ini` do diretório atual (storage + conexão PostgreSQL) |
+| `sgs.Fetcher(storage, max_workers=)` | **Via A**: `plan_series`, `fetch_metadata`, `download_series` |
+| `loader.load(config, path, kind=)` | **Via B**: carrega JSON de observações/metadados em disco, sem rede |
+| `Storage.default(config)` | Arquivos JSON locais: observações + metadados em cache |
+| `TomlScript(config, toml_path)` | ETL declarativo: metadados → observações → carga |
+| `TransformRunner(config, toml_path)` | Executa o `transform.toml` + `.sql` pareado |
+| `database.*` | `get_engine`, `create_all`, `save_series_metadata`, `load_series_data` (COPY soft-versioned) |
 
 ---
 
@@ -721,61 +562,20 @@ path = "precos"
 
 ## Schema
 
-Tabelas criadas no schema configurado (ex.: `bcb_sgs`) por
-`Base.metadata.create_all(engine)`.
+Quatro tabelas no schema configurado (ex.: `bcb_sgs`), criadas por
+`database.create_all(engine)` — o diagrama está acima:
 
-**`series_metadata`** — Catálogo de séries
+- **`series_metadata`** — catálogo da série (nomes, frequência, unidade, fonte,
+  `theme_hierarchy` com índice GIN, `search_vector` para busca full-text).
+- **`series_data`** — tabela-fato soft-versioned (`series_id`, `date`, `date_end`, `value`,
+  `loaded_at`, `ativo`), com índice único parcial
+  `(series_id, date, date_end) NULLS NOT DISTINCT WHERE ativo` — no máximo uma linha ativa
+  por chave.
+- **`theme`** — hierarquia de temas auto-referente (`name`, `level`, `parent_id`).
+- **`arquivo_carregado`** — rastreador de arquivos para a idempotência da Via B.
 
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `series_id` | integer PK | ID natural da série no SGS (não auto) |
-| `name`, `name_abbreviated`, `name_english`, `name_english_abbreviated` | text | Nomes |
-| `theme_hierarchy` | text[] | Caminho de temas (índice GIN) |
-| `frequency_acronym` | text | D / S / M / T / Qd / A |
-| `frequency`, `unit`, `source` | text | Frequência, unidade, fonte |
-| `start_date`, `last_date`, `last_date_index` | date | Janela de disponibilidade |
-| `series_type`, `precision`, `max_value`, `min_value` | — | Descritores |
-| `active`, `special`, `formula`, `series_primitive` | — | Flags/derivação |
-| `owner_manager`, `message`, `message_warning` | text | Gestor, avisos |
-| `full_provider_data`, `full_description`, `full_methodology`, `full_dissemination_formats` | jsonb | Metadados completos |
-| `last_update` | date | Última atualização de metadados |
-| `theme_id` | integer FK | → `theme.id` (`ON DELETE SET NULL`) |
-| `search_vector` | tsvector | Busca full-text (gerado, índice GIN) |
-
-**`series_data`** — Tabela de fatos (soft-versioned)
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | bigint PK | Auto-incremento |
-| `series_id` | integer FK | → `series_metadata.series_id` |
-| `date` | date | Data da observação |
-| `date_end` | date \| null | Data final (frequências não-diárias) |
-| `value` | numeric | Valor (precisão preservada) |
-| `loaded_at` | timestamptz | Carimbo da revisão |
-| `ativo` | boolean | Flag de registro ativo |
-
-Índice único parcial: `(series_id, date, date_end) NULLS NOT DISTINCT WHERE ativo` —
-no máximo uma linha ativa por chave.
-
-**`theme`** — Hierarquia de temas (auto-referente)
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `id` | integer PK | Auto-incremento |
-| `name` | text | Nome do tema |
-| `level` | integer | Profundidade (1 = raiz) |
-| `parent_id` | integer FK | → `theme.id` |
-
-Constraints: `level > 0`; `(parent_id IS NULL) = (level = 1)`; único
-`(name, level, parent_id)`.
-
-**`arquivo_carregado`** — Rastreador de arquivos (idempotência da Via B)
-
-| Coluna | Tipo | Descrição |
-|--------|------|----------|
-| `arquivo` | text PK | Nome do arquivo carregado |
-| `series_id` | integer FK \| null | Série (nullable: um arquivo pode conter várias) |
-| `carregado_em` | timestamptz | Quando foi carregado |
+As colunas e constraints completas estão nos
+[modelos SQLAlchemy do repositório](https://github.com/Quantilica/bcb-sgs-sql).
 
 ### Exemplo de consulta: painel wide
 

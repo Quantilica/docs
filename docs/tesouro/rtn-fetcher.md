@@ -241,27 +241,12 @@ account_code  account_name             account_level  P_1       P_2
 
 ## A Classe `Tbl`
 
-O `rtn-fetcher` vem com a `Tbl`, uma pequena tabela orientada a colunas — os dados são armazenados como uma lista de colunas em vez de linhas. Não há dependência de Polars ou Pandas; a `Tbl` é a única estrutura de dados que você precisa aprender.
-
-```python
-from rtn_fetcher import Tbl
-
-t = Tbl([
-    ["name", "Alice", "Bob"],
-    ["age",  25,      30   ],
-])
-
-t["name"]                       # ["name", "Alice", "Bob"]
-t.select("name")                # subconjunto
-t.assign(city=["SP", "RJ"])     # adicionar/sobrescrever uma coluna
-t.melt(id_cols=["name"])        # wide -> long
-t.rename(name="full_name")      # renomear colunas
-
-for row in t.iter_rows():
-    print(row)
-```
-
-Principais métodos: `select`, `assign`, `melt`, `transpose`, `insert`, `drop_rows`, `drop_cols`, `rename`, `iter_rows`, `get_header`. Atributos: `data`, `nrows`, `ncols`. Todas as transformações retornam novas tabelas — as operações não são mutáveis.
+As funções de leitura retornam uma `Tbl` — uma tabela leve orientada a colunas, sem
+dependência de Polars ou Pandas e com operações imutáveis (`select`, `assign`, `melt`,
+`rename`, `iter_rows`, …). Na maioria dos usos você exporta direto para Excel/SQLite ou
+Parquet; consulte o
+[código-fonte do repositório](https://github.com/Quantilica/rtn-fetcher) se precisar
+manipular a `Tbl` diretamente.
 
 ## Saiba Mais
 

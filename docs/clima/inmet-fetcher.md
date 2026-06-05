@@ -29,32 +29,16 @@ BDMEP do INMET (Banco de Dados Meteorológicos para Ensino e Pesquisa) oferece:
 
 ## Casos de Uso
 
-### Pesquisa Climática
-
-Analisar padrões climáticos de longo prazo, tendências de temperatura e variações sazonais em todo o Brasil.
-
-### Planejamento e Modelagem Agrícola
-
-Use dados de precipitação e temperatura para informar seleção de culturas, agendamento de irrigação e avaliação de risco agrícola.
-
-### Hidrologia e Recursos Hídricos
-
-Analisar padrões de chuva e escoamento para informar gerenciamento de recursos hídricos, planejamento de secas e predição de inundações.
-
-### Planejamento de Energia
-
-Dados de radiação solar e vento para avaliação de energia renovável e planejamento de rede.
-
-### Avaliação de Impacto Ambiental
-
-Monitorar mudanças ambientais de longo prazo, correlações de qualidade do ar e variabilidade climática.
+- **Pesquisa climática** — tendências de longo prazo, anomalias e variações sazonais
+- **Análise e modelagem agrícola** — precipitação, GDD e radiação para seleção de culturas e irrigação
+- **Hidrologia e recursos hídricos** — chuva e escoamento para gestão hídrica e previsão de secas
+- **Planejamento de energia** — radiação solar e vento para avaliação de renováveis
+- **Estudos ambientais** — meteorologia multi-década e variabilidade climática
 
 ## Acesso
 
-Acesse dados meteorológicos históricos oficiais do Brasil com:
+O fetcher entrega dados meteorológicos históricos oficiais já tratados:
 
-- **Cobertura nacional** de estações meteorológicas automáticas (~570+ estações em anos recentes)
-- **Observações horárias** remontando a 2000
 - **Limpo & padronizado**: colunas snake_case, `data_hora` parseado, `-9999` → null
 - **Filtros**: UF, código de estação, intervalo de data
 - **Export**: Parquet, CSV, ou JSON
@@ -184,14 +168,6 @@ inmet.write_to_parquet(df, "output/bdmep_2023.parquet", manifest=manifest)
 | `vento_direcao` | ° | Direção do vento |
 
 Metadados da estação por linha unidos automaticamente: `regiao`, `uf`, `estacao`, `codigo_wmo`, `latitude`, `longitude`, `altitude`, `data_fundacao`.
-
-## Casos de Uso
-
-- **Pesquisa climática** — tendências de longo prazo, anomalias
-- **Análise agrícola** — precipitação, GDD, radiação
-- **Hidrologia** — chuva para modelagem de recursos hídricos
-- **Planejamento de energia** — radiação solar, vento para renováveis
-- **Estudos ambientais** — meteorologia multi-década
 
 ## Desenvolvimento
 

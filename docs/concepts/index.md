@@ -1,6 +1,10 @@
 # Conceitos Transversais
 
-Quatro páginas formam a coluna conceitual do ecossistema. Leia em ordem se você é novo; consulte por referência caso já conheça o sistema.
+Esta seção explica o **porquê** e o **como funciona** do ecossistema — a forma do sistema e
+as ideias que a sustentam. Para as **regras que o contribuidor segue** (versão, escrita,
+CLI, `pyproject`, `.gitignore`), veja a seção [Desenvolvimento](../normas/python.md).
+
+Quatro páginas formam a coluna conceitual. Leia em ordem se você é novo; consulte por referência caso já conheça o sistema.
 
 ## [Arquitetura do Ecossistema](arquitetura.md)
 
@@ -25,6 +29,15 @@ Os oito padrões táticos que materializam os princípios em código: idempotên
 Tutorial dedicado ao formato e biblioteca centrais do ecossistema. Mostra workflows eficientes para datasets de 100MB a 100GB+, com exemplos cobrindo SIDRA, RAIS e Tesouro.
 
 **Leia quando** for processar volumes grandes ou converter CSVs herdados.
+
+## Aprofundamentos
+
+Páginas conceituais focadas em um tema específico:
+
+- **[Convenções de Armazenamento](storage.md)** — como os arquivos são nomeados e organizados.
+- **[Proveniência & Manifestos](proveniencia.md)** — checksums SHA-256 e reprodução *time-travel*.
+- **[Bulk Load & Versionamento de Revisões](bulk-load.md)** — ingestão via COPY e histórico de revisões nos warehouses SQL.
+- **[Cálculo de Retornos de Renda Fixa](calculo-retornos-renda-fixa.md)** — a matemática de YTM, duration e retorno real.
 
 ---
 

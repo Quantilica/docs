@@ -6,22 +6,27 @@ Visão estratégica do Ecossistema Quantilica para dados abertos brasileiros.
 
 ## Visão de Futuro
 
-A Quantilica é um **ecossistema de dados aberto com SDK**. O valor do projeto reside na conveniência de fornecer dados públicos prontos para consumo analítico, abstraindo a instabilidade das fontes oficiais.
+A Quantilica é um **ecossistema de dados aberto com SDK** — a camada de confiança entre o
+analista e a instabilidade das fontes oficiais brasileiras. A direção de longo prazo se
+apoia em três pilares:
+
+- **Cobertura** — uma ferramenta resiliente por fonte pública relevante, todas sob os mesmos princípios.
+- **Ativos analíticos prontos** — sair de "arquivos brutos" para Parquet tipado, com proveniência e *time travel* embarcados.
+- **Confiabilidade observável** — saúde das fontes monitorada e visível, para que quebras externas virem alertas, não surpresas.
 
 ---
+
+## Quick wins (DX)
+
+Melhorias de baixo custo e alto impacto na experiência do desenvolvedor, fora da trilha das fases estratégicas:
+
+- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático.
 
 ## Roadmap de Execução Detalhado
 
 O desenvolvimento da Quantilica está estruturado em ciclos incrementais que definem a direção técnica e de produto do ecossistema.
 
-### Fase 1: Unificação e Experiência do Desenvolvedor (DX)
-*Objetivo: Reduzir a fricção de entrada para novos usuários e padronizar o consumo das ferramentas.*
-
-1.  **Template de Projeto (Boilerplate)**:
-    *   Criar repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados.
-    *   Incluir GitHub Actions base para teste e lint automático.
-
-### Fase 2: Confiança, Estabilidade e Qualidade
+### Fase 1: Confiança, Estabilidade e Qualidade
 *Objetivo: Transformar a Quantilica na camada de confiança entre os usuários e a instabilidade das fontes oficiais.*
 
 1.  **Sistema de Observabilidade Proativa (Health Checks)**:
@@ -37,7 +42,7 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
     *   Suporte a arquiteturas múltiplas (amd64, arm64).
     *   Permitir execução via: `docker run quantilica/inmet-fetcher --year 2024`.
 
-### Fase 3: Evolução Técnica (Data Access Layer)
+### Fase 2: Evolução Técnica (Data Access Layer)
 *Objetivo: Mover o processamento de "arquivos brutos" para "ativos analíticos prontos".*
 
 1.  **Analytical-Ready (Foco em Parquet)**:
@@ -54,7 +59,7 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
     *   Desenvolver o `State Store` para rastrear fatias (partições) já baixadas.
     *   Lógica de download incremental (delta) para economizar banda e tempo em datasets volumosos.
 
-### Fase 4: Produto e Ecossistema
+### Fase 3: Produto e Ecossistema
 *Objetivo: Oferecer conveniência máxima e dados pré-processados.*
 
 1.  **Sustentabilidade**:
@@ -62,20 +67,13 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
 
 ---
 
-## Marketing e Branding
+## Comunidade e Sustentabilidade
 
-Transformar a Quantilica em referência para a comunidade analítica brasileira:
+Transformar a Quantilica em referência para a comunidade analítica brasileira e garantir sua longevidade:
 
-### Táticas de Social Proof
-*   **Quantilica Cookbook:** Repositório de Jupyter Notebooks com cruzamentos de alto valor: *"Como o desemprego do CAGED se correlaciona com a inflação do IPCA em SP"*.
-*   **Presença Técnica (Storytelling):** Artigos em blogs (Medium/LinkedIn) sobre os desafios técnicos de minerar FTPs do DATASUS e APIs obsoletas.
-*   **GitHub Sponsors / Open Collective:** Sinalizar seriedade e buscar sustentabilidade para custos de infraestrutura.
-
----
-
-## Governança e Comunidade
-*   **Sustentabilidade:** Avaliar modelos de apoio (GitHub Sponsors) para custear a infraestrutura de hospedagem de dados.
-*   **Open Collective:** Transparência financeira para possíveis contribuições futuras.
+*   **Quantilica Cookbook:** notebooks com cruzamentos de alto valor (ex.: *"como o desemprego do CAGED se correlaciona com a inflação do IPCA em SP"*).
+*   **Presença técnica (storytelling):** artigos sobre os desafios de minerar FTPs do DATASUS e APIs obsoletas.
+*   **GitHub Sponsors / Open Collective:** sustentabilidade e transparência financeira para os custos de infraestrutura.
 
 ---
 *Atualizado em: 12 de maio de 2026*

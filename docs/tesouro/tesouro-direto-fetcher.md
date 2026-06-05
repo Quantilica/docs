@@ -183,6 +183,6 @@ Todos os dados são buscados do oficial **Tesouro Transparente** através de sua
 ## Saiba Mais
 
 - **[Visão Geral do Tesouro Direto](index.md)** — Todas as ferramentas do Tesouro Direto
-- **[Guia de Retornos de Portfólio](calculo-retornos.md)** — Como calcular retornos de títulos
+- **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)** — A matemática por trás de YTM, duration e retorno real
 - **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — Design do sistema
 - **[Tesouro Transparente](https://www.tesourotransparente.gov.br/)** — Fonte de dados oficial

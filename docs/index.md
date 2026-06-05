@@ -99,15 +99,12 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 
 ---
 
-## Stack e padrões
+## Sob o capô
 
-- **Python 3.12+**, `uv` para ambientes e dependências.
-- **`hatchling`** como build system, **`ruff`** para lint/format, **`pytest`** para testes.
-- **Parquet + Polars** como destino analítico padrão.
-- **MIT** para todos os pacotes.
-- Distribuição via `git+https://` para quase tudo; **`datasus-fetcher`** publicado no PyPI.
-
-Veja os [Princípios de Design](concepts/principios.md) para o detalhe completo, ou pule direto para o [Quickstart](quickstart.md).
+Todo o ecossistema é **Python 3.12+** com `uv`, saída analítica padronizada em
+**Parquet + Polars** e licença **MIT**. O detalhe de stack, distribuição e padrões técnicos
+está em [Contribuir](contribuir.md); o porquê das escolhas, em
+[Princípios de Design](concepts/principios.md).
 
 ---
 

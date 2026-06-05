@@ -57,6 +57,8 @@ nav:
       - Parquet + Polars: concepts/parquet-polars.md
       - Convenções de Armazenamento: concepts/storage.md
       - Proveniência & Manifestos: concepts/proveniencia.md
+      - Bulk Load & Versionamento: concepts/bulk-load.md
+      - Cálculo de Retornos (Renda Fixa): concepts/calculo-retornos-renda-fixa.md
 
   - Fundações:
       - fundacoes/index.md
@@ -75,7 +77,6 @@ nav:
           - tesouro/index.md
           - tesouro-direto-fetcher: tesouro/tesouro-direto-fetcher.md
           - rtn-fetcher: tesouro/rtn-fetcher.md
-          - Cálculo de Retornos: tesouro/calculo-retornos.md
       - Banco Central (BCB):
           - bcb/index.md
           - bcb-sgs-fetcher: bcb/bcb-sgs-fetcher.md

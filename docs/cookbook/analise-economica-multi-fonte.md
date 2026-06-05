@@ -216,5 +216,5 @@ wages_real.write_parquet("data/wages_real.parquet")
 - **[sidra-fetcher](../ibge/sidra-fetcher.md)** — SDK SIDRA detalhado.
 - **[tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)** — análise Tesouro Direto.
 - **[pdet-fetcher](../trabalho/pdet-fetcher.md)** — RAIS/CAGED.
-- **[Cálculo de Retornos](../tesouro/calculo-retornos.md)** — matemática por trás de yield real, duration, FIFO.
+- **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)** — matemática por trás de yield real, duration, FIFO.
 - **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — padrão multi-fonte ELT.

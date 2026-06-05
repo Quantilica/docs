@@ -86,7 +86,7 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
 
     **Próximos passos:**
 
-    - [Calcule retornos GIPS-compliant](tesouro/calculo-retornos.md)
+    - [Calcule retornos GIPS-compliant](concepts/calculo-retornos-renda-fixa.md)
     - [Combine com o RTN para a foto fiscal mensal](tesouro/rtn-fetcher.md)
 
 === "Saúde — DATASUS"

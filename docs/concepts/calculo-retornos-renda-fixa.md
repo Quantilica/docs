@@ -1,6 +1,10 @@
-# Guia de Retornos de Portfólio e Duration
+# Cálculo de Retornos de Renda Fixa
 
-Calcule retornos, YTM e sensibilidade de taxa de juros para portfólios de renda fixa.
+Guia conceitual da matemática por trás de retornos, YTM e sensibilidade a taxa de juros
+para portfólios de renda fixa. É a base teórica que as ferramentas do Tesouro
+(**[tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)**) materializam — leia
+aqui para entender *o que* os números significam; veja a página do pacote para *como*
+obtê-los.
 
 ## Conceitos Principais
 
@@ -394,6 +398,6 @@ coupon_yield = 4.5   # % para reinvestimento
 
 ## Saiba Mais
 
-- [Visão Geral do Tesouro](index.md)
-- [Ferramenta tesouro-direto-fetcher](tesouro-direto-fetcher.md)
+- [Visão Geral do Tesouro](../tesouro/index.md)
+- [Ferramenta tesouro-direto-fetcher](../tesouro/tesouro-direto-fetcher.md)
 - [Dados IBGE](../ibge/index.md) — Para dados de inflação

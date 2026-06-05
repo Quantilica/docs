@@ -113,21 +113,13 @@ Quando o BCB renomear `valor` para `value_eur` em uma série, o teste falha — 
 
 Para validações de valor, combine `DataContract` com Polars expressions ou Pydantic na camada de aplicação.
 
-### Onde estão os contratos do ecossistema
+### Contratos no ecossistema
 
-| Fetcher | Contrato | Local |
-|---|---|---|
-| `inmet-fetcher` | `BDMEP_CONTRACT` | `inmet_fetcher.schema` |
-| `rtn-fetcher` | `build_contract(sheet, cfg)` (varia por planilha) | `rtn_fetcher.schema` |
-
-Os writers Parquet desses fetchers (`write_to_parquet`, `write_table_to_parquet`) aplicam o `cast()` automaticamente antes de gravar.
-
-!!! note "bcb-sgs-fetcher"
-
-    O `bcb-sgs-fetcher` é um adaptador de fonte puro (JSON) e **não** embute Parquet
-    nem `DataContract`. A serialização das séries do SGS fica a cargo da camada de ETL
-    ([`bcb-sgs-sql`](../bcb/bcb-sgs-sql.md)). O exemplo `SGS_CONTRACT` acima é apenas
-    ilustrativo de como definir um contrato.
+Cada fetcher que grava Parquet define e aplica seu próprio `DataContract`, documentado na
+página do pacote correspondente (ex.: [`inmet-fetcher`](../clima/inmet-fetcher.md),
+[`rtn-fetcher`](../tesouro/rtn-fetcher.md)) — os writers Parquet aplicam o `cast()` antes de
+gravar. Adaptadores de fonte puros como o [`bcb-sgs-fetcher`](../bcb/bcb-sgs-fetcher.md) não
+embutem Parquet nem contratos: a serialização fica a cargo da camada de ETL.
 
 ## Quando NÃO usar
 

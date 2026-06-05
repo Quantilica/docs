@@ -13,6 +13,8 @@ A Curva de Phillips é o gráfico clássico macroeconômico: inflação no eixo 
 
 Um scatter plot mensal com IPCA YoY contra a taxa de desocupação da PNAD Contínua. Esperaríamos uma relação negativa em curto prazo — na prática, o Brasil mostra ruído e quebras estruturais interessantes.
 
+![Curva de Phillips brasileira — PNAD-C × IPCA](../assets/generated/curva_phillips.svg)
+
 ## Setup
 
 ```bash

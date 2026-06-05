@@ -48,7 +48,7 @@ Para dados fiscais (RTN), o fluxo é mais simples: `rtn-fetcher` baixa a planilh
 
 - **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — suíte de engenharia financeira: async fetching com idempotência, processamento Polars (10× vs. Pandas), matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
 - **[rtn-fetcher](rtn-fetcher.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI de exportação Excel/SQLite.
-- **[Cálculo de Retornos](calculo-retornos.md)** — guia matemático: YTM, duration, FIFO, Modified Dietz, retornos reais para títulos indexados à inflação.
+Para a teoria por trás dos números — YTM, duration, Modified Dietz, retornos reais para títulos indexados à inflação — consulte **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)** na seção Conceitos.
 
 Os [Princípios de Design](../concepts/principios.md) do ecossistema se manifestam aqui de forma especialmente visível: idempotência via `last_modified`, FIFO determinístico e Modified Dietz auditável. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Idempotência](../concepts/padroes.md#processamento-idempotente), [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation).
 
@@ -67,7 +67,7 @@ Métricas disponíveis por título e data: yield (YTM), preço (% do par), durat
 ## Próximos passos
 
 - Para análise de portfólio: vá para **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** e use `calculate_portfolio_monthly_returns`.
-- Para a matemática por trás dos cálculos: leia **[Cálculo de Retornos](calculo-retornos.md)**.
+- Para a matemática por trás dos cálculos: leia **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)**.
 - Para dados fiscais (RTN): vá para **[rtn-fetcher](rtn-fetcher.md)**.
 - Para combinar Tesouro com IPCA/PIB: veja **[Análise Econômica Multi-Fonte](../cookbook/analise-economica-multi-fonte.md)**.
 

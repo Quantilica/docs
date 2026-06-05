@@ -24,6 +24,8 @@ Parquet contorna todos os três:
 | RAIS 2023 | ~850 MB | ~100 MB | 88% |
 | Siscomex anual | ~500 MB | ~50 MB | 90% |
 
+![Comparação de tamanho CSV vs. Parquet por dataset](../assets/generated/compression_comparison.svg)
+
 ## Início rápido
 
 ### Converter CSV para Parquet
@@ -295,6 +297,8 @@ df = df.with_columns([
 | `read_csv` (eager) | ~12 s |
 | `read_parquet` (eager) | ~0,3 s (40× mais rápido) |
 | `scan_parquet().filter().collect()` | ~0,05 s (240× mais rápido) |
+
+![Tempo de leitura: CSV vs. Parquet com Polars](../assets/generated/read_performance.svg)
 
 ### Profile suas queries
 
