@@ -20,7 +20,7 @@ function __md_analytics() {
   });
 
   // Track search and feedback events
-  document.addEventListener("DOMContentLoaded", function() {
+  function __ga_init() {
     if (document.forms.search) {
       document.forms.search.query.addEventListener("blur", function() {
         if (this.value) {
@@ -40,7 +40,7 @@ function __md_analytics() {
               var path = document.location.pathname;
               var val = this.getAttribute("data-md-value");
               gtag("event", "feedback", { page: path, data: val });
-              
+
               feedbackForm.firstElementChild.disabled = true;
               var note = feedbackForm.querySelector(".md-feedback__note [data-md-value='" + val + "']");
               if (note) {
@@ -62,7 +62,13 @@ function __md_analytics() {
         });
       });
     }
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", __ga_init);
+  } else {
+    __ga_init();
+  }
 
   var gaScript = document.createElement("script");
   gaScript.async = true;
