@@ -1,0 +1,83 @@
+{% if config.extra.analytics %}
+  {% set property = config.extra.analytics.property | d("", true) %}
+  {% set umami_website_id = config.extra.analytics.umami_website_id | d("", true) %}
+  {% set umami_script_url = config.extra.analytics.umami_script_url | d("", true) %}
+{% endif %}
+
+<script id="__analytics">
+function __md_analytics() {
+  {% if property %}
+  // --- Google Analytics 4 (gtag.js) ---
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag("js", new Date());
+  
+  // Configure GA4 with default tracking disabled (send_page_view: false)
+  // because we will track page views manually on location$.subscribe to support navigation.instant.
+  gtag("config", "{{ property }}", {
+    send_page_view: false,
+    anonymize_ip: true
+  });
+
+  // Track search and feedback events
+  document.addEventListener("DOMContentLoaded", function() {
+    if (document.forms.search) {
+      document.forms.search.query.addEventListener("blur", function() {
+        if (this.value) {
+          gtag("event", "search", { search_term: this.value });
+        }
+      });
+    }
+
+    if (typeof document$.subscribe === "function") {
+      document$.subscribe(function() {
+        var feedbackForm = document.forms.feedback;
+        if (feedbackForm !== undefined) {
+          var submitButtons = feedbackForm.querySelectorAll("[type=submit]");
+          for (var i = 0; i < submitButtons.length; i++) {
+            submitButtons[i].addEventListener("click", function(e) {
+              e.preventDefault();
+              var path = document.location.pathname;
+              var val = this.getAttribute("data-md-value");
+              gtag("event", "feedback", { page: path, data: val });
+              
+              feedbackForm.firstElementChild.disabled = true;
+              var note = feedbackForm.querySelector(".md-feedback__note [data-md-value='" + val + "']");
+              if (note) {
+                note.hidden = false;
+              }
+            });
+          }
+          feedbackForm.hidden = false;
+        }
+      });
+    }
+
+    if (typeof location$.subscribe === "function") {
+      location$.subscribe(function(url) {
+        gtag("event", "page_view", {
+          page_path: url.pathname,
+          page_location: url.href,
+          page_title: document.title
+        });
+      });
+    }
+  });
+
+  var gaScript = document.createElement("script");
+  gaScript.async = true;
+  gaScript.src = "https://www.googletagmanager.com/gtag/js?id={{ property }}";
+  document.getElementById("__analytics").insertAdjacentElement("afterEnd", gaScript);
+  {% endif %}
+
+  {% if umami_website_id and umami_script_url %}
+  // --- Umami Analytics ---
+  var umamiScript = document.createElement("script");
+  umamiScript.async = true;
+  umamiScript.defer = true;
+  umamiScript.src = "{{ umami_script_url }}";
+  umamiScript.setAttribute("data-website-id", "{{ umami_website_id }}");
+  document.getElementById("__analytics").insertAdjacentElement("afterEnd", umamiScript);
+  {% endif %}
+}
+</script>

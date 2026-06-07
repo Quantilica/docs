@@ -2,6 +2,7 @@ site_name: Quantilica — Dados Públicos Brasileiros
 site_description: Ferramentas resilientes em Python para extrair, normalizar e analisar dados públicos brasileiros — IBGE, Tesouro, DATASUS, INMET, CAGED, RAIS, Comex.
 site_author: Quantilica
 site_url: https://docs.quantilica.com
+copyright: "Copyright &copy; 2026 Quantilica &bull; <a href=\"#__consent\">Alterar preferências de cookies</a>"
 
 repo_url: https://github.com/Quantilica/docs
 repo_name: Quantilica
@@ -141,6 +142,21 @@ extra_javascript:
 
 extra:
   generator: false
+  analytics:
+    provider: custom
+    property: !ENV [GOOGLE_ANALYTICS_KEY, ""]
+    umami_website_id: !ENV [UMAMI_WEBSITE_ID, ""]
+    umami_script_url: !ENV [UMAMI_SCRIPT_URL, "https://cloud.umami.is/script.js"]
+  consent:
+    title: Controle de Privacidade e Cookies
+    description: >-
+      Utilizamos cookies e tecnologias semelhantes para nos ajudar a entender como você utiliza o nosso site, melhorar a sua experiência e medir o tráfego de documentação. Ao aceitar, você concorda com o uso de cookies para fins de análise estatística.
+    actions:
+      - accept
+      - reject
+      - manage
+    cookies:
+      analytics: Google Analytics & Umami Analytics
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Quantilica
