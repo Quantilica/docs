@@ -19,7 +19,7 @@ docs/
 │   ├── index.md           # hero e narrativa de abertura
 │   ├── quickstart.md      # 5 minutos para o primeiro dado
 │   ├── concepts/          # arquitetura, princípios, padrões
-│   ├── fundacoes/         # quantilica-core, quantilica-io
+│   ├── fundacoes/         # quantilica-core, quantilica-analytics
 │   ├── ibge/ tesouro/ ... # domínios e ferramentas
 │   └── cookbook/          # receitas multi-fonte
 ├── overrides/             # extensões do tema Material
