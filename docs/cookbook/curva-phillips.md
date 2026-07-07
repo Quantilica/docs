@@ -86,7 +86,7 @@ chart.save("phillips.html")
 ## Variações
 
 - Substitua a PNAD-C pelo CAGED (`pdet-fetcher`) para fluxos de emprego mensais.
-- Adicione expectativa de inflação (BCB Focus via `aplicação privada`) e veja a Phillips com expectativas, à la Lucas.
+- Adicione expectativa de inflação (BCB Focus) e veja a Phillips com expectativas, à la Lucas.
 - Recorte por região metropolitana (PNAD-C tem agregado por região).
 
 ## Veja também

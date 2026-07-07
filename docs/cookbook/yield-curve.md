@@ -87,7 +87,7 @@ chart.save("curva.html")
 
 - **Evolução temporal:** loop sobre datas mensais e use `facet` do Altair para ver a curva mudando.
 - **Spread Selic × Prefixado:** join interno por vencimento, calcule diferença, plote no tempo.
-- **Compare com expectativas:** baixe o Focus via `aplicação privada` e sobreponha.
+- **Compare com expectativas:** baixe o Focus (BCB) e sobreponha.
 
 ## Veja também
 

@@ -24,8 +24,7 @@ análoga ao `sidra-sql` do IBGE.
 Enquanto **bcb-sgs-fetcher** resolve o problema de comunicação (obter séries da API JSON e
 metadados via scraping), **bcb-sgs-sql** resolve o problema de **persistência, governança
 e reprodutibilidade**: converte observações e metadados do SGS em um banco PostgreSQL
-relacional, com histórico de revisões preservado — sem depender da aplicação privada
-`aplicação privada`.
+relacional, com histórico de revisões preservado.
 
 ## Problema que Resolve
 
@@ -46,10 +45,11 @@ staging.
 
 ### 3. Revisões & reprodutibilidade — sem tabela de auditoria
 
-O BCB revisa valores. Sobrescrever destrói a reprodutibilidade. A aplicação privada
-`aplicação privada` resolve isso com overwrite + uma tabela `audit_log`. O `bcb-sgs-sql`
-adota uma abordagem mais enxuta: **soft-versioning na própria tabela-fato**, preservando a
-trilha completa de revisões sem nenhuma tabela de auditoria separada.
+O BCB revisa valores. Sobrescrever destrói a reprodutibilidade. Uma abordagem comum é
+manter overwrite mais uma tabela `audit_log` separada para rastrear mudanças. O
+`bcb-sgs-sql` adota uma abordagem mais enxuta: **soft-versioning na própria
+tabela-fato**, preservando a trilha completa de revisões sem nenhuma tabela de
+auditoria separada.
 
 ## Arquitetura & Recursos Principais
 
