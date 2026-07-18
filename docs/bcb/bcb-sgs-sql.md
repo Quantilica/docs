@@ -181,13 +181,13 @@ bcb-sgs-sql run std precos
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/bcb-sgs-sql.git
+pip install bcb-sgs-sql
 ```
 
 Com [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv add "git+https://github.com/Quantilica/bcb-sgs-sql.git"
+uv add bcb-sgs-sql
 ```
 
 ## Configuração

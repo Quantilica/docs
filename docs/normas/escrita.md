@@ -8,7 +8,7 @@ Este documento define o padrão de README adotado por todos os repositórios da 
 
 - **Idioma:** Todo o texto em prosa (descrições, títulos de seção, comentários) é escrito em **português**. Exemplos de código, flags de CLI, identificadores e nomes de funções permanecem em inglês.
 - **Emoji:** Nenhum emoji decorativo em cabeçalhos ou prosa. Usar somente onde necessário para clareza técnica (ex: tabelas comparativas).
-- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`) usam `pip install <pacote>` / `uv add <pacote>`; os demais são instalados via `git+https://`.
+- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql`) usam `pip install <pacote>` / `uv add <pacote>`; os demais são instalados via `git+https://`.
 
 ---
 
@@ -84,7 +84,7 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 
 ### `## Instalação`
 
-Para pacotes **publicados no PyPI** (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`):
+Para pacotes **publicados no PyPI** (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql`):
 
 ```markdown
 ## Instalação

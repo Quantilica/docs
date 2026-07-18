@@ -7,6 +7,22 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-07 — Stack BCB SGS publicado no PyPI
+
+**`bcb-sgs-fetcher` (0.5.0) e `bcb-sgs-sql` (0.2.1) agora estão no PyPI.** A cadeia
+`bcb-sgs-sql` → `bcb-sgs-fetcher` → `quantilica-core` resolve direto do índice.
+
+- **Instalação:** `pip install bcb-sgs-fetcher` / `pip install bcb-sgs-sql` (antes `git+https`).
+- **Dependências por versão de registro:** `bcb-sgs-fetcher` passa a depender de
+  `quantilica-core>=0.3.1` e `bcb-sgs-sql` de `bcb-sgs-fetcher>=0.5.0` — ambos antes
+  fixados via `git+https`. `httpx` passou a ser declarado diretamente no fetcher.
+- **Correções junto da preparação:** `series search` (CLI standalone) que quebrava com
+  `AttributeError`; `run`/`transform` do `bcb-sgs-sql` que saíam com código 0 em falha;
+  NULL-overwrite no upsert de metadados; registry do plugin sob `~/.config/quantilica/`;
+  senha mascarada; remoção de código morto. Ver os `CHANGELOG.md` de cada repo.
+- **Publicação automatizada:** workflows de CI com Trusted Publishing (OIDC), como nos
+  demais pacotes.
+
 ## 2026-07 — Primeiros pacotes do núcleo publicados no PyPI
 
 **`quantilica-core`, `sidra-fetcher` e `sidra-sql` agora estão no PyPI.** O maior

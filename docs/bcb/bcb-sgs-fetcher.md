@@ -33,13 +33,13 @@ O **SGS** (Sistema Gerenciador de Séries Temporais) é o repositório oficial d
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/bcb-sgs-fetcher.git
+pip install bcb-sgs-fetcher
 ```
 
 Com [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv add "git+https://github.com/Quantilica/bcb-sgs-fetcher.git"
+uv add bcb-sgs-fetcher
 ```
 
 O pacote registra o subcomando `bcb-sgs` na CLI do Quantilica via entry point:
