@@ -23,6 +23,8 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 - A versão Python deve corresponder ao `requires-python` do `pyproject.toml`.
 - Licença `MIT` para todos os pacotes.
 - Badge de CI apenas em pacotes com workflow de testes ativo.
+- **Pacotes publicados no PyPI** adicionam um badge de versão do PyPI:
+  `![PyPI](https://img.shields.io/pypi/v/<pacote>.svg?style=flat-square)`.
 
 ---
 
@@ -49,6 +51,8 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 
 ## Desenvolvimento
 
+## Changelog       ← link para o CHANGELOG.md do repo
+
 ## Licença
 ```
 
@@ -74,6 +78,8 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 ## Princípios de Design
 
 ## Desenvolvimento
+
+## Changelog       ← link para o CHANGELOG.md do repo
 
 ## Licença
 ```
@@ -129,6 +135,16 @@ cd <pacote>
 uv sync --dev
 uv run pytest
 \`\`\`
+```
+
+### `## Changelog`
+
+Todo pacote mantém um `CHANGELOG.md` (formato Keep a Changelog — ver [Publicação e Release](publicacao.md)); o README apenas aponta para ele:
+
+```markdown
+## Changelog
+
+Veja [CHANGELOG.md](CHANGELOG.md).
 ```
 
 ### `## Licença`

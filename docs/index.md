@@ -48,7 +48,7 @@ Cada download vem acompanhado de um manifesto SHA-256 (proveniência total), ret
 
 ## A promessa
 
-Não é mais um pacote no PyPI. É **infraestrutura aberta**: quando o IBGE muda um endpoint, o ecossistema inteiro se atualiza junto. Quando o DATASUS publica um novo arquivo `.dbc`, o crawler já sabe. Quando o Tesouro reformata a planilha de taxas, o parser absorve a mudança em uma release.
+Não é só mais um pacote no PyPI. É **infraestrutura aberta**: quando o IBGE muda um endpoint, o ecossistema inteiro se atualiza junto. Quando o DATASUS publica um novo arquivo `.dbc`, o crawler já sabe. Quando o Tesouro reformata a planilha de taxas, o parser absorve a mudança em uma release.
 
 A camada de confiança entre você e os dados públicos do Brasil — para que você volte a fazer o trabalho que importa.
 

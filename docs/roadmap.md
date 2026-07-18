@@ -20,7 +20,7 @@ apoia em três pilares:
 
 Melhorias de baixo custo e alto impacto na experiência do desenvolvedor, fora da trilha das fases estratégicas:
 
-- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático.
+- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático. *(Parcialmente entregue: o padrão de empacotamento e o processo de release já estão documentados em [Publicação e Release](normas/publicacao.md), com workflows `test.yml`/`publish.yml` em uso nos 6 pacotes publicados; falta o repositório-template em si.)*
 
 ## Roadmap de Execução Detalhado
 
@@ -33,10 +33,11 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
     *   Implementar cron jobs semanais que testam a conectividade e integridade dos endpoints governamentais.
     *   Criar uma "Status Page" pública informando se uma fonte (ex: FTP do DATASUS) está instável.
     *   Alertas automáticos via GitHub Issues quando um fetcher falhar por mudança externa.
-2.  **Padronização Rigorosa de CI/CD**:
-    *   Matrix de testes em Python 3.12 e 3.13 para todos os pacotes.
-    *   Obrigatoriedade de 80%+ de cobertura de testes para novos PRs.
-    *   Bloqueio de PRs que não atendam às regras do `ruff`.
+2.  **Padronização Rigorosa de CI/CD** *(parcialmente entregue)*:
+    *   ✅ Matrix de testes em Python 3.12 e 3.13 para todos os pacotes (workflow `test.yml`).
+    *   ✅ Bloqueio de PRs que não atendam às regras do `ruff` (`ruff check` + `ruff format --check` no CI).
+    *   ✅ Publicação automatizada no PyPI via Trusted Publishing (workflow `publish.yml`) — ver [Publicação e Release](normas/publicacao.md).
+    *   ⏳ Obrigatoriedade de 80%+ de cobertura de testes para novos PRs.
 3.  **Distribuição via Container (Docker Oficiais)**:
     *   Publicar imagens Docker no GitHub Container Registry (GHCR) para cada fetcher.
     *   Suporte a arquiteturas múltiplas (amd64, arm64).
@@ -76,4 +77,4 @@ Transformar a Quantilica em referência para a comunidade analítica brasileira 
 *   **GitHub Sponsors / Open Collective:** sustentabilidade e transparência financeira para os custos de infraestrutura.
 
 ---
-*Atualizado em: 12 de maio de 2026*
+*Atualizado em: 18 de julho de 2026*

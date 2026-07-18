@@ -1,6 +1,6 @@
 ---
 title: Status das fontes públicas brasileiras
-description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET.
+description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET, BCB.
 ---
 
 # Status das fontes oficiais
@@ -25,6 +25,7 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 | **Siscomex** (Comex) | ⚠️ instável | 2026-05-17 | SSL ruim em janelas curtas; arquivos GB |
 | **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai com frequência; CAGED schema diferente em 2020+ |
 | **Tesouro Nacional RTN** | ✅ estável | 2026-05-17 | Excel multi-aba publicado mensalmente |
+| **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-07-18 | API JSON de valores estável; metadados só via scraping HTML sequencial (não paralelizável); séries diárias truncadas (varredura ano a ano) |
 
 **Legenda:**
 - ✅ **Estável** — funciona sem intervenção; eventuais 502 curtos são normais.
@@ -56,4 +57,4 @@ Encontrou uma fonte fora do ar que esta página marca como estável (ou o contr�
 
 ---
 
-*Última atualização manual desta página: 2026-05-17.*
+*Última atualização manual desta página: 2026-07-18.*

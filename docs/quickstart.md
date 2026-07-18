@@ -91,7 +91,7 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
 
 === "Saúde — DATASUS"
 
-    Baixa os microdados do SIH-RD (Internações Hospitalares) para São Paulo nos últimos 3 anos. Sem dependências externas — `datasus-fetcher` roda em Python puro e está no PyPI.
+    Baixa os microdados do SIH-RD (Internações Hospitalares) para São Paulo nos últimos 3 anos. Sem dependências externas — `datasus-fetcher` roda em Python puro.
 
     ```bash
     uv add datasus-fetcher
