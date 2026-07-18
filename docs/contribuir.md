@@ -88,7 +88,7 @@ Todos os pacotes seguem **SemVer**:
 - **MINOR** — feature compatível.
 - **MAJOR** — quebra de API.
 
-Releases saem sem cadência fixa — quando funcionalidade está pronta e testada. O único pacote no PyPI é `datasus-fetcher`; os demais são instalados via `git+https`.
+Releases saem sem cadência fixa — quando funcionalidade está pronta e testada. Os pacotes publicados no PyPI são `quantilica-core`, `sidra-fetcher`, `sidra-sql` e `datasus-fetcher`; os demais são instalados via `git+https`.
 
 ## Governança
 

@@ -8,7 +8,7 @@ Este documento define o padrão de README adotado por todos os repositórios da 
 
 - **Idioma:** Todo o texto em prosa (descrições, títulos de seção, comentários) é escrito em **português**. Exemplos de código, flags de CLI, identificadores e nomes de funções permanecem em inglês.
 - **Emoji:** Nenhum emoji decorativo em cabeçalhos ou prosa. Usar somente onde necessário para clareza técnica (ex: tabelas comparativas).
-- **Instalação:** Todos os pacotes são instalados via `git+https://`, exceto `datasus-fetcher` (publicado no PyPI).
+- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`) usam `pip install <pacote>` / `uv add <pacote>`; os demais são instalados via `git+https://`.
 
 ---
 
@@ -84,6 +84,24 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 
 ### `## Instalação`
 
+Para pacotes **publicados no PyPI** (`quantilica-core`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`):
+
+```markdown
+## Instalação
+
+\`\`\`bash
+pip install <pacote>
+\`\`\`
+
+Com [uv](https://github.com/astral-sh/uv):
+
+\`\`\`bash
+uv add <pacote>
+\`\`\`
+```
+
+Para pacotes **ainda não publicados** (instalados via `git+https`):
+
 ```markdown
 ## Instalação
 
@@ -98,11 +116,7 @@ uv add "git+https://github.com/Quantilica/<pacote>.git"
 \`\`\`
 ```
 
-Para extras opcionais:
-
-```bash
-pip install "<pacote>[extra] @ git+https://github.com/Quantilica/<pacote>.git"
-```
+Para extras opcionais: `pip install "<pacote>[extra]"` (PyPI) ou `pip install "<pacote>[extra] @ git+https://github.com/Quantilica/<pacote>.git"` (git).
 
 ### `## Desenvolvimento`
 

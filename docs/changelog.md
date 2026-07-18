@@ -7,6 +7,26 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-07 — Primeiros pacotes do núcleo publicados no PyPI
+
+**`quantilica-core`, `sidra-fetcher` e `sidra-sql` agora estão no PyPI.** O maior
+bloqueador de adoção do ecossistema Sidra — a dependência `git+https` de
+`quantilica-core` — foi removido. `pip install sidra-sql` passa a resolver toda a
+cadeia (`sidra-sql` → `sidra-fetcher` → `quantilica-core`) direto do índice, sem
+clonar o monorepo.
+
+- **Instalação simplificada:** os três pacotes trocaram `pip install git+https://…`
+  por `pip install <pacote>` / `uv add <pacote>`.
+- **Dependências por versão de registro:** `sidra-fetcher` passa a depender de
+  `quantilica-core>=0.3.1` e `sidra-sql` de `sidra-fetcher>=0.7.2` — ambos antes
+  fixados via `git+https`. (`typer`/`rich` continuam fornecidos pelo host
+  `quantilica-cli`, não pelos fetchers — ver [Arquitetura de CLI](concepts/arquitetura.md#arquitetura-de-cli).)
+- **Publicação automatizada:** cada repositório ganhou um workflow de CI com
+  **Trusted Publishing (OIDC)** via GitHub Actions, sem tokens de API de longa
+  duração — TestPyPI primeiro, PyPI em seguida, a cada tag `v*`.
+- Versões publicadas: `quantilica-core` 0.3.1, `sidra-fetcher` 0.7.3,
+  `sidra-sql` 1.3.0.
+
 ## 2026-06 — Configuração global unificada sob `~/.config/quantilica/`
 
 Todos os pacotes SQL do ecossistema passam a guardar configuração global sob um

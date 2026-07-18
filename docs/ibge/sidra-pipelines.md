@@ -83,11 +83,9 @@ O catálogo cobre datasets brasileiros essenciais de economia, demografia, agric
 ### 1. Instalar sidra-sql
 
 ```bash
-git clone https://github.com/Quantilica/sidra-sql.git
-cd sidra-sql
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install sidra-sql
 ```
 
 ### 2. Configurar Banco de Dados

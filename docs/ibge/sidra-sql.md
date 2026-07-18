@@ -193,7 +193,7 @@ sidra-sql run std pib_municipal
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/sidra-sql.git
+pip install sidra-sql
 ```
 
 ## Configuração

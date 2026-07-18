@@ -19,7 +19,7 @@ Em seguida, instale os fetchers que quiser usar:
 
 ```bash
 uv add "comex-fetcher @ git+https://github.com/Quantilica/comex-fetcher.git"
-uv add "sidra-fetcher @ git+https://github.com/Quantilica/sidra-fetcher.git"
+uv add sidra-fetcher
 # ...
 ```
 

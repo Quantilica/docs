@@ -20,7 +20,7 @@ Esta receita mostra como a infraestrutura Quantilica resolve isso com **dois mec
 ## Setup
 
 ```bash
-uv add "sidra-sql @ git+https://github.com/Quantilica/sidra-sql.git"
+uv add sidra-sql
 ```
 
 Assume que você já tem `sidra-sql` rodando com o pipeline `pib_municipal` carregado (veja [sidra-pipelines](../ibge/sidra-pipelines.md)).

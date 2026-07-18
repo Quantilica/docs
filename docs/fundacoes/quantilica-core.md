@@ -12,7 +12,7 @@ Biblioteca de utilitários **domain-neutral** que serve como base para todos os 
 ## Instalação
 
 ```bash
-uv add "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git"
+uv add quantilica-core
 ```
 
 ## Anatomia de um download Quantilica

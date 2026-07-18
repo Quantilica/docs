@@ -106,7 +106,7 @@ As respostas de metadados são analisadas em dataclasses ricas:
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/sidra-fetcher.git
+pip install sidra-fetcher
 ```
 
 ## Async/Await: Extração de Metadados de Alta Performance

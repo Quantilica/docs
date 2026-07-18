@@ -15,7 +15,7 @@ Para isso precisamos de:
 ## Pré-requisitos
 
 ```bash
-pip install git+https://github.com/Quantilica/sidra-fetcher.git
+pip install sidra-fetcher
 pip install git+https://github.com/Quantilica/pdet-fetcher.git
 pip install "git+https://github.com/Quantilica/tesouro-direto-fetcher#egg=tesouro-direto-fetcher"
 pip install polars

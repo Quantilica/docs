@@ -26,7 +26,7 @@ Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo
     Baixa os metadados completos do IPCA-15 (agregado 1705) e mostra a estrutura: períodos disponíveis, localidades cobertas, variáveis.
 
     ```bash
-    uv add "sidra-fetcher @ git+https://github.com/Quantilica/sidra-fetcher.git"
+    uv add sidra-fetcher
     ```
 
     ```python
