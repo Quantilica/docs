@@ -113,8 +113,9 @@ Reforço da separação de camadas: o fetcher volta a ser um **adaptador de font
 - **`bcb-sgs-fetcher` (v0.4.0)** removeu `save_parquet`, `points_to_dataframe` e
   `SGS_CONTRACT` (módulos `writer`/`schema` deletados) e o extra `[parquet]`. A saída passa
   a ser apenas JSON/dataclasses; deps base só `quantilica-core` + scraping.
-- **`bcb-sgs-sql`** continua lendo Parquet na Via B (papel da camada de ETL) e passou a
-  declarar `polars` como dependência direta (depende do `bcb-sgs-fetcher` base, @v0.4.0).
+- **`bcb-sgs-sql`** consome os snapshots **JSON** do `bcb-sgs-fetcher` e carrega em
+  PostgreSQL — não usa Parquet nem depende de `polars` (depende do `bcb-sgs-fetcher`
+  base, @v0.4.0).
 - `rtn-fetcher` e `inmet-fetcher` **não** foram afetados — seguem exportando Parquet tipado.
 
 ## 2026-05 — Padronização das CLIs dos fetchers (breaking change)

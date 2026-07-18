@@ -294,9 +294,8 @@ Todos os arquivos são escritos atomicamente via `quantilica.core.files`.
 !!! note "Saída em Parquet?"
 
     O `bcb-sgs-fetcher` produz apenas **JSON / dataclasses** — é um adaptador de
-    fonte. A serialização em Parquet tipado fica a cargo da camada de ETL: o
-    [`bcb-sgs-sql`](bcb-sgs-sql.md) carrega as séries em PostgreSQL e materializa
-    saídas analíticas.
+    fonte. A camada de ETL [`bcb-sgs-sql`](bcb-sgs-sql.md) consome esse JSON e
+    carrega as séries em PostgreSQL, materializando saídas analíticas (sem Parquet).
 
 ---
 
