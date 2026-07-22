@@ -105,7 +105,9 @@ jobs:
 
 ## 3. `CHANGELOG.md`
 
-Todo pacote publicável mantém um `CHANGELOG.md` no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) + [SemVer](https://semver.org/lang/pt-BR/), com uma entrada por versão (`## [x.y.z] - AAAA-MM-DD`) e seções `### Adicionado / Alterado / Corrigido`. O `CHANGELOG.md` de cada repo é a fonte por-pacote; o [changelog do site](../changelog.md) é o resumo cross-pacote.
+Todo pacote publicável mantém um `CHANGELOG.md` no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) + [SemVer](https://semver.org/lang/pt-BR/), com uma entrada por versão (`## [x.y.z] - AAAA-MM-DD`) e as seções `### Adicionado / Alterado / Corrigido / …`. O `CHANGELOG.md` de cada repo é a fonte por-pacote; o [changelog do site](../changelog.md) é o resumo cross-pacote. A entrada da nova versão deve existir **antes** de criar a tag de release.
+
+O formato completo — cabeçalho padrão, categorias permitidas e bootstrap de repos com histórico — está na norma dedicada de [Padronização de CHANGELOG.md](changelog.md).
 
 ---
 

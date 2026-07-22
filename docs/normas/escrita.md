@@ -139,7 +139,7 @@ uv run pytest
 
 ### `## Changelog`
 
-Todo pacote mantém um `CHANGELOG.md` (formato Keep a Changelog — ver [Publicação e Release](publicacao.md)); o README apenas aponta para ele:
+Todo pacote mantém um `CHANGELOG.md` (formato Keep a Changelog — ver [Padronização de CHANGELOG.md](changelog.md)); o README apenas aponta para ele:
 
 ```markdown
 ## Changelog

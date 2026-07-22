@@ -124,6 +124,7 @@ nav:
       - Padronização de CLI: normas/cli-fetchers.md
       - Padronização de .gitignore: normas/gitignore.md
       - Padronização de pyproject.toml: normas/pyproject.md
+      - Padronização de CHANGELOG.md: normas/changelog.md
       - Publicação e Release: normas/publicacao.md
       - Configuração Global: normas/configuracao.md
 
