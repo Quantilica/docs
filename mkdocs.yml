@@ -94,6 +94,12 @@ nav:
       - Clima & Meio Ambiente:
           - clima/index.md
           - inmet-fetcher: clima/inmet-fetcher.md
+      - Aviação Civil (ANAC):
+          - aviacao/index.md
+          - anac-fetcher: aviacao/anac-fetcher.md
+      - Petróleo, Gás e Biocombustíveis (ANP):
+          - petroleo/index.md
+          - anp-fetcher: petroleo/anp-fetcher.md
 
   - Cookbook:
       - cookbook/index.md
