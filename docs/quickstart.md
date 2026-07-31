@@ -23,7 +23,7 @@ quantilica install comex
 Se preferir utilizar como biblioteca Python dentro do seu projeto:
 
 ```bash
-uv add "comex-fetcher --extra-index-url https://quantilica.github.io/quantilica-index/simple/"
+uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/simple/"
 ```
 
 ---
