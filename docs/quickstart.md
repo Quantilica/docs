@@ -13,11 +13,18 @@ Quatro caminhos prontos para baixar e analisar um dataset público real, do zero
 - **[uv](https://github.com/astral-sh/uv)** para gerenciar ambientes (recomendado).
 
 ```bash
-# Cria um projeto novo
-uv init quantilica-demo && cd quantilica-demo
+# Instala a CLI unificada
+uv tool install quantilica-cli
+
+# Instala o fetcher desejado sob demanda
+quantilica install comex
 ```
 
-Se preferir `pip` puro, substitua `uv add` por `pip install` nos comandos abaixo.
+Se preferir utilizar como biblioteca Python dentro do seu projeto:
+
+```bash
+uv add "comex-fetcher --extra-index-url https://quantilica.github.io/quantilica-index/simple/"
+```
 
 ---
 

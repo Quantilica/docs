@@ -128,15 +128,32 @@ Dependa **por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allo
 
 ---
 
-## 6. Checklist de release
+## 7. Distribuição via GitHub Releases (Índice Próprio)
+
+Para mitigar a dependência exclusiva do PyPI e permitir instalação sem Git nem `git+https`, os pacotes de fetchers e bibliotecas auxiliares (`quantilica-analytics`, `quantilica-catalog` e `*-fetcher`) utilizam o modelo de **GitHub Releases + índice estático PEP 503 próprio** (hospedado no GitHub Pages em `quantilica-index`).
+
+### Quando usar PyPI vs. GitHub Releases
+
+- **PyPI:** Apenas para pacotes-âncora centrais (`quantilica-core` e `quantilica-cli`).
+- **GitHub Releases + Índice Próprio:** Para `quantilica-analytics`, `quantilica-catalog` e todos os repositórios `*-fetcher`.
+
+### Fluxo de Publicação via Release
+1. O desenvolvedor realiza o push da tag `vX.Y.Z`.
+2. O workflow `publish.yml` compila os artefatos com `uv build` e cria o Release no GitHub do próprio repositório contendo as `.whl` e `.tar.gz`.
+3. O workflow envia um evento `repository_dispatch` para `Quantilica/quantilica-index`, que regenera o índice estático no GitHub Pages em ~1 minuto.
+4. O usuário final instala a fonte sob demanda através da CLI: `quantilica install <fonte>`.
+
+---
+
+## 8. Checklist de release
 
 ```text
-[ ] Trusted Publisher + Environments configurados (§1, uma vez)
+[ ] Trusted Publisher + Environments configurados (§1, para pacotes do PyPI)
 [ ] CHANGELOG.md com a entrada da nova versão
 [ ] version bumpada no pyproject.toml
 [ ] deps são de registro (sem git+https / allow-direct-references)
 [ ] test.yml verde no main
 [ ] git tag vX.Y.Z && git push origin vX.Y.Z
-[ ] aprovar o gate do Environment pypi
-[ ] verificar: pip install <pacote>==X.Y.Z em venv limpa
+[ ] aprovar o gate do Environment pypi (se aplicável)
+[ ] verificar: quantilica install <fonte> ou pip install <pacote>==X.Y.Z em venv limpa
 ```

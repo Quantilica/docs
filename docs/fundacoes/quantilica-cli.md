@@ -12,28 +12,45 @@ A arquitetura híbrida (argparse no fetcher + Typer no plugin) está descrita em
 ## Instalação
 
 ```bash
-uv add "quantilica-cli @ git+https://github.com/Quantilica/quantilica-cli.git"
+uv tool install quantilica-cli
+# Ou via pip:
+pip install quantilica-cli
 ```
 
-Em seguida, instale os fetchers que quiser usar:
+Em seguida, instale as fontes de dados (fetchers) que quiser usar diretamente pela CLI:
 
 ```bash
-uv add "comex-fetcher @ git+https://github.com/Quantilica/comex-fetcher.git"
-uv add sidra-fetcher
+quantilica install comex
+quantilica install rtn
 # ...
 ```
 
-O `quantilica-cli` detecta automaticamente cada fetcher instalado.
+O `quantilica-cli` faz o download da distribuição do fetcher a partir do índice estático e o registra automaticamente no ambiente.
 
 ## Uso
 
-### Listar fontes disponíveis
+### Gerenciamento de Fontes de Dados
 
-```bash
-quantilica list-sources
-```
-
-Imprime uma tabela com todos os fetchers descobertos via entry points, no formato `quantilica <nome>`. Se nada estiver instalado, sugere instalar um fetcher.
+- **Instalar uma fonte:**
+  ```bash
+  quantilica install <fonte>
+  ```
+- **Desinstalar uma fonte:**
+  ```bash
+  quantilica uninstall <fonte>
+  ```
+- **Listar fontes instaladas:**
+  ```bash
+  quantilica list-sources
+  ```
+- **Listar todas as fontes conhecidas no repositório remoto:**
+  ```bash
+  quantilica list-sources --remote
+  ```
+- **Diagnosticar e recuperar fontes em caso de ambiente recriado:**
+  ```bash
+  quantilica doctor
+  ```
 
 ### Executar um fetcher
 
