@@ -405,6 +405,8 @@ sidra = "sidra_fetcher.plugin:app"
 
 O `<nome-curto>` é o que o usuário digitará: `quantilica <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
 
+> **Nota sobre instalação sob demanda:** O `quantilica-cli` descobre os entry points registrados em `quantilica.fetchers` automaticamente assim que o pacote é instalado via `quantilica install <fonte>`.
+
 ---
 
 ## 4. Padrões visuais Rich

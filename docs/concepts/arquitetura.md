@@ -53,10 +53,10 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
 | Tipo | Padrão Esperado | Exemplos |
 | :--- | :--- | :--- |
-| **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `datasus-fetcher`, `bcb-sgs-fetcher` |
+| **Client (Fetcher)** | Biblioteca Python + CLI simples (distribuído via GitHub Releases) | `sidra-fetcher`, `datasus-fetcher`, `bcb-sgs-fetcher` |
 | **Pipeline** | Motor ETL + definições TOML/SQL | `sidra-sql`, `bcb-sgs-sql`, `sidra-pipelines` |
 | **Data Package** | Download + Transformação + Export | `rtn-fetcher`, `inmet-fetcher` |
-| **CLI Host** | CLI unificada com descoberta por entry points | `quantilica-cli` |
+| **CLI Host** | CLI unificada (PyPI) com instalação de fontes sob demanda (`quantilica install`) | `quantilica-cli` |
 
 ## Camadas e responsabilidades
 
