@@ -518,51 +518,41 @@ with Progress(
     bulk.fetch_arvore_grupos(..., on_grupo=on_grupo)
 ```
 
-#### Dois níveis simultâneos com `Live + Group`
+#### Downloads Paralelos e Progresso Concorrente
 
-Para fetchers que baixam N arquivos grandes em sequência, exiba uma barra de itens (overall) e uma barra de bytes do arquivo atual ao mesmo tempo usando `Live + Group`:
+Para fetchers que baixam múltiplos arquivos onde é razoável paralelizá-los, adote o `concurrent.futures.ThreadPoolExecutor` e exiba barras concorrentes alocadas dinamicamente via `make_download_progress`.
+Exija também um argumento `--workers` (padrão `4`) na CLI:
 
 ```python
-from rich.console import Group
-from rich.live import Live
-from quantilica.core.cli import make_batch_progress, make_download_progress
-from quantilica.core.http import ProgressCallback
-from rich.progress import Progress, TaskID
-
-def _file_callback(
-    file_progress: Progress,
-    task_id: TaskID,
-    description: str,
-) -> ProgressCallback:
-    """Retorna ProgressCallback que alimenta uma task Rich de bytes."""
-    def callback(downloaded: int, total_bytes: int) -> None:
-        if downloaded == 0 and total_bytes == 0:   # sinal de retry
-            file_progress.reset(task_id)
-            file_progress.update(task_id, description=description, visible=True)
-            return
-        if total_bytes:
-            file_progress.update(task_id, total=total_bytes)
-        file_progress.update(task_id, completed=downloaded)
-    return callback
+import threading
+from quantilica.core.cli import make_download_progress
 
 # No comando:
-overall = make_batch_progress(console)
-file_prog = make_download_progress(console)
-overall_task = overall.add_task("[cyan]Iniciando...[/cyan]", total=total)
-file_task = file_prog.add_task("", total=None, visible=False)
+lock = threading.Lock()
+task_ids = {}
 
-ok = 0
-with Live(Group(overall, file_prog), console=console, refresh_per_second=10):
-    for year in years_list:
-        overall.update(overall_task, description=f"[cyan]{year}[/cyan]")
-        cb = _file_callback(file_prog, file_task, str(year))
-        get_year(data_dir=output, year=year, progress=cb)
-        file_prog.update(file_task, visible=False)
-        ok += 1
-        overall.update(overall_task, advance=1, description=f"[green]{ok}✓[/green]")
+with make_download_progress(console=console) as progress:
+    def on_bytes(filename: str, downloaded: int, total: int) -> None:
+        with lock:
+            if filename not in task_ids:
+                if downloaded == 0 and total == 0:
+                    return
+                task_id = progress.add_task(filename, total=total or None)
+                task_ids[filename] = task_id
+            
+            task_id = task_ids[filename]
+            if downloaded == 0 and total == 0: # retry
+                progress.update(task_id, completed=0)
+                return
+            progress.update(task_id, completed=downloaded, total=total or None)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        # submeter tarefas que internamente invocam on_bytes
+        # ex: executor.submit(get_year, data_dir=output, year=year, on_bytes=on_bytes)
+        pass
 ```
 
-`make_batch_progress` e `make_download_progress` são fornecidas por `quantilica.core.cli` e já usam o console correto. `ProgressCallback = Callable[[int, int], None]` é definida em `quantilica.core.http`. Veja o `comex-fetcher plugin.py :: sync` como referência.
+Isso garante o uso ótimo de rede e uma experiência interativa rica que atualiza as barras independentemente. Veja o `inmet-fetcher` como referência. Para casos nativamente assíncronos (`asyncio`), como o `tesouro-direto-fetcher` ou `rtn-fetcher`, aplique semáforos assíncronos e um callback análogo.
 
 ### 4.4 `Table` — exibição de dados tabulares
 
