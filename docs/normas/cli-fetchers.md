@@ -520,39 +520,60 @@ with Progress(
 
 #### Downloads Paralelos e Progresso Concorrente
 
-Para fetchers que baixam múltiplos arquivos onde é razoável paralelizá-los, adote o `concurrent.futures.ThreadPoolExecutor` e exiba barras concorrentes alocadas dinamicamente via `make_download_progress`.
-Exija também um argumento `--workers` (padrão `4`) na CLI:
+Para fetchers que baixam múltiplos arquivos onde é razoável paralelizá-los, adote o `concurrent.futures.ThreadPoolExecutor` e um **pool de barras concorrentes fixo** renderizadas via `make_download_progress`.
+Este padrão evita a poluição do console (quando há centenas de arquivos) ao reciclar as barras de progresso ativas. 
+Exija um argumento `--workers` (padrão `4`) na CLI:
 
 ```python
+import concurrent.futures
 import threading
 from quantilica.core.cli import make_download_progress
 
 # No comando:
 lock = threading.Lock()
-task_ids = {}
 
 with make_download_progress(console=console) as progress:
-    def on_bytes(filename: str, downloaded: int, total: int) -> None:
+    # 1. Pré-aloca exatamente `workers` barras invisíveis/inativas
+    worker_task_ids = [
+        progress.add_task("[dim]Inativo[/dim]", total=1) for _ in range(workers)
+    ]
+    available_tasks = worker_task_ids.copy()
+
+    def _worker(entry: dict) -> bool:
+        # 2. Worker adquire uma barra do pool ao iniciar
         with lock:
-            if filename not in task_ids:
-                if downloaded == 0 and total == 0:
-                    return
-                task_id = progress.add_task(filename, total=total or None)
-                task_ids[filename] = task_id
-            
-            task_id = task_ids[filename]
-            if downloaded == 0 and total == 0: # retry
+            task_id = available_tasks.pop(0)
+
+        # Atualiza a barra imediatamente com o nome do arquivo
+        progress.update(task_id, description=f"[cyan]{entry['id']}[/cyan]", completed=0, total=None)
+
+        def on_bytes(downloaded: int, total: int) -> None:
+            if downloaded == 0 and total == 0:
                 progress.update(task_id, completed=0)
                 return
-            progress.update(task_id, completed=downloaded, total=total or None)
+            progress.update(
+                task_id,
+                completed=downloaded,
+                total=total or None,
+            )
 
+        try:
+            download_entry(entry, progress=on_bytes)
+            return True
+        finally:
+            # 3. Limpa a barra e devolve ao pool
+            with lock:
+                progress.update(task_id, description="[dim]Inativo[/dim]", completed=0, total=1)
+                available_tasks.append(task_id)
+
+    # Nota: instancie o ThreadPoolExecutor sem o context manager `with` se quiser tratar
+    # KeyboardInterrupt graciosamente (cancelando futures e dando shutdown(wait=False)).
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        # submeter tarefas que internamente invocam on_bytes
-        # ex: executor.submit(get_year, data_dir=output, year=year, on_bytes=on_bytes)
-        pass
+        futures = {executor.submit(_worker, e): e for e in entries}
+        # iteração as_completed...
 ```
 
-Isso garante o uso ótimo de rede e uma experiência interativa rica que atualiza as barras independentemente. Veja o `inmet-fetcher` como referência. Para casos nativamente assíncronos (`asyncio`), como o `tesouro-direto-fetcher` ou `rtn-fetcher`, aplique semáforos assíncronos e um callback análogo.
+Isso garante o uso ótimo de rede e uma experiência interativa rica, sem poluir o terminal, enquanto os retornos globais (ok/falha) podem ser controlados por um `make_batch_progress` ou log à parte. Para casos nativamente assíncronos (`asyncio`), como o `tesouro-direto-fetcher` ou `rtn-fetcher`, aplique semáforos assíncronos e lógica similar de pop/append na lista `available_tasks`.
 
 ### 4.4 `Table` — exibição de dados tabulares
 
