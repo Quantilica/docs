@@ -566,11 +566,19 @@ with make_download_progress(console=console) as progress:
                 progress.update(task_id, description="[dim]Inativo[/dim]", completed=0, total=1)
                 available_tasks.append(task_id)
 
-    # Nota: instancie o ThreadPoolExecutor sem o context manager `with` se quiser tratar
-    # KeyboardInterrupt graciosamente (cancelando futures e dando shutdown(wait=False)).
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
+    futures = {}
+    try:
         futures = {executor.submit(_worker, e): e for e in entries}
-        # iteração as_completed...
+        for future in concurrent.futures.as_completed(futures):
+            # atualizar barra geral, lidar com resultados, etc.
+            pass
+        executor.shutdown(wait=True)
+    except KeyboardInterrupt:
+        for future in futures:
+            future.cancel()
+        executor.shutdown(wait=False, cancel_futures=True)
+        raise
 ```
 
 Isso garante o uso ótimo de rede e uma experiência interativa rica, sem poluir o terminal, enquanto os retornos globais (ok/falha) podem ser controlados por um `make_batch_progress` ou log à parte. Para casos nativamente assíncronos (`asyncio`), como o `tesouro-direto-fetcher` ou `rtn-fetcher`, aplique semáforos assíncronos e lógica similar de pop/append na lista `available_tasks`.
