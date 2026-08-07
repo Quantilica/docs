@@ -78,9 +78,17 @@ Regras de ouro:
   o `bcb-sgs` separam operações por série (`series sync`, `series metadata`) das
   operações de catálogo (`catalogo sync`, `catalogo metadata-bulk`).
 
+### 1.3 O Padrão FetcherApp (Recomendado)
+
+> **Novo (Agosto/2026):** Para reduzir o boilerplate, o `quantilica-cli` exporta a classe `quantilica.cli.sdk.FetcherApp`. 
+
+Fetchers padrão (que fazem download de datasets estruturados via HTTP estático) devem instanciar o `FetcherApp` em `plugin.py` e passar seus metadados, estrutura de catálogos (ex: `GROUPS`, `GROUP_ALIASES`) e uma factory de rotas (`path_builder`). Com isso, a `cli.py` atua apenas como wrapper de execução, removendo totalmente a necessidade de escrever `argparse`, subcomandos manuais, e formatações Rich descritas nas seções 2 a 5.
+
+As seções a seguir (2 a 5) devem ser aplicadas **apenas** aos fetchers que não conseguem adotar o `FetcherApp` (como os baseados em FTP, ex: `datasus-fetcher`, ou APIs REST paginadas complexas, ex: `sidra-fetcher`).
+
 ---
 
-## 2. CLI nativa — `cli.py`
+## 2. CLI nativa — `cli.py` (Apenas fetchers customizados)
 
 ### 2.1 Esqueleto obrigatório
 
