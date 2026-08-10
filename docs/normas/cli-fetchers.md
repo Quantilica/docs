@@ -351,7 +351,35 @@ Regras:
 - A opção `--verbose` deve existir em todo comando que realiza I/O de rede.
 - Nenhum tipo deve ser `Optional[X]` — use `X | None`.
 
-### 3.5 Subcommands aninhados
+### 3.5 Comandos Analíticos e Dependências Opcionais
+
+Fetchers são, por definição, ferramentas de extração leve. Subcomandos que exigem processamento de dados denso (como `convert` ou `pipeline`, que utilizam bibliotecas como `polars` ou `quantilica-analytics`) **não devem** impor essas dependências aos usuários que apenas desejam fazer o download (`sync`).
+
+Nesses casos, adote o seguinte padrão:
+
+1. Registre as dependências pesadas em `[project.optional-dependencies]` sob o grupo `analysis` no `pyproject.toml` do fetcher.
+2. Atrase as importações do módulo de conversão (ex: `from .reader import convert`) para o momento da execução do comando, isolando em um bloco `try...except ImportError`.
+3. Avise graciosamente o usuário caso o módulo não esteja disponível:
+
+```python
+@app.command("convert")
+def cmd_convert(
+    input: Annotated[Path, typer.Option("-i", "--input")] = Path("/data/fonte"),
+) -> None:
+    """Converter dados brutos para Parquet (requer extra 'analysis')."""
+    try:
+        from .reader import converte_dados
+    except ImportError:
+        console.print(
+            "[red]Erro:[/red] convert requer extras de análise: "
+            "pip install <pacote-fetcher>[analysis]"
+        )
+        raise typer.Exit(1) from None
+        
+    converte_dados(input)
+```
+
+### 3.6 Subcommands aninhados
 
 Para fetchers com mais de um eixo semântico, use `typer.Typer` aninhado. O
 `bcb-sgs` separa operações **por série** das operações de **catálogo**:
