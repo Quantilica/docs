@@ -11,7 +11,7 @@ Você trabalha com microdados do SUS — mortalidade (SIM), nascimentos (SINASC)
 
 | Dor | A ferramenta |
 |---|---|
-| 320+ GB de microdados em FTP legado que cai três vezes por semana | **[`datasus-fetcher`](../saude/datasus-fetcher.md)** |
+| 383+ GB de microdados em FTP legado que cai três vezes por semana | **[`datasus-fetcher`](../saude/datasus-fetcher.md)** |
 | Denominadores populacionais por município, ano, faixa etária | **[`sidra-fetcher`](../ibge/sidra-fetcher.md)** (Censo, Estimativas) |
 | Auditar exatamente qual versão do dado alimentou seu paper | **[Proveniência & Manifestos](../concepts/proveniencia.md)** |
 
@@ -47,7 +47,7 @@ print(df.shape)  # (linhas, colunas)
 
 ## Padrões que economizam tempo
 
-- **Filtre cedo.** Use `--regions sp rj mg` e `--start 2020-01 --end 2023-12` antes de qualquer download massivo. 320 GB começam pequenos quando você sabe o recorte.
+- **Filtre cedo.** Use `--regions sp rj mg` e `--start 2020-01 --end 2023-12` antes de qualquer download massivo. 383 GB começam pequenos quando você sabe o recorte.
 - **`.dbc` precisa de leitor próprio.** Use `pyreaddbc` ou converta para Parquet via [`quantilica-analytics`](../fundacoes/quantilica-analytics.md). `pd.read_csv` não abre.
 - **Baixe dicionários junto.** `datasus-fetcher sync --docs` traz os PDFs de descrição dos campos — sem eles, códigos como `RACACOR=4` ou `CAUSABAS=I64` são opacos.
 - **Use `--dry-run` antes do download real.** Mostra tamanho total e número de arquivos. Evita surpresa de 50 GB.

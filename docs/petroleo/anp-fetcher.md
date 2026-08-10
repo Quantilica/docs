@@ -7,13 +7,13 @@ description: Catálogo declarativo cobrindo preços de combustíveis (SHPC), ven
 
 Dados abertos e estatísticos da ANP (Agência Nacional do Petróleo, Gás Natural e Biocombustíveis).
 
-**anp-fetcher** descobre datasets a partir de um catálogo declarativo (sem chamadas de rede) e baixa cada um com manifesto de proveniência (`quantilica-core`), organizados por grupo.
+**anp-fetcher** descobre datasets a partir de um catálogo declarativo (sem chamadas de rede) e baixa cada um com manifesto de proveniência (`quantilica-core`), organizados por grupo. Ele foi projetado para esconder toda a complexidade e instabilidade da fonte original.
 
-!!! warning "Pegadinhas da fonte oficial"
+!!! warning "Pegadinhas da fonte oficial (que o anp-fetcher resolve para você)"
 
-    - **Convenção de nome de arquivo muda ao longo do tempo, dentro do mesmo dataset.** Ex.: preços mensais de diesel/GNV usam `precos-{produto}-{mm}.csv` até 2025 e `{mm}-dados-abertos-precos-{produto}.{ext}` a partir de 2026 (e abril/2026 sai em `.xlsx`, não `.csv`). O catálogo hardcoda cada exceção conhecida — ver `anp_fetcher/catalog_dados_abertos.py`.
-    - **Separador de campo muda entre `_`, `-` e nenhum.** Royalties por união/estado/município têm três eras de nomenclatura (`royalties_uniao_2018.csv` → `royalties-uniao-2019.csv`, com um ano isolado em subpasta própria).
-    - **Sem API.** Assim como no `anac-fetcher`, os dados-abertos da ANP são arquivos estáticos servidos a partir de páginas de conteúdo do `gov.br/anp`; não há endpoint consultável.
+    - **Convenção de nome de arquivo muda ao longo do tempo:** Ex.: preços mensais de diesel/GNV usam `precos-{produto}-{mm}.csv` até 2025 e `{mm}-dados-abertos-precos-{produto}.{ext}` a partir de 2026. Além disso, a partir de 2026, certos dados saem em `.xlsx` em vez de `.csv`. O fetcher tenta a extensão principal e possui URLs de fallback dinâmicas.
+    - **Separador de campo mutável:** Royalties por união/estado/município têm três eras de nomenclatura (`royalties_uniao_2018.csv` → `royalties-uniao-2019.csv`).
+    - **Sem API:** Os dados são arquivos estáticos servidos a partir de páginas do `gov.br/anp`; não há endpoint consultável. O catálogo da Quantilica resolve isso com hardcoding inteligente e lógica de predição temporal.
 
 ## Instalação
 
@@ -51,26 +51,56 @@ anp-fetcher sync shpc
 
 # Listar sem baixar
 anp-fetcher sync --dry-run
-
-# Listar todo o catálogo
-anp-fetcher discover
 ```
 
-### Integração com `quantilica-cli`
+## Fases dos Dados: Abertos vs Estatísticos
 
-```bash
-quantilica anp sync
-quantilica anp discover
-```
+O catálogo unifica duas fontes principais da ANP:
 
-## API Python
+1. **Dados Estatísticos (Fase 1):** Consolidados em planilhas (`XLS/XLSX`). Trazem totalizadores agregados (ex: `ie` para Importações/Exportações, `pp` para Processamento). Útil para visões macro e anuários.
+2. **Dados Abertos (Fases 2 e 3a):** Microdados granulares (geralmente em `.csv` ou `.zip`). Trazem os registros linha a linha (ex: vendas por município, preços por posto). Essencial para modelos de machine learning e painéis interativos.
+
+---
+
+## O Macro-Alias `shpc` (Preços de Combustíveis)
+
+O Sistema de Levantamento de Preços (SHPC) é vasto. Em vez de baixar subgrupos um por um, o `anp-fetcher` oferece o macro-alias `shpc`. 
+
+Ao executar `anp-fetcher sync shpc`, o fetcher expande e coleta automaticamente **seis** verticais da base de preços desde 2004:
+- `shpc-ca`: Combustíveis automotivos (Semestral, 2004–2025)
+- `shpc-glp`: GLP P13 (Semestral, 2004–2025)
+- `shpc-diesel-gnv`: Diesel e GNV (Mensal, 2023–hoje)
+- `shpc-gasolina-etanol`: Gasolina e Etanol (Mensal, 2023–hoje)
+- `shpc-glp-mensal`: GLP (Mensal, 2023–hoje)
+- `shpc-4s`: Últimas 4 semanas (Snapshot dinâmico)
+
+### Cookbook: Lendo o histórico do SHPC em Polars
+
+Uma vez que você baixou toda a base com `anp-fetcher sync shpc`, você terá dezenas de zips e csvs históricos. Para carregar tudo eficientemente:
 
 ```python
-from anp_fetcher.catalog import list_datasets
+import polars as pl
+from pathlib import Path
 
-for entry in list_datasets(group="ie"):
-    print(entry["id"], entry["url"])
+# Como a ANP altera encodings e separadores, uma leitura unificada
+# robusta em LazyFrames usa inferência agressiva e preenchimento de nulos.
+df_lazy = pl.scan_csv(
+    "data/anp/shpc-*/*.csv", 
+    separator=";", 
+    infer_schema_length=0, # Ler tudo como string primeiro para evitar erros de casting
+    ignore_errors=True
+)
+
+# Filtre apenas o que precisa antes de coletar para a RAM
+gasolina_sp = (
+    df_lazy
+    .filter(pl.col("Estado - Sigla") == "SP")
+    .filter(pl.col("Produto") == "GASOLINA")
+    .collect()
+)
 ```
+
+---
 
 ## Datasets
 
@@ -83,19 +113,6 @@ for entry in list_datasets(group="ie"):
 | `pb` | Produção de Biocombustíveis |
 | `ppg` | Produção de Petróleo e Gás Natural |
 | `vdpb` | Vendas de Derivados de Petróleo e Biocombustíveis |
-
-### Dados Abertos — SHPC (Sistema de Levantamento de Preços)
-
-Agrupáveis via o alias `shpc`.
-
-| Grupo | Descrição | Cobertura |
-|---|---|---|
-| `shpc-ca` | Preços de combustíveis automotivos | Semestral, 2004–presente |
-| `shpc-glp` | Preços de GLP P13 | Semestral, 2004–presente |
-| `shpc-diesel-gnv` | Preços de diesel (S-500, S-10) + GNV | Mensal, 2023–presente |
-| `shpc-gasolina-etanol` | Preços de gasolina C + etanol hidratado | Mensal, 2023–presente |
-| `shpc-glp-mensal` | Preços de GLP P13 | Mensal, 2023–presente |
-| `shpc-4s` | Preços das últimas 4 semanas | Snapshot atual |
 
 ### Dados Abertos — Vendas, Produção e Comércio Exterior
 
@@ -113,36 +130,18 @@ Agrupáveis via o alias `shpc`.
 
 | Grupo | Descrição |
 |---|---|
-| `comercializacao-gn` | Comercialização de gás natural (distribuidoras, produtores, comercializadores) |
-| `movimentacao-terminais` | Movimentação de terminais aquaviários de derivados |
+| `comercializacao-gn` | Comercialização de gás natural |
+| `movimentacao-terminais` | Movimentação de terminais aquaviários |
 | `armazenagem-terminais` | Capacidade de armazenagem de terminais |
-| `movimentacao-gn` | Movimentação de gás natural em gasodutos de transporte |
-| `movimentacao-derivados` | Logística de derivados (asfalto, aviação, GLP, lubrificantes, TRR, etc.) |
 | `tancagem` | Tancagem do abastecimento nacional de combustíveis |
 | `pmqc` | Monitoramento da qualidade dos combustíveis |
 | `incidentes` | Incidentes de segurança operacional em E&P |
-| `rodadas` | Rodadas de licitações (blocos, ofertas vencedoras, cessão de contratos) |
+| `rodadas` | Rodadas de licitações |
 | `concessionarios` | Relação de concessionários e país de origem |
-| `revendedores` / `revendas-glp` | Cadastro de revendedores varejistas / revendas de GLP |
-| `registro-lubrificantes` / `pml` | Registro e monitoramento de qualidade de lubrificantes |
-| `fiscalizacao` | Ações de fiscalização do abastecimento |
-| `royalties` | Participações governamentais (royalties, participação especial, preços de referência) |
+| `revendedores` / `revendas-glp` | Cadastro de revendedores varejistas |
+| `royalties` | Participações governamentais (royalties, participação especial) |
 
-Execute `anp-fetcher discover` para a lista completa com URLs.
-
-## Layout em Disco
-
-```
-/data/anp/
-├── importacoes-exportacoes/ie-m3@20260529.xlsx
-├── shpc-combustiveis-automotivos/shpc-ca_2024-01@20260601.zip
-├── vendas-abertos/vdpb-a-combustiveis-m3@20260715.csv
-└── participacoes-governamentais/royalties-uniao_2020@20260629.csv
-```
-
-## Fonte de Dados
-
-[Portal de Dados Abertos da ANP](https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos).
+Execute `anp-fetcher discover` para a lista completa.
 
 ## Saiba Mais
 

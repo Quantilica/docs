@@ -1,262 +1,109 @@
 ---
-title: pdet-fetcher — Microdados RAIS e CAGED em Polars
-description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mensais) do PDET. Polars-native, CSV ragged-tolerant, bulk-convert para Parquet.
+title: pdet-fetcher — Microdados RAIS e CAGED
+description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mensais) do PDET. 59+ GB de histórico laboral brasileiro.
 ---
 
-# pdet-fetcher — Microdados de Mercado de Trabalho Brasileiro
+# Mercado de Trabalho Brasileiro (PDET)
 
-**pdet-fetcher** é um pacote Python para buscar, ler e converter microdados de PDET (Plataforma de Disseminação de Estatísticas do Trabalho) — plataforma oficial de estatísticas de trabalho do Brasil mantida pelo Ministério do Trabalho e Previdência Social.
+**pdet-fetcher** busca, lê e converte microdados do PDET (Plataforma de Disseminação de Estatísticas do Trabalho), hospedada pelo Ministério do Trabalho. 
 
-Cobre RAIS (censo anual de emprego) e CAGED (fluxos mensais de emprego), incluindo CAGED legado até 2019 e CAGED redesenhado 2020+. Output é DataFrames Polars, com utilitários para bulk-convert de arquivos brutos para Parquet.
+Cobre a **RAIS** (censo anual de emprego) e o **CAGED** (fluxos mensais de emprego), englobando tanto o formato legado (até 2019) quanto o novo (2020+).
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **CAGED mudou em 2020.** Schema, separadores e colunas diferentes entre `caged` (até 2019), `caged-ajustes` e `caged-2020`. Use o dataset certo no `convert`.
-    - **CSVs são "ragged".** Linhas com número variável de colunas, separador `;`, encoding `latin-1`. O reader já conserta, mas `pl.read_csv` cru vai falhar.
-    - **Arquivos vêm em `.7z`.** Você precisa do CLI `7z` no `PATH`. Sem ele, `convert` falha com erro de subprocesso.
-    - **RAIS é gigante.** Vínculos por ano ultrapassam 50M linhas e ~5 GB. Processe em chunks por UF ou por ano; nunca carregue tudo em memória.
-    - **`-9999` significa nulo em algumas colunas.** O `pdet-fetcher` aplica os mapeamentos via metadados por coluna; verifique se sua análise não conta `-9999` como número real.
-    - **FTP cai com frequência.** `fetch` faz retry, mas em horário de pico (manhã útil) pode ser melhor rodar à noite ou em fim de semana.
-
-## Recursos Principais
-
-- **FTP fetcher** — baixa tudo de `ftp.mtps.gov.br` (RAIS, CAGED, docs)
-- **Smart CSV reader** — auto-detecta separator, lida com `latin-1` e `utf-8`, conserta CSVs ragged
-- **Type conversion** — `INT64`, `FLOAT64`, `Boolean` e `Categorical` baseado em metadata por coluna
-- **Bulk Parquet conversion** — `convert_rais` / `convert_caged` orquestram decompression + read + write
-- **Schema introspection** — `extract_columns_for_dataset` dumpa todo header por arquivo para CSV
-- **Polars-native** — processamento colunares rápido com dependências mínimas (`polars`, `tqdm`)
+    - **CAGED mudou em 2020.** Schema, separadores e colunas variam drasticamente entre o legado (`caged`) e o atual (`caged-2020`).
+    - **CSVs são irregulares ("ragged").** Linhas com número variável de colunas, delimitador `;` falho, encoding `latin-1` mesclado com lixo invisível. O `read_csv` nativo do Pandas falhará silenciosamente ou quebrará. O fetcher possui tratativas robustas para varrer as impurezas.
+    - **Formato `.7z` é nativo.** Os arquivos vêm em 7-Zip. Você *precisa* do binário `7z` instalado no sistema (`apt-get install p7zip-full` ou `brew install p7zip`), caso contrário as funções de conversão quebrarão com erro de subprocesso.
+    - **Volumes Inviáveis em RAM.** Um único ano da RAIS pode ter mais de 50 milhões de vínculos (~5 GB descomprimido). **Nunca carregue tudo em memória** usando `pd.read_csv()`. Sempre converta para Parquet e use LazyFrames.
+    - **Nulos como valores extremos.** O valor `-9999` frequentemente representa `NULL` em variáveis contínuas.
 
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/pdet-fetcher.git
+pip install pdet-fetcher
 ```
 
-**Requisitos:** Python 3.12+ e o CLI `7z` em `PATH` (usado por `convert_*` para extrair arquivos `.7z`).
+**Requisitos:** Python 3.12+ e o CLI `7z` no seu `PATH`.
 
-## CLI
+## CLI Oficial (Ambiente Unificado)
 
-O pacote instala o comando `pdet-fetcher` (também disponível como `python -m pdet_fetcher`) com cinco subcomandos:
+Para operar a extração, prefira utilizar a CLI unificada `quantilica`:
 
-```text
-pdet-fetcher <subcommand> [args]
+```bash
+# Sincroniza RAIS e CAGED por completo (download)
+quantilica pdet sync -o ./data
 
-Subcomandos:
-  sync     [DATASETS...] [-o DIR]   Sincroniza RAIS e CAGED (data + docs). Sem
-                                    DATASETS, baixa rais, caged e caged-2020.
-  list     [-o DIR]                 Lista arquivos remotos ainda ausentes localmente
-  convert  -i DATA_DIR [-o DIR]     Descomprime os arquivos brutos e escreve Parquet
-  columns  DATASET -i DATA_DIR [-o OUT_DIR]
-                                    Dumpa headers de coluna por arquivo para CSV
-  pipeline [DATASETS...] [-o DIR] [--parquet-dir DIR]
-                                    Pipeline completo: sync -> convert
+# Pipeline completo: sincroniza os .7z brutos e já converte tudo para Parquet
+quantilica pdet pipeline -o ./data --parquet-dir ./parquet
+
+# Listar os schemas de colunas de um dataset específico
+quantilica pdet columns rais-vinculos -i ./data -o ./schemas
 ```
 
-`DATASET` para `columns` aceita: `rais-vinculos`, `rais-estabelecimentos`, `caged`, `caged-ajustes`, `caged-2020`.
+---
 
-## Início Rápido
+## Datasets Disponíveis (Macro-Grupos)
 
-### 1. Baixar todos os dados
+Os argumentos do subcomando `sync` mapeiam para as verticais do Ministério do Trabalho:
+
+- **`rais-vinculos`** — Vínculos empregatícios formais do censo anual.
+- **`rais-estabelecimentos`** — Características do CNPJ empregador.
+- **`caged`** — Fluxos de emprego mensais até 2019.
+- **`caged-ajustes`** — Arquivos atrasados retroativos do CAGED legado.
+- **`caged-2020`** — Novo sistema (2020+), que baixa autonomamente os movimentos (`caged-2020-mov`), os fora do prazo (`caged-2020-for`) e as exclusões (`caged-2020-exc`).
+
+---
+
+## Cookbook Analítico: Lendo a gigantesca RAIS sem estourar a memória
+
+Uma vez que você baixou a base da RAIS e do CAGED usando o `quantilica pdet pipeline` (que já converte os 7z irregulares para Parquets tipados otimizados), você lidará com dezenas de gigabytes em disco.
+
+A melhor maneira de analisar fluxos de trabalho é usar a API Lazy do Polars (ou DuckDB). O Polars criará um grafo de execução e enviará os filtros de agregação **diretamente para o motor de leitura do Parquet**, trazendo para a RAM apenas os poucos bytes necessários da tabela final.
+
+```python
+import polars as pl
+
+# Mapeia todos os anos dos vínculos da RAIS (ex: mais de 2 bilhões de linhas ao todo)
+df_rais = pl.scan_parquet("parquet/rais_vinculos_*.parquet")
+
+# Qual foi o salário médio por gênero (coluna 'sexo_trabalhador') no setor 
+# de Tecnologia da Informação (CNAE 6204-0)?
+analise_ti = (
+    df_rais
+    .filter(pl.col("cnae_20_classe") == "62040") # Filtro executado direto no disco!
+    .group_by(["ano", "sexo_trabalhador"])
+    .agg(
+        pl.col("vl_remun_media_nom").mean().alias("salario_medio"),
+        pl.count().alias("total_trabalhadores")
+    )
+    .sort(["ano", "sexo_trabalhador"])
+    .collect() # O processamento massivo só ocorre aqui
+)
+
+print(analise_ti)
+```
+
+## Uso sem o Ambiente Unificado (Isolado)
+
+Para ambientes de container minimalistas onde o `quantilica-cli` não está presente, você pode invocar o pacote autônomo diretamente:
 
 ```bash
 pdet-fetcher sync -o ./data
-```
-
-Python equivalente:
-
-```python
-from pathlib import Path
-from pdet_fetcher import (
-    fetch_rais, fetch_rais_docs,
-    fetch_caged, fetch_caged_docs,
-    fetch_caged_2020, fetch_caged_2020_docs,
-)
-
-dest = Path("./data")
-fetch_rais(dest_dir=dest)
-fetch_rais_docs(dest_dir=dest)
-fetch_caged(dest_dir=dest)
-fetch_caged_docs(dest_dir=dest)
-fetch_caged_2020(dest_dir=dest)
-fetch_caged_2020_docs(dest_dir=dest)
-```
-
-### 2. Converter arquivos brutos para Parquet
-
-```bash
 pdet-fetcher convert -i ./data -o ./parquet
 ```
 
-```python
-from pathlib import Path
-from pdet_fetcher import convert_rais, convert_caged
-
-convert_rais(Path("./data"), Path("./parquet"))
-convert_caged(Path("./data"), Path("./parquet"))
-```
-
-### 3. Ler CSVs RAIS
+Você também pode utilizar as rotinas de limpeza via Python, que já corrigem os encondings e os delimitadores defeituosos:
 
 ```python
 from pathlib import Path
-import polars as pl
-from pdet_fetcher.reader import read_rais
+from pdet_fetcher.reader import read_rais, read_caged
 
-df = read_rais(
-    filepath=Path("data/rais_2023_vinculos.csv"),
-    year=2023,
-    dataset="vinculos",       # or "estabelecimentos"
-)
-
-top_sectors = (
-    df.group_by("cnae_setor")
-      .agg(pl.col("id_vinculo").count().alias("num_employees"))
-      .sort("num_employees", descending=True)
-      .head(10)
-)
+# Isso aplicará auto-detect de schema, truncamento de colunas extra, e conversão de 0/1 para Boolean.
+df_vinculos = read_rais(Path("data/rais_2023_vinculos.csv"), year=2023, dataset="vinculos")
+df_mov_caged = read_caged(Path("data/cagedmov_202401.csv"), date=202401, dataset="caged-2020-mov")
 ```
-
-### 4. Ler CSVs CAGED (legado ou 2020+)
-
-Um único `read_caged` cobre todas as variantes, despachadas pelo argumento `dataset`:
-
-| `dataset` | Fonte | Período |
-|---|---|---|
-| `caged` | CAGED Legado | até 2019 |
-| `caged-ajustes` | CAGED Legado — arquivos atrasados | até 2019 |
-| `caged-2020-mov` | CAGED Novo — movimentos em tempo | 2020+ |
-| `caged-2020-for` | CAGED Novo — arquivos atrasados | 2020+ |
-| `caged-2020-exc` | CAGED Novo — exclusões | 2020+ |
-
-```python
-from pathlib import Path
-import polars as pl
-from pdet_fetcher.reader import read_caged
-
-df_caged = read_caged(
-    Path("data/caged_201812.csv"),
-    date=201812,
-    dataset="caged",
-)
-
-df_mov = read_caged(
-    Path("data/cagedmov_202401.csv"),
-    date=202401,
-    dataset="caged-2020-mov",
-)
-
-balance = (
-    df_mov.with_columns(saldo=pl.col("admissoes") - pl.col("demissoes"))
-          .group_by("uf")
-          .agg(pl.col("saldo").sum())
-          .sort("saldo", descending=True)
-)
-```
-
-### 5. Extrair schema por arquivo
-
-```bash
-pdet-fetcher columns rais-vinculos -i ./data -o ./schemas
-```
-
-```python
-from pathlib import Path
-from pdet_fetcher import extract_columns_for_dataset
-
-extract_columns_for_dataset(
-    data_dir=Path("./data"),
-    glob_pattern="rais-*.*",
-    output_file=Path("./schemas/rais-vinculos-columns.csv"),
-    encoding="latin-1",
-    has_uf=True,
-)
-```
-
-## Dados Disponíveis
-
-### RAIS (Relação Anual de Informações Sociais)
-
-Censo anual de emprego formal. Datasets: `rais-vinculos` (vínculos de emprego) e `rais-estabelecimentos` (estabelecimentos). Cobertura de 1985 até presente.
-
-### CAGED legado
-
-Fluxos de emprego mensais até dezembro de 2019. Datasets: `caged`, `caged-ajustes`.
-
-### CAGED Novo (2020+)
-
-Fluxos de emprego mensais a partir de janeiro de 2020, divididos em três arquivos por competência:
-
-- `caged-2020-mov` — movimentos em tempo
-- `caged-2020-for` — registros atrasados
-- `caged-2020-exc` — exclusões / cancelamentos retroativos
-
-## Arquitetura
-
-```
-src/pdet_fetcher/
-├── __init__.py        # Re-exporta API pública
-├── __main__.py        # CLI (fetch / list / convert / columns)
-├── fetch.py           # Conexão FTP, listagem, downloads
-├── reader.py          # Parsing CSV + conversão de dtype
-├── wrangling.py       # convert_rais, convert_caged, extract_columns_for_dataset
-├── storage.py         # Convenções de caminho de destino
-├── constants.py       # Schemas de coluna por ano, valores NA, lista de arquivos ragged
-└── meta.py            # Diretórios FTP e padrões de nome de arquivo
-```
-
-Pipeline: FTP → arquivo comprimido (`.7z` / `.zip`) → extração `7z` → CSV → `read_rais` / `read_caged` → DataFrame Polars tipado → Parquet.
-
-## API Pública
-
-Importável diretamente de `pdet_fetcher`:
-
-| Função | Propósito |
-|---|---|
-| `list_rais()`, `list_rais_docs()` | Iterar metadata de arquivos RAIS / docs disponíveis. |
-| `list_caged()`, `list_caged_docs()` | Iterar arquivos CAGED legado / docs. |
-| `list_caged_2020()`, `list_caged_2020_docs()` | Iterar arquivos CAGED Novo / docs. |
-| `fetch_rais(dest_dir)`, `fetch_rais_docs(dest_dir)` | Baixar dados RAIS / docs. |
-| `fetch_caged(dest_dir)`, `fetch_caged_docs(dest_dir)` | Baixar dados CAGED legado / docs. |
-| `fetch_caged_2020(dest_dir)`, `fetch_caged_2020_docs(dest_dir)` | Baixar dados CAGED Novo / docs. |
-| `convert_rais(data_dir, dest_dir)` | Descompactar + ler + escrever Parquet para cada arquivo RAIS. |
-| `convert_caged(data_dir, dest_dir)` | Mesmo para cada arquivo CAGED (legado + 2020+). |
-| `extract_columns_for_dataset(...)` | Dumpar headers por arquivo para um glob de dataset. |
-
-Helpers de leitura de baixo nível em `pdet_fetcher.reader`:
-
-- `read_rais(filepath, year, dataset, **read_csv_args)` — `dataset` ∈ `{"vinculos", "estabelecimentos"}`
-- `read_caged(filepath, date, dataset, **read_csv_args)` — `dataset` ∈ `{"caged", "caged-ajustes", "caged-2020-mov", "caged-2020-for", "caged-2020-exc"}`
-- `write_parquet(df, filepath)`
-- `decompress(file_metadata)` — chamada ao binário `7z`
-
-## Qualidade de Dados
-
-`read_rais` / `read_caged` automaticamente:
-
-- Detectam separador CSV (`;`, `\t`, `,`) na primeira linha
-- Usam encoding correto (`latin-1` para RAIS / CAGED legado, `utf-8` para CAGED Novo)
-- Removem espaço em branco e separadores de milhares de `INTEGER_COLUMNS`
-- Convertem vírgulas decimais para pontos para `NUMERIC_COLUMNS`
-- Fazem cast de `BOOLEAN_COLUMNS` de inteiros `0/1` para `Boolean`
-- Fazem cast de todo o resto para `Categorical` depois de `strip_chars()`
-- Truncam linhas muito longas em arquivos listados em `constants.RAGGED_CSV_FILES` para largura do header
-
-## Performance
-
-Para um ano RAIS completo (~10 GB descomprimido):
-
-| Etapa | Tempo | Pico de memória |
-|------|-----------|-------------|
-| Download FTP | 5–15 min | – |
-| Extração `7z` | 1–3 min | – |
-| `read_rais` (parse + cast) | ~10 s | ~2 GB |
-| Group-by / agg simples | <1 s | – |
-
-*Referência: CPU moderno, 16 GB RAM, SSD.*
 
 ## Saiba Mais
 
-- **[Dados de Comércio Exterior](../comex/comex-fetcher.md)** — Estatísticas comerciais
 - **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — Design do sistema
 - **[PDET Oficial](http://pdet.mte.gov.br/microdados-rais-e-caged)** — Fonte governamental

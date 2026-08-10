@@ -5,188 +5,112 @@ description: Downloader resiliente para os arquivos GB do Siscomex (importação
 
 # Comércio Exterior (Comex)
 
-Dados de importação/exportação brasileira do Siscomex (Sistema Integrado de Comércio Exterior).
+Dados de importação e exportação brasileira extraídos do Siscomex (Sistema Integrado de Comércio Exterior).
 
-**comex-fetcher** é um agente de extração resiliente de rede para dados Siscomex — projetado para lidar com a infraestrutura governamental legada com downloads idempotentes e eficiência streaming.
+**comex-fetcher** é um agente de extração resiliente de rede — projetado especificamente para lidar com a infraestrutura governamental legada, superando instabilidades através de downloads idempotentes e eficiência via *chunk streaming*.
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **Arquivos em escala de GB.** Cada arquivo anual de NCM 4-dígitos passa fácil de 1 GB. Use sempre o reader em chunks; `pd.read_csv` cru estoura memória.
-    - **SSL frequentemente quebrado.** O servidor do Siscomex tem cadeia de certificados incompleta em janelas curtas. O `comex-fetcher` tem fallback configurável.
-    - **Schema NCM vs NBM.** NCM cobre 1997+; NBM cobre 1989–1996 com colunas diferentes. Não confunda o dataset histórico com o atual.
-    - **Códigos auxiliares são tabelas separadas.** País, UF, via de transporte, URF — 20+ tabelas de código. Sem juntar essas dimensões, "valor" sozinho não diz nada.
-    - **Idempotência é temporal, não por hash.** Arquivos do mesmo período não são re-baixados; mas se o Siscomex republicar com correção, você precisa forçar re-download.
-    - **Mês corrente é parcial.** O Siscomex publica o mês fechado por volta do dia 15 do mês seguinte. Não tire conclusões de séries com o último ponto incompleto.
-
-## O Desafio
-
-Extrair dados de comércio brasileiro programaticamente atinge obstáculos reais de infraestrutura:
-
-- **Volume colossal**: Arquivos CSV em escala de gigabytes esgotam downloads ingênuos em memória
-- **Servidores instáveis**: Throttling de largura de banda, problemas de certificado SSL, quedas ocasionais
-- **Downloads redundantes**: Sem APIs modernas, re-executar pipelines busca novamente arquivos que não mudaram
-
-**comex-fetcher** resolve esses problemas através de downloads idempotentes, chunks streaming, resiliência SSL e auto-retry.
-
-## Casos de Uso
-
-### Análise de Comércio
-
-Entender os padrões de exportação, especialização e vantagem comparativa do Brasil por commodity e destino.
-
-### Estudos de Competitividade
-
-Analisar crescimento de exportações, diversificação de produtos, penetração de mercado e posição competitiva.
-
-### Indicadores Econômicos
-
-Saldo comercial e fluxos como indicadores antecedentes de atividade econômica e movimentos cambiais.
-
-### Pesquisa de Cadeia de Suprimentos
-
-Rastrear importações de bens intermediários, insumos e equipamentos de capital por setor.
-
-### Inteligência de Mercado
-
-Monitorar países concorrentes e tendências de acesso ao mercado.
-
-## Recursos
-
-- **Idempotência temporal** — requisição HEAD verifica `Last-Modified`; pula arquivos já atualizados
-- **Downloads streaming** — chunks de 8 KiB; memória constante independente do tamanho do arquivo
-- **Escritas atômicas** — downloads para `*.tmp` e renomeia no sucesso; arquivos parciais nunca aparecem
-- **Auto-retry** — até 3 tentativas com backoff exponencial (1 s → 2 s → 4 s)
-- **Resiliência SSL** — usa contexto SSL não verificado para servidores SECEX com certificados expirados/mal configurados
-- **Sem dependências terceirizadas** — biblioteca padrão pura (`urllib`, `ssl`, `http.client`)
+    - **Arquivos em escala de GB.** Cada arquivo anual de transações (NCM 4-dígitos) atinge facilmente múltiplos gigabytes. Utilize `polars.scan_csv` (avaliação lazy) ou os converta para `.parquet`; um mero `pd.read_csv` causará Out Of Memory (OOM).
+    - **SSL frequentemente quebrado.** O servidor do Siscomex e do MDIC possui a fama de deixar a cadeia de certificados incompleta em curtas janelas de tempo. A CLI possui um fallback não-verificado (unverified context) configurável para não quebrar pipelines noturnos.
+    - **Schema NCM vs NBM.** A classificação NCM cobre as transações de 1997 em diante; a NBM cobre o buraco negro de 1989 a 1996 e possui colunas diferentes. Não os concatene de olhos fechados.
+    - **A matrix dimensional.** Os arquivos principais trazem apenas IDs numéricos (País=23, UF=1). O real valor analítico só surge quando você faz JOIN com as 20+ tabelas auxiliares (países, municípios, vias de transporte) que a CLI baixa automaticamente.
+    - **Idempotência é temporal.** Como não há API moderna fornecendo Hashes, o fetcher usa requisições `HEAD` para validar o cabeçalho `Last-Modified` do servidor FTP/HTTP. Se o MDIC corrigir uma linha do passado, ele baixará novamente o arquivo modificado de forma indetectável para você.
 
 ## Instalação
 
 ```bash
-pip install git+https://github.com/Quantilica/comex-fetcher.git
+pip install comex-fetcher
 ```
 
 **Requisitos:** Python 3.12+
 
-## CLI
+## CLI Oficial (Ambiente Unificado)
 
-```text
-comex-fetcher <command> [args]
-
-Comandos:
-  sync [YEARS...] [-exp] [-imp] [-mun] [--no-tables] [--tables-only] [--dry-run] [-o PATH]
-        Sincronizar transações comerciais e tabelas auxiliares.
-        Sem YEARS, baixa todos os anos desde 1989; aceita anos (2023) e
-        intervalos (2018:2023). -exp / -imp restringem a direção; padrão
-        baixa ambas. -mun adiciona arquivos no nível municipal (1997+).
-        --no-tables pula as tabelas; --tables-only baixa apenas as tabelas;
-        --dry-run lista sem baixar.
-  list  Listar as tabelas de códigos auxiliares disponíveis.
-```
-
-`PATH` padrão é `data/secex-comex`.
-
-### Exemplos
+A porta de entrada primária para baixar transações internacionais é o executável `quantilica`. A CLI orquestra automaticamente a validação temporal, os retries e o streaming:
 
 ```bash
-# Exportações + importações para 2023 (+ tabelas auxiliares)
-comex-fetcher sync 2023 -o ./DATA
+# Baixar exportações e importações completas para 2023 (+ tabelas auxiliares)
+quantilica comex sync 2023 -o ./data
 
-# Apenas importações, 2018–2023, com breakdown municipal
-comex-fetcher sync 2018:2023 -imp -mun -o ./DATA
+# Baixar apenas as importações (de 2018 até 2023), no nível granular de municípios
+quantilica comex sync 2018:2023 -imp -mun -o ./data
 
-# Listar sem baixar
-comex-fetcher sync --dry-run 2023 -o ./DATA
+# Longa duração (multi-GB): clonar a base completa (todos os anos) + tabelas de códigos
+quantilica comex sync -o ./data
 
-# Apenas as tabelas auxiliares de códigos
-comex-fetcher sync --tables-only -o ./DATA
-
-# Apenas as transações, sem tabelas
-comex-fetcher sync 2023 --no-tables -o ./DATA
-
-# Listar tabelas auxiliares disponíveis
-comex-fetcher list
-
-# Tudo (longa duração, multi-GB): todos os anos + todas as tabelas
-comex-fetcher sync -o ./DATA
+# Apenas atualizar as tabelas auxiliares
+quantilica comex sync --tables-only -o ./data
 ```
 
-## API Python
+---
 
-Funções de nível superior em `comex-fetcher`:
+## Datasets e Tabelas (Macro-Grupos)
+
+### Transações Comerciais Fato
+- `exp` / `imp`: Exportações/Importações normais (1997+, nível UF)
+- `exp-mun` / `imp-mun`: Exportações/Importações mais granulares, rastreando o município emissor/receptor.
+- `exp-nbm` / `imp-nbm`: Legado histórico (1989-1996) sob a classificação NBM.
+
+### Tabelas Auxiliares (Dimensões)
+Ao sincronizar o Comex, a ferramenta puxa silenciosamente dicionários indispensáveis, salvos em `auxiliary-tables/`:
+- `ncm` (Nomenclatura Comum do Mercosul), `sh` (Sistema Harmonizado)
+- `pais`, `pais-bloco` (Mercosul, União Europeia, etc)
+- `uf-mun` (Municípios), `via` (Marítima, Aérea, etc), `urf` (Unidade da Receita Federal)
+
+---
+
+## Cookbook Analítico: Agregações em GBs com Polars
+
+O volume de arquivos CSV gerados pelo SISCOMEX facilmente esgota a memória RAM, especialmente quando você busca granularidade municipal (`-mun`).
+
+Abaixo demonstramos a maneira idiomática de cruzar os dados faturados (gigantescos) com a tabela de códigos NCM (pequena) executando o cálculo inteiramente em *streaming*:
 
 ```python
+import polars as pl
 from pathlib import Path
-import comex_fetcher
 
-data_dir = Path("./DATA")
+# 1. Carrega as tabelas pequenas de metadados em memória (Eager)
+df_ncm = pl.read_csv(
+    "data/secex-comex/auxiliary-tables/ncm.csv", 
+    separator=";", 
+    encoding="latin-1"
+)
 
-# Transações comerciais para um ano (baseado em NCM, 1997+)
-comex_fetcher.get_year(data_dir, year=2023)                     # exports + imports
-comex_fetcher.get_year(data_dir, year=2023, exp=True)           # apenas exportações
-comex_fetcher.get_year(data_dir, year=2023, imp=True, mun=True) # importações, município
+# 2. Registra todos os anos de exportação no motor Lazy
+# (O Polars não lê os GBs agora, apenas examina o schema)
+df_export = pl.scan_csv(
+    "data/secex-comex/exp-mun/*.csv", 
+    separator=";", 
+    encoding="latin-1"
+)
 
-# Dados comerciais antigos baseados em NBM (1989–1996)
-comex_fetcher.get_year_nbm(data_dir, year=1995)
+# 3. Descobrir os 5 produtos que o Brasil mais faturou em Dólar na década
+top_commodities = (
+    df_export
+    # Faz o JOIN com os nomes legíveis antes mesmo de coletar!
+    .join(df_ncm.lazy(), left_on="CO_NCM", right_on="CO_NCM", how="left")
+    # Agrega o valor total faturado (FOB) em Dólar
+    .group_by("NO_NCM_POR")
+    .agg(pl.col("VL_FOB").sum().alias("Total_Dolar"))
+    .sort("Total_Dolar", descending=True)
+    .head(5)
+    .collect() # <-- Aqui o motor lê tudo paralelamente otimizando o I/O
+)
 
-# Tabela de códigos auxiliares
-comex_fetcher.get_table(data_dir, table="ncm")
-comex_fetcher.get_table(data_dir, table="pais")
-
-# Tudo (tabelas auxiliares + todas as séries anuais disponíveis)
-comex_fetcher.download_all(data_dir)
+print(top_commodities)
 ```
 
-Helper de baixo nível em `comex_fetcher.download`: `download_file(url, output, retry=3, blocksize=8192)`.
+## Resiliência de Rede Oculta
+Se a sua conexão cair em 95% do download de um arquivo de 2 GB, o `comex-fetcher` não perde o trabalho. Ele baixa nativamente todos os *chunks* para extensões `.tmp`. Somente após o checksum e sucesso a transferência é efetivada, garantindo escritas 100% atômicas no seu datalake.
 
-## Datasets
+## Uso sem Ambiente Unificado (Isolado)
 
-### Transações comerciais
-
-| Dataset | Cobertura | Notas |
-|---|---|---|
-| `exp`, `imp` | 1997–presente | Baseado em NCM, granularidade mensal |
-| `exp-mun`, `imp-mun` | 1997–presente | Mesmo, com município de origem/destino |
-| `exp-nbm`, `imp-nbm` | 1989–1996 | Pré-NCM, classificação NBM |
-| `exp-completa`, `imp-completa` | histórico completo | Arquivo único agrupado por direção |
-| `exp-mun-completa`, `imp-mun-completa` | histórico completo | Mesmo, com município |
-
-### Totais de validação (somas cross-check)
-
-`exp-validacao`, `imp-validacao`, `exp-mun-validacao`, `imp-mun-validacao`.
-
-### REPETRO (regime especial de petróleo & gás)
-
-`exp-repetro`, `imp-repetro`.
-
-### Tabelas auxiliares
-
-`ncm`, `sh`, `cuci`, `cgce`, `isic`, `siit`, `fat-agreg`, `unidade`, `ppi`, `ppe`, `grupo`, `pais`, `pais-bloco`, `uf`, `uf-mun`, `via`, `urf`, `isic-cuci`, `nbm`, `ncm-nbm`.
-
-Execute `comex-fetcher list` para imprimir a lista atual com descrições.
-
-## Layout em Disco
-
-`comex-fetcher` escreve em uma árvore estruturada no caminho de saída:
-
+Se necessário num container mínimo:
+```bash
+comex-fetcher sync 2023 -exp -o /data
+comex-fetcher list
 ```
-data/secex-comex/
-├── exp/2023.csv
-├── imp/2023.csv
-├── exp-mun/2023.csv
-├── exp-nbm/1995.csv
-├── exp-completa.csv
-├── auxiliary-tables/<table>.csv
-├── validacao/<file>
-└── repetro/<file>
-```
-
-## Idempotência
-
-Todo download começa com um HEAD request. `remote_is_more_recent` compara `Last-Modified` contra o `mtime` do arquivo local; se o arquivo local está atualizado o GET é pulado inteiramente. Após um download bem-sucedido o `mtime` do arquivo é configurado de `Last-Modified`, então a próxima execução o encontra idempotente sem re-buscar.
-
-## Fonte de Dados
-
-[Ministério do Desenvolvimento, Indústria, Comércio e Serviços — Estatísticas de Comércio Exterior](https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta).
 
 ## Saiba Mais
 

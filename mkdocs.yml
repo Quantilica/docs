@@ -100,6 +100,12 @@ nav:
       - Petróleo, Gás e Biocombustíveis (ANP):
           - petroleo/index.md
           - anp-fetcher: petroleo/anp-fetcher.md
+      - Educação (INEP):
+          - educacao/index.md
+          - inep-fetcher: educacao/inep-fetcher.md
+      - Empresas (Receita Federal):
+          - empresas/index.md
+          - rfb-cnpj-fetcher: empresas/rfb-cnpj-fetcher.md
 
   - Cookbook:
       - cookbook/index.md

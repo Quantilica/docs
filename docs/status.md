@@ -1,6 +1,6 @@
 ---
 title: Status das fontes públicas brasileiras
-description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET, BCB.
+description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET, BCB, INEP, RFB, ANAC, ANP.
 ---
 
 # Status das fontes oficiais
@@ -26,6 +26,10 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 | **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai com frequência; CAGED schema diferente em 2020+ |
 | **Tesouro Nacional RTN** | ✅ estável | 2026-05-17 | Excel multi-aba publicado mensalmente |
 | **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-07-18 | API JSON de valores estável; metadados só via scraping HTML sequencial (não paralelizável); séries diárias truncadas (varredura ano a ano) |
+| **INEP** (`download.inep.gov.br`) | ✅ estável | 2026-08-09 | Arquivos muito grandes, preferir download particionado |
+| **RFB CNPJ** (`gov.br/receitafederal`) | ✅ estável | 2026-08-09 | Base completa (~245 GB) atualizada mensalmente |
+| **ANAC** (`gov.br/anac`) | ✅ estável | 2026-08-09 | Arquivos estáticos; schema razoavelmente consistente |
+| **ANP** (`gov.br/anp`) | ✅ estável | 2026-08-09 | Arquivos estáticos; atualizados periodicamente |
 
 **Legenda:**
 - ✅ **Estável** — funciona sem intervenção; eventuais 502 curtos são normais.

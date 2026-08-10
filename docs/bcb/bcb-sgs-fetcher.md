@@ -3,32 +3,17 @@ title: bcb-sgs-fetcher — Séries temporais do Banco Central do Brasil
 description: Coleta séries temporais do SGS/BCB via API JSON e scraping HTML — câmbio, SELIC, CDI, IPCA e centenas de outros indicadores macroeconômicos.
 ---
 
-# bcb-sgs-fetcher
+# Banco Central do Brasil (SGS)
+
+O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de indicadores macroeconômicos do BCB. São mais de 17.000 séries, muitas com histórico desde a década de 1980.
+
+**bcb-sgs-fetcher** expõe dois clientes resilientes: o `SgsDataClient` para a API JSON pública, e o `ScraperClient` para contornar a ausência de uma API de metadados via scraping.
 
 !!! warning "Pegadinhas da fonte oficial"
-    - **Séries diárias:** a API `/dados` não retorna o histórico completo para séries de alta frequência. O fetcher usa uma estratégia retroativa ano a ano para contornar esse limite — espere múltiplas requisições ao baixar uma série diária longa.
-    - **Metadados:** não existe API pública de metadados. A coleta exige scraping HTML com sessão stateful via `ScraperClient`. A sessão é gerenciada automaticamente, mas não é compatível com execução paralela.
-    - **Séries desativadas:** séries encerradas pelo BCB ainda existem no SGS mas podem retornar conjuntos de dados parciais.
 
----
-
-## O Que É
-
-O **SGS** (Sistema Gerenciador de Séries Temporais) é o repositório oficial de indicadores macroeconômicos do Banco Central do Brasil. São mais de **17.000 séries**, muitas com histórico desde a década de 1980, organizadas em temas:
-
-| Tema | Exemplos |
-|---|---|
-| Câmbio | USD/BRL, EUR/BRL, GBP/BRL |
-| Juros | SELIC, CDI, TR, TBF |
-| Inflação | IPCA, IPCA-15, IGP-M |
-| Crédito | Estoque de crédito, inadimplência, spreads |
-| Balanço de pagamentos | Conta corrente, investimento direto |
-| Meios de pagamento | M1, M2, M3, M4 |
-| Atividade econômica | IBC-Br, Resultado primário |
-
-`bcb-sgs-fetcher` expõe dois clientes independentes: `SgsDataClient` para a API JSON pública e `ScraperClient` para os metadados via HTML.
-
----
+    - **Séries diárias capadas silenciosamente:** a API `/dados` do BCB não retorna o histórico completo para séries de alta frequência se você não passar uma janela de data estrita; ela apenas trunca os resultados velhos. A CLI da Quantilica resolve isso ancorando uma data recente e fazendo paginação retroativa ano a ano até secar o poço.
+    - **Metadados invisíveis:** Não existe API pública para descobrir os nomes das séries. A CLI faz um scraping HTML com sessão stateful para descobrir isso. Por isso, a coleta do catálogo inteiro não pode ser paralelizável.
+    - **Séries Zumbis:** Séries encerradas pelo BCB (como antigas taxas do mercado livre) ainda existem no SGS mas podem retornar conjuntos de dados vazios ou corrompidos. 
 
 ## Instalação
 
@@ -36,285 +21,104 @@ O **SGS** (Sistema Gerenciador de Séries Temporais) é o repositório oficial d
 pip install bcb-sgs-fetcher
 ```
 
-Com [uv](https://github.com/astral-sh/uv):
+**Requisitos:** Python 3.12+
+
+## CLI Oficial (Ambiente Unificado)
+
+Para baixar os dados diretamente, prefira o hub central `quantilica`:
 
 ```bash
-uv add bcb-sgs-fetcher
+# Dados históricos de câmbio USD/BRL (série 1, diária)
+quantilica bcb-sgs series sync 1 -f D -o ./dados
+
+# Dados da taxa SELIC mensal
+quantilica bcb-sgs series sync 11 -f M -o ./dados
+
+# Sincronizar o catálogo completo de metadados 
+# (varre o site do BCB via web scraping)
+quantilica bcb-sgs catalogo sync
 ```
 
-O pacote registra o subcomando `bcb-sgs` na CLI do Quantilica via entry point:
-
-```toml
-[project.entry-points."quantilica.fetchers"]
-bcb-sgs = "bcb_sgs_fetcher.plugin:app"
-```
+!!! info "A Mágica da Periodicidade `D`"
+    Ao passar `-f D`, o fetcher ativa a estratégia retroativa ano a ano para driblar os bloqueios não-documentados da API do governo. Não use `-f D` para séries mensais!
 
 ---
 
-## CLI
+## Séries Importantes (Macro-Grupos)
 
-Os comandos são agrupados em `series` (operações por série) e `catalogo`
-(catálogo de metadados), disponíveis tanto pelo CLI standalone quanto pelo
-`quantilica-cli`.
+Em vez de grupos nomeados, o BCB opera unicamente por **IDs Numéricos**. Eis as âncoras da macroeconomia brasileira:
 
-=== "quantilica-cli"
-
-    ```bash
-    # Dados históricos de câmbio USD/BRL (série 1, diária)
-    quantilica bcb-sgs series sync 1 -f D -o ./dados
-
-    # Dados da taxa SELIC mensal
-    quantilica bcb-sgs series sync 11 -f M -o ./dados
-
-    # Metadados de uma série
-    quantilica bcb-sgs series metadata 433 -o ./dados
-
-    # Buscar séries por texto
-    quantilica bcb-sgs series search "câmbio dólar"
-
-    # Sincronizar o catálogo completo de metadados
-    quantilica bcb-sgs catalogo sync
-    ```
-
-=== "CLI standalone"
-
-    ```bash
-    # Dados históricos de câmbio USD/BRL (série 1, diária)
-    bcb-sgs-fetcher series sync 1 --frequency D --output ./dados
-
-    # Dados da taxa SELIC mensal
-    bcb-sgs-fetcher series sync 11 --frequency M --output ./dados
-
-    # Metadados de uma série
-    bcb-sgs-fetcher series metadata 433 --output ./dados
-
-    # Buscar séries por texto
-    bcb-sgs-fetcher series search "câmbio dólar"
-
-    # Sincronizar o catálogo completo de metadados
-    bcb-sgs-fetcher catalogo sync
-    ```
-
-### Opções do comando `series sync`
-
-| Opção | Padrão | Descrição |
+| ID | Nome | Periodicidade |
 |---|---|---|
-| `series_id` | _(obrigatório)_ | ID numérico da série no SGS |
-| `-f / --frequency` | _(detectado automaticamente)_ | Periodicidade: `D` diária, `S` semanal, `M` mensal, `T` trimestral, `Qd` quadrimestral, `A` anual |
-| `-o / --output` | `/data/bcb-sgs` | Diretório de saída |
-| `--verbose` | `False` | Logs detalhados |
+| **1** | Taxa de câmbio — Livre — USD/BRL (compra) | Diária |
+| **11** | Taxa de juros — Selic — meta Copom | Mensal |
+| **12** | Taxa de juros — CDI | Diária |
+| **189** | IPCA-15 — Variação mensal | Mensal |
+| **433** | IPCA — Variação mensal | Mensal |
+| **7478** | Taxa de câmbio — Livre — EUR/BRL (compra) | Diária |
+| **13522** | IPCA — Variação acumulada em 12 meses | Mensal |
 
-!!! info "Periodicidade `D` (diária)"
-    Ao passar `-f D`, o fetcher ativa a estratégia retroativa ano a ano. Não use `-f D` para séries de periodicidade mensal ou maior — a detecção automática é suficiente nesses casos.
+Para descobrir outros IDs na CLI:
+`quantilica bcb-sgs series search "inadimplência"`
 
 ---
 
-## API Python
+## Cookbook Analítico: Séries Temporais com Polars
 
-### Buscar dados de uma série
+O `bcb-sgs-fetcher` despeja JSONs contendo as séries no disco, pois é uma ponte desenhada principalmente para alimentar a camada de ETL do [`bcb-sgs-sql`](bcb-sgs-sql.md). Mas se você deseja consumi-los puramente via scripts analíticos:
+
+```python
+import polars as pl
+from pathlib import Path
+
+# Supondo que baixamos a SELIC Mensal (11) e o IPCA (433)
+# O JSON do BCB segue o formato [{"data": "01/01/2024", "valor": "10.5"}]
+df_selic = pl.read_json("dados/series_11.json")
+df_ipca = pl.read_json("dados/series_433.json")
+
+# Vamos limpar os dados (datas vêm em DD/MM/YYYY)
+def limpa_serie(df, id_nome):
+    return (
+        df
+        .with_columns(
+            pl.col("data").str.to_date("%d/%m/%Y"),
+            pl.col("valor").cast(pl.Float64)
+        )
+        .rename({"valor": id_nome})
+    )
+
+df_selic_clean = limpa_serie(df_selic, "selic_mensal")
+df_ipca_clean = limpa_serie(df_ipca, "ipca_mensal")
+
+# Juntar (JOIN) a inflação e a Selic para calcular Juro Real
+juros_reais = (
+    df_selic_clean
+    .join(df_ipca_clean, on="data", how="inner")
+    .with_columns(
+        (pl.col("selic_mensal") - pl.col("ipca_mensal")).alias("juro_real")
+    )
+    .sort("data", descending=True)
+)
+
+print(juros_reais.head())
+```
+
+## Uso via Python Puro (Bibliotecas de Extração)
 
 ```python
 from bcb_sgs_fetcher import SgsDataClient
 
-# USD/BRL — série 1, periodicidade diária
+# Download resiliente do Câmbio (USD/BRL)
 with SgsDataClient() as client:
     points = client.fetch_series_data(
         series_id=1,
-        frequency_acronym="D",  # ativa estratégia retroativa
+        frequency_acronym="D",
     )
 
-for p in points[:5]:
-    print(p.date, p.value)
-# 2025-01-02 5.8734
-# 2025-01-03 5.9210
-# ...
+print(points[0].date, points[0].value)
 ```
-
-### Buscar metadados
-
-```python
-from bcb_sgs_fetcher import (
-    ScraperClient,
-    parse_metadata_basic,
-    parse_metadata_full,
-)
-
-with ScraperClient() as scraper:
-    htmls = scraper.request_metadata_html(series_id=1)
-
-basic = parse_metadata_basic(htmls["basic"])
-full = parse_metadata_full(htmls["full"])
-
-print(basic.name)           # "Taxa de câmbio - Livre - Dólar americano (compra)"
-print(basic.frequency)      # "Diária"
-print(basic.unit)           # "Real/Dólar americano"
-print(basic.start_date)     # datetime.date(1984, 11, 28)
-print(full.last_update)     # datetime.date(2025, 5, 12)
-```
-
-### Buscar séries por texto
-
-```python
-from bcb_sgs_fetcher import ScraperClient, extract_table_data
-from bs4 import BeautifulSoup
-
-with ScraperClient() as scraper:
-    html = scraper.search_series_by_text("taxa selic")
-
-soup = BeautifulSoup(html, "lxml")
-rows = extract_table_data(soup.find("table"))
-
-for row in rows:
-    print(row.series_id, row.name_index, row.frequency_acronym)
-```
-
-### Navegar a árvore de grupos
-
-```python
-from bcb_sgs_fetcher import ScraperClient, extract_arvore_grupos
-from bs4 import BeautifulSoup
-
-with ScraperClient() as scraper:
-    html = scraper.get_grupos_principais()
-
-soup = BeautifulSoup(html, "lxml")
-grupos = extract_arvore_grupos(soup.find("table"))
-
-for g in grupos:
-    print(g.nome, g.hd_oid_grupo_selecionado)
-```
-
----
-
-## Modelos de Dados
-
-### `SeriesPoint`
-
-Retornado por `fetch_series_data()`. Um ponto da série temporal.
-
-```python
-@dataclass
-class SeriesPoint:
-    series_id: int
-    date: date           # data de início da observação
-    value: Decimal | None
-    date_end: date | None  # data final (séries não diárias)
-```
-
-### `SeriesMetadataBasic`
-
-Retornado por `parse_metadata_basic()`. Dados cadastrais da série.
-
-```python
-@dataclass
-class SeriesMetadataBasic:
-    series_id: int
-    name: str | None                # nome completo em português
-    name_abbreviated: str | None
-    name_english: str | None
-    theme_hierarchy: list[str]      # caminho temático: ["Câmbio", "Taxas livres"]
-    frequency: str | None           # "Diária", "Mensal", etc.
-    unit: str | None
-    source: str | None
-    start_date: date | None
-    end_date: date | None
-    precision: int | None
-    min_value: float | None
-    max_value: float | None
-    special: bool | None            # série especial (restrição de uso)
-```
-
-### `SeriesMetadataFull`
-
-Retornado por `parse_metadata_full()`. Metodologia e divulgação.
-
-```python
-@dataclass
-class SeriesMetadataFull:
-    last_update: date | None
-    provider_data: list[ProviderField]         # dados do divulgador
-    description: list[DescriptionField]        # descrição por seções
-    methodology: list[MethodologyField]        # notas metodológicas
-    dissemination_formats: list[DisseminationField]  # formatos de divulgação
-```
-
----
-
-## Séries Importantes
-
-Algumas séries de referência do SGS/BCB:
-
-| ID | Nome | Periodicidade |
-|---|---|---|
-| 1 | Taxa de câmbio — Livre — USD/BRL (compra) | Diária |
-| 11 | Taxa de juros — Selic — meta Copom | Mensal |
-| 12 | Taxa de juros — CDI | Diária |
-| 189 | IPCA-15 — Variação mensal | Mensal |
-| 433 | IPCA — Variação mensal | Mensal |
-| 7478 | Taxa de câmbio — Livre — EUR/BRL (compra) | Diária |
-| 13522 | IPCA — Variação acumulada em 12 meses | Mensal |
-
-Para descobrir outros IDs, use `bcb-sgs-fetcher series search "<termo>"` ou acesse o portal SGS diretamente.
-
----
-
-## Estratégia para Séries Diárias
-
-A API pública BCB (`api.bcb.gov.br`) impõe um limite não documentado de janela temporal para séries de alta frequência. Sem parâmetros de data, o endpoint `/dados` retorna apenas os registros mais recentes — o histórico completo é truncado.
-
-O fetcher resolve isso com a função `get_daily_series()`:
-
-```
-1. Busca os últimos 20 registros → ancora a data mais recente
-2. Entra em loop retroativo: requisita Jan 1 – Dez 31 de cada ano anterior
-3. Continua até o API retornar vazio (sem dados para aquele ano)
-4. Agrega e ordena todos os pontos coletados
-```
-
-Essa estratégia garante o histórico completo sem depender de limites documentados da API.
-
----
-
-## Armazenamento
-
-O comando `series sync` salva os dados no arquivo `{output}/series_{series_id}.json`.
-
-O comando `series metadata` usa um subdiretório particionado por mês:
-
-```
-{output}/
-└── bcb-sgs_{YYYY-MM}/
-    └── metadata/
-        ├── 000001_basic.json
-        └── 000001_full.json
-```
-
-Todos os arquivos são escritos atomicamente via `quantilica.core.files`.
-
-!!! note "Saída em Parquet?"
-
-    O `bcb-sgs-fetcher` produz apenas **JSON / dataclasses** — é um adaptador de
-    fonte. A camada de ETL [`bcb-sgs-sql`](bcb-sgs-sql.md) consome esse JSON e
-    carrega as séries em PostgreSQL, materializando saídas analíticas (sem Parquet).
-
----
-
-## Fonte de Dados
-
-| Cliente | Endpoint | Formato |
-|---|---|---|
-| `SgsDataClient` | `api.bcb.gov.br/dados/serie/bcdata.sgs.{id}/dados` | JSON |
-| `ScraperClient` | `www3.bcb.gov.br/sgspub` | HTML |
-
-- [Portal SGS/BCB](https://www.bcb.gov.br/estatisticas/tabelaestatistica)
-- [API BCB — documentação](https://www.bcb.gov.br/api/catalogo/apis)
-
----
 
 ## Saiba Mais
 
-- [bcb-sgs-sql](bcb-sgs-sql.md) — carrega estas séries em PostgreSQL com histórico de revisões (o "Stack 2" de produção)
-- [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) — como fetchers se integram ao `quantilica-cli`
-- [Manifestos & proveniência](../concepts/proveniencia.md) — rastreamento de origem dos dados
-- [Convenções de armazenamento](../concepts/storage.md) — layout de diretórios e escrita atômica
-- [Cookbook — Análise econômica multi-fonte](../cookbook/analise-economica-multi-fonte.md)
+- **[bcb-sgs-sql](bcb-sgs-sql.md)** — Motor ETL que envia estas séries para PostgreSQL com histórico de revisões.
+- **[Arquitetura do Ecossistema](../concepts/arquitetura.md)** — Como as bibliotecas se conectam.

@@ -9,7 +9,7 @@ Extrair e processar os microdados de saúde do Brasil envolve superar sérias ba
 - **Instabilidade do FTP oficial** — o servidor `ftp.datasus.gov.br` é instável, apresenta quedas frequentes e velocidades de download limitadas por conexão.
 - **Formato proprietário `.dbc`** — os arquivos são disponibilizados no formato compactado proprietário `.dbc`. Ele precisa ser descompactado para `.dbf` antes de ser legível por ferramentas tradicionais de dados.
 - **Nomenclatura críptica** — os arquivos seguem regras de nomenclatura complexas (ex.: `RDSP2001.dbc` significa Internações Hospitalares Reduzidas, em São Paulo, de janeiro de 2020) que exigem decodificação precisa.
-- **Escala de dados** — a base histórica completa ultrapassa 320 GB, exigindo filtros inteligentes (região, período e subsistemas) para downloads viáveis.
+- **Escala de dados** — a base histórica completa ultrapassa 383 GB, exigindo filtros inteligentes (região, período e subsistemas) para downloads viáveis.
 - **Mapeamento de códigos** — muitos campos são codificados numericamente e requerem tabelas auxiliares de referência (geralmente distribuídas em PDFs) para se tornarem inteligíveis.
 
 ## Pacotes

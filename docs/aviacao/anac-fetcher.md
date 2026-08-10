@@ -11,11 +11,9 @@ Dados abertos da ANAC (Agência Nacional de Aviação Civil).
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **Sem API.** `sistemas.anac.gov.br/dadosabertos` é um índice de diretórios cru; não há endpoint consultável nem paginação — o catálogo do `anac-fetcher` hardcoda os caminhos conhecidos.
-    - **Convenção de nome de arquivo varia por área.** VRA usa `VRA_{ano}{mês}.csv` sem zero à esquerda no mês (`VRA_20001.csv` = janeiro/2000); RAB usa `{AAAA-MM}.{ext}`; cada subcategoria de aeródromo tem seu próprio nome de arquivo estático.
-    - **RAB histórico tem lacunas de formato.** `csv` só existe a partir de 2024-09; meses anteriores só têm `json`/`xls`. Um mês (2019-05) não existe em formato nenhum.
-    - **Dados recentes de VRA podem não estar publicados ainda.** A ANAC publica com atraso de 1-2 meses; o catálogo gera entradas até o mês corrente, e falhas de download de meses ainda não publicados não interrompem a sincronização.
-    - **Grupos grandes geram muitos arquivos pequenos.** `rab` sozinho tem ~250 entradas no histórico mensal; `sync` já aplica `--sleeptime 0.3` (segundos) entre downloads por padrão, como cortesia ao servidor.
+    - **Sem API.** O `sistemas.anac.gov.br` é um índice de diretórios cru. O catálogo hardcoda caminhos conhecidos.
+    - **Convenção de nome varia:** VRA usa `VRA_{ano}{mês}.csv` sem zero à esquerda (`VRA_20001.csv` = Jan/2000); RAB usa `{AAAA-MM}.{ext}`.
+    - **Atrasos de publicação:** A ANAC publica o VRA com 1 a 2 meses de atraso; se o script tentar baixar o mês atual e der 404, ele ignora sem interromper os demais.
 
 ## Instalação
 
@@ -27,77 +25,91 @@ pip install anac-fetcher
 
 ## CLI
 
-```text
-anac-fetcher <command> [args]
-
-Comandos:
-  sync [GRUPOS...] [-o DIR] [--dry-run] [--verbose]
-        Sincronizar datasets. Sem GRUPOS, baixa todos.
-  discover [--verbose]
-        Listar todos os datasets do catálogo, sem baixar.
-```
-
-`DIR` padrão é `/data/anac`.
-
-### Exemplos
-
 ```bash
-# Baixar todos os grupos
-anac-fetcher sync
-
 # Baixar VRA e RAB apenas
 anac-fetcher sync vra rab -o ./dados/anac
 
-# Baixar todos os grupos de aeródromos de uma vez
+# Baixar toda infraestrutura de aeródromos de uma vez
 anac-fetcher sync aerodromos
-
-# Listar sem baixar
-anac-fetcher sync --dry-run
 
 # Listar todo o catálogo
 anac-fetcher discover
 ```
 
-### Integração com `quantilica-cli`
+---
 
-```bash
-quantilica anac sync
-quantilica anac discover
-```
-
-## API Python
-
-```python
-from anac_fetcher.catalog import list_datasets
-
-for entry in list_datasets(group="vra"):
-    print(entry["id"], entry["url"])
-```
-
-## Datasets
+## Datasets Principais
 
 | Grupo | Descrição | Cobertura |
 |---|---|---|
 | `vra` | Voo Regular Ativo — voos, atrasos, cancelamentos | Mensal, 2000–presente |
-| `rab` | Registro Aeronáutico Brasileiro — cadastro de aeronaves | Snapshot atual + histórico mensal desde 2017-01 |
-| `ocorrencias` | Ocorrências Aeronáuticas (CENIPA) | Tabela consolidada, atualizada diariamente |
-| `aerodromos` | Infraestrutura de aeródromos (13 subgrupos: pistas, pátios, posições de estacionamento, helipontos, PZR, planos diretores, etc.) | Snapshot atual por subgrupo |
+| `rab` | Registro Aeronáutico Brasileiro — cadastro de aeronaves | Histórico mensal desde 2017-01 |
+| `ocorrencias` | Ocorrências Aeronáuticas (CENIPA) | Tabela atualizada diariamente |
 
-Execute `anac-fetcher discover` para a lista completa com URLs.
+### Lacunas Históricas no RAB
 
-## Layout em Disco
+O histórico do **Registro Aeronáutico Brasileiro (RAB)** é turbulento. O catálogo gerencia inteligentemente esses formatos variáveis, tentando primeiro `.csv`, depois `.json` e `.xls`:
 
+| Período | Extensão de Arquivo Disponível |
+|---|---|
+| **Antes de 2019-05** | Apenas `json` ou `xls` |
+| **2019-05** | 🔴 Arquivo inexistente nos servidores da ANAC |
+| **Até 2024-08** | Apenas `json` ou `xls` |
+| **2024-09 em diante** | `.csv` padronizado e disponibilizado |
+
+---
+
+## A Macro `aerodromos`
+
+Ao invés de sincronizar bases soltas, o alias `aerodromos` resolve **14 subgrupos distintos** de infraestrutura aeroportuária brasileira. Todos tentam baixar prioritariamente CSV, caindo para JSON/XLS quando necessário. O nível de granularidade engloba:
+
+- `aero-lista-publicos` (Lista oficial de aeródromos públicos)
+- `aero-caracteristicas` (Características físicas gerais)
+- `aero-pistas-pouso` (Pistas de pouso e decolagem)
+- `aero-pistas-taxi` (Áreas de taxiamento)
+- `aero-patio` (Dados de pátios)
+- `aero-posicoes-estacionamento` (Posições de aeronaves)
+- `aero-helipontos-publicos` (Helipontos públicos)
+- `aero-excluidos` (Aeródromos desativados)
+- `aero-seguranca` (Programas de segurança)
+- `aero-lista-privados` (Aeródromos privados)
+- `aero-helideck` (Helidecks off-shore / plataformas)
+- `aero-heliponto-privado` (Helipontos privados)
+- `aero-pzr` (Planos de Zoneamento de Ruído)
+- `aero-plano-diretor` (Planos Diretores Aeroportuários Aprovados e Validados)
+
+Basta rodar `anac-fetcher sync aerodromos` para ter a radiografia completa da infraestrutura do Brasil.
+
+---
+
+## Cookbook: Analisando VRA com Polars
+
+O grupo `vra` baixa centenas de arquivos (um por mês desde 2000). Para não estourar a memória (o VRA acumula milhões de registros), o ideal é usar `polars.scan_csv`:
+
+```python
+import polars as pl
+
+# O VRA é distribuído em CSVs separados por ponto-e-vírgula.
+# Utilizamos o scan_csv para criar um LazyFrame (avaliação preguiçosa)
+df_vra = pl.scan_csv(
+    "data/anac/voo-regular-ativo/*.csv", 
+    separator=";",
+    infer_schema_length=10000,
+    ignore_errors=True
+)
+
+# Descobrir a companhia aérea com mais cancelamentos
+cancelamentos = (
+    df_vra
+    .filter(pl.col("Situação Voo") == "CANCELADO")
+    .group_by("Empresa Aérea")
+    .agg(pl.count().alias("Total_Cancelamentos"))
+    .sort("Total_Cancelamentos", descending=True)
+    .collect()
+)
+
+print(cancelamentos)
 ```
-/data/anac/
-├── voo-regular-ativo/vra_2024-03@20240401.csv
-├── registro-aeronautico-brasileiro/rab-atual-csv@20260721.csv
-├── ocorrencias-cenipa/ocorrencias-csv@20260721.csv
-└── aerodromos-lista-publicos/aero-lista-publicos-lista-csv@20260715.csv
-```
-
-## Fonte de Dados
-
-[Portal de Dados Abertos da ANAC](https://www.gov.br/anac/pt-br/acesso-a-informacao/dados-abertos) — arquivos servidos por [sistemas.anac.gov.br/dadosabertos](https://sistemas.anac.gov.br/dadosabertos/).
 
 ## Saiba Mais
 

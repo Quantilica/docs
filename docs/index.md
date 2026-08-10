@@ -65,10 +65,14 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[rtn-fetcher](tesouro/rtn-fetcher.md)** | Planilhas hierárquicas do RTN viradas em DataFrame tipado |
 | **[pdet-fetcher](trabalho/pdet-fetcher.md)** | CAGED/RAIS de 50M+ linhas, processadas com Polars sem estourar memória |
 | **[comex-fetcher](comex/comex-fetcher.md)** | Siscomex com SSL ruim, arquivos GB, downtime governamental |
-| **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, 320+ GB de microdados |
+| **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, 383+ GB de microdados |
 | **[inmet-fetcher](clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
 | **[bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
 | **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
+| **[anac-fetcher](aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
+| **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
+| **[inep-fetcher](educacao/inep-fetcher.md)** | Conversão robusta de bases educacionais (39 GB) para Parquet tipado |
+| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo e conversão da base inteira de CNPJs (245 GB) |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
 | **[quantilica-catalog](fundacoes/quantilica-catalog.md)** | Modelo canônico de observações para cruzamento multi-fonte |
@@ -96,6 +100,10 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | Microdados de saúde pública | [Saúde Pública](saude/datasus-fetcher.md) |
 | Séries climáticas históricas | [Clima](clima/inmet-fetcher.md) |
 | Cruzar múltiplos domínios | [Cookbook](cookbook/index.md) |
+| Aviação civil e aeródromos | [Aviação Civil](aviacao/index.md) |
+| Preços de combustíveis e exploração | [Petróleo e Gás](petroleo/index.md) |
+| Dados educacionais (ENEM, Censo) | [Educação](educacao/index.md) |
+| Análise de CNPJs e quadros societários | [Empresas](empresas/index.md) |
 
 ---
 

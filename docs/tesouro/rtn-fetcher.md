@@ -1,256 +1,115 @@
 ---
-title: rtn-fetcher — Resultado do Tesouro Nacional em Python
-description: Baixa, lê e normaliza a planilha Excel do RTN (24+ abas, células mescladas, hierarquia implícita) em tabela longa com expansão de contas pronta para análise.
+title: rtn-fetcher — Resultado do Tesouro Nacional (RTN)
+description: Baixa, lê e normaliza a gigantesca planilha Excel do RTN em tabelas de formato longo com hierarquia de contas pronta para engenharia de dados.
 ---
 
-# rtn-fetcher — Resultado do Tesouro Nacional (RTN) Brasileiro
+# Resultado do Tesouro Nacional (RTN)
 
-**rtn-fetcher** é um pacote Python que baixa, extrai e normaliza o *Resultado do Tesouro Nacional* (RTN) — relatório mensal de resultados fiscais federais do Brasil. Transforma as pastas de trabalho Excel com múltiplas abas do Tesouro em tabelas de formato longo limpo com expansão hierárquica de contas, prontas para análise ou carregamento em warehouse.
+**rtn-fetcher** domina a extração dos relatórios fiscais do Governo Federal Brasileiro.
+
+O Tesouro Nacional publica os resultados primários (receitas e despesas) em uma pasta de trabalho Excel incrivelmente complexa. Este agente automatiza o pipeline de `fetch-and-normalize`: vai da URL oficial a uma tabela Parquet tipada em formato longo, preservando a hierarquia contábil.
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **Headers não estão em linha fixa.** Cada uma das 24+ abas tem cabeçalho em linhas diferentes, frequentemente com células mescladas. O leitor detecta dinamicamente; não tente `header=0`.
-    - **Hierarquia de contas é implícita.** Código `1.2.3` exige a existência de `1` e `1.2` — o `rtn-fetcher` expande em uma tabela de dimensão separada.
-    - **Unidades mudam por aba.** Abas `1.x` em milhões de R$; abas `2.x-A` em fração do PIB; aba `1.2-B` deflacionada por IPCA. Confira `unit` antes de somar.
-    - **Períodos misturados.** Mensal, trimestral, anual — em colunas diferentes na mesma planilha. O leitor separa em `year`/`month` ou `year`/`quarter`.
-    - **Abas 3.1 e 3.2 não são suportadas.** Layout comparativo com headers multi-nível — ainda não normalizado.
-
-## O Que É
-
-O *Resultado do Tesouro Nacional* contém dados fiscais consolidados do Governo Federal Brasileiro: receitas, despesas e resultado primário, em valores correntes e constantes, mensais, trimestrais e anuais, também como percentuais do PIB. O Tesouro publica isso como uma extensa pasta de trabalho Excel com 24+ abas, cada uma com seu próprio layout de header e hierarquia de contas. `rtn-fetcher` automatiza o pipeline de fetch-and-normalize para você ir da URL oficial a uma tabela de formato longo arrumada em poucas linhas de Python — ou um comando CLI.
-
-**Source:** [Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)
-
-## O Desafio
-
-- **Excel com múltiplas abas** com headers variáveis e células mescladas em 24 abas suportadas — linhas de header não estão em posições fixas, requerendo detecção dinâmica.
-- **Hierarquia de contas em formato amplo**: códigos como `1.2.3` carregam níveis pai implícitos (`1`, `1.2`) que precisam ser expandidos em uma tabela de dimensão separada.
-- **Unidades e períodos mistos**: valores aparecem como milhões de R$, R$ constantes, ou % do PIB; períodos misturam mensal, trimestral e anual — cada aba precisa da normalização correta.
-
-## Recursos
-
-- Download automático da pasta de trabalho RTN mais recente com deduplicação baseada em timestamp
-- Lê 24 abas suportadas cobrindo mensal / trimestral / anual; corrente / constante; % do PIB
-- Saída em formato longo com expansão hierárquica de contas
-- Normalização de unidades (milhões de R$ → reais; % do PIB preservado como fração)
-- Período dividido em colunas `year` / `month` ou `year` / `quarter`
-- Hierarquia de contas retornada como tabela de dimensão separada
-- CLI com `sync` (todas as publicações; `--latest` para a série histórica), `export` (Excel/SQLite) e `pipeline` (sync → export)
-
-## Abas Suportadas
-
-| Abas | Descrição | Período | Unidade |
-|--------|-------------|--------|------|
-| 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 | Série mensal, valores correntes | Mensal | R$ |
-| 1.1-A, 1.2-A, 1.3-A, 1.4-A, 1.5-A | Série mensal, valores constantes | Mensal | R$ |
-| 1.2-B | Série mensal, rolling 12-meses, deflacionado pelo IPCA | Mensal | R$ |
-| 2.1, 2.2, 2.3, 2.4, 2.5 | Série anual, valores correntes | Anual | R$ |
-| 2.1-A, 2.2-A, 2.3-A, 2.4-A, 2.5-A | Série anual, % do PIB | Anual | Fração do PIB |
-| 4.1, 4.2 | Série trimestral, Orçamento do Governo Central | Trimestral | R$ |
-
-As abas `3.1` e `3.2` usam um layout comparativo de publicação atual com headers multi-nível e ainda não são normalizadas pelo leitor de série histórica.
+    - **Tabela Viva.** Os headers não estão em uma linha fixa. Cada uma das 24 abas tem cabeçalhos em linhas diferentes e células mescladas caóticas. O `rtn-fetcher` varre a planilha descobrindo o escopo dos dados dinamicamente; não tente carregar isso via `pd.read_excel(header=3)`.
+    - **Hierarquia Implícita.** Um código contábil `1.2.3` na planilha não explica quem são seus pais. O fetcher reconstrói a árvore inteira gerando duas tabelas separadas: Tabela de Fatos e Tabela de Dimensão (Hierarquia de Contas).
+    - **Mistura de Unidades Lógicas.** Abas `1.x` estão em milhões de Reais correntes; `2.x-A` são frações do PIB percentual; `1.2-B` deflacionadas pelo IPCA. O fetcher rastreia essas unidades via *Data Contracts*.
+    - **Períodos Misturados.** Meses, trimestres e anos coabitam a mesma aba. O motor divide inteligentemente os esquemas para `year/month` ou `year/quarter`.
 
 ## Instalação
 
-Requer Python 3.12+.
-
 ```bash
-pip install git+https://github.com/Quantilica/rtn-fetcher.git
-# ou
-uv add "git+https://github.com/Quantilica/rtn-fetcher.git"
+pip install rtn-fetcher
 ```
 
-Dependências: `httpx`, `openpyxl`, `beautifulsoup4`.
+**Requisitos:** Python 3.12+
 
-## Interface de Linha de Comando
+## CLI Oficial (Ambiente Unificado)
 
-O pacote instala um comando `rtn-fetcher` com os subcomandos `sync`, `export` e `pipeline`:
-
-```bash
-rtn-fetcher --help
-rtn-fetcher --version
-
-# Sincronizar todas as publicações RTN
-rtn-fetcher sync
-
-# Baixar apenas o arquivo da série histórica mais recente
-rtn-fetcher sync --latest
-
-# Exportar dados para outros formatos
-rtn-fetcher export excel
-rtn-fetcher export sqlite
-
-# Pipeline completo (sync → export)
-rtn-fetcher pipeline --format excel
-```
-
-### `sync` — sincronização completa
-
-Busca metadados da página de publicações do Tesouro Nacional, identifica todos os links de download e baixa os arquivos ainda ausentes no diretório local. Os metadados HTML são cacheados em `<output>/metadata.html`; na próxima execução o cache é reutilizado automaticamente.
+A forma idomática de varrer os dados fiscais é utilizando o binário host `quantilica`. Ele cuidará de acessar a API APEX do Tesouro, encontrar a URL mais recente (cujo ID muda mensalmente) e converter a planilha para banco de dados ou Parquet:
 
 ```bash
-rtn-fetcher sync -o /data/rtn              # Diretório de destino (padrão: /data/rtn)
-rtn-fetcher sync --force                   # Refaz o fetch de metadados mesmo se já existe
-rtn-fetcher sync --concurrency 8           # Até 8 downloads simultâneos (padrão: 4)
-rtn-fetcher sync --dry-run                 # Lista os arquivos sem baixar
-rtn-fetcher sync --metadata metadata.json  # Usa JSON de metadados existente (offline)
-rtn-fetcher sync --latest                  # Apenas a série histórica mais recente
-rtn-fetcher --verbose sync                 # Exibe logs detalhados
+# Baixar o relatório da série histórica mais recente
+quantilica rtn sync --latest -o ./data
+
+# Pipeline completo: descobre URL, baixa o Excel e gera o banco SQLite estruturado
+quantilica rtn pipeline --format sqlite -o ./data
 ```
 
-### `export` — exportação
+---
 
-Ambos os subcomandos baixam automaticamente a pasta de trabalho mais recente se nenhum `--file` for fornecido, e escrevem todas as abas suportadas junto com a dimensão de hierarquia de contas.
+## Estrutura de Extração (Abas e Dimensões)
 
-```bash
-rtn-fetcher export excel --save-as rtn_data.xlsx
-rtn-fetcher export sqlite --save-as rtn_data.db
+O pacote domina as 24 abas mais cruciais de contas públicas do Excel do Tesouro Nacional:
 
-# Usar arquivo local já baixado (sem nova requisição de rede)
-rtn-fetcher export excel  --file rtn@20250101T120000.xlsx --save-as rtn_data.xlsx
-rtn-fetcher export sqlite --file rtn@20250101T120000.xlsx --save-as rtn_data.db
+| Aba | Descrição | Granularidade | Unidade |
+|--------|-------------|--------|------|
+| **1.1 a 1.6** | Séries correntes (Receitas, Despesas, Previdência) | Mensal | Milhões de R$ |
+| **1.1-A a 1.5-A** | Séries a valores constantes (Deflacionadas) | Mensal | Milhões de R$ |
+| **1.2-B** | Acumulado de 12-meses pelo IPCA | Mensal | Milhões de R$ |
+| **2.1 a 2.5** | Resultados agregados correntes | Anual | Milhões de R$ |
+| **2.1-A a 2.5-A** | Resultados versus o tamanho do país | Anual | % Fração do PIB |
+| **4.1 a 4.2** | Orçamento Trimestral do Governo Central | Trimestral | Milhões de R$ |
 
-# Sobrescrever banco SQLite existente sem confirmação
-rtn-fetcher export sqlite --save-as rtn_data.db --force
-```
+---
 
-### Via `quantilica-cli`
+## Cookbook Analítico: Modelagem Estrela com RTN
 
-Quando instalado no mesmo ambiente que `quantilica-cli`, o rtn-fetcher é descoberto automaticamente via entry point:
+Após rodar o pipeline para banco relacional (`quantilica rtn pipeline --format sqlite`), o banco de dados gerado terá dezenas de tabelas de Fato (os dados em si) e Tabelas de Dimensão (as hierarquias contábeis reconstruídas).
 
-```bash
-quantilica rtn sync
-quantilica rtn sync --latest
-quantilica rtn export excel
-quantilica rtn export sqlite
-quantilica rtn pipeline --format sqlite
-```
-
-## API Python
-
-### Baixar
+Veja como consultar usando o motor analítico embarcado do DuckDB para cruzar as receitas correntes:
 
 ```python
-from pathlib import Path
-from rtn_fetcher import download_latest_file
+import duckdb
+import polars as pl
 
-filepath = download_latest_file(Path("data"))
-print(f"Baixado: {filepath}")
+# Conecta ao banco gerado pela CLI da Quantilica
+con = duckdb.connect("data/rtn_data.db")
+
+# Vamos cruzar a tabela de fatos da Aba 1.1 com a dimensão de Contas
+# para descobrir os maiores ofensores de despesas no ano de 2024
+query = """
+    SELECT 
+        dim.account_name,
+        SUM(fato.value) as total_gasto_milhoes
+    FROM 
+        'sheet_1.1' as fato
+    JOIN 
+        'accounts_1.1' as dim ON fato.account = dim.account_code
+    WHERE 
+        fato.year = 2024
+        AND dim.account_level = 2 -- Pegar apenas o nível macro
+    GROUP BY 
+        dim.account_name
+    ORDER BY 
+        total_gasto_milhoes DESC
+    LIMIT 5;
+"""
+
+df_resultado = con.execute(query).pl()
+print(df_resultado)
 ```
 
-`download_latest_file` retorna o `Path` do arquivo baixado, ou `None` se uma cópia atual já existe no destino.
+## Uso via Python Puro (Engine Tbl Interna)
 
-### Ler uma aba única
+Para cenários isolados (sem a CLI unificada e sem gerar um banco relacional), o fetcher possui uma class própria ultraleve chamada `Tbl` para leitura imutável na memória:
 
 ```python
 from pathlib import Path
 from rtn_fetcher import read_sheet, write_table_to_csv
 
 filepath = Path("data/rtn_202412301200.xlsx")
-data, accounts = read_sheet(filepath, "1.2")
 
-print(f"Dados:     {data.nrows} linhas x {data.ncols} colunas")
-print(f"Contas:    {accounts.nrows} linhas x {accounts.ncols} colunas")
+# Extrai os Fatos e as Dimensões Contábeis de uma vez
+fato, contas = read_sheet(filepath, "1.2")
 
-write_table_to_csv(data,     Path("output/rtn_1_2_data.csv"))
-write_table_to_csv(accounts, Path("output/rtn_1_2_accounts.csv"))
+print(f"Fatos: {fato.nrows} linhas x {fato.ncols} colunas")
+print(f"Dimensão Contábil: {contas.nrows} linhas x {contas.ncols} colunas")
+
+write_table_to_csv(fato, Path("output/rtn_1_2_data.csv"))
 ```
-
-`read_sheet(filepath, sheet_name)` retorna uma tupla `(data, accounts)` de instâncias `Tbl` — a tabela de fatos em formato longo e a dimensão de hierarquia de contas.
-
-### Gravar Parquet com proveniência
-
-Para saída tipada e com manifesto embutido no header, use `write_table_to_parquet`. Ele aplica o `DataContract` da planilha (via `build_contract`) e escreve via `quantilica-analytics`:
-
-```python
-from pathlib import Path
-from quantilica.core.manifests import DownloadManifest
-from rtn_fetcher import read_sheet, write_table_to_parquet
-
-filepath = Path("data/rtn_202412301200.xlsx")
-data, _ = read_sheet(filepath, "2.1")
-
-manifest = DownloadManifest.from_file(
-    source_id="tesouro-nacional",
-    dataset_id="rtn",
-    url="http://sisweb.tesouro.gov.br/apex/cosis/thot/link/rtn/serie-historica",
-    file_path=filepath,
-    producer="rtn-fetcher",
-)
-write_table_to_parquet(data, Path("output/rtn_2_1.parquet"), "2.1",
-                      manifest=manifest)
-```
-
-O contrato é derivado de `SHEET_CONFIGS[sheet]`: `year` para anuais, `year/month` para mensais, `year/quarter` para trimestrais. Veja [Data Contracts](../fundacoes/quantilica-analytics.md#data-contracts).
-
-### Ler cada aba suportada
-
-```python
-from rtn_fetcher import read_all_sheets
-
-results = read_all_sheets(filepath)
-
-for sheet_name, (data, accounts) in results.items():
-    print(f"{sheet_name}: {data.nrows} data rows")
-```
-
-### Publication metadata
-
-```python
-from rtn_fetcher import fetch_publications_metadata
-
-publications = fetch_publications_metadata()
-print(publications[0])
-```
-
-## Estrutura de Dados
-
-### Tabela de fatos (formato longo)
-
-| Coluna  | Tipo      | Descrição                                |
-|---------|-----------|--------------------------------------------|
-| year    | int       | Ano de referência                             |
-| month   | int       | Mês de referência (abas mensais)           |
-| quarter | int       | Trimestre de referência (abas trimestrais)       |
-| account | str       | Código hierárquico da conta                  |
-| value   | int/float | Reais para abas de moeda; fração para % do PIB |
-
-### Hierarquia de contas (dimensão)
-
-| Coluna        | Tipo | Descrição                              |
-|---------------|------|------------------------------------------|
-| account_code  | str  | Código hierárquico (ex: `1.2.3`)        |
-| account_name  | str  | Nome completo da conta                        |
-| account_level | int  | Profundidade da hierarquia                          |
-| P_1, P_2, ... | str  | Nome em cada nível da hierarquia             |
-
-### Exemplo
-
-```python
-# Linhas de fatos
-year  month  account  value
-2024  1      1.1      1500000000
-2024  1      1.2      2300000000
-2024  2      1.1      1600000000
-
-# Linhas de hierarquia
-account_code  account_name             account_level  P_1       P_2
-1.1           1.1 Receitas Correntes   2              Receitas  Receitas Correntes
-1.2           1.2 Receitas de Capital  2              Receitas  Receitas de Capital
-```
-
-## A Classe `Tbl`
-
-As funções de leitura retornam uma `Tbl` — uma tabela leve orientada a colunas, sem
-dependência de Polars ou Pandas e com operações imutáveis (`select`, `assign`, `melt`,
-`rename`, `iter_rows`, …). Na maioria dos usos você exporta direto para Excel/SQLite ou
-Parquet; consulte o
-[código-fonte do repositório](https://github.com/Quantilica/rtn-fetcher) se precisar
-manipular a `Tbl` diretamente.
 
 ## Saiba Mais
 
 - **[Visão Geral do Tesouro](index.md)** — Todas as ferramentas do Tesouro (Finanças)
 - **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — Microdados do Tesouro Direto e análise de portfólio
-- **[Tesouro Nacional — RTN](https://www.gov.br/tesouronacional/pt-br/estatisticas-fiscais-e-planejamento/resultado-do-tesouro-nacional-rtn)** — Fonte oficial
-- **[API do Tesouro Nacional](https://apiapex.tesouro.gov.br/)** — API de metadados de publicações
