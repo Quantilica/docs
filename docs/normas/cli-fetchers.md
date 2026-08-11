@@ -84,7 +84,9 @@ Regras de ouro:
 
 Fetchers padrão (que fazem download de datasets estruturados via HTTP estático) devem instanciar o `FetcherApp` em `plugin.py` e passar seus metadados, estrutura de catálogos (ex: `GROUPS`, `GROUP_ALIASES`) e uma factory de rotas (`path_builder`). Com isso, a `cli.py` atua apenas como wrapper de execução, removendo totalmente a necessidade de escrever `argparse`, subcomandos manuais, e formatações Rich descritas nas seções 2 a 5.
 
-As seções a seguir (2 a 5) devem ser aplicadas **apenas** aos fetchers que não conseguem adotar o `FetcherApp` (como os baseados em FTP, ex: `datasus-fetcher`, ou APIs REST paginadas complexas, ex: `sidra-fetcher`).
+Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão.
+
+As seções a seguir (2 a 5) devem ser aplicadas **apenas** para o entendimento da engenharia por trás do `FetcherApp` ou quando, em último caso, um fetcher precisar estender a CLI nativamente e customizar intensamente.
 
 ---
 
