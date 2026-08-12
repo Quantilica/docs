@@ -118,6 +118,7 @@ A camada de armazenamento foi desenhada para ser estritamente **agnóstica** —
 
 ---
 
+<a id="arquitetura-de-cli"></a>
 ## Arquitetura de CLI Híbrida
 
 Para o usuário não lidar com 14 binários independentes, adotamos a estratégia de Hub Híbrido:

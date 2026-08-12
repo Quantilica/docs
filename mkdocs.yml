@@ -144,6 +144,21 @@ plugins:
       lang:
         - pt
         - en
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths:
+            - ../quantilica-core/src
+            - ../quantilica-analytics/src
+            - ../quantilica-cli/src
+            - ../quantilica-catalog/src
+            - ../sidra-fetcher/src
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            show_root_heading: true
+            show_source: false
   # Para ativar o plugin social (gera og-image automaticamente por página),
   # instale `mkdocs-material[imaging]` e descomente o bloco abaixo:
   # - social:
