@@ -20,7 +20,11 @@ Dados de importação e exportação brasileira extraídos do Siscomex (Sistema 
 ## Instalação
 
 ```bash
-pip install comex-fetcher
+# Via CLI unificada (recomendado)
+quantilica install comex
+
+# Ou como biblioteca no seu projeto
+uv add comex-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

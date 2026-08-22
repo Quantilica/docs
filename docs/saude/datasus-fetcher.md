@@ -21,7 +21,11 @@ Dados de vigilância de saúde brasileira do DATASUS (Departamento de Dados de S
 ## Instalação
 
 ```bash
-pip install datasus-fetcher
+# Via CLI unificada (recomendado)
+quantilica install datasus
+
+# Ou como biblioteca no seu projeto
+uv add datasus-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

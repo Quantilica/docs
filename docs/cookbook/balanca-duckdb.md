@@ -16,7 +16,7 @@ A balança comercial mensal do Brasil — exportações menos importações — 
 ## Setup
 
 ```bash
-uv add "comex-fetcher @ git+https://github.com/Quantilica/comex-fetcher.git" duckdb
+uv add comex-fetcher duckdb --index https://index.quantilica.com/simple/
 ```
 
 ## A receita

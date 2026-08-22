@@ -16,7 +16,11 @@ description: Download e visualização de dados históricos do programa Tesouro 
 ## Instalação
 
 ```shell
-pip install "tesouro-direto-fetcher[analysis]"
+# Via CLI unificada (recomendado)
+quantilica install tesouro-direto
+
+# Ou como biblioteca no seu projeto
+uv add "tesouro-direto-fetcher[analysis]" --index https://index.quantilica.com/simple/
 ```
 
 *Nota: O extra `[analysis]` carrega o Polars e o Altair para habilitar visualizações. Omiti-lo instalará apenas os motores básicos de rede.*

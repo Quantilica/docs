@@ -16,7 +16,7 @@ Um gráfico de precipitação total anual média por estado do Nordeste, com ten
 ## Setup
 
 ```bash
-uv add "inmet-fetcher @ git+https://github.com/Quantilica/inmet-fetcher.git" polars "altair[save]"
+uv add inmet-fetcher polars "altair[save]" --index https://index.quantilica.com/simple/
 ```
 
 ## A receita

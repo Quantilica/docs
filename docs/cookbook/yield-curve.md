@@ -23,7 +23,7 @@ Séries temporais por vencimento:
 ## Setup
 
 ```bash
-uv add "tesouro-direto-fetcher[analysis] @ git+https://github.com/Quantilica/tesouro-direto-fetcher.git"
+uv add "tesouro-direto-fetcher[analysis]" --index https://index.quantilica.com/simple/
 ```
 
 ## A receita

@@ -12,7 +12,7 @@ Camada de processamento e padronização analítica da Quantilica. Transforma ar
 ## Instalação
 
 ```bash
-uv add "quantilica-analytics @ git+https://github.com/Quantilica/quantilica-analytics.git"
+uv add quantilica-analytics --index https://index.quantilica.com/simple/
 ```
 
 ## Da bagunça ao Parquet em uma chamada

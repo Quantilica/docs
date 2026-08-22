@@ -20,10 +20,10 @@ uv tool install quantilica-cli
 quantilica install comex
 ```
 
-Se preferir utilizar como biblioteca Python dentro do seu projeto:
+Para usar os fetchers como bibliotecas Python dentro do seu projeto:
 
 ```bash
-uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/simple/"
+uv add comex-fetcher --index https://index.quantilica.com/simple/
 ```
 
 ---
@@ -33,7 +33,7 @@ uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/
     Baixa os metadados completos do IPCA-15 (agregado 1705) e mostra a estrutura: períodos disponíveis, localidades cobertas, variáveis.
 
     ```bash
-    uv add sidra-fetcher
+    uv add sidra-fetcher --index https://index.quantilica.com/simple/
     ```
 
     ```python
@@ -65,7 +65,7 @@ uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/
     Baixa o histórico completo de taxas e preços do Tesouro Direto via API CKAN, lê com Polars e plota a yield curve por tipo de título.
 
     ```bash
-    uv add "tesouro-direto-fetcher[analysis] @ git+https://github.com/Quantilica/tesouro-direto-fetcher.git"
+    uv add "tesouro-direto-fetcher[analysis]" --index https://index.quantilica.com/simple/
     ```
 
     ```python
@@ -101,7 +101,7 @@ uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/
     Baixa os microdados do SIH-RD (Internações Hospitalares) para São Paulo nos últimos 3 anos. Sem dependências externas — `datasus-fetcher` roda em Python puro.
 
     ```bash
-    uv add datasus-fetcher
+    quantilica install datasus
     ```
 
     ```bash
@@ -127,7 +127,7 @@ uv add "comex-fetcher --extra-index-url https://quantilica.com/quantilica-index/
     Baixa um intervalo de anos do BDMEP em paralelo, com encoding e cabeçalhos já tratados, e exporta direto em Parquet.
 
     ```bash
-    uv add "inmet-fetcher @ git+https://github.com/Quantilica/inmet-fetcher.git"
+    quantilica install inmet
     ```
 
     ```bash

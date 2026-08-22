@@ -19,7 +19,11 @@ O Tesouro Nacional publica os resultados primários (receitas e despesas) em uma
 ## Instalação
 
 ```bash
-pip install rtn-fetcher
+# Via CLI unificada (recomendado)
+quantilica install rtn
+
+# Ou como biblioteca no seu projeto
+uv add rtn-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

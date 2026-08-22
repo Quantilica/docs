@@ -18,7 +18,11 @@ Dados abertos e estatísticos da ANP (Agência Nacional do Petróleo, Gás Natur
 ## Instalação
 
 ```bash
-pip install anp-fetcher
+# Via CLI unificada (recomendado)
+quantilica install anp
+
+# Ou como biblioteca no seu projeto
+uv add anp-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

@@ -20,7 +20,11 @@ Cobre a **RAIS** (censo anual de emprego) e o **CAGED** (fluxos mensais de empre
 ## Instalação
 
 ```bash
-pip install pdet-fetcher
+# Via CLI unificada (recomendado)
+quantilica install pdet
+
+# Ou como biblioteca no seu projeto
+uv add pdet-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+ e o CLI `7z` no seu `PATH`.

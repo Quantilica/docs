@@ -20,7 +20,11 @@ O **inmet-fetcher** domina a rede nacional de dados meteorológicos históricos 
 ## Instalação
 
 ```bash
-pip install inmet-fetcher
+# Via CLI unificada (recomendado)
+quantilica install inmet
+
+# Ou como biblioteca no seu projeto
+uv add inmet-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

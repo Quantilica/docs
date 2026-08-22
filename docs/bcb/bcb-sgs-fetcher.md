@@ -18,7 +18,11 @@ O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de in
 ## Instalação
 
 ```bash
-pip install bcb-sgs-fetcher
+# Via CLI unificada (recomendado)
+quantilica install bcb-sgs
+
+# Ou como biblioteca no seu projeto
+uv add bcb-sgs-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

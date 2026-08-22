@@ -17,7 +17,11 @@ Cliente Python para a API SIDRA do IBGE — com suporte para requisições assí
 ## Instalação
 
 ```bash
-pip install sidra-fetcher
+# Via CLI unificada (recomendado)
+quantilica install sidra
+
+# Ou como biblioteca no seu projeto
+uv add sidra-fetcher --index https://index.quantilica.com/simple/
 ```
 
 ## CLI Oficial (Ambiente Unificado)

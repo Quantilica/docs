@@ -18,7 +18,11 @@ Dados abertos da ANAC (Agência Nacional de Aviação Civil).
 ## Instalação
 
 ```bash
-pip install anac-fetcher
+# Via CLI unificada (recomendado)
+quantilica install anac
+
+# Ou como biblioteca no seu projeto
+uv add anac-fetcher --index https://index.quantilica.com/simple/
 ```
 
 **Requisitos:** Python 3.12+

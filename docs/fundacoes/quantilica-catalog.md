@@ -12,7 +12,7 @@ Modelo de dados canônico e adaptadores para normalizar observações de diferen
 ## Instalação
 
 ```bash
-uv add "quantilica-catalog @ git+https://github.com/Quantilica/quantilica-catalog.git"
+uv add quantilica-catalog --index https://index.quantilica.com/simple/
 ```
 
 ## O Modelo: Star Schema
