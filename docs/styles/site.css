@@ -1,0 +1,17 @@
+/* Menos bordas visíveis — superfícies por sombra suave; bordas só como divisórias.
+   Alinha com branding/ (paleta Bege Areia para superfícies em Light Mode). */
+
+.md-typeset .admonition,
+.md-typeset details {
+  border: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .07);
+}
+
+.md-typeset .grid > .card {
+  border: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .07);
+}
+
+.md-typeset .grid > .card:hover {
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .12);
+}

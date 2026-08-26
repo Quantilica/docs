@@ -8,6 +8,9 @@ repo_url: https://github.com/Quantilica/docs
 repo_name: Quantilica
 edit_uri: ""
 
+extra_css:
+  - styles/site.css
+
 theme:
   name: material
   custom_dir: overrides
