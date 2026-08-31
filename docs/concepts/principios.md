@@ -35,11 +35,11 @@ Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a 
 
 ```
 sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher            comex-fetcher
-├─ httpx, tenacity  ├─ httpx, tqdm       ├─ polars, tqdm      ├─ stdlib only
+├─ httpx2, tenacity ├─ httpx2, tqdm      ├─ polars, tqdm      ├─ stdlib only
 └─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
 
 datasus-fetcher        inmet-fetcher              rtn-fetcher            bcb-sgs-fetcher
-├─ stdlib only         ├─ httpx, pandas, pyarrow  ├─ httpx, openpyxl     ├─ httpx, beautifulsoup4
+├─ stdlib only         ├─ httpx2, pandas, pyarrow ├─ httpx2, openpyxl    ├─ httpx2, beautifulsoup4
 └─ no cross-deps       └─ no cross-deps           └─ no cross-deps       └─ no cross-deps
 ```
 

@@ -58,7 +58,7 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 
 | Camada | Pacote | Depende de | Tamanho | Para quem |
 |---|---|---|---|---|
-| I/O resiliente | `quantilica-core` | stdlib + httpx | Leve | Todo coletor, todo usuário |
+| I/O resiliente | `quantilica-core` | stdlib + httpx2 | Leve | Todo coletor, todo usuário |
 | Analítica | `quantilica-analytics` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
 | CLI unificada | `quantilica-cli` | core | Leve | Quem interage via linha de comando |
 | Catálogo unificado | `quantilica-catalog` | io + Polars | Pesado | Quem cruza dados de múltiplas fontes |

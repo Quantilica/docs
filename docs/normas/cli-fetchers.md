@@ -241,7 +241,7 @@ def main(argv: list[str] | None = None) -> None:
     args.func(args)
 ```
 
-Onde `<pacote_fetcher>` é o nome do pacote do fetcher (ex: `"comex_fetcher"`, `"pdet_fetcher"`). São necessários dois `setLevel` porque `quantilica.core.*` usa o namespace `"quantilica.core"` e cada fetcher usa o namespace do seu próprio pacote — `get_logger(__name__)` retorna `logging.getLogger(name)` sem prefixo adicional. Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx`.
+Onde `<pacote_fetcher>` é o nome do pacote do fetcher (ex: `"comex_fetcher"`, `"pdet_fetcher"`). São necessários dois `setLevel` porque `quantilica.core.*` usa o namespace `"quantilica.core"` e cada fetcher usa o namespace do seu próprio pacote — `get_logger(__name__)` retorna `logging.getLogger(name)` sem prefixo adicional. Evite `logging.getLogger().setLevel(WARNING)` (raiz) pois suprime loggers de terceiros como `httpx2`.
 
 ---
 
@@ -1192,7 +1192,7 @@ dependencies = [
 [project]
 dependencies = [
     "beautifulsoup4>=4.12",
-    "httpx>=0.28.1",
+    "httpx2>=2.12.0",
     "quantilica-core ...",
 ]
 ```
