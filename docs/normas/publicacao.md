@@ -45,7 +45,11 @@ Todo repo publicável tem dois workflows em `.github/workflows/`.
 
 ### `test.yml` — lint + testes (todos os pacotes)
 
-Dispara em push/PR para `main`; roda `ruff check`, `ruff format --check` e `pytest` numa matriz 3.12/3.13 via `uv`.
+Dispara em push/PR para `main` (+ `workflow_dispatch`); roda `ruff check`, `ruff format --check` e `pytest` numa matriz 3.12/3.13 via `uv`. **Três regras obrigatórias**, cada uma nascida de falha real de CI:
+
+1. **Um único `uv sync` com retry** — o `--index` do índice próprio é sempre passado (pacotes âncora residem no PyPI, mas `quantilica-analytics`/`quantilica-catalog` só existem no índice), e o índice (GitHub Pages) já deu flake de DNS no runner (2026-08-23): sem retry, um push bom fica vermelho até o próximo push.
+2. **Todos os passos pós-sync usam `uv run --no-sync`** — cada `uv run` *sem* essa flag re-resolve o ambiente e **remove os extras** instalados no sync (caso `anp`: `ModuleNotFoundError: polars`, 2026-08-29).
+3. **O pyproject do repo não contém `[tool.uv.sources] { workspace = true }`** — é uma configuração do clone de desenvolvimento; num repo standalone o CI não resolve workspace (caso `anac`, 2026-08-29).
 
 ```yaml
 name: Test
@@ -55,6 +59,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -77,16 +82,30 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --group dev
+        run: |
+          for i in 1 2 3; do
+            if uv sync --group dev --python ${{ matrix.python-version }} \
+                --index https://index.quantilica.com/simple/ \
+                --index-strategy unsafe-best-match; then
+              exit 0
+            fi
+            echo "::warning::uv sync falhou (tentativa $i/3); nova tentativa em 10s"
+            sleep 10
+          done
+          exit 1
 
       - name: Lint with ruff
         run: |
-          uv run ruff check src/ tests/
-          uv run ruff format --check src/ tests/
+          uv run --no-sync ruff check src/ tests/
+          uv run --no-sync ruff format --check src/ tests/
 
       - name: Run tests
-        run: uv run pytest
+        run: uv run --no-sync pytest
 ```
+
+Se o repo tem testes que exigem um extra opcional do próprio pacote, acrescente `--extra <nome>` ao `uv sync` acima (ex.: `anp`/`rtn` usam `--extra analysis`).
+
+> **Deriva cross-repo:** workflows por pacote não enxergam a quebra de um vizinho (ex.: função removida de `sidra-fetcher` quebrando `sidra-sql` em silêncio por ~1 mês). Para isso existe `integration.yml` em `quantilica-core` (cron diário): monta o uv workspace com todos os members, roda o suite conjunto e veta o vazamento de `workspace = true`.
 
 ### `publish.yml` — Fluxo A: build → TestPyPI → PyPI (OIDC)
 
