@@ -237,18 +237,58 @@ O formato completo — cabeçalho padrão, categorias permitidas e bootstrap de 
 
 ---
 
-## 4. Versionamento e tags
+## 4. Versionamento, SemVer e Política de Bump
 
-- **SemVer**: PATCH = fix; MINOR = feature compatível; MAJOR = quebra de API.
-- A versão vive em `[project] version` do `pyproject.toml`.
-- A **tag `vX.Y.Z`** é o release: criá-la e dar push dispara o `publish.yml`.
-- Uma versão publicada é **imutável**. Errou? Publique uma nova; se necessário, faça *yank* da anterior pela interface web (não há API/twine para yank — Fluxo A apenas).
+O ecossistema Quantilica adere estritamente ao [Semantic Versioning 2.0.0](https://semver.org/lang/pt-BR/) (`MAJOR.MINOR.PATCH`). A versão canônica vive em `[project] version` do `pyproject.toml`.
+
+### 4.1. Critérios de Incremento (Quando subir cada dígito)
+
+| Tipo de Bump | Formato | Quando Aplicar | Exemplos no Ecossistema |
+|---|---|---|---|
+| **`PATCH`** | `x.y.Z` $\to$ `x.y.Z+1` | Correções de bugs, tolerância a falhas na extração, melhorias de desempenho internas sem mudança de assinatura, correções de tipagem (`py.typed`), atualizações de segurança em dependências e documentação. | Fix em parser de HTML de tabela IBGE; correção de timeout em endpoint BCB; bump de segurança de `httpx2`. |
+| **`MINOR`** | `x.Y.z` $\to$ `x.Y+1.0` | Adição de novos endpoints, novos datasets/tabelas em fetchers, novos comandos de CLI retrocompatíveis, novos parâmetros opcionais com valor padrão preservado, ou introdução de `DeprecationWarning`. | Adição do endpoint de `royalties` no `anp-fetcher`; novo subcomando de exportação no `quantilica-cli`. |
+| **`MAJOR`** | `X.y.z` $\to$ `X+1.0.0` | Quebras de compatibilidade com versões anteriores (breaking changes): remoção ou renomeação de funções/classes públicas, alteração estrutural no retorno de dados, remoção de argumentos legados ou quebra de contrato de schemas. | Remoção do comando `quantilica fetch <fonte>` em prol de `quantilica <fonte>`; refatoração de retorno de dataclasses para novo formato inalterável. |
+
+> **Nota sobre imutabilidade:** Uma versão publicada no PyPI ou no índice estático é **estritamente imutável**. Havendo qualquer erro de empacotamento ou código após a publicação, incremente uma nova versão `PATCH`.
+
+### 4.2. Delineamento: Bibliotecas vs. Aplicações Web
+
+| Dimensão | Bibliotecas & Fetchers (Fluxo A / Fluxo B) | Aplicações Web (`quantilica-portal`) |
+|---|---|---|
+| **Arquivos tocados no bump** | `pyproject.toml` + `CHANGELOG.md` | `pyproject.toml` + `uv.lock` |
+| **Versionamento do `uv.lock`** | **PROIBIDO**. Bibliotecas não versionam `uv.lock` para permitir resolução dinâmica por consumidores. | **OBRIGATÓRIO**. `uv.lock` é commitado (`uv lock && uv lock --check`) para garantir deploys 100% determinísticos no VPS. |
+| **`CHANGELOG.md`** | **OBRIGATÓRIO** no formato Keep a Changelog. | **ISENTO** (rastreado por releases git e notas internas). |
+| **Tipo de Tag Git** | `vX.Y.Z` simples ou anotada. | `git tag -a vX.Y.Z -m "vX.Y.Z"` anotada. |
+
+### 4.3. Regra de Isolamento Absoluto do Commit de Release (Zero-Feature Release)
+
+Nunca misture código de funcionalidades (`feat`, `fix`, `refactor`) no mesmo commit que realiza o bump de versão:
+
+1. **Commit de Funcionalidade:** Adicione e commite todas as implementações (`git add .` e `git commit -m "feat/fix: ..."`). A working tree deve ficar **100% limpa**.
+2. **Commit Exclusivo de Release:** Altere apenas os arquivos de metadados (`pyproject.toml` + `CHANGELOG.md` em pacotes; `pyproject.toml` + `uv.lock` em apps) e faça o commit dedicado:
+   ```bash
+   git add pyproject.toml CHANGELOG.md
+   git commit -m "release: vX.Y.Z"
+   ```
+3. **Criação e Push de Tags:**
+   ```bash
+   git tag vX.Y.Z
+   git push origin main && git push origin vX.Y.Z
+   ```
 
 ---
 
-## 5. Cadeia de dependências
+## 5. Cadeia de Dependências e Cascata Upstream-Downstream
 
-Dependa **por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allow-direct-references` (o PyPI rejeita dependências VCS; o índice próprio também recomenda pins de versão). Publique **de cima para baixo**: o upstream primeiro, depois troque a dependência do downstream de git para registro. Ex.: `quantilica-core` → `sidra-fetcher` (`quantilica-core>=0.3.1`) → `sidra-sql` (`sidra-fetcher>=0.7.2`).
+Dependa **sempre por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allow-direct-references`. 
+
+### Ordem Obrigatória de Publicação (Upstream $\to$ Downstream)
+Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma alteração em `quantilica-core` que é consumida por `quantilica-analytics` e depois por `sidra-fetcher`):
+1. Faça o release e push da tag do pacote upstream (`quantilica-core`).
+2. **Aguarde a conclusão do workflow de CI/CD** (PyPI ou GitHub Release + `quantilica-index`) e certifique-se de que a nova versão já está resolúvel no índice.
+3. Somente então atualize o pin mínimo no `pyproject.toml` do pacote downstream (ex: `quantilica-core>=0.5.0`), teste localmente e proceda com o release do downstream.
+
+> **Atenção:** Atualizar o pin downstream antes da publicação do upstream fará com que o workflow `test.yml` ou `publish.yml` do downstream falhe no GitHub Actions por pacote não encontrado.
 
 > Fetchers **não** declaram `typer`/`rich` (nem via extra) — esses vêm do host `quantilica-cli`. Ver [Padronização de CLI](cli-fetchers.md).
 
