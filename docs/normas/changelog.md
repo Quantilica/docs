@@ -110,14 +110,13 @@ Seguindo a [norma de escrita](escrita.md):
 
 ## 6. Relação com SemVer, tags e o changelog do site
 
-- A categoria da mudança sugere o _bump_ [SemVer](https://semver.org/lang/pt-BR/):
-  `Corrigido` → PATCH; `Adicionado` → MINOR; `Removido`/quebra de API em
-  `Alterado` → MAJOR.
-- A **tag `vX.Y.Z`** é o release (dispara `publish.yml`); o `CHANGELOG.md` deve
-  conter a entrada dessa versão **antes** de criar a tag.
-- Marcos maiores (novo pacote, publicação no PyPI, renomeação) também entram, de
-  forma resumida e cross-pacote, no [changelog do site](../changelog.md). O detalhe
-  fica sempre no `CHANGELOG.md` do repo.
+- O tipo de alteração define o _bump_ [SemVer](https://semver.org/lang/pt-BR/) de acordo com a [Política Canônica de Versionamento](publicacao.md#4-versionamento-semver-e-política-de-bump):
+  - `Corrigido`, `Segurança` ou melhorias internas $\to$ **`PATCH`** (`x.y.Z`).
+  - `Adicionado`, novos endpoints/tabelas ou `Descontinuado` $\to$ **`MINOR`** (`x.Y.0`).
+  - `Removido` ou quebra de contrato de API em `Alterado` $\to$ **`MAJOR`** (`X.0.0`).
+- A **tag `vX.Y.Z`** é o release (dispara `publish.yml`); o `CHANGELOG.md` deve conter a entrada dessa versão **antes** de criar a tag.
+- **Isolamento de Commit:** O `CHANGELOG.md` e o `pyproject.toml` são commitados juntos em um commit exclusivo de release (`release: vX.Y.Z`), separado dos commits de implementação (`feat`, `fix`).
+- Marcos maiores (novo pacote, publicação no PyPI, renomeação) também entram, de forma resumida e cross-pacote, no [changelog do site](../changelog.md). O detalhe fica sempre no `CHANGELOG.md` do repo.
 
 ---
 

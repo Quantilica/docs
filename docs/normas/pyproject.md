@@ -15,6 +15,8 @@ Todo pacote publicável declara:
 
 ```toml
 [project]
+name = "meu-pacote"
+version = "0.1.0"                  # SemVer canônico (MAJOR.MINOR.PATCH)
 license = "MIT"                    # PEP 639 (expressão SPDX)
 license-files = ["LICENSE"]
 classifiers = [
@@ -27,8 +29,10 @@ requires = ["hatchling>=1.27"]     # >=1.27 para suporte a PEP 639
 build-backend = "hatchling.build"
 ```
 
+- **Versão (`version`):** adere estritamente a [SemVer 2.0.0](https://semver.org/lang/pt-BR/). O bump de versão segue a [Política Canônica de Versionamento](publicacao.md#4-versionamento-semver-e-política-de-bump).
 - **Licença — PEP 639:** use a expressão SPDX (`license = "MIT"`) + `license-files`, **não** a forma antiga `license = { file = "LICENSE" }` nem o classifier `License :: OSI Approved :: MIT License`. Requer `hatchling>=1.27`.
 - **Tipagem — PEP 561:** um pacote tipado envia um arquivo marcador `py.typed` (vazio) em `src/<pacote>/py.typed` e declara o classifier `Typing :: Typed`. Sem o marcador, consumidores com mypy/pyright não enxergam os tipos. Os dois andam juntos: ou tem ambos, ou nenhum.
+- **`uv.lock` em bibliotecas:** bibliotecas e fetchers **nunca versionam `uv.lock`** no repositório. O lockfile é restrito a aplicações web privadas (como `quantilica-portal`).
 
 ---
 
