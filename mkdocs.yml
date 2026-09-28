@@ -115,6 +115,7 @@ nav:
       - cookbook/index.md
       - Curva de Phillips brasileira: cookbook/curva-phillips.md
       - Yield Curve em 10 linhas: cookbook/yield-curve.md
+      - Taxa real ex-post (Selic × IPCA): cookbook/taxa-real-ipca-selic.md
       - Mortalidade infantil × SUS: cookbook/mortalidade-sus.md
       - Estiagem no Nordeste: cookbook/estiagem-nordeste.md
       - Balança comercial em DuckDB: cookbook/balanca-duckdb.md
