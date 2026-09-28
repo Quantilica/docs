@@ -6,7 +6,7 @@ copyright: "Copyright &copy; 2026 Quantilica &bull; <a href=\"#__consent\">Alter
 
 repo_url: https://github.com/Quantilica/docs
 repo_name: Quantilica
-edit_uri: ""
+edit_uri: blob/main/docs/
 
 extra_css:
   - styles/site.css
@@ -29,6 +29,7 @@ theme:
     - toc.follow
     - content.code.copy
     - content.code.annotate
+    - content.action.edit
     - content.tabs.link
     - search.highlight
     - search.suggest

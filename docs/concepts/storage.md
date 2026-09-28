@@ -137,7 +137,7 @@ Para a estrutura detalhada de todos os demais pacotes (`inmet-fetcher`, `pdet-fe
 
 ## Interface CLI
 
-Todos os fetchers expõem o diretório de saída pelo argumento `-o` / `--output` com um valor padrão de `/data/<fonte>`.
+A convenção é expor o diretório de saída pelo argumento `-o` / `--output`. Nos fetchers clássicos há um valor padrão `/data/<fonte>`; nos fetchers novos com catálogo declarativo o destino é informado por comando — consulte `quantilica <fonte> --help`.
 
 Para especificações detalhadas sobre a implementação desse argumento, as opções do parser e regras adicionais de interface, consulte o guia de [Padronização de CLI](../normas/cli-fetchers.md).
 
@@ -147,13 +147,17 @@ Abaixo estão definidos os diretórios de saída padrão (`default` de `--output
 
 | Pacote | Diretório Padrão (`--output`) |
 |---|---|
+| `bcb-sgs-fetcher` | `/data/bcb-sgs` |
 | `comex-fetcher` | `/data/secex-comex` |
 | `datasus-fetcher` | `/data/datasus` |
 | `inmet-fetcher` | `/data/inmet` |
 | `pdet-fetcher` | `/data/pdet` |
 | `rtn-fetcher` | `/data/rtn` |
+| `sidra-fetcher` | `/data/sidra` |
 | `tesouro-direto-fetcher` | `/data/tesouro-direto` |
+
+Fetchers novos com catálogo (`anac`, `anp`, `inep`, `rfb-cnpj`) não têm um padrão global único — o destino é passado por comando.
 
 ---
 
-*Atualizado em: 11 de maio de 2026*
+*Atualizado em: 28 de setembro de 2026*
