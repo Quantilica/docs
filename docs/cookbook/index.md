@@ -19,6 +19,7 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 ### Finanças
 
 - **[Yield Curve em 10 linhas](yield-curve.md)** — DI, Selic, IPCA+ — a curva inteira com Altair. Só `tesouro-direto-fetcher`.
+- **[Taxa real ex-post — Selic × IPCA](taxa-real-ipca-selic.md)** — juros reais mensais e em 12 meses com `bcb-sgs-fetcher` + Polars. Só SGS/BCB.
 
 ### Saúde pública
 
@@ -40,7 +41,6 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 Ideias de receitas ainda não escritas, priorizando os domínios novos. Quer escrever uma? Siga o padrão das receitas acima e abra PR — ou abra issue no repositório de docs para reservar o tema:
 
-- **IPCA (SIDRA) × Selic (BCB)** — taxa real ex-post mensal com `sidra-fetcher` + `bcb-sgs-fetcher`, via `quantilica-catalog` (`indicator_id + geo_id + date`).
 - **Balança comercial (Comex) × câmbio (BCB)** — elasticidade preço-volume das exportações com `comex-fetcher` + série 1 do SGS.
 - **Preço de combustíveis (ANP) × IPCA transportes (SIDRA)** — repasse na bomba com `anp-fetcher` + pipeline `snipc`.
 
