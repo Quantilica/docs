@@ -1,3 +1,8 @@
+---
+title: Aviação Civil — dados da ANAC
+description: Voos, aeronaves, ocorrências e aeródromos nos dados abertos da ANAC — anac-fetcher.
+---
+
 # Aviação Civil
 
 Dados abertos da ANAC (Agência Nacional de Aviação Civil): voos regulares, cadastro de aeronaves, ocorrências aeronáuticas investigadas pelo CENIPA e infraestrutura de aeródromos.

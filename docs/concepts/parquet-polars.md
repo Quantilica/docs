@@ -1,3 +1,8 @@
+---
+title: Parquet + Polars — formato e motor analítico
+description: Por que Parquet e Polars sustentam o ecossistema, com workflows para datasets de 100 MB a 100 GB+ (SIDRA, RAIS, Tesouro).
+---
+
 # Parquet + Polars
 
 Tutorial dedicado ao formato (Parquet) e biblioteca (Polars) que formam a espinha do processamento no ecossistema. Os exemplos usam datasets dos três principais domínios — IBGE/SIDRA, RAIS/CAGED e Tesouro Direto — para mostrar que os mesmos padrões servem volumes muito diferentes.

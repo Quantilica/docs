@@ -9,7 +9,7 @@ Os pacotes públicos do ecossistema Quantilica seguem **dois fluxos de release d
 
 | Fluxo | Canal | Pacotes | Workflow |
 |---|---|---|---|
-| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli`, `sidra-fetcher` | `publish.yml` com Trusted Publishing |
+| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql` | `publish.yml` com Trusted Publishing |
 | **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` (exceto `sidra-fetcher`) | `publish.yml` com GitHub Release + dispatch |
 
 > Fetchers distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages.
@@ -109,7 +109,7 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, acrescente
 
 ### `publish.yml` — Fluxo A: build → TestPyPI → PyPI (OIDC)
 
-Para `quantilica-core`, `quantilica-cli` e `sidra-fetcher`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
+Para `quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher` e `bcb-sgs-sql`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
 
 ```yaml
 name: Publish to PyPI
@@ -185,7 +185,7 @@ jobs:
 
 ### `publish.yml` — Fluxo B: build → GitHub Release → dispatch (índice estático)
 
-Para todos os `*-fetcher` (exceto `sidra-fetcher`), `quantilica-analytics` e `quantilica-catalog`. Dispara em push de tag `v*`. Cria um GitHub Release com os artefatos e dispara o rebuild do índice estático.
+Para os demais `*-fetcher`, `quantilica-analytics` e `quantilica-catalog`. Dispara em push de tag `v*`. Cria um GitHub Release com os artefatos e dispara o rebuild do índice estático.
 
 ```yaml
 name: Release to GitHub & Notify Index

@@ -1,3 +1,8 @@
+---
+title: Padrões práticos de implementação
+description: Idempotência, concorrência explícita, Parquet, lazy evaluation, auto-retry e validação — os padrões táticos do ecossistema em código real.
+---
+
 # Padrões Práticos
 
 Este guia cobre nove padrões usados em todas as ferramentas do ecossistema. Cada padrão materializa um ou mais [Princípios de Design](principios.md) em código real. Seguindo-os, seus pipelines ficam mais rápidos, confiáveis e fáceis de manter.

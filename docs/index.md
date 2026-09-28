@@ -69,11 +69,13 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[inmet-fetcher](clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
 | **[bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
 | **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
+| **[bcb-sgs-pipelines](bcb/bcb-sgs-pipelines.md)** | Catálogo declarativo de 13 pipelines macro BCB prontos para rodar |
 | **[anac-fetcher](aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
 | **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
 | **[inep-fetcher](educacao/inep-fetcher.md)** | Conversão robusta de bases educacionais (39 GB) para Parquet tipado |
 | **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo e conversão da base inteira de CNPJs (245 GB) |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
+| **[quantilica-cli](fundacoes/quantilica-cli.md)** | O ponto de entrada único: `quantilica <fonte>` com instalação sob demanda |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
 | **[quantilica-catalog](fundacoes/quantilica-catalog.md)** | Modelo canônico de observações para cruzamento multi-fonte |
 

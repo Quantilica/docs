@@ -1,3 +1,8 @@
+---
+title: IBGE — macroeconomia via SIDRA
+description: Estatísticas oficiais do IBGE via SIDRA — sidra-fetcher para exploração, sidra-sql e sidra-pipelines para produção.
+---
+
 # IBGE — Macroeconomia
 
 O Instituto Brasileiro de Geografia e Estatística (IBGE) é a fonte oficial das estatísticas macroeconômicas do país. O **SIDRA** é o sistema central — milhares de séries temporais sobre PIB, inflação, emprego, comércio interno e demografia.

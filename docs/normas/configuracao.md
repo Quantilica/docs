@@ -51,7 +51,7 @@ Os arquivos usam o formato INI padrão do Python:
 host     = localhost
 port     = 5432
 user     = postgres
-password = senha_secreta
+password = <senha>
 dbname   = dados
 schema   = bcb_sgs
 
@@ -76,7 +76,7 @@ Todas as ferramentas expõem um subcomando `config` com três operações:
 bcb-sgs-sql config set database.host localhost
 bcb-sgs-sql config set database.port 5432
 bcb-sgs-sql config set database.user postgres
-bcb-sgs-sql config set database.password senha_secreta
+bcb-sgs-sql config set database.password <senha>
 bcb-sgs-sql config set database.dbname dados
 bcb-sgs-sql config set database.schema bcb_sgs
 bcb-sgs-sql config set storage.data_dir /data/bcb-sgs

@@ -1,3 +1,8 @@
+---
+title: Versão em pacotes Python via importlib.metadata
+description: Fonte única de versão no pyproject.toml, leitura via importlib.metadata e exposição em CLIs argparse e Typer.
+---
+
 # Padronização de Versão em Pacotes Python
 
 Para garantir consistência entre os projetos da Quantilica e evitar a duplicação manual da versão (no `pyproject.toml` e no código), adotamos o seguinte padrão.

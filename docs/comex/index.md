@@ -1,3 +1,8 @@
+---
+title: Comércio Exterior — dados do Siscomex
+description: Exportações e importações brasileiras via Siscomex/Secex — comex-fetcher com retry e Parquet direto.
+---
+
 # Comércio Exterior
 
 Dados detalhados sobre as exportações e importações brasileiras, consolidados pela Secretaria de Comércio Exterior (SECEX/MDIC) através do Siscomex.

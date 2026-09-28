@@ -1,3 +1,8 @@
+---
+title: Petróleo, Gás e Biocombustíveis — dados da ANP
+description: Preços de combustíveis, produção, vendas e royalties nos dados abertos da ANP — anp-fetcher.
+---
+
 # Petróleo, Gás e Biocombustíveis
 
 Dados abertos e estatísticos da ANP (Agência Nacional do Petróleo, Gás Natural e Biocombustíveis): preços de combustíveis, vendas e produção de derivados, importação/exportação, royalties e participações governamentais, movimentação e qualidade de combustíveis, produção por poço, e infraestrutura regulatória do setor.
