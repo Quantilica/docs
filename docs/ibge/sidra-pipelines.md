@@ -98,7 +98,7 @@ data_dir = data
 
 [database]
 user          = postgres
-password      = sua_senha
+password      = <senha>
 host          = localhost
 port          = 5432
 dbname        = dados

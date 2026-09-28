@@ -200,7 +200,7 @@ data_dir = data
 
 [database]
 user = postgres
-password = suasenha
+password = <senha>
 host = localhost
 port = 5432
 dbname = dados
@@ -221,7 +221,7 @@ Ou via CLI:
 bcb-sgs-sql config set database.host     localhost
 bcb-sgs-sql config set database.port     5432
 bcb-sgs-sql config set database.user     postgres
-bcb-sgs-sql config set database.password suasenha
+bcb-sgs-sql config set database.password <senha>
 bcb-sgs-sql config set database.dbname   dados
 bcb-sgs-sql config set database.schema   bcb_sgs
 bcb-sgs-sql config set storage.data_dir  data
@@ -483,7 +483,7 @@ bcb-sgs-sql config list [--global] [--local]
 ```
 
 Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local; com `--global`, usa
-`~/.config/bcb-sgs-sql/config.ini`. `config list` sem flags mostra a visão mesclada.
+`~/.config/quantilica/bcb-sgs-sql/config.ini`. `config list` sem flags mostra a visão mesclada.
 
 ---
 

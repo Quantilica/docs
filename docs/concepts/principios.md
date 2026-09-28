@@ -1,3 +1,8 @@
+---
+title: Princípios de design da Quantilica
+description: Modularidade, resiliência, performance, reprodutibilidade e sem mágica — os cinco princípios que orientam cada ferramenta.
+---
+
 # Princípios de Design
 
 O Ecossistema Quantilica é construído sobre cinco princípios que orientam cada ferramenta — de `sidra-fetcher` a `datasus-fetcher`. Entendê-los ajuda a usar as ferramentas com eficácia e a estendê-las para necessidades próprias.

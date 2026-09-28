@@ -1,3 +1,8 @@
+---
+title: Roadmap do ecossistema Quantilica
+description: Visão estratégica e roadmap de execução da Quantilica — cobertura de fontes, ativos analíticos prontos e confiabilidade observável.
+---
+
 # Visão Estratégica e Roadmap
 
 Visão estratégica do Ecossistema Quantilica para dados abertos brasileiros.
@@ -20,7 +25,7 @@ apoia em três pilares:
 
 Melhorias de baixo custo e alto impacto na experiência do desenvolvedor, fora da trilha das fases estratégicas:
 
-- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático. *(Parcialmente entregue: o padrão de empacotamento e o processo de release já estão documentados em [Publicação e Release](normas/publicacao.md), com workflows `test.yml`/`publish.yml` em uso nos 6 pacotes publicados; falta o repositório-template em si.)*
+- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático. *(Parcialmente entregue: o padrão de empacotamento e o processo de release já estão documentados em [Publicação e Release](normas/publicacao.md), com workflows `test.yml`/`publish.yml` em uso nos 7 pacotes do PyPI; falta o repositório-template em si.)*
 
 ## Roadmap de Execução Detalhado
 
@@ -33,10 +38,11 @@ O desenvolvimento da Quantilica está estruturado em ciclos incrementais que def
     *   Implementar cron jobs semanais que testam a conectividade e integridade dos endpoints governamentais.
     *   Criar uma "Status Page" pública informando se uma fonte (ex: FTP do DATASUS) está instável.
     *   Alertas automáticos via GitHub Issues quando um fetcher falhar por mudança externa.
-2.  **Padronização Rigorosa de CI/CD** *(parcialmente entregue)*:
-    *   ✅ Matrix de testes em Python 3.12 e 3.13 para todos os pacotes (workflow `test.yml`).
+2.  **Padronização Rigorosa de CI/CD** *(entregue para o padrão; cobertura segue como meta)*:
+    *   ✅ Matrix de testes em Python 3.12 e 3.13 para todos os pacotes (workflow `test.yml` canônico: `uv sync` único com retry no índice, passos pós-sync com `uv run --no-sync`, `workflow_dispatch`).
     *   ✅ Bloqueio de PRs que não atendam às regras do `ruff` (`ruff check` + `ruff format --check` no CI).
-    *   ✅ Publicação automatizada no PyPI via Trusted Publishing (workflow `publish.yml`) — ver [Publicação e Release](normas/publicacao.md).
+    *   ✅ Publicação automatizada — Fluxo A via Trusted Publishing no PyPI (OIDC) e Fluxo B via GitHub Releases + índice próprio — ver [Publicação e Release](normas/publicacao.md).
+    *   ✅ Anti-deriva cross-repo: `integration.yml` em `quantilica-core` (cron diário) monta o workspace e roda o suite conjunto.
     *   ⏳ Obrigatoriedade de 80%+ de cobertura de testes para novos PRs.
 3.  **Distribuição via Container (Docker Oficiais)**:
     *   Publicar imagens Docker no GitHub Container Registry (GHCR) para cada fetcher.
@@ -77,4 +83,4 @@ Transformar a Quantilica em referência para a comunidade analítica brasileira 
 *   **GitHub Sponsors / Open Collective:** sustentabilidade e transparência financeira para os custos de infraestrutura.
 
 ---
-*Atualizado em: 18 de julho de 2026*
+*Atualizado em: 28 de setembro de 2026*

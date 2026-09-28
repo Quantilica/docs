@@ -1,11 +1,11 @@
 ---
 title: Fundações da Quantilica
-description: Os dois pacotes que sustentam todo o ecossistema — infraestrutura de I/O e camada analítica.
+description: A base técnica compartilhada por todo o ecossistema — I/O resiliente, camada analítica, CLI unificada e catálogo canônico.
 ---
 
 # Fundações
 
-Cada coletor da Quantilica é especializado para a sua fonte. Mas **todos compartilham as mesmas duas fundações**, que entregam o comportamento técnico comum: rede resiliente, armazenamento atômico, proveniência criptográfica e conversão Parquet tipada.
+Cada coletor da Quantilica é especializado para a sua fonte. Mas **todos compartilham a mesma base técnica**, que entrega o comportamento comum: rede resiliente, armazenamento atômico, proveniência criptográfica, conversão Parquet tipada, CLI unificada e modelo canônico de observações.
 
 Essa separação não é cosmética. Ela é a razão pela qual o ecossistema escala sem virar monolito.
 
@@ -38,7 +38,7 @@ A ponte entre arquivos brutos e ativos analíticos prontos.
 
 Um cientista de dados que só quer baixar séries do SIDRA não deveria precisar instalar 50 MB de binários do Polars e do Arrow para isso. E uma equipe de engenharia construindo um data lake não deveria ter que reimplementar `to_parquet()` em cada fetcher.
 
-A divisão `core` (I/O leve de rede/disco) e `io` (processamento pesado com Polars/PyArrow) garante que cada camada tenha uma responsabilidade única, evitando desperdício de recursos e dependências desnecessárias.
+Por isso a base é dividida em camadas — `core` (I/O leve) e `analytics` (processamento pesado com Polars/PyArrow) — cada uma com responsabilidade única, sem desperdício de dependências. O host de CLI e o catálogo canônico completam a base sem acoplamento.
 
 Veja o desenho completo na [Arquitetura do Ecossistema](../concepts/arquitetura.md).
 

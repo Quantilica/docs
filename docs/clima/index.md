@@ -1,3 +1,8 @@
+---
+title: Clima e Meio Ambiente — dados do INMET
+description: Séries meteorológicas históricas do INMET BDMEP com encoding e cabeçalhos tratados — inmet-fetcher.
+---
+
 # Clima e Meio Ambiente
 
 Dados meteorológicos e climáticos históricos e em tempo real provenientes das estações automáticas e convencionais do INMET (Instituto Nacional de Meteorologia).

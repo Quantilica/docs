@@ -7,6 +7,41 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-09 — Sete pacotes no PyPI e quatro fetchers novos documentados
+
+Versões no PyPI em 2026-09-28: `quantilica-core` 0.7.1, `quantilica-cli` 0.3.2,
+`sidra-fetcher` 0.10.3, `sidra-sql` 2.0.0, `datasus-fetcher` 0.7.0,
+`bcb-sgs-fetcher` 0.5.0, `bcb-sgs-sql` 0.2.1. (`quantilica-analytics` e
+`quantilica-catalog` seguem distribuídos pelo índice próprio — Fluxo B.)
+
+- **Novos domínios documentados:** `anac-fetcher` (aviação civil),
+  `anp-fetcher` (petróleo, gás e biocombustíveis), `inep-fetcher` (educação) e
+  `rfb-cnpj-fetcher` (base de CNPJs) ganharam páginas em [Aviação](aviacao/index.md),
+  [Petróleo](petroleo/index.md), [Educação](educacao/index.md) e
+  [Empresas](empresas/index.md). Versões granulares nos `CHANGELOG.md` de cada repo.
+- **Cliente HTTP padronizado em `httpx2`:** normas, princípios e fundações
+  migrados do `httpx` direto para o cliente resiliente do `quantilica-core`.
+- **CI canônico formalizado:** `test.yml` com `uv sync` único e retry no índice,
+  todos os passos pós-sync com `uv run --no-sync`, `workflow_dispatch`, e
+  `integration.yml` anti-deriva cross-repo em `quantilica-core` — ver
+  [Publicação e Release](normas/publicacao.md).
+- **Padrão `FetcherApp` adotado em todo o ecossistema** (ver
+  [Padronização de CLI](normas/cli-fetchers.md)) e dependências analíticas
+  opcionais padronizadas para fetchers.
+
+## 2026-08 — Cobertura de fontes: ANAC, ANP, INEP e RFB-CNPJ
+
+Quatro novas fontes ganham coletores dedicados, seguindo os mesmos princípios
+(resiliência, proveniência SHA-256, Parquet tipado):
+
+- **`anac-fetcher`** — voos regulares, aeronaves, ocorrências e aeródromos.
+- **`anp-fetcher`** — preços de combustíveis, produção, vendas e royalties.
+- **`inep-fetcher`** — microdados educacionais (ENEM, Censo Escolar).
+- **`rfb-cnpj-fetcher`** — base pública de CNPJs com download paralelo e conversão.
+
+Instalação pelo fluxo canônico (`quantilica install <fonte>`) ou como
+biblioteca via índice próprio. Detalhes e datasets em cada página de domínio.
+
 ## 2026-07 — Stack BCB SGS publicado no PyPI
 
 **`bcb-sgs-fetcher` (0.5.0) e `bcb-sgs-sql` (0.2.1) agora estão no PyPI.** A cadeia

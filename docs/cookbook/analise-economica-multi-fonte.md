@@ -1,3 +1,8 @@
+---
+title: "Receita: análise econômica multi-fonte"
+description: IPCA do IBGE, yields do Tesouro Direto e salários da RAIS num painel macroeconômico — modularidade em prática.
+---
+
 # Receita: Análise Econômica Multi-Fonte
 
 Combinar três fontes — IPCA do IBGE, yields do Tesouro Direto e salários da RAIS — para construir um painel macroeconômico básico. Esta receita demonstra **[Modularidade](../concepts/principios.md#modularidade)** em prática: três ferramentas independentes, sem dependências cruzadas, compostas num pipeline coerente.

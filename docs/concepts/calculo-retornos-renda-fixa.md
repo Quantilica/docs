@@ -1,3 +1,8 @@
+---
+title: Cálculo de retornos de renda fixa
+description: YTM, duration e retorno real de títulos públicos — a base teórica que o tesouro-direto-fetcher materializa.
+---
+
 # Cálculo de Retornos de Renda Fixa
 
 Guia conceitual da matemática por trás de retornos, YTM e sensibilidade a taxa de juros

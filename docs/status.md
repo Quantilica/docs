@@ -19,17 +19,17 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 |---|---|---|---|
 | **IBGE SIDRA** (`apisidra.ibge.gov.br`) | ✅ estável | 2026-05-17 | Rate limit não documentado; preferir horário não-comercial |
 | **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-05-17 | Janelas curtas de 502 em manutenção |
-| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai frequentemente em horário comercial; reduzir `--threads` |
-| **Tesouro Transparente CKAN** | ✅ estável | 2026-05-17 | Dataset com timestamp no nome |
+| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-09-28 | Cai frequentemente em horário comercial; reduzir `--threads` (FTP alcançável na verificação) |
+| **Tesouro Transparente CKAN** | ✅ estável | 2026-09-28 | Dataset com timestamp no nome (API `package_list` responde 200) |
 | **INMET BDMEP** | ✅ estável | 2026-05-17 | ZIPs por ano; latin-1; valores `-9999` |
 | **Siscomex** (Comex) | ⚠️ instável | 2026-05-17 | SSL ruim em janelas curtas; arquivos GB |
 | **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai com frequência; CAGED schema diferente em 2020+ |
 | **Tesouro Nacional RTN** | ✅ estável | 2026-05-17 | Excel multi-aba publicado mensalmente |
-| **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-07-18 | API JSON de valores estável; metadados só via scraping HTML sequencial (não paralelizável); séries diárias truncadas (varredura ano a ano) |
+| **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-09-28 | API JSON de valores estável (200); metadados só via scraping HTML sequencial (não paralelizável); séries diárias truncadas (varredura ano a ano) |
 | **INEP** (`download.inep.gov.br`) | ✅ estável | 2026-08-09 | Arquivos muito grandes, preferir download particionado |
-| **RFB CNPJ** (`gov.br/receitafederal`) | ✅ estável | 2026-08-09 | Base completa (~245 GB) atualizada mensalmente |
-| **ANAC** (`gov.br/anac`) | ✅ estável | 2026-08-09 | Arquivos estáticos; schema razoavelmente consistente |
-| **ANP** (`gov.br/anp`) | ✅ estável | 2026-08-09 | Arquivos estáticos; atualizados periodicamente |
+| **RFB CNPJ** (`gov.br/receitafederal`) | ✅ estável | 2026-09-28 | Base completa (~245 GB) atualizada mensalmente (portal responde 200) |
+| **ANAC** (`gov.br/anac`) | ✅ estável | 2026-09-28 | Arquivos estáticos; schema razoavelmente consistente (portal responde 200) |
+| **ANP** (`gov.br/anp`) | ✅ estável | 2026-09-28 | Arquivos estáticos; atualizados periodicamente (portal responde 200) |
 
 **Legenda:**
 - ✅ **Estável** — funciona sem intervenção; eventuais 502 curtos são normais.
@@ -61,4 +61,4 @@ Encontrou uma fonte fora do ar que esta página marca como estável (ou o contr�
 
 ---
 
-*Última atualização manual desta página: 2026-07-18.*
+*Última revisão editorial desta página: 2026-09-28 (verificação ao vivo parcial via HTTP/FTP; linhas não re-verificadas mantêm a data anterior). Cadência pretendida: revisão mensal. Divergências, reporte como descrito acima.*

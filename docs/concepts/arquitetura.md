@@ -1,3 +1,8 @@
+---
+title: Arquitetura do ecossistema Quantilica
+description: As quatro camadas do ecossistema (extração, processamento, armazenamento, análise), o modelo ELT e a CLI híbrida.
+---
+
 # Arquitetura do Ecossistema
 
 Como o Ecossistema Quantilica é organizado e como as partes se conectam. Esta página descreve a forma do sistema; os [Princípios de Design](principios.md) explicam **por que** ele tem essa forma.
@@ -23,6 +28,9 @@ graph TD
     Sources -->|ANP| ANP["anp-fetcher"]
     Sources -->|ANAC| ANAC["anac-fetcher"]
 
+    SP["sidra-pipelines<br/>catálogo declarativo"] --> SQL
+    BP["bcb-sgs-pipelines<br/>catálogo declarativo"] --> BCBSQL
+
     SF --> Processing["Processamento & Transformação<br/>(Polars vetorial / DuckDB)"]
     SQL --> Processing
     TD --> Processing
@@ -44,6 +52,8 @@ graph TD
 
     PQ --> Analytics["Analytics & BI<br/>(dashboards, ML, relatórios)"]
     PG --> Analytics
+    PQ --> CAT["quantilica-catalog<br/>modelo canônico de observações"]
+    PG --> CAT
 ```
 
 O ecossistema é organizado em **quatro camadas**: extração, processamento, armazenamento, análise. Cada camada tem responsabilidades estritas.
@@ -64,7 +74,10 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 | **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `bcb-sgs-fetcher` |
 | **Data Extractor (Bulk)** | Download Massivo + Transformação + Parquet | `rfb-cnpj-fetcher`, `inep-fetcher`, `pdet-fetcher` |
 | **Pipeline DB** | Motor ETL + definições TOML/SQL | `sidra-sql`, `bcb-sgs-sql` |
+| **Catálogo de pipelines** | Repositório Git com `manifest.toml` + `fetch.toml`/`transform.sql` por pipeline | `sidra-pipelines`, `bcb-sgs-pipelines` |
 | **CLI Host** | Hub unificado (PyPI) com instalação de fontes sob demanda (`quantilica install`) | `quantilica-cli` |
+
+> **Escopo deste site:** documentamos apenas contratos públicos (instalação, CLI, schemas, pipelines declarativos). Componentes operacionais internos — agendadores, rotinas de produção, infraestrutura — são intencionalmente indocumentados aqui.
 
 ## Camadas e responsabilidades
 

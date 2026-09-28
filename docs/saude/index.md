@@ -1,3 +1,8 @@
+---
+title: Saúde Pública — microdados do DATASUS
+description: Microdados do SUS (SIM, SINASC, SIH, CNES) via FTP do DATASUS — datasus-fetcher com crawler multithread.
+---
+
 # Saúde Pública
 
 Dados e microdados de vigilância epidemiológica, natalidade, mortalidade e internações hospitalares brasileiras obtidos a partir dos sistemas do DATASUS (Departamento de Informática do SUS).

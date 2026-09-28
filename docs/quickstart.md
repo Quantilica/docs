@@ -1,11 +1,11 @@
 ---
 title: Quickstart — Dados públicos brasileiros em 5 minutos
-description: Instale uma ferramenta Quantilica, baixe um dataset real e analise. Quatro caminhos prontos para IBGE, Tesouro, Saúde e Clima.
+description: Instale uma ferramenta Quantilica, baixe um dataset real e analise. Cinco caminhos prontos para IBGE, Tesouro, Saúde, Clima e BCB.
 ---
 
 # Comece em 5 minutos
 
-Quatro caminhos prontos para baixar e analisar um dataset público real, do zero. Escolha o domínio mais próximo do seu trabalho — todos seguem o mesmo padrão.
+Cinco caminhos prontos para baixar e analisar um dataset público real, do zero. Escolha o domínio mais próximo do seu trabalho — todos seguem o mesmo padrão.
 
 ## Pré-requisitos
 
@@ -141,6 +141,36 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     - [Filtrar por estação e período](clima/inmet-fetcher.md)
     - [Series climáticas históricas + IPCA agrícola](cookbook/index.md)
+
+=== "BCB — Câmbio e Selic"
+
+    Baixa séries macroeconômicas do SGS/BCB — câmbio USD/BRL diário e Selic mensal — como JSONs com manifesto de proveniência.
+
+    ```bash
+    quantilica install bcb-sgs
+    ```
+
+    ```bash
+    # Câmbio USD/BRL (série 1, diária — varredura retroativa ano a ano)
+    quantilica bcb-sgs series sync 1 -f D -o ./dados
+
+    # Selic mensal (série 11)
+    quantilica bcb-sgs series sync 11 -f M -o ./dados
+    ```
+
+    Saída esperada: JSONs por série em `./dados/`, cada um acompanhado de manifesto SHA-256. Descubra outros IDs com `quantilica bcb-sgs series search "<termo>"`.
+
+    **Próximos passos:**
+
+    - [Catálogo completo de metadados e séries importantes](bcb/bcb-sgs-fetcher.md)
+    - [Carregue em PostgreSQL com histórico de revisões](bcb/bcb-sgs-sql.md)
+    - [Use um pipeline pronto do catálogo](bcb/bcb-sgs-pipelines.md)
+
+---
+
+## Outras fontes
+
+Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) e empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
 
 ---
 

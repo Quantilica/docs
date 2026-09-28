@@ -1,3 +1,8 @@
+---
+title: Conceitos transversais do ecossistema
+description: Arquitetura, princípios de design, padrões práticos e fundamentos (Parquet, proveniência, bulk load) da Quantilica.
+---
+
 # Conceitos Transversais
 
 Esta seção explica o **porquê** e o **como funciona** do ecossistema — a forma do sistema e

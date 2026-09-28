@@ -36,6 +36,14 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 - **[Reproduzir um paper de 2019 — Time Travel](time-travel.md)** — usar manifesto SHA-256 + SCD Type II do `sidra-sql` para defender um número exato anos depois.
 
+### Combinações sugeridas (propostas)
+
+Ideias de receitas ainda não escritas, priorizando os domínios novos. Quer escrever uma? Siga o padrão das receitas acima e abra PR — ou abra issue no repositório de docs para reservar o tema:
+
+- **IPCA (SIDRA) × Selic (BCB)** — taxa real ex-post mensal com `sidra-fetcher` + `bcb-sgs-fetcher`, via `quantilica-catalog` (`indicator_id + geo_id + date`).
+- **Balança comercial (Comex) × câmbio (BCB)** — elasticidade preço-volume das exportações com `comex-fetcher` + série 1 do SGS.
+- **Preço de combustíveis (ANP) × IPCA transportes (SIDRA)** — repasse na bomba com `anp-fetcher` + pipeline `snipc`.
+
 ---
 
 Quer ver uma receita específica? Abra issue no repositório de docs.

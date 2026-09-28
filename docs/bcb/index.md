@@ -1,3 +1,8 @@
+---
+title: Banco Central (BCB) — séries do SGS
+description: Extração e warehousing das séries macroeconômicas do SGS/BCB — bcb-sgs-fetcher, bcb-sgs-sql e catálogo de pipelines.
+---
+
 # Banco Central (BCB)
 
 O Banco Central do Brasil publica, via **SGS** (Sistema Gerenciador de Séries Temporais),
@@ -69,6 +74,9 @@ graph LR
   observações (`series_data`, soft-versioned) e hierarquia de temas (`theme`) em
   PostgreSQL. Pipelines TOML declarativos, ingestão via `COPY`, comando `load` para
   artefatos em disco.
+- **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)** — catálogo pré-construído de 13 pipelines
+  production-ready (preços, juros, câmbio, atividade, crédito, monetário e setoriais).
+  Deploy one-command via `bcb-sgs-sql run std <pipeline>`.
 
 Os [Princípios de Design](../concepts/principios.md) aparecem aqui de forma clara:
 idempotência (recarga com zero churn), reprodutibilidade (histórico de revisões na própria
@@ -90,7 +98,7 @@ tabela-fato) e a separação de camadas fetcher/sql — o mesmo padrão de
 ## Próximos passos
 
 - Para extrair séries: vá para **[bcb-sgs-fetcher](bcb-sgs-fetcher.md)**.
-- Para carregar em PostgreSQL com histórico: vá para **[bcb-sgs-sql](bcb-sgs-sql.md)**.
+- Para carregar em PostgreSQL com histórico: vá para **[bcb-sgs-sql](bcb-sgs-sql.md)** + **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)**.
 - Para combinar SGS com IPCA/PIB do IBGE e Tesouro: veja **[Análise Econômica
   Multi-Fonte](../cookbook/analise-economica-multi-fonte.md)**.
 

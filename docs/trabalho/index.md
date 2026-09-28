@@ -1,3 +1,8 @@
+---
+title: Mercado de Trabalho — CAGED e RAIS
+description: Microdados de emprego formal (CAGED, RAIS) processados com Polars sem estourar memória — pdet-fetcher.
+---
+
 # Mercado de Trabalho
 
 Microdados administrativos do mercado de trabalho brasileiro, vindos de duas fontes do Ministério do Trabalho:

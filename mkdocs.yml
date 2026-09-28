@@ -85,6 +85,7 @@ nav:
           - bcb/index.md
           - bcb-sgs-fetcher: bcb/bcb-sgs-fetcher.md
           - bcb-sgs-sql: bcb/bcb-sgs-sql.md
+          - bcb-sgs-pipelines: bcb/bcb-sgs-pipelines.md
       - Mercado de Trabalho:
           - trabalho/index.md
           - pdet-fetcher: trabalho/pdet-fetcher.md
@@ -128,7 +129,7 @@ nav:
       - Pesquisador acadêmico: personas/pesquisador.md
 
   - Desenvolvimento:
-      - Padronização de Versão: normas/python.md
+      - Versão em pacotes Python: normas/python.md
       - Padrões de Escrita: normas/escrita.md
       - Padronização de CLI: normas/cli-fetchers.md
       - Padronização de .gitignore: normas/gitignore.md
@@ -151,12 +152,6 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths:
-            - ../quantilica-core/src
-            - ../quantilica-analytics/src
-            - ../quantilica-cli/src
-            - ../quantilica-catalog/src
-            - ../sidra-fetcher/src
           options:
             docstring_style: google
             docstring_section_style: table

@@ -1,3 +1,8 @@
+---
+title: Convenções de armazenamento dos fetchers
+description: Nomenclatura de arquivos, estrutura de pastas e semântica da flag -o em todos os fetchers da Quantilica.
+---
+
 # Convenções de Armazenamento — Fetchers
 
 Esta página cobre a perspectiva do **usuário final**: como os arquivos são nomeados, como as pastas são organizadas e como a flag `-o` funciona. Para a perspectiva do **contribuidor** (como implementar essas convenções num novo fetcher), veja [Padronização de CLI](../normas/cli-fetchers.md).
