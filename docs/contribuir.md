@@ -50,7 +50,7 @@ Todos os repositórios da Quantilica seguem o mesmo padrão. Consulte o [`ARCHIT
 | Fundação | Coletores devem usar [`quantilica-core`](fundacoes/quantilica-core.md) |
 | Nomenclatura | Novos coletores seguem `<fonte>-fetcher` |
 | Proveniência | Todo artefato baixado gera um `.manifest.json` |
-| Documentação | READMEs seguem o template em [`DOCUMENTATION.md`](https://github.com/Quantilica/.github/blob/main/DOCUMENTATION.md) |
+| Documentação | READMEs seguem o template em [Padrão de Documentação](normas/escrita.md) |
 
 ## Workflow de PR
 

@@ -20,7 +20,7 @@ Este documento define o padrão de `.gitignore` adotado pelos pacotes-biblioteca
 
 ## 2. Política de `uv.lock` nos pacotes-biblioteca
 
-`uv.lock` **não é versionado** em pacotes-biblioteca (libs e fetchers). O pacote é distribuído via `pip install git+https://...` ou PyPI; quem instala não usa o lockfile. Contribuidores trabalham no workspace, onde a `.venv` raiz já fornece um ambiente reproduzível. Versionar o lockfile cria ruído de merge sem ganho.
+`uv.lock` **não é versionado** em pacotes-biblioteca (libs e fetchers). O pacote é distribuído via PyPI ou índice próprio ([Fluxo A / Fluxo B](publicacao.md)); quem instala não usa o lockfile. Contribuidores trabalham no workspace, onde a `.venv` raiz já fornece um ambiente reproduzível. Versionar o lockfile cria ruído de merge sem ganho. (`git+https` não é rota de distribuição — ver [Publicação e Release](publicacao.md).)
 
 Em todos os casos, **nunca** versionar `.venv/`, `.uv-cache/` ou outros artefatos de runtime.
 
