@@ -5,7 +5,7 @@ description: Exportações e importações brasileiras via Siscomex/Secex — co
 
 # Comércio Exterior
 
-Dados detalhados sobre as exportações e importações brasileiras, consolidados pela Secretaria de Comércio Exterior (SECEX/MDIC) através do Siscomex.
+O navio já atracou, a carga já foi desembaraçada — mas o dado daquela operação dorme num servidor do Siscomex que serve arquivos de gigabytes com SSL quebrado e cai sem avisar. A Secretaria de Comércio Exterior (SECEX/MDIC) publica cada exportação e importação do país em detalhe NCM; chegar até elas é um exercício de paciência com infraestrutura dos anos 2000.
 
 ## O desafio
 

@@ -5,7 +5,7 @@ description: Voos, aeronaves, ocorrências e aeródromos nos dados abertos da AN
 
 # Aviação Civil
 
-Dados abertos da ANAC (Agência Nacional de Aviação Civil): voos regulares, cadastro de aeronaves, ocorrências aeronáuticas investigadas pelo CENIPA e infraestrutura de aeródromos.
+Seu voo atrasou 3 horas em Congonhas — e esse atraso virou uma linha numa base pública, junto de cada voo regular, cada aeronave registrada, cada ocorrência investigada e cada aeródromo do país. A ANAC (Agência Nacional de Aviação Civil) publica o raio-X do setor aéreo brasileiro em arquivos estáticos; o trabalho é juntar as peças sem se perder nos layouts.
 
 ## O desafio
 

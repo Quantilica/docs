@@ -5,7 +5,7 @@ description: Preços de combustíveis, produção, vendas e royalties nos dados 
 
 # Petróleo, Gás e Biocombustíveis
 
-Dados abertos e estatísticos da ANP (Agência Nacional do Petróleo, Gás Natural e Biocombustíveis): preços de combustíveis, vendas e produção de derivados, importação/exportação, royalties e participações governamentais, movimentação e qualidade de combustíveis, produção por poço, e infraestrutura regulatória do setor.
+Toda semana, milhares de postos têm o preço da bomba coletado — e esse número viaja por planilhas, levantamentos e séries históricas até virar política energética. A ANP (Agência Nacional do Petróleo, Gás Natural e Biocombustíveis) publica preços de combustíveis, vendas e produção de derivados, importação/exportação, royalties e participações governamentais, movimentação e qualidade de combustíveis, produção por poço e a infraestrutura regulatória do setor. O desafio é que cada levantamento tem seu formato e seu calendário.
 
 ## O desafio
 

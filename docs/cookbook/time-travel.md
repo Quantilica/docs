@@ -7,7 +7,7 @@ description: Como o manifesto SHA-256 + SCD II do sidra-sql permitem reproduzir 
 
 > **Tempo estimado:** 20 minutos. **Pacotes:** `sidra-sql` + PostgreSQL.
 
-Você publicou um relatório em 2019 com o PIB municipal por estado. Em 2026, alguém pede para reproduzir a Tabela 4 — número exato. Só que o IBGE revisou a série em 2021. Como provar que o seu número original estava certo?
+Você publicou um relatório em 2019 com o PIB municipal por estado. Em 2026, alguém pede para reproduzir a Tabela 4 — número exato, vírgula por vírgula. Só que o IBGE revisou a série em 2021 e o número "atual" não bate mais com o impresso. Auditoria, banca ou tribunal: alguém vai perguntar se o seu número original estava certo. Como provar?
 
 Esta receita mostra como a infraestrutura Quantilica resolve isso com **dois mecanismos** que trabalham juntos: manifesto SHA-256 (proveniência criptográfica) + SCD Type II (snapshots preservados no warehouse).
 

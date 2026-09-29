@@ -5,12 +5,10 @@ description: Tesouro Direto (taxas, preços, yield curve) e RTN (resultado fisca
 
 # Tesouro — Finanças
 
-O Tesouro Nacional brasileiro publica dois tipos muito diferentes de dados:
+Duas perguntas movem quem acompanha o Tesouro Nacional — "quanto está rendendo meu título?" e "como estão as contas do governo?" — e cada uma mora num sistema diferente, num formato diferente, com uma pegadinha diferente. O ecossistema cobre ambos com pacotes dedicados:
 
 - **Microdados de renda fixa** via Tesouro Direto — preços, yields, operações de compra/venda, estoques, investidores.
 - **Agregados fiscais** via *Resultado do Tesouro Nacional* (RTN) — receitas, despesas e resultado primário do Governo Federal.
-
-O ecossistema cobre ambos com pacotes dedicados.
 
 ## O desafio
 

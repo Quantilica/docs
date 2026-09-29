@@ -5,10 +5,7 @@ description: Extração e warehousing das séries macroeconômicas do SGS/BCB �
 
 # Banco Central (BCB)
 
-O Banco Central do Brasil publica, via **SGS** (Sistema Gerenciador de Séries Temporais),
-mais de **17.000 séries** macroeconômicas — câmbio, juros (SELIC, CDI), inflação (IPCA,
-IGP-M), crédito, balanço de pagamentos, meios de pagamento e atividade econômica — muitas
-com histórico desde os anos 1980.
+Você quer 30 anos de Selic para um modelo — e descobre que o Banco Central guarda mais de **17.000 séries** no SGS, que os valores vêm numa API JSON limpa, mas que o nome, a unidade e a frequência de cada série só existem numa página HTML que exige login de sessão. O **SGS** (Sistema Gerenciador de Séries Temporais) é o cofre da macroeconomia brasileira — câmbio, juros, inflação, crédito, atividade — e a fechadura dele é um scraping com cookies.
 
 O ecossistema cobre o SGS com dois pacotes complementares: um para extração, outro para
 persistência analítica em PostgreSQL.
