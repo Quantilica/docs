@@ -73,19 +73,19 @@ con = duckdb.connect("data/rtn_data.db")
 # Vamos cruzar a tabela de fatos da Aba 1.1 com a dimensão de Contas
 # para descobrir os maiores ofensores de despesas no ano de 2024
 query = """
-    SELECT 
+    SELECT
         dim.account_name,
         SUM(fato.value) as total_gasto_milhoes
-    FROM 
+    FROM
         'sheet_1.1' as fato
-    JOIN 
+    JOIN
         'accounts_1.1' as dim ON fato.account = dim.account_code
-    WHERE 
+    WHERE
         fato.year = 2024
         AND dim.account_level = 2 -- Pegar apenas o nível macro
-    GROUP BY 
+    GROUP BY
         dim.account_name
-    ORDER BY 
+    ORDER BY
         total_gasto_milhoes DESC
     LIMIT 5;
 """

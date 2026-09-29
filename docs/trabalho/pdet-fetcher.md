@@ -5,7 +5,7 @@ description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mens
 
 # Mercado de Trabalho Brasileiro (PDET)
 
-**pdet-fetcher** busca, lê e converte microdados do PDET (Plataforma de Disseminação de Estatísticas do Trabalho), hospedada pelo Ministério do Trabalho. 
+**pdet-fetcher** busca, lê e converte microdados do PDET (Plataforma de Disseminação de Estatísticas do Trabalho), hospedada pelo Ministério do Trabalho.
 
 Cobre a **RAIS** (censo anual de emprego) e o **CAGED** (fluxos mensais de emprego), englobando tanto o formato legado (até 2019) quanto o novo (2020+).
 
@@ -70,7 +70,7 @@ import polars as pl
 # Mapeia todos os anos dos vínculos da RAIS (ex: mais de 2 bilhões de linhas ao todo)
 df_rais = pl.scan_parquet("parquet/rais_vinculos_*.parquet")
 
-# Qual foi o salário médio por gênero (coluna 'sexo_trabalhador') no setor 
+# Qual foi o salário médio por gênero (coluna 'sexo_trabalhador') no setor
 # de Tecnologia da Informação (CNAE 6204-0)?
 analise_ti = (
     df_rais

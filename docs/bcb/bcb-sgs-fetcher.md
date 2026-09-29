@@ -13,7 +13,7 @@ O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de in
 
     - **Séries diárias capadas silenciosamente:** a API `/dados` do BCB não retorna o histórico completo para séries de alta frequência se você não passar uma janela de data estrita; ela apenas trunca os resultados velhos. A CLI da Quantilica resolve isso ancorando uma data recente e fazendo paginação retroativa ano a ano até secar o poço.
     - **Metadados invisíveis:** Não existe API pública para descobrir os nomes das séries. A CLI faz um scraping HTML com sessão stateful para descobrir isso. Por isso, a coleta do catálogo inteiro não pode ser paralelizável.
-    - **Séries Zumbis:** Séries encerradas pelo BCB (como antigas taxas do mercado livre) ainda existem no SGS mas podem retornar conjuntos de dados vazios ou corrompidos. 
+    - **Séries Zumbis:** Séries encerradas pelo BCB (como antigas taxas do mercado livre) ainda existem no SGS mas podem retornar conjuntos de dados vazios ou corrompidos.
 
 ## Instalação
 
@@ -38,7 +38,7 @@ quantilica bcb-sgs series sync 1 -f D -o ./dados
 # Dados da taxa SELIC mensal
 quantilica bcb-sgs series sync 11 -f M -o ./dados
 
-# Sincronizar o catálogo completo de metadados 
+# Sincronizar o catálogo completo de metadados
 # (varre o site do BCB via web scraping)
 quantilica bcb-sgs catalogo sync
 ```

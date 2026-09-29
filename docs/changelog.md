@@ -11,7 +11,8 @@ Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio
 
 Versões no PyPI em 2026-09-28: `quantilica-core` 0.7.1, `quantilica-cli` 0.3.2,
 `sidra-fetcher` 0.10.3, `sidra-sql` 2.0.0, `datasus-fetcher` 0.7.0,
-`bcb-sgs-fetcher` 0.5.0, `bcb-sgs-sql` 0.2.1. (`quantilica-analytics` e
+`bcb-sgs-fetcher` 0.5.0, `bcb-sgs-sql` 0.2.1. (Confira o vigente no
+[PyPI](https://pypi.org/) ou nos `CHANGELOG.md` de cada repo; `quantilica-analytics` e
 `quantilica-catalog` seguem distribuídos pelo índice próprio — Fluxo B.)
 
 - **Novos domínios documentados:** `anac-fetcher` (aviação civil),

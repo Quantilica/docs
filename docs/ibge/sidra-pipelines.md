@@ -224,8 +224,8 @@ Encontre o ID de tabela SIDRA em [sidra.ibge.gov.br](https://sidra.ibge.gov.br),
 
 ```toml
 [[tabelas]]
-tabela_sidra = "XXXX"
-variables    = ["YY"]
+tabela_sidra = "1620"  # ex.: uma tabela real (troque pelo ID em sidra.ibge.gov.br)
+variables    = ["116"] # ex.: uma variável dessa tabela
 territories  = {6 = []}
 ```
 

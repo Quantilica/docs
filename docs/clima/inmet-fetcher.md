@@ -45,7 +45,7 @@ quantilica inmet sync 2000:2024 -o ./data --workers 8
 
 ## Cookbook Analítico: Meteorologia Escalonável
 
-O banco do INMET cresceu enormemente após 2008 devido ao auge das estações automáticas. Quando descompactado, os CSVs são de leitura dolorosa. O ecossistema Quantilica disponibiliza a conversão forte e tipada para `Parquet` obedecendo contratos exatos de schemas (`BDMEP_CONTRACT`). 
+O banco do INMET cresceu enormemente após 2008 devido ao auge das estações automáticas. Quando descompactado, os CSVs são de leitura dolorosa. O ecossistema Quantilica disponibiliza a conversão forte e tipada para `Parquet` obedecendo contratos exatos de schemas (`BDMEP_CONTRACT`).
 
 Para ler o diretório de dados massivos e visualizar anomalias térmicas, use o `Polars`:
 
@@ -57,7 +57,7 @@ import inmet_fetcher as inmet
 # 1. Supondo que você sincronizou os arquivos brutos com a CLI
 data_dir = Path("./data")
 
-# 2. Use a API de extração da Quantilica para normalizar 
+# 2. Use a API de extração da Quantilica para normalizar
 # todos os CSVs bizarros em DataFrames em memória
 df_inmet = inmet.read(
     data_dir,

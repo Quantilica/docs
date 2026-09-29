@@ -80,7 +80,7 @@ Regras de ouro:
 
 ### 1.3 O Padrão FetcherApp (Recomendado)
 
-> **Novo (Agosto/2026):** Para reduzir o boilerplate, o `quantilica-cli` exporta a classe `quantilica.cli.sdk.FetcherApp`. 
+> **Novo (Agosto/2026):** Para reduzir o boilerplate, o `quantilica-cli` exporta a classe `quantilica.cli.sdk.FetcherApp`.
 
 Fetchers padrão (que fazem download de datasets estruturados via HTTP estático) devem instanciar o `FetcherApp` em `plugin.py` e passar seus metadados, estrutura de catálogos (ex: `GROUPS`, `GROUP_ALIASES`) e uma factory de rotas (`path_builder`). Com isso, a `cli.py` atua apenas como wrapper de execução, removendo totalmente a necessidade de escrever `argparse`, subcomandos manuais, e formatações Rich descritas nas seções 2 a 5.
 
@@ -377,7 +377,7 @@ def cmd_convert(
             "pip install <pacote-fetcher>[analysis]"
         )
         raise typer.Exit(1) from None
-        
+
     converte_dados(input)
 ```
 
@@ -559,7 +559,7 @@ with Progress(
 #### Downloads Paralelos e Progresso Concorrente
 
 Para fetchers que baixam múltiplos arquivos onde é razoável paralelizá-los, adote o `concurrent.futures.ThreadPoolExecutor` e um **pool de barras concorrentes fixo** renderizadas via `make_download_progress`.
-Este padrão evita a poluição do console (quando há centenas de arquivos) ao reciclar as barras de progresso ativas. 
+Este padrão evita a poluição do console (quando há centenas de arquivos) ao reciclar as barras de progresso ativas.
 Exija um argumento `--workers` (padrão `4`) na CLI:
 
 ```python

@@ -197,7 +197,7 @@ for dy in yield_changes:
     ])
     new_value = (new_price["new_price"] * new_price["quantity"]).sum()
     pnl = new_value - current_value
-    
+
     print(f"{dy:+.1f}% | R${new_value:,.0f} | R${pnl:+,.0f}")
 ```
 

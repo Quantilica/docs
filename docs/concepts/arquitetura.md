@@ -83,7 +83,7 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
 ### Extração (Os Fetchers)
 
-Obter dados de APIs, páginas de HTML arcaicas e servidores FTP falhos com resiliência militar. 
+Obter dados de APIs, páginas de HTML arcaicas e servidores FTP falhos com resiliência militar.
 *Tamanho somado: Mais de 800 GB em centenas de partições!*
 
 **Faz:**
