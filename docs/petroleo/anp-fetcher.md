@@ -68,7 +68,7 @@ O catálogo unifica duas fontes principais da ANP:
 
 ## O Macro-Alias `shpc` (Preços de Combustíveis)
 
-O Sistema de Levantamento de Preços (SHPC) é vasto. Em vez de baixar subgrupos um por um, o `anp-fetcher` oferece o macro-alias `shpc`. 
+O Sistema de Levantamento de Preços (SHPC) é vasto. Em vez de baixar subgrupos um por um, o `anp-fetcher` oferece o macro-alias `shpc`.
 
 Ao executar `anp-fetcher sync shpc`, o fetcher expande e coleta automaticamente **seis** verticais da base de preços desde 2004:
 - `shpc-ca`: Combustíveis automotivos (Semestral, 2004–2025)
@@ -89,8 +89,8 @@ from pathlib import Path
 # Como a ANP altera encodings e separadores, uma leitura unificada
 # robusta em LazyFrames usa inferência agressiva e preenchimento de nulos.
 df_lazy = pl.scan_csv(
-    "data/anp/shpc-*/*.csv", 
-    separator=";", 
+    "data/anp/shpc-*/*.csv",
+    separator=";",
     infer_schema_length=0, # Ler tudo como string primeiro para evitar erros de casting
     ignore_errors=True
 )

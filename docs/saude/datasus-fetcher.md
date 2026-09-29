@@ -93,7 +93,7 @@ tendencia_mortalidade = (
 
 # 3. Agora o dataset está pequeno e pronto para visualização
 fig = px.line(
-    tendencia_mortalidade.to_pandas(), 
+    tendencia_mortalidade.to_pandas(),
     x="DTOBITO_ANO", y="Total_Obitos", color="SIGLA_UF"
 )
 fig.show()

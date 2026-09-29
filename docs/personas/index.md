@@ -15,3 +15,5 @@ Esta seção é um atalho. Você descreve o seu trabalho; a página devolve as t
 - **[Pesquisador acadêmico](pesquisador.md)** — reprodutibilidade, séries longas, snapshots versionados.
 
 Nenhum dos perfis cobre o seu? Comece pelo [Quickstart](../quickstart.md) e pelos [Princípios de Design](../concepts/principios.md) — eles funcionam para qualquer caso de uso analítico.
+
+Vem por uma fonte específica? Cada domínio tem página própria: [Comércio Exterior](../comex/index.md), [Aviação Civil](../aviacao/index.md), [Petróleo e Gás](../petroleo/index.md), [Educação](../educacao/index.md) e [Empresas](../empresas/index.md).

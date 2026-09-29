@@ -76,16 +76,16 @@ from pathlib import Path
 
 # 1. Carrega as tabelas pequenas de metadados em memória (Eager)
 df_ncm = pl.read_csv(
-    "data/secex-comex/auxiliary-tables/ncm.csv", 
-    separator=";", 
+    "data/secex-comex/auxiliary-tables/ncm.csv",
+    separator=";",
     encoding="latin-1"
 )
 
 # 2. Registra todos os anos de exportação no motor Lazy
 # (O Polars não lê os GBs agora, apenas examina o schema)
 df_export = pl.scan_csv(
-    "data/secex-comex/exp-mun/*.csv", 
-    separator=";", 
+    "data/secex-comex/exp-mun/*.csv",
+    separator=";",
     encoding="latin-1"
 )
 

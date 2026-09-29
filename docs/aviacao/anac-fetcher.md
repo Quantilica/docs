@@ -96,7 +96,7 @@ import polars as pl
 # O VRA é distribuído em CSVs separados por ponto-e-vírgula.
 # Utilizamos o scan_csv para criar um LazyFrame (avaliação preguiçosa)
 df_vra = pl.scan_csv(
-    "data/anac/voo-regular-ativo/*.csv", 
+    "data/anac/voo-regular-ativo/*.csv",
     separator=";",
     infer_schema_length=10000,
     ignore_errors=True

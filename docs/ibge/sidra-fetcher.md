@@ -10,7 +10,7 @@ Cliente Python para a API SIDRA do IBGE — com suporte para requisições assí
 !!! warning "Pegadinhas da fonte oficial"
 
     - **URLs indecifráveis.** O SIDRA usa pares de identificador/valor (`/t/1620/n1/all/v/116/p/all/d/m`). Isso é confuso e quebra scripts com facilidade. Use nossa abstração `Parametro` ao invés de concatenar *strings* manualmente.
-    - **O produto cartesiano fatal.** Uma tabela com 3 classificações cruzadas vira milhares de linhas. Se você não especificar o filtro na URL, a API retornará cruzamentos absurdos e estourará a RAM. 
+    - **O produto cartesiano fatal.** Uma tabela com 3 classificações cruzadas vira milhares de linhas. Se você não especificar o filtro na URL, a API retornará cruzamentos absurdos e estourará a RAM.
     - **Limitação invisível por volume.** O IBGE trunca silenciosamente respostas de tabelas muito grandes (como o PIB Municipal ou o Censo) resultando em um erro genérico `503`. O fetcher possui iteração segura fragmentando chamadas mês a mês se necessário.
     - **Rate Limit Oculto.** Evite horários comerciais. Em scripts massivos, utilize o cliente `AsyncSidraClient` travado com um `asyncio.Semaphore` para não ser banido temporariamente pelo governo.
 
@@ -35,7 +35,7 @@ quantilica sidra list
 # Descobrir metadados detalhados de uma tabela específica (ex: IPCA 1620)
 quantilica sidra info 1620
 
-# Verificar todos os períodos suportados 
+# Verificar todos os períodos suportados
 quantilica sidra periods 1620
 
 # Fazer o dump completo respeitando limites da API
@@ -96,7 +96,7 @@ async def coleta_macro():
     async with AsyncSidraClient(timeout=60) as client:
         # Dispara todas as requisições simultaneamente
         ipca, pib = await asyncio.gather(
-            client.get_agregado(7060), 
+            client.get_agregado(7060),
             client.get_agregado(1620)
         )
     return ipca, pib

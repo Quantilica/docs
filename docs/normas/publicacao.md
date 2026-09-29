@@ -280,7 +280,7 @@ Nunca misture código de funcionalidades (`feat`, `fix`, `refactor`) no mesmo co
 
 ## 5. Cadeia de Dependências e Cascata Upstream-Downstream
 
-Dependa **sempre por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allow-direct-references`. 
+Dependa **sempre por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allow-direct-references`.
 
 ### Ordem Obrigatória de Publicação (Upstream $\to$ Downstream)
 Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma alteração em `quantilica-core` que é consumida por `quantilica-analytics` e depois por `sidra-fetcher`):

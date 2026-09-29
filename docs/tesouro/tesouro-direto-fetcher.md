@@ -33,7 +33,7 @@ Use o executor unificado da Quantilica para contornar a API CKAN e extrair/conve
 # Inspecionar (dry-run) os datasets de preços sem escrever no disco
 quantilica td sync --dataset prices --dry-run -o ./data
 
-# Pipeline completo: baixar a base de investidores e já convertê-la para 
+# Pipeline completo: baixar a base de investidores e já convertê-la para
 # arquivos Parquet limpos e serializados
 quantilica td pipeline --dataset investors -o ./data
 
@@ -53,7 +53,7 @@ Os parâmetros `--dataset` mapeiam diretamente para chaves CKAN de infraestrutur
 - **`operations`** (`operacoes-do-tesouro-direto`)
 - **`buybacks`** / **`sales`** (recompras e emissões diretas)
 
-## Cookbook Analítico: Plotando a Série de Taxas 
+## Cookbook Analítico: Plotando a Série de Taxas
 
 O `tesouro-direto-fetcher` carrega baterias inclusas. Ele já traz o Polars para leitura limpa (consertando as virgulas decimais do governo) e o **Altair** para gráficos de qualidade acadêmica:
 
@@ -67,7 +67,7 @@ from tesouro_direto_fetcher.constants import Column
 caminho_csv = list(Path("./data").glob("taxas-dos-titulos*.csv"))[0]
 df_prices = reader.read_prices(caminho_csv)
 
-# 2. Utiliza o módulo plot nativo do fetcher para exibir o 
+# 2. Utiliza o módulo plot nativo do fetcher para exibir o
 # Histórico de Preços Base do Tesouro Selic
 grafico = plot.plot_prices(
     df_prices,
