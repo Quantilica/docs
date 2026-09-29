@@ -5,7 +5,7 @@ description: Ferramentas para extração e análise de dados educacionais brasil
 
 # Educação (INEP)
 
-Os dados do INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira) formam a base para entender o cenário educacional brasileiro. Suas principais bases (como o Censo Escolar e o ENEM) envolvem gigabytes de dados, muitas vezes distribuídos em formatos complexos ou arquivos CSV/TXT gigantescos.
+Atrás de cada ponto no IDEB há milhões de provas, questionários e matrículas — 39 GB de microdados que o INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira) distribui em CSVs gigantescos com delimitador que muda de ano para ano e dicionários espalhados. Censo Escolar, ENEM e companhia: a base para entender a educação brasileira, empacotada do jeito mais difícil possível.
 
 ## O problema
 

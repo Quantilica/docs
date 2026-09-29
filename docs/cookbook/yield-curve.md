@@ -7,7 +7,7 @@ description: Baixe o histórico de taxas do Tesouro Direto e plote a curva de ju
 
 > **Tempo estimado:** 3 minutos. **Pacotes:** `tesouro-direto-fetcher[analysis]`.
 
-A curva de juros é o gráfico mais cobiçado da renda fixa brasileira: taxa contratada por vencimento. Vamos baixar o dataset completo de taxas do Tesouro Direto, filtrar uma data e plotar.
+Prefixado a 12% ou IPCA+ a 6%? Todo investidor de renda fixa já fez essa conta no guardanapo — e a resposta mora na curva de juros: a taxa contratada por vencimento, o gráfico mais cobiçado do mercado brasileiro. Vamos baixar o dataset completo de taxas do Tesouro Direto, filtrar uma data e plotar a curva como ela estava naquele dia.
 
 ## O que você vai ver
 

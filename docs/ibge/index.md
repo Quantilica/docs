@@ -5,7 +5,7 @@ description: Estatísticas oficiais do IBGE via SIDRA — sidra-fetcher para exp
 
 # IBGE — Macroeconomia
 
-O Instituto Brasileiro de Geografia e Estatística (IBGE) é a fonte oficial das estatísticas macroeconômicas do país. O **SIDRA** é o sistema central — milhares de séries temporais sobre PIB, inflação, emprego, comércio interno e demografia.
+Você precisa do IPCA mensal desde 1994. O portal do IBGE te entrega uma URL como `/t/1737/n1/all/v/allxp/p/last%201/c81/0/d/m` — e no meio da série histórica, um `502` sem explicação. Bem-vindo ao SIDRA: o sistema central das estatísticas oficiais do país — PIB, inflação, emprego, demografia — milhares de séries temporais atrás da API mais rica e mais instável do Brasil.
 
 ## O desafio
 

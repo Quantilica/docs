@@ -5,7 +5,7 @@ description: IPCA do IBGE, yields do Tesouro Direto e salários da RAIS num pain
 
 # Receita: Análise Econômica Multi-Fonte
 
-Combinar três fontes — IPCA do IBGE, yields do Tesouro Direto e salários da RAIS — para construir um painel macroeconômico básico. Esta receita demonstra **[Modularidade](../concepts/principios.md#modularidade)** em prática: três ferramentas independentes, sem dependências cruzadas, compostas num pipeline coerente.
+Quando o juro real sobe, o salário real acompanha — ou o emprego paga a conta? Nenhuma fonte isolada responde: o IPCA mora no IBGE, os yields no Tesouro, os salários na RAIS. Esta receita monta o painel macroeconômico completo com três ferramentas independentes, sem dependências cruzadas — **[Modularidade](../concepts/principios.md#modularidade)** saindo do princípio abstrato para a prática.
 
 ## Objetivo
 

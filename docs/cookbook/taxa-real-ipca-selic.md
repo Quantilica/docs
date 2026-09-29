@@ -5,7 +5,7 @@ description: Juros reais mensais e em 12 meses combinando IPCA (SGS 433) e Selic
 
 # Receita: Taxa Real Ex-Post — Selic × IPCA
 
-Quanto rendeu de verdade a renda fixa brasileira depois da inflação? Esta receita combina duas séries do SGS/BCB — IPCA mensal e Selic acumulada no mês — para calcular a taxa real ex-post, mensal e acumulada em 12 meses. Só `bcb-sgs-fetcher` + Polars (+ Altair para o gráfico).
+Em agosto de 2026 o IPCA marcou −0,32% enquanto a Selic acumulava 1,09% no mês — dinheiro parado no CDI rendeu quase 10% acima da inflação em 12 meses. Mas quanto rendeu *de verdade*, mês a mês, descontada a corrosão dos preços? Esta receita combina IPCA e Selic do SGS/BCB para calcular a taxa real ex-post. Só `bcb-sgs-fetcher` + Polars (+ Altair para o gráfico).
 
 ## O que você vai ver
 

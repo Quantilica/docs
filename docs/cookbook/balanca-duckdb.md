@@ -7,7 +7,7 @@ description: comex-fetcher baixa os GBs do Siscomex, salva como Parquet, e DuckD
 
 > **Tempo estimado:** 10 minutos (incluindo o primeiro download). **Pacotes:** `comex-fetcher`, `duckdb`.
 
-Dados de comércio exterior do Brasil são **grandes**. Cada arquivo anual do Siscomex em granularidade NCM-8 passa de 1 GB. A receita aqui mostra como combinar dois superpoderes: o coletor resiliente que lida com o servidor governamental, e o DuckDB lendo Parquet direto do disco para consultar bilhões de linhas em segundos.
+O Brasil exportou mais do que importou este mês? A resposta está enterrada em bilhões de linhas do Siscomex — arquivos anuais que passam de 1 GB cada, grandes demais para o Pandas, lentos demais para o servidor do governo servir duas vezes. A saída é combinar dois superpoderes: o coletor resiliente que baixa uma vez só, e o DuckDB que consulta o Parquet direto do disco, sem carregar nada em memória.
 
 ## O que você vai ver
 

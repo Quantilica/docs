@@ -7,7 +7,7 @@ description: Cruzar IPCA mensal e taxa de desemprego do IBGE para visualizar a C
 
 > **Tempo estimado:** 5 minutos. **Pacotes:** `sidra-fetcher`, `polars`, `altair`.
 
-A Curva de Phillips é o gráfico clássico macroeconômico: inflação no eixo Y, desemprego no eixo X. Vamos baixar as duas séries direto do SIDRA, juntar por mês e plotar.
+Toda turma de macroeconomia desenha a Curva de Phillips no quadro — inflação contra desemprego, a troca cruel da política monetária. Mas quando você baixa as séries reais do Brasil e plota, a curva se recusa a cooperar: ruído, quebras estruturais, pontos fora da reta. Vamos buscar IPCA e desocupação direto do SIDRA, juntar por mês e encarar o gráfico como ele é.
 
 ## O que você vai ver
 

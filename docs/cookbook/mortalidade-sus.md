@@ -7,7 +7,7 @@ description: Cruza microdados do SIM com população do SIDRA e cadastro CNES. D
 
 > **Tempo estimado:** 30 minutos (depende do recorte). **Pacotes:** `datasus-fetcher`, `sidra-fetcher`, `polars`, `pyreaddbc`.
 
-Taxa de mortalidade infantil é o indicador clássico de saúde pública. Vamos cruzá-la com a cobertura de estabelecimentos SUS por município usando três fontes oficiais — DATASUS (SIM e CNES) e IBGE (estimativas populacionais).
+"Quantas crianças morreram antes de 1 ano no meu município — e quantos postos de saúde existem para cada 10 mil habitantes?" A pergunta que todo secretário de saúde faz (e teme) se responde com três sistemas oficiais que nunca conversaram entre si: SIM e CNES no DATASUS, população no IBGE. Vamos costurá-los num pipeline reproduzível e calcular a taxa por 1.000 nascidos vivos.
 
 ## O que você vai produzir
 

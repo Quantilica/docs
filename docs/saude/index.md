@@ -5,7 +5,7 @@ description: Microdados do SUS (SIM, SINASC, SIH, CNES) via FTP do DATASUS — d
 
 # Saúde Pública
 
-Dados e microdados de vigilância epidemiológica, natalidade, mortalidade e internações hospitalares brasileiras obtidos a partir dos sistemas do DATASUS (Departamento de Informática do SUS).
+São 22h, seu script puxa o lote de internações de 2019 — e a conexão com o FTP do DATASUS congela no terceiro arquivo. Atrás desse servidor dos anos 1990 dormem os microdados mais importantes do país: cada nascimento (SINASC), cada óbito (SIM), cada internação hospitalar (SIH) do SUS. Chegar até eles exige um crawler com paciência de plantonista.
 
 ## O desafio
 

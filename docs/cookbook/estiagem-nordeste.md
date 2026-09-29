@@ -7,7 +7,7 @@ description: Série climática histórica do BDMEP para identificar tendência d
 
 > **Tempo estimado:** 15 minutos (depois do download inicial). **Pacotes:** `inmet-fetcher`, `polars`, `altair`.
 
-O Nordeste tem o maior corpo conhecido de séries climáticas estável do Brasil. Vamos baixar 30 anos do BDMEP, filtrar as estações nordestinas e visualizar a evolução da precipitação anual.
+No sertão, um ano sem chuva não é estatística — é caminhão-pipa, lavoura perdida, migração. O Nordeste concentra a rede mais densa de estações climáticas do país, e 30 anos de BDMEP guardam a resposta para a pergunta que todo pesquisador do semiárido faz: está chovendo menos do que antes? Vamos baixar as séries, filtrar as estações nordestinas e medir a tendência.
 
 ## O que você vai produzir
 

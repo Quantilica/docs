@@ -5,7 +5,7 @@ description: Séries meteorológicas históricas do INMET BDMEP com encoding e c
 
 # Clima e Meio Ambiente
 
-Dados meteorológicos e climáticos históricos e em tempo real provenientes das estações automáticas e convencionais do INMET (Instituto Nacional de Meteorologia).
+Uma estação do INMET no interior do Piauí registra 40 °C num dia de outubro — ou registra `-9999`, que é o jeito do BDMEP dizer "sensor quebrou". Séries meteorológicas históricas das estações automáticas e convencionais do Instituto Nacional de Meteorologia: décadas de chuva, temperatura e vento, servidas em ZIPs anuais com encoding latin-1 e cabeçalhos que mudam sem aviso.
 
 ## O desafio
 

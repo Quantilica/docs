@@ -33,6 +33,23 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 
 ---
 
+## Voz narrativa (aberturas)
+
+Páginas de domínio (`*/index.md`) e receitas do Cookbook abrem com narrativa; o resto da página segue referência técnica. O padrão tem três movimentos, em 2–4 frases:
+
+1. **Cena** — segunda pessoa, artefato concreto, tempo ou lugar ("São 22h, seu script puxa o lote de internações…").
+2. **Atrito** — o comportamento do sistema governamental que bloqueia (FTP que congela, `502` sem aviso, CSV de 8 GB).
+3. **Virada** — a resolução em uma frase, apontando para a ferramenta ("…exige um crawler com paciência de plantonista" → `datasus-fetcher`).
+
+Regras:
+
+- **Narrativa não é hype.** Continuam proibidos "revolucionário", superlativos vazios e promessas sem mecanismo. A cena cria contexto; a prova continua sendo comando executável e número verificável.
+- **Toda afirmação factual da cena deve ser defensável** — use os números que a própria página já documenta (245 GB, 17.000 séries, 39 GB) ou hedge ("costuma", "pode"). Sem depoimentos inventados, sem estatísticas sem fonte.
+- **Normas, referência de API e configuração ficam fora** — texto normativo e contratual permanece seco e literal.
+- Front-matter (`title`/`description`) permanece factual para SEO/Open Graph, mesmo quando a abertura é narrativa.
+
+---
+
 ## Template para Pacotes de Dados (fetchers)
 
 ```markdown

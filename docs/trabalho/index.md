@@ -5,7 +5,7 @@ description: Microdados de emprego formal (CAGED, RAIS) processados com Polars s
 
 # Mercado de Trabalho
 
-Microdados administrativos do mercado de trabalho brasileiro, vindos de duas fontes do Ministério do Trabalho:
+Seu notebook abre o CSV da RAIS — 50 milhões de linhas, 8 GB — e o Pandas morre antes do primeiro `groupby`. Esse é o batismo de quem estuda emprego formal no Brasil: os microdados administrativos do Ministério do Trabalho são um censo do país inteiro, e cobram pedágio em memória de quem chega despreparado. Duas fontes, dois ritmos:
 
 - **RAIS** (Relação Anual de Informações Sociais) — censo anual de todas as relações de emprego formal. ~60M registros/ano, 1985–presente, ~8 GB CSV/ano.
 - **CAGED** (Cadastro Geral de Empregados e Desempregados) — registro mensal de fluxos (admissões e desligamentos) por setor/região. 1992–presente, 200-500 MB/mês.
