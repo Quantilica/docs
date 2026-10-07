@@ -38,8 +38,11 @@ quantilica sidra info 1620
 # Verificar todos os períodos suportados
 quantilica sidra periods 1620
 
+# Verificar o que mudou sem baixar (plano de freshness por nível)
+quantilica sidra check 1620 -o ./data
+
 # Fazer o dump completo respeitando limites da API
-quantilica sidra download 1620 -o ./data
+quantilica sidra sync 1620 -o ./data
 ```
 
 ---

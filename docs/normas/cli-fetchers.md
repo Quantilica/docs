@@ -52,7 +52,8 @@ existente nesta tabela:
 
 | Verbo | Significado | Default |
 |---|---|---|
-| `sync` | Baixar/atualizar os dados da fonte; idempotente (pula o que já está atualizado) | baixa **tudo**; aceita seleção opcional via argumento posicional ou `--dataset` |
+| `sync` | Baixar/atualizar os dados da fonte; idempotente (pula o que já está atualizado) | baixa **tudo**; aceita seleção opcional via argumento posicional ou `--dataset`; aceita `--from-plan` (plano do `check`) |
+| `check` | **Obrigatório** (fetchers de arquivo estático): verificar remoto × local (HEAD por entrada) e emitir plano de freshness, **sem baixar**; `--json` gera plano consumível por `sync --from-plan` | — |
 | `list` | Listar o que está disponível remotamente (datasets, tabelas, pesquisas) | — |
 | `info` | Exibir metadados de **uma** entidade específica | — |
 | `convert` | Converter dados brutos para Parquet/formato analítico | — |
@@ -71,9 +72,17 @@ Regras de ouro:
   `data` ou outro sinônimo para "baixar os dados da fonte".
 - **`sync` baixa tudo por padrão.** A seleção de datasets é sempre opcional —
   omitir o argumento significa "sincronizar o conjunto completo".
-- **Pré-visualização é uma flag, não um comando.** Use `--dry-run` no `sync`;
-  não crie um comando `info`/`status` separado só para listar o que seria
-  baixado. `info` é reservado para metadados de uma entidade.
+- **Pré-visualização é uma flag, não um comando.** Use `--dry-run` no `sync`
+  para listar o que seria baixado **sem tocar a rede**; não crie um comando
+  `info`/`status` separado só para listar. `info` é reservado para metadados
+  de uma entidade. Exceção: `check` (ADR 2026-10-07) não é listagem — é
+  verificação remoto × local com plano consumível (`--json` →
+  `sync --from-plan`), etapa operacional distinta do download.
+- **Exceção declarada: `bcb-sgs-fetcher`.** API de séries temporais (SGS);
+  os dados vão para o Postgres, não para arquivos stamped em disco. Não há
+  HEAD com `Last-Modified`/`ETag`/`Content-Length` para comparar contra
+  arquivo local, então o padrão `check` não se aplica. A checagem de
+  freshness por série usa o metadado de última atualização da própria API.
 - **Agrupe quando houver mais de um eixo semântico.** Veja §3.5 — fetchers como
   o `bcb-sgs` separam operações por série (`series sync`, `series metadata`) das
   operações de catálogo (`catalogo sync`, `catalogo metadata-bulk`).
