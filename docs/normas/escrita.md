@@ -13,7 +13,7 @@ Este documento define o padrão de README adotado por todos os repositórios da 
 
 - **Idioma:** Todo o texto em prosa (descrições, títulos de seção, comentários) é escrito em **português**. Exemplos de código, flags de CLI, identificadores e nomes de funções permanecem em inglês.
 - **Emoji:** Nenhum emoji decorativo em cabeçalhos ou prosa. Usar somente onde necessário para clareza técnica (ex: tabelas comparativas).
-- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql`) usam `pip install <pacote>` / `uv add <pacote>`; os demais (fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
+- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `quantilica-cli` e, como legado transitório, `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`) usam `pip install <pacote>` / `uv add <pacote>`; os demais (fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
 
 ---
 
@@ -112,7 +112,7 @@ Regras:
 
 ### `## Instalação`
 
-Para pacotes **publicados no PyPI** (`quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql`):
+Para pacotes **publicados no PyPI** (`quantilica-core`, `quantilica-cli` e, como legado transitório, `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`):
 
 ```markdown
 ## Instalação

@@ -75,7 +75,6 @@ analysis = ["quantilica-analytics>=0.2.0"]
 ```
 
 Exemplos corretos:
-- `quantilica-core` expõe `quantilica-core[cli]` para habilitar helpers de Rich/Typer nos hosts que precisam deles.
 - **Fetchers** usam a tag `analysis` para dependências analíticas pesadas (como `quantilica-analytics`, `polars` ou `pandas`), já que fetchers são focados primariamente em extração leve. Subcomandos analíticos (como `convert` ou `pipeline`) devem tratar a ausência dessas dependências graciosamente.
 
 ---
