@@ -13,7 +13,7 @@ Este documento define o padrão de README adotado por todos os repositórios da 
 
 - **Idioma:** Todo o texto em prosa (descrições, títulos de seção, comentários) é escrito em **português**. Exemplos de código, flags de CLI, identificadores e nomes de funções permanecem em inglês.
 - **Emoji:** Nenhum emoji decorativo em cabeçalhos ou prosa. Usar somente onde necessário para clareza técnica (ex: tabelas comparativas).
-- **Instalação:** Pacotes publicados no PyPI (`quantilica-core`, `quantilica-cli` e, como legado transitório, `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`) usam `pip install <pacote>` / `uv add <pacote>`; os demais (fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
+- **Instalação:** apenas `quantilica-core` e `quantilica-cli` são publicados no PyPI e usam `pip install <pacote>` / `uv add <pacote>`; os demais (`sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`, fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
 
 ---
 
@@ -28,7 +28,7 @@ Linha de badges imediatamente após o título `# `, seguindo o padrão `flat-squ
 - A versão Python deve corresponder ao `requires-python` do `pyproject.toml`.
 - Licença `MIT` para todos os pacotes.
 - Badge de CI apenas em pacotes com workflow de testes ativo.
-- **Pacotes publicados no PyPI** adicionam um badge de versão do PyPI:
+- **Pacotes publicados no PyPI** (apenas `quantilica-core` e `quantilica-cli`) adicionam um badge de versão do PyPI:
   `![PyPI](https://img.shields.io/pypi/v/<pacote>.svg?style=flat-square)`.
 
 ---
@@ -112,7 +112,7 @@ Regras:
 
 ### `## Instalação`
 
-Para pacotes **publicados no PyPI** (`quantilica-core`, `quantilica-cli` e, como legado transitório, `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`):
+Para pacotes **publicados no PyPI** (apenas `quantilica-core` e `quantilica-cli`):
 
 ```markdown
 ## Instalação
@@ -128,7 +128,7 @@ uv add <pacote>
 \`\`\`
 ```
 
-Para pacotes distribuídos via **índice próprio** (fetchers, `quantilica-analytics`, `quantilica-catalog`):
+Para pacotes distribuídos via **índice próprio** (todos os `*-fetcher` e `*-sql`, `quantilica-analytics`, `quantilica-catalog`):
 
 ```markdown
 ## Instalação

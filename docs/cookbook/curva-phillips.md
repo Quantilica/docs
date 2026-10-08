@@ -18,7 +18,7 @@ Um scatter plot mensal com IPCA YoY contra a taxa de desocupação da PNAD Cont�
 ## Setup
 
 ```bash
-uv add sidra-fetcher polars "altair[save]"
+uv add sidra-fetcher polars "altair[save]" --index https://index.quantilica.com/simple/
 ```
 
 ## A receita

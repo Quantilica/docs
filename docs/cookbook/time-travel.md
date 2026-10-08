@@ -20,7 +20,7 @@ Esta receita mostra como a infraestrutura Quantilica resolve isso com **dois mec
 ## Setup
 
 ```bash
-uv add sidra-sql
+quantilica install sidra-sql
 ```
 
 Assume que você já tem `sidra-sql` rodando com o pipeline `pib_municipal` carregado (veja [sidra-pipelines](../ibge/sidra-pipelines.md)).
@@ -132,7 +132,7 @@ Para o apêndice metodológico do paper, anexe:
 
 1. **`pib-municipal.json.manifest.json`** versionado no repositório do paper.
 2. **A query SQL** com `modificacao <= 'YYYY-MM-DD'` literal, sem variáveis.
-3. **A versão do `sidra-sql`** e do `sidra-fetcher` usadas (output de `pip show`).
+3. **A versão do `sidra-sql`** e do `sidra-fetcher` usadas (output de `uv pip show`).
 4. **Um README** mostrando como subir o warehouse a partir do zero e rodar a query.
 
 Quatro arquivos. Zero ambiguidade.

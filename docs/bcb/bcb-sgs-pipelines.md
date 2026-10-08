@@ -76,7 +76,7 @@ As tabelas de output seguem o padrão wide-pivot (uma coluna por série, em port
 ### 1. Instalar bcb-sgs-sql
 
 ```bash
-pip install bcb-sgs-sql
+quantilica install bcb-sgs-sql
 ```
 
 ### 2. Configurar Banco de Dados

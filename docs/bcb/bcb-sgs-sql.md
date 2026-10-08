@@ -181,13 +181,11 @@ bcb-sgs-sql run std precos
 ## Instalação
 
 ```bash
-pip install bcb-sgs-sql
-```
+# Via CLI unificada (recomendado)
+quantilica install bcb-sgs-sql
 
-Com [uv](https://github.com/astral-sh/uv):
-
-```bash
-uv add bcb-sgs-sql
+# Ou como biblioteca no seu projeto
+uv add bcb-sgs-sql --index https://index.quantilica.com/simple/
 ```
 
 ## Configuração
