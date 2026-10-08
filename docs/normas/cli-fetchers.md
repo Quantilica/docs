@@ -1,6 +1,6 @@
 ---
 title: Padronização de CLI para Fetchers
-description: Guia completo e normativo para escrever a interface de linha de comando de fetchers Quantilica — cobrindo cli.py (argparse), plugin.py (Typer + Rich), logging, barras de progresso, UX e registro de entry points.
+description: Guia normativo para a interface de linha de comando de fetchers Quantilica — cli.py (wrapper fino do plugin, com import protegido; argparse apenas para fetchers customizados) e plugin.py (Typer + Rich), logging, barras de progresso, UX e entry points.
 ---
 
 # Padronização de CLI para Fetchers
@@ -9,7 +9,7 @@ description: Guia completo e normativo para escrever a interface de linha de com
 >
 > Para o contexto conceitual por trás destas regras, veja [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) (os dois níveis) e o padrão [UX de CLI: progresso vs. logs](../concepts/padroes.md#cli-ux).
 
-Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher deve implementar: a **CLI nativa leve** (`cli.py`, argparse) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich).
+Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher implementa: o **wrapper da CLI standalone** (`cli.py`) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich). A estrutura canônica de `cli.py` segue o ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`: para fetchers baseados no `FetcherApp`, `cli.py` é apenas um **wrapper fino** do app Typer do `plugin.py`; `argparse` completo (§2) fica restrito a fetchers com comandos customizados fora do `FetcherApp` (hoje, `sidra-fetcher`).
 
 Seguir este guia garante comportamento consistente entre fetchers, integração correta com `quantilica-cli` e UX homogênea para o usuário final.
 
@@ -22,26 +22,28 @@ Todo fetcher Quantilica expõe **dois pontos de entrada CLI** com responsabilida
 ```
 <pacote>/
 ├── src/<pacote>/
-│   ├── cli.py       ← CLI nativa (argparse, sem Typer/Rich)
+│   ├── cli.py       ← Wrapper fino do Typer do plugin (padrão) ou argparse (fetcher customizado)
 │   └── plugin.py    ← Plugin para quantilica-cli (Typer + Rich)
 ```
 
 | Dimensão | `cli.py` | `plugin.py` |
 |---|---|---|
-| Framework | `argparse` (stdlib) | `typer` + `rich` |
+| Framework | Wrapper do app Typer do `plugin.py` (padrão) ou `argparse` (fetcher customizado) | `typer` + `rich` |
 | Dependências extras | Nenhuma | `typer`, `rich` (fornecidos pelo host) |
 | Ativado por | `<pacote>-fetcher [comando]` | `quantilica <fonte> [comando]` |
-| Propósito | Instalação leve, scripting, pipelines | Experiência interativa, UX rica |
+| Propósito | Exposição como script, automação | Experiência interativa, UX rica |
 | Registro | `[project.scripts]` | `[project.entry-points."quantilica.fetchers"]` |
-| Colorido / progresso | Rich: Não; tqdm: opcional (via core) | Sim |
+| Colorido / progresso | Rich (via `plugin.py`, no wrapper); tqdm: opcional em fetcher customizado (via core) | Sim |
+
+**Import protegido é obrigatório** em todo `cli.py` wrapper de `FetcherApp`: `try/except ImportError` que imprime `instale via "quantilica install <fonte>"` e encerra com código **1** — nunca `ModuleNotFoundError` cru. Referência canônica: `bcb-sgs-fetcher/src/bcb_sgs_fetcher/cli.py`.
 
 O `quantilica-cli` descobre plugins dinamicamente via entry points — nunca declara fetchers como dependências diretas. Isso mantém o hub leve e desacoplado.
 
 ### 1.1 Por que dois níveis?
 
-- **Instalação mínima**: um usuário que só quer usar `comex-fetcher` como biblioteca não precisa de Typer nem Rich. A `cli.py` garante isso.
 - **UX superior no hub**: quando carregado via `quantilica-cli`, o ambiente já tem Typer e Rich disponíveis. O `plugin.py` usa isso sem declarar dependência.
-- **Automação vs. interativo**: `cli.py` é adequada para cron jobs e scripts; `plugin.py` serve quem usa o terminal interativamente.
+- **Implementação única**: com o `FetcherApp`, a gramática de subcomandos (`sync`, `check`, `--from-plan`, ...) vive uma vez só em `plugin.py`; a `cli.py` apenas delega a ela, sem duplicar a lógica de CLI.
+- **Instalação mínima apenas como biblioteca**: um usuário que consome o fetcher como biblioteca (`import`) não precisa de Typer nem Rich. **Executar a CLI standalone sem o host não é objetivo** (ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): a instalação canônica é `quantilica install <fonte>`, que já traz o host; sem ele, o wrapper imprime `instale via "quantilica install <fonte>"` e sai com código 1.
 
 ### 1.2 Vocabulário canônico de subcomandos
 
@@ -78,11 +80,18 @@ Regras de ouro:
   de uma entidade. Exceção: `check` (ADR 2026-10-07) não é listagem — é
   verificação remoto × local com plano consumível (`--json` →
   `sync --from-plan`), etapa operacional distinta do download.
-- **Exceção declarada: `bcb-sgs-fetcher`.** API de séries temporais (SGS);
-  os dados vão para o Postgres, não para arquivos stamped em disco. Não há
-  HEAD com `Last-Modified`/`ETag`/`Content-Length` para comparar contra
-  arquivo local, então o padrão `check` não se aplica. A checagem de
-  freshness por série usa o metadado de última atualização da própria API.
+- **Exceção declarada: `bcb-sgs-fetcher`** (ADR `2026-10-07-check-obrigatorio-e-sidra-sync-rename.md`): API de séries temporais (SGS): um endpoint REST dinâmico, sem `Last-Modified`/`ETag`/`Content-Length` de arquivo estático para comparar contra o snapshot JSON local, então o padrão `check` não se aplica. A freshness por série usa o metadado de última atualização da própria API (mecanismo distinto). A carga no Postgres é responsabilidade do `bcb-sgs-sql`.
+- **Fetchers FTP (ex.: `pdet-fetcher`) — limitação a definir.** Servidores
+  FTP não provêm `HEAD` nem `Last-Modified` confiável; o `check` canônico do
+  `FetcherApp` (HEAD sobre os mesmos URLs do `download_entry`) pressupõe
+  HTTP estático. A checagem para FTP seria via listagem remota
+  (tamanho/mtime do diretório FTP), mas esse comportamento **ainda não está
+  definido nem implementado** — é pendência registrada no plano
+  `2026-10-08-conformidade-fetchers-auditoria-2026-10`. Enquanto isso, o
+  `pdet-fetcher` usa o `FetcherApp` e herda o `check`, que devolve o veredito
+  `metadata-unavailable` por não haver `HEAD`/`Last-Modified` no cliente FTP.
+  Fetchers FTP não devem simular um plano de freshness com dados que o
+  protocolo não garante.
 - **Agrupe quando houver mais de um eixo semântico.** Veja §3.5 — fetchers como
   o `bcb-sgs` separam operações por série (`series sync`, `series metadata`) das
   operações de catálogo (`catalogo sync`, `catalogo metadata-bulk`).
@@ -93,13 +102,18 @@ Regras de ouro:
 
 Fetchers padrão (que fazem download de datasets estruturados via HTTP estático) devem instanciar o `FetcherApp` em `plugin.py` e passar seus metadados, estrutura de catálogos (ex: `GROUPS`, `GROUP_ALIASES`) e uma factory de rotas (`path_builder`). Com isso, a `cli.py` atua apenas como wrapper de execução, removendo totalmente a necessidade de escrever `argparse`, subcomandos manuais, e formatações Rich descritas nas seções 2 a 5.
 
-Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão.
+Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão. Ressalva: o `sidra-fetcher` instancia o `FetcherApp` no `plugin.py`, mas mantém uma `cli.py` com `argparse` dedicado (única exceção, conforme o ADR 2026-10-08); logo, sua `cli.py` não é um wrapper fino.
 
 As seções a seguir (2 a 5) devem ser aplicadas **apenas** para o entendimento da engenharia por trás do `FetcherApp` ou quando, em último caso, um fetcher precisar estender a CLI nativamente e customizar intensamente.
 
 ---
 
 ## 2. CLI nativa — `cli.py` (Apenas fetchers customizados)
+
+> **Escopo restrito (ADR `2026-10-08`):** `argparse` completo aplica-se apenas a
+> fetchers com **comandos customizados fora do `FetcherApp`** — hoje, somente o
+> `sidra-fetcher`. Todo fetcher novo baseado no `FetcherApp` **não** escreve a
+> CLI nesta seção: usa o wrapper fino (§1.3).
 
 ### 2.1 Esqueleto obrigatório
 
@@ -195,6 +209,7 @@ nativa deve expor exatamente os mesmos verbos que o `plugin.py` do fetcher:
 |---|---|
 | `sync` | Baixar o conjunto principal de dados (tudo por padrão) |
 | `list` | Listar o que está disponível (datasets, anos, etc.) |
+| `check` | Verificar remoto × local sem baixar; `--json` gera plano consumível por `sync --from-plan` |
 | `convert` | Converter de formato bruto para Parquet/JSON |
 | `export` | Exportar para formatos externos (Excel, SQLite) |
 | `info` | Exibir metadados de uma entidade |
@@ -223,7 +238,7 @@ comex-fetcher = "comex_fetcher.cli:main"
 ```python
 import sys
 
-def _cmd_download(args):
+def _cmd_sync(args):
     if not args.output.parent.exists():
         print(f"Erro: diretório pai não existe: {args.output.parent}", file=sys.stderr)
         sys.exit(1)
@@ -262,20 +277,19 @@ O `quantilica-cli` monta uma árvore de comandos a partir de todos os fetchers i
 
 ```
 quantilica
-└── fetch
-    ├── bcb-sgs    ← bcb_sgs_fetcher.plugin:app
-    ├── comex      ← comex_fetcher.plugin:app
-    ├── datasus    ← datasus_fetcher.plugin:app
-    ├── inmet      ← inmet_fetcher.plugin:app
-    ├── pdet       ← pdet_fetcher.plugin:app
-    ├── rtn        ← rtn_fetcher.plugin:app
-    ├── sidra      ← sidra_fetcher.plugin:app
-    └── td         ← tesouro_direto_fetcher.plugin:app
+├── bcb-sgs      ← bcb_sgs_fetcher.plugin:app
+├── comex        ← comex_fetcher.plugin:app
+├── datasus      ← datasus_fetcher.plugin:app
+├── inmet        ← inmet_fetcher.plugin:app
+├── pdet         ← pdet_fetcher.plugin:app
+├── rtn          ← rtn_fetcher.plugin:app
+├── sidra        ← sidra_fetcher.plugin:app
+└── td           ← tesouro_direto_fetcher.plugin:app
 ```
 
 Cada nó da árvore é um `typer.Typer` exportado por `plugin.py` e descoberto via entry point.
 
-O `plugin.py` pode importar funções auxiliares de `cli.py` quando ambos compartilham lógica de negócio que não pertence a um módulo separado (ex: helpers de exportação Excel/SQLite no `rtn-fetcher`). Isso não é acoplamento indevido — `cli.py` funciona como módulo de lógica reutilizável enquanto `plugin.py` cuida da apresentação Rich.
+A lógica de negócio compartilhada vive em **módulo próprio** (ex: `bulk.py`, `catalog.py`, `storage.py`). Não confie em `plugin.py` importando helpers de `cli.py` no modelo wrapper: `cli.py` é que importa `plugin.py` (um `import` no sentido inverso feria o modelo e criaria potencial circularidade). O antigo padrão "reutilizar helpers de `cli.py` no `plugin.py`" mantém-se tolerado apenas em fetchers customizados com argparse.
 
 ### 3.2 Cabeçalho obrigatório
 
@@ -285,14 +299,19 @@ O `plugin.py` pode importar funções auxiliares de `cli.py` quando ambos compar
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
-import typer
-from quantilica.core.cli import get_console, setup_rich_logging
+from quantilica.cli.sdk import FetcherApp
 
-app = typer.Typer(help="<Descrição curta do fetcher.>")
-console = get_console()
+fetcher = FetcherApp(
+    name="<pacote>-fetcher",
+    help="<Descrição curta do fetcher.>",
+    ...
+)
 
+app = fetcher.app
+
+# Apenas em plugins com comandos próprios (além do FetcherApp):
 _DEFAULT_OUTPUT = Path("/data/<fonte>")
 ```
 
@@ -304,9 +323,12 @@ Regras:
 - `_DEFAULT_OUTPUT` define o caminho padrão de saída do fetcher. Deve ser `/data/<fonte>` para consistência com a convenção de montagem Docker do ecossistema.
 - Não importe `typer` ou `rich` no `pyproject.toml` do fetcher — essas dependências são fornecidas pelo host `quantilica-cli`.
 
+!!! info "Fronteira com `quantilica.cli` (ADR `2026-10-08`)"
+    A única fronteira pela qual o fetcher consome o host é `plugin.py` — e `cli.py`, que apenas o referencia/delega. `plugin.py` importa `FetcherApp` (e demais helpers de SDK) de **`quantilica.cli.sdk`** e helpers de console/log/progresso (`get_console`, `setup_rich_logging`, `make_download_progress`, `expand_years_cli`) de **`quantilica.cli.ui`**. **Nenhum outro módulo do fetcher** (clientes HTTP, FTP, readers, storage, parsers) pode importar `quantilica.cli.sdk`/`quantilica.cli.ui` — nem mesmo com fallback `try/except`. `quantilica.core.cli` não existe: os helpers estão em `quantilica.cli.ui`/`sdk`.
+
 ### 3.3 `setup_rich_logging` — o ponto central de logging
 
-Cada `plugin.py` deve chamar `setup_rich_logging` de `quantilica.core.cli` como primeira linha de cada comando:
+Cada `plugin.py` que escreve comandos próprios deve chamar `setup_rich_logging` de `quantilica.cli.ui` como primeira linha de cada comando:
 
 ```python
 @app.command("sync")
@@ -574,7 +596,7 @@ Exija um argumento `--workers` (padrão `4`) na CLI:
 ```python
 import concurrent.futures
 import threading
-from quantilica.core.cli import make_download_progress
+from quantilica.cli.ui import make_download_progress
 
 # No comando:
 lock = threading.Lock()
@@ -1076,10 +1098,10 @@ Fetchers que aceitam anos como argumento devem suportar o formato de intervalo `
 
 ### 10.1 No Plugin Typer (`plugin.py`)
 
-Use a função **`expand_years_cli`** importada de `quantilica.core.cli`. Ela faz a expansão utilizando `expand_year_range` internamente e imprime avisos amigáveis no console compartilhado caso encontre algum formato inválido:
+Use a função **`expand_years_cli`** importada de `quantilica.cli.ui`. Ela faz a expansão utilizando `expand_year_range` internamente e imprime avisos amigáveis no console compartilhado caso encontre algum formato inválido:
 
 ```python
-from quantilica.core.cli import expand_years_cli
+from quantilica.cli.ui import expand_years_cli
 
 @app.command("sync")
 def cmd_sync(
@@ -1181,8 +1203,8 @@ def fetch_bulk(ids, on_progress=None):
 from quantilica.core.logging import configure_cli_logging
 configure_cli_logging(verbose=verbose)
 
-# ✅ Use setup_rich_logging de quantilica.core.cli
-from quantilica.core.cli import setup_rich_logging
+# ✅ Use setup_rich_logging de quantilica.cli.ui
+from quantilica.cli.ui import setup_rich_logging
 setup_rich_logging(verbose, console=console)
 ```
 
@@ -1222,7 +1244,15 @@ typer.Option("--verbose", ...)
 
 Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
-### `cli.py` (argparse)
+### `cli.py` — wrapper fino (padrão `FetcherApp`)
+
+- [ ] Import do plugin **protegido**: `try/except ImportError` → imprime `instale via "quantilica install <fonte>"` em `sys.stderr` e sai com código **1** — nunca `ModuleNotFoundError` (referência: `bcb-sgs-fetcher/src/bcb_sgs_fetcher/cli.py`).
+- [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade (obrigatório).
+- [ ] `main()` delega ao app: `app(argv)` (nenhuma gramática de subcomando duplicada aqui).
+- [ ] `cli.py` não importa `quantilica.cli.sdk`/`quantilica.cli.ui` diretamente — apenas o `plugin.py` (§3.2).
+- [ ] Entry point declarado em `[project.scripts]`.
+
+### `cli.py` — argparse (apenas fetcher customizado, ex: `sidra-fetcher`)
 
 - [ ] `argparse.ArgumentParser` com `prog` e `description` definidos.
 - [ ] `--version` com `action="version"` lendo de `__version__`.
@@ -1239,8 +1269,8 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 ### `plugin.py` (Typer + Rich)
 
 - [ ] Docstring `"""Typer plugin for quantilica-cli integration."""`.
-- [ ] `app = typer.Typer(help="...")` no topo.
-- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica.core.cli`).
+- [ ] `app = typer.Typer(help="...")` no topo (ou `app = FetcherApp(...).app`).
+- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica.cli.ui`).
 - [ ] `_DEFAULT_OUTPUT = Path("/data/<fonte>")`.
 - [ ] Cada comando chama `setup_rich_logging(verbose, console=console)` como primeira linha.
 - [ ] Funções de comando nomeadas `cmd_<verbo>` (ex: `cmd_sync`, `cmd_list`).
@@ -1256,6 +1286,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] Avisos usam `[yellow]Aviso:[/yellow]`.
 - [ ] Entry point declarado em `[project.entry-points."quantilica.fetchers"]`.
 - [ ] `typer` e `rich` **não** estão em `[project.dependencies]`.
+- [ ] **Fronteira**: `quantilica.cli.sdk`/`quantilica.cli.ui` são importados **somente aqui** — nenhum outro módulo do fetcher os importa (§3.2).
 
 ---
 
@@ -1270,8 +1301,8 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | `ProgressCallback` per-file + `_file_callback` | `comex-fetcher` | `plugin.py` |
 | `on_done(filename, result)` callback pós-arquivo | `rtn-fetcher` | `plugin.py :: _sync_publications` |
 | `console.status` + `asyncio.run()` para downloads async | `tesouro-direto-fetcher` | `plugin.py :: cmd_sync` |
-| `getLogger("quantilica.core"/"<pacote>").setLevel(WARNING)` em cli.py | `inmet-fetcher` | `cli.py :: main` |
-| `parser.set_defaults(func=print_help)` sem `required=True` | `bcb-sgs-fetcher` | `cli.py :: get_parser` |
+| `getLogger("quantilica.core"/"<pacote>").setLevel(WARNING)` em cli.py | `sidra-fetcher` | `src/sidra_fetcher/cli.py :: main` |
+| Wrapper fino de `plugin.py` com import protegido | `bcb-sgs-fetcher` | `cli.py` |
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
@@ -1281,7 +1312,6 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |
 | `_print_info` como helper de tabela reutilizável | `tesouro-direto-fetcher` | `plugin.py :: _print_info` |
 | `console.rule` / `console.print(Rule(...))` para seção | `tesouro-direto-fetcher` | `plugin.py :: cmd_pipeline` |
-| Importar helpers de `cli.py` no `plugin.py` | `rtn-fetcher` | `plugin.py` (importa de `cli.py`) |
 
 ---
 

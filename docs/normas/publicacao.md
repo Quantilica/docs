@@ -9,10 +9,14 @@ Os pacotes públicos do ecossistema Quantilica seguem **dois fluxos de release d
 
 | Fluxo | Canal | Pacotes | Workflow |
 |---|---|---|---|
-| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher`, `bcb-sgs-sql` | `publish.yml` com Trusted Publishing |
-| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` (exceto `sidra-fetcher`) | `publish.yml` com GitHub Release + dispatch |
+| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli` + **exceção legada transitória**: `sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`¹ | `publish.yml` com Trusted Publishing |
+| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` (exceto `sidra-fetcher`, no Fluxo A como legado)² | `publish.yml` com GitHub Release + dispatch |
 
 > Fetchers distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages.
+>
+> ¹ Legado transitório declarado (ADRs `2026-07-30-distribuicao-fetchers-github-releases` e `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): permanecem no PyPI por back-compat até migração para o Fluxo B (item do plano; confirmar `publish.yml` dos dois `*-sql` antes de migrar).
+>
+> ² `datasus-fetcher` e `bcb-sgs-fetcher` já publicam por Fluxo B (`Release to GitHub & Notify Index`).
 
 ---
 
@@ -109,7 +113,7 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, acrescente
 
 ### `publish.yml` — Fluxo A: build → TestPyPI → PyPI (OIDC)
 
-Para `quantilica-core`, `quantilica-cli`, `sidra-fetcher`, `sidra-sql`, `datasus-fetcher`, `bcb-sgs-fetcher` e `bcb-sgs-sql`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
+Para `quantilica-core`, `quantilica-cli` e — como **exceção legada transitória** (ADRs `2026-07-30` e `2026-10-08`) — `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
 
 ```yaml
 name: Publish to PyPI
