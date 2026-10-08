@@ -43,7 +43,7 @@ O `quantilica-cli` descobre plugins dinamicamente via entry points — nunca dec
 
 - **UX superior no hub**: quando carregado via `quantilica-cli`, o ambiente já tem Typer e Rich disponíveis. O `plugin.py` usa isso sem declarar dependência.
 - **Implementação única**: com o `FetcherApp`, a gramática de subcomandos (`sync`, `check`, `--from-plan`, ...) vive uma vez só em `plugin.py`; a `cli.py` apenas delega a ela, sem duplicar a lógica de CLI.
-- **Instalação mínima apenas como biblioteca**: um usuário que consome o fetcher como biblioteca (`import`) não precisa de Typer nem Rich. **Executar a CLI standalone sem o host não é objetivo** (ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): a instalação canônica é `quantilica install <fonte>`, que já traz o host; sem ele, o wrapper imprime `instale via "quantilica install <fonte>"` e sai com código 1.
+- **Instalação mínima apenas como biblioteca**: um usuário que consome o fetcher como biblioteca (`import`) não precisa de Typer nem Rich. **Executar a CLI standalone sem o host não é objetivo** (ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): a instalação canônica é `quantilica install <fonte>`, que já traz o host; sem ele, o wrapper imprime `instale via "quantilica install <fonte>"` e sai com código 1. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` (ver §3.6) — não necessariamente o nome do pacote.
 
 ### 1.2 Vocabulário canônico de subcomandos
 
@@ -81,17 +81,19 @@ Regras de ouro:
   verificação remoto × local com plano consumível (`--json` →
   `sync --from-plan`), etapa operacional distinta do download.
 - **Exceção declarada: `bcb-sgs-fetcher`** (ADR `2026-10-07-check-obrigatorio-e-sidra-sync-rename.md`): API de séries temporais (SGS): um endpoint REST dinâmico, sem `Last-Modified`/`ETag`/`Content-Length` de arquivo estático para comparar contra o snapshot JSON local, então o padrão `check` não se aplica. A freshness por série usa o metadado de última atualização da própria API (mecanismo distinto). A carga no Postgres é responsabilidade do `bcb-sgs-sql`.
-- **Fetchers FTP (ex.: `pdet-fetcher`) — limitação a definir.** Servidores
+- **Fetchers FTP (`pdet-fetcher`, `datasus-fetcher`) — `check` herdado é conforme.** Servidores
   FTP não provêm `HEAD` nem `Last-Modified` confiável; o `check` canônico do
   `FetcherApp` (HEAD sobre os mesmos URLs do `download_entry`) pressupõe
-  HTTP estático. A checagem para FTP seria via listagem remota
-  (tamanho/mtime do diretório FTP), mas esse comportamento **ainda não está
-  definido nem implementado** — é pendência registrada no plano
-  `2026-10-08-conformidade-fetchers-auditoria-2026-10`. Enquanto isso, o
-  `pdet-fetcher` usa o `FetcherApp` e herda o `check`, que devolve o veredito
-  `metadata-unavailable` por não haver `HEAD`/`Last-Modified` no cliente FTP.
-  Fetchers FTP não devem simular um plano de freshness com dados que o
-  protocolo não garante.
+  HTTP estático. Ambos usam o `FetcherApp` com `FtpClient`. O `pdet-fetcher` herda o `check`,
+  que devolve o veredito `metadata-unavailable` por não haver
+  `HEAD`/`Last-Modified` no cliente FTP; o `datasus-fetcher` substitui o
+  `check_entry` por uma sonda local (arquivo já presente = `skip`/atualizado,
+  sem consultar o servidor) e serializa as entradas para que `check --json`
+  alimente `sync --from-plan`. Ambos os comportamentos **são conformes para
+  fins de obrigatoriedade** do `check` (§1.2). A checagem real para FTP via listagem
+  remota (tamanho/mtime do diretório FTP) segue pendência registrada no plano
+  `2026-10-08-conformidade-fetchers-auditoria-2026-10`. Fetchers FTP não devem
+  simular um plano de freshness com dados que o protocolo não garante.
 - **Agrupe quando houver mais de um eixo semântico.** Veja §3.5 — fetchers como
   o `bcb-sgs` separam operações por série (`series sync`, `series metadata`) das
   operações de catálogo (`catalogo sync`, `catalogo metadata-bulk`).
@@ -105,6 +107,14 @@ Fetchers padrão (que fazem download de datasets estruturados via HTTP estático
 Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão. Ressalva: o `sidra-fetcher` instancia o `FetcherApp` no `plugin.py`, mas mantém uma `cli.py` com `argparse` dedicado (única exceção, conforme o ADR 2026-10-08); logo, sua `cli.py` não é um wrapper fino.
 
 As seções a seguir (2 a 5) devem ser aplicadas **apenas** para o entendimento da engenharia por trás do `FetcherApp` ou quando, em último caso, um fetcher precisar estender a CLI nativamente e customizar intensamente.
+
+!!! warning "Sobreposição de comandos do `FetcherApp` — paridade de flags"
+    Um fetcher que re-registra `sync`/`list`/`check` por cima dos defaults do `FetcherApp` (caso `datasus-fetcher/plugin.py`, que re-registra `list` e `sync`; o `check` permanece o do SDK, com `check_entry` próprio) **deve** manter paridade de flags com o comando do SDK: o `sync` próprio inclui `--from-plan` (plano do `check`, já presente no `datasus-fetcher` desde 2026-10-08) e o `check` próprio inclui `--json`. No Typer, o último registro vence — a sobreposição substitui o default, não o estende; flags omitidas deixam de existir para o usuário.
+
+### 1.4 Manifests de proveniência — o que é exigido de fetchers
+
+- **`DownloadManifest` — obrigatório por arquivo baixado.** Todo arquivo baixado por um fetcher sai acompanhado do seu sidecar `DownloadManifest` (SHA-256, URL de origem, timestamps). O fetcher **não** o constrói manualmente: ele é provido por herança do `FetcherApp` — `FetcherApp._download_file` delega a `client.download_with_manifest` (`quantilica-cli/src/quantilica/cli/sdk.py`), implementado em `HttpClient.download_with_manifest` (`quantilica-core/src/quantilica/core/http.py`) e `FtpClient.download_with_manifest` (`quantilica-core/src/quantilica/core/ftp.py`), que faz freshness check, escrita atômica e emite o sidecar. Regra prática: baixe sempre via o caminho do `FetcherApp` (`download_entry`/`download_datasets`); nunca faça streaming próprio sem manifest.
+- **`ExecutionManifest` — não exigido por download.** `ExecutionManifest` é apenas o alias de `RunManifest` (`quantilica-core/src/quantilica/core/manifests.py`), disponível no core e re-exportado em `quantilica.core`. O código não impõe sua produção a fetchers nem o SDK o emite no caminho de download — portanto **nenhum fetcher precisa produzi-lo por arquivo baixado**.
 
 ---
 
@@ -249,6 +259,8 @@ def _cmd_sync(args):
 
 ### 2.6 Silenciar logs INFO quando exibindo progresso
 
+> **Só se aplica a fetcher customizado** (hoje, apenas `sidra-fetcher`, ADR `2026-10-08`) — wrappers finos não exibem progresso próprio nem tocam em loggers (§1.3).
+
 `configure_cli_logging(verbose=False)` define o nível raiz em `INFO`. Isso faz com que mensagens internas do core (como `log_step` em `quantilica.core.http`) apareçam no terminal e corrompam a saída de barras tqdm.
 
 Quando `cli.py` exibe progresso (barra tqdm ou output limpo), adicione após `configure_cli_logging`:
@@ -319,8 +331,8 @@ Regras:
 
 - O docstring do módulo deve ser exatamente `"""Typer plugin for quantilica-cli integration."""`.
 - `app` deve ser o nome do objeto `typer.Typer` exportado (é o que o entry point aponta).
-- `console = get_console()` deve ser instanciado no topo do módulo — todos os comandos compartilham a mesma instância. `get_console()` retorna um console global compartilhado pelo processo, garantindo intercalamento correto entre logs e barras de progresso.
-- `_DEFAULT_OUTPUT` define o caminho padrão de saída do fetcher. Deve ser `/data/<fonte>` para consistência com a convenção de montagem Docker do ecossistema.
+- `console = get_console()` deve ser instanciado no topo do módulo — **somente quando o `plugin.py` define comandos próprios**. Todos os comandos próprios compartilham a mesma instância. `get_console()` retorna um console global compartilhado pelo processo, garantindo intercalamento correto entre logs e barras de progresso. Plugins 100% `FetcherApp` (ex.: `comex`, `rtn` — sem comandos próprios) **não** definem `console`: herdam o console do SDK (cada `_build_commands` do `FetcherApp` resolve o seu via `get_console()` — `quantilica-cli/src/quantilica/cli/sdk.py`).
+- `_DEFAULT_OUTPUT` define o caminho padrão de saída do fetcher. Deve ser `/data/<fonte>` para consistência com a convenção de montagem Docker do ecossistema — **somente quando o `plugin.py` define comandos próprios** (é o default dos `typer.Option("-o", "--output")` desses comandos). Plugins 100% `FetcherApp` **não** definem `_DEFAULT_OUTPUT`: herdam o output default do SDK (`default_output or Path(f"/data/{name.replace('-fetcher', '')}")` — `sdk.py`).
 - Não importe `typer` ou `rich` no `pyproject.toml` do fetcher — essas dependências são fornecidas pelo host `quantilica-cli`.
 
 !!! info "Fronteira com `quantilica.cli` (ADR `2026-10-08`)"
@@ -412,6 +424,22 @@ def cmd_convert(
     converte_dados(input)
 ```
 
+4. Módulos analíticos (`reader`, `contracts`, `wrangling` ou equivalentes) que importam `polars` (ou outra dependência do extra `analysis`) diretamente **devem** converter a ausência do extra num `ImportError` de mensagem acionável — nunca `ModuleNotFoundError` cru. Padrão: guarda no topo do módulo que re-levanta com a instrução de instalação:
+
+```python
+try:
+    import polars as pl
+except ImportError as exc:
+    raise ImportError(
+        "requer o extra 'analysis': pip install '<pacote-fetcher>[analysis]'"
+    ) from exc
+```
+
+Teste canônico da condição (c) do ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`, num ambiente **sem** o extra `analysis` instalado:
+
+- `python -c "import <pacote>"` deve funcionar (o pacote base nunca exige o extra);
+- `python -c "from <pacote>.reader import <simbolo>"` (ou `contracts`/`wrangling` importados diretamente) deve falhar com o `ImportError` acionável acima — nunca `ModuleNotFoundError` cru.
+
 ### 3.6 Subcommands aninhados
 
 Para fetchers com mais de um eixo semântico, use `typer.Typer` aninhado. O
@@ -474,7 +502,7 @@ sidra = "sidra_fetcher.plugin:app"
 
 O `<nome-curto>` é o que o usuário digitará: `quantilica <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
 
-> **Nota sobre instalação sob demanda:** O `quantilica-cli` descobre os entry points registrados em `quantilica.fetchers` automaticamente assim que o pacote é instalado via `quantilica install <fonte>`.
+> **Nota sobre instalação sob demanda:** O `quantilica-cli` descobre os entry points registrados em `quantilica.fetchers` automaticamente assim que o pacote é instalado via `quantilica install <fonte>`. Aqui, `<fonte>` é a **chave do `SOURCES_REGISTRY`** (`quantilica-cli/src/quantilica/cli/sources.py`), que mapeia chave → distribuição — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`). Chaves reais: `anac`, `anp`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inmet`, `pdet`, `rtn`, `sidra`, `td`, `tse`. O comando resolve via `registry.get(source, source)` sobre o registro local mesclado com o remoto (`sources.json` do índice; o local tem precedência) — chave desconhecida é passada adiante como nome de distribuição. Wrappers cuja mensagem usa nome fora do registro (`tesouro-direto`, `inep`, `rfb-cnpj`) devem migrar para a chave na próxima revisão.
 
 ---
 
@@ -1119,6 +1147,8 @@ def cmd_sync(
 
 ### 10.2 Na CLI nativa (`cli.py`)
 
+> **Só se aplica a fetcher customizado** (hoje, apenas `sidra-fetcher`, ADR `2026-10-08`) — wrappers finos delegam anos/intervalos ao `plugin.py` e não usam `argparse` (§1.3).
+
 Na CLI nativa standalone (que não depende de `rich`), utilize diretamente a função **`expand_year_range`** de `quantilica.core.dates`. Como ela pode lançar `ValueError` para intervalos ou anos inválidos, capture e trate a exceção exibindo uma mensagem no stderr:
 
 ```python
@@ -1248,7 +1278,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 - [ ] Import do plugin **protegido**: `try/except ImportError` → imprime `instale via "quantilica install <fonte>"` em `sys.stderr` e sai com código **1** — nunca `ModuleNotFoundError` (referência: `bcb-sgs-fetcher/src/bcb_sgs_fetcher/cli.py`).
 - [ ] `main(argv: list[str] | None = None)` — aceita argv para testabilidade (obrigatório).
-- [ ] `main()` delega ao app: `app(argv)` (nenhuma gramática de subcomando duplicada aqui).
+- [ ] `main()` delega ao app na forma canônica `app(argv)`, com `if argv is None: argv = sys.argv[1:]` (nenhuma gramática de subcomando duplicada aqui; referência: `bcb-sgs-fetcher/src/bcb_sgs_fetcher/cli.py`). A forma antiga (`sys.argv = [sys.argv[0]] + argv; app()`, ainda presente em `anac`, `anp`, `cvm`, `inep`, `inmet`, `pdet`, `rfb-cnpj` e `rtn`) é tolerada até a próxima revisão de cada fetcher — fetchers novos usam `app(argv)` (já adotada em `bcb-sgs`, `comex`, `datasus`, `tesouro-direto` e `tse`).
 - [ ] `cli.py` não importa `quantilica.cli.sdk`/`quantilica.cli.ui` diretamente — apenas o `plugin.py` (§3.2).
 - [ ] Entry point declarado em `[project.scripts]`.
 
@@ -1270,8 +1300,8 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 - [ ] Docstring `"""Typer plugin for quantilica-cli integration."""`.
 - [ ] `app = typer.Typer(help="...")` no topo (ou `app = FetcherApp(...).app`).
-- [ ] `console = get_console()` compartilhado por todos os comandos (importado de `quantilica.cli.ui`).
-- [ ] `_DEFAULT_OUTPUT = Path("/data/<fonte>")`.
+- [ ] `console = get_console()` compartilhado por todos os comandos próprios (importado de `quantilica.cli.ui`) — **apenas se o plugin define comandos próprios**; plugins 100% `FetcherApp` (ex.: `comex`, `rtn`) herdam do SDK e não o definem (§3.2).
+- [ ] `_DEFAULT_OUTPUT = Path("/data/<fonte>")` — **apenas se o plugin define comandos próprios**; plugins 100% `FetcherApp` herdam o default do SDK (§3.2).
 - [ ] Cada comando chama `setup_rich_logging(verbose, console=console)` como primeira linha.
 - [ ] Funções de comando nomeadas `cmd_<verbo>` (ex: `cmd_sync`, `cmd_list`).
 - [ ] Nenhum `typer.echo()` — apenas `console.print()`.
