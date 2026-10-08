@@ -9,14 +9,12 @@ Os pacotes públicos do ecossistema Quantilica seguem **dois fluxos de release d
 
 | Fluxo | Canal | Pacotes | Workflow |
 |---|---|---|---|
-| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli` + **exceção legada transitória**: `sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`¹ | `publish.yml` com Trusted Publishing |
-| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` (exceto `sidra-fetcher`, no Fluxo A como legado)² | `publish.yml` com GitHub Release + dispatch |
+| **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli` | `publish.yml` com Trusted Publishing |
+| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` e `*-sql` (inclui `sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`) | `publish.yml` com GitHub Release + dispatch |
 
-> Fetchers distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` (`quantilica-cli/src/quantilica/cli/sources.py`: `anac`, `anp`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inmet`, `pdet`, `rtn`, `sidra`, `td`, `tse`) — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`).
+> Pacotes distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` local (`quantilica-cli/src/quantilica/cli/sources.py`) mesclada com o `sources.json` remoto do índice; chaves remotas atuais: `anac`, `anp`, `bcb-sgs`, `bcb-sgs-sql`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb-cnpj`, `rtn`, `sidra`, `sidra-sql`, `tesouro-direto`, `tse`, `quantilica-analytics`, `quantilica-catalog` (o registro local tem também `td`) — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`).
 >
-> ¹ Legado transitório declarado (ADRs `2026-07-30-distribuicao-fetchers-github-releases` e `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): permanecem no PyPI por back-compat até migração para o Fluxo B (item do plano; confirmar `publish.yml` dos dois `*-sql` antes de migrar).
->
-> ² `datasus-fetcher` e `bcb-sgs-fetcher` já publicam por Fluxo B (`Release to GitHub & Notify Index`).
+> `sidra-fetcher 0.10.5`, `sidra-sql 2.0.1` e `bcb-sgs-sql 0.2.2` (2026-10-08) foram os primeiros releases no Fluxo B; versões anteriores permanecem congeladas no PyPI.
 
 ---
 
@@ -130,7 +128,7 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, use a vari
 
 ### `publish.yml` — Fluxo A: build → TestPyPI → PyPI (OIDC)
 
-Para `quantilica-core`, `quantilica-cli` e — como **exceção legada transitória** (ADRs `2026-07-30` e `2026-10-08`) — `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
+Para `quantilica-core` e `quantilica-cli`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
 
 ```yaml
 name: Publish to PyPI
@@ -206,7 +204,7 @@ jobs:
 
 ### `publish.yml` — Fluxo B: build → GitHub Release → dispatch (índice estático)
 
-Para os demais `*-fetcher`, `quantilica-analytics` e `quantilica-catalog`. Dispara em push de tag `v*`. Cria um GitHub Release com os artefatos e dispara o rebuild do índice estático.
+Para todos os `*-fetcher`, `*-sql`, `quantilica-analytics` e `quantilica-catalog`. Dispara em push de tag `v*`. Cria um GitHub Release com os artefatos e dispara o rebuild do índice estático.
 
 ```yaml
 name: Release to GitHub & Notify Index

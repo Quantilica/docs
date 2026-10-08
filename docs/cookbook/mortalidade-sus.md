@@ -22,7 +22,7 @@ Uma tabela municipal com:
 ## Setup
 
 ```bash
-uv add datasus-fetcher sidra-fetcher polars pyreaddbc
+uv add datasus-fetcher sidra-fetcher polars pyreaddbc --index https://index.quantilica.com/simple/
 ```
 
 ## A receita

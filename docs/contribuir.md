@@ -88,7 +88,7 @@ Todos os pacotes seguem **SemVer**:
 - **MINOR** — feature compatível.
 - **MAJOR** — quebra de API.
 
-Releases saem sem cadência fixa — quando funcionalidade está pronta e testada. Os pacotes publicados no PyPI são `quantilica-core` e `quantilica-cli`, além de `sidra-fetcher`, `sidra-sql` e `bcb-sgs-sql` como legado transitório; os demais (fetchers restantes, `quantilica-analytics`, `quantilica-catalog`) distribuem wheels via GitHub Releases + índice próprio e instalam-se com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md) para os dois fluxos.
+Releases saem sem cadência fixa — quando funcionalidade está pronta e testada. Apenas `quantilica-core` e `quantilica-cli` são publicados no PyPI; os demais (`sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`, fetchers restantes, `quantilica-analytics`, `quantilica-catalog`) distribuem wheels via GitHub Releases + índice próprio e instalam-se com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md) para os dois fluxos.
 
 ## Governança
 
