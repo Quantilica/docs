@@ -31,6 +31,7 @@ build-backend = "hatchling.build"
 
 - **Versão (`version`):** adere estritamente a [SemVer 2.0.0](https://semver.org/lang/pt-BR/). O bump de versão segue a [Política Canônica de Versionamento](publicacao.md#4-versionamento-semver-e-política-de-bump).
 - **Licença — PEP 639:** use a expressão SPDX (`license = "MIT"`) + `license-files`, **não** a forma antiga `license = { file = "LICENSE" }` nem o classifier `License :: OSI Approved :: MIT License`. Requer `hatchling>=1.27`.
+- **Exceção — backend `maturin` (extensão nativa):** fetchers com extensão nativa compilada usam `maturin` como backend em vez de `hatchling`, mantendo os demais campos PEP 639 iguais (`license = "MIT"` + `license-files`, classifier `Typing :: Typed` quando aplicável). Hoje, o único caso é o `datasus-fetcher` (módulo Rust `_datasus_dbc`): `requires = ["maturin>=1.5,<2.0"]`, `build-backend = "maturin"`, com `[tool.maturin] python-source = "src"` e `module-name` apontando para o módulo nativo (ver `datasus-fetcher/pyproject.toml`).
 - **Tipagem — PEP 561:** um pacote tipado envia um arquivo marcador `py.typed` (vazio) em `src/<pacote>/py.typed` e declara o classifier `Typing :: Typed`. Sem o marcador, consumidores com mypy/pyright não enxergam os tipos. Os dois andam juntos: ou tem ambos, ou nenhum.
 - **`uv.lock` em bibliotecas:** bibliotecas e fetchers **nunca versionam `uv.lock`** no repositório. O lockfile é restrito a aplicações web privadas (como `quantilica-portal`).
 
@@ -76,6 +77,9 @@ analysis = ["quantilica-analytics>=0.2.0"]
 
 Exemplos corretos:
 - **Fetchers** usam a tag `analysis` para dependências analíticas pesadas (como `quantilica-analytics`, `polars` ou `pandas`), já que fetchers são focados primariamente em extração leve. Subcomandos analíticos (como `convert` ou `pipeline`) devem tratar a ausência dessas dependências graciosamente.
+- **Declare `polars` explicitamente no extra `analysis`** sempre que um módulo do pacote importar `polars` diretamente (`import polars` / `from polars import ...` em `reader`, `contracts`, `wrangling` ou equivalentes). Não dependa da transitividade via `quantilica-analytics`: o pin transitivo pode mudar e o pacote quebra fora do workspace. Referência conforme: `cvm-fetcher` declara `"polars>=1.0.0"` ao lado de `"quantilica-analytics>=0.3.0"` no extra `analysis`.
+
+O teste canônico da importabilidade sem o extra e a mensagem de erro exigida para módulos analíticos estão em [Padronização de CLI](cli-fetchers.md#35-comandos-analíticos-e-dependências-opcionais).
 
 ---
 

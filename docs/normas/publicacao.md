@@ -12,7 +12,7 @@ Os pacotes públicos do ecossistema Quantilica seguem **dois fluxos de release d
 | **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli` + **exceção legada transitória**: `sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`¹ | `publish.yml` com Trusted Publishing |
 | **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` (exceto `sidra-fetcher`, no Fluxo A como legado)² | `publish.yml` com GitHub Release + dispatch |
 
-> Fetchers distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages.
+> Fetchers distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` (`quantilica-cli/src/quantilica/cli/sources.py`: `anac`, `anp`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inmet`, `pdet`, `rtn`, `sidra`, `td`, `tse`) — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`).
 >
 > ¹ Legado transitório declarado (ADRs `2026-07-30-distribuicao-fetchers-github-releases` e `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`): permanecem no PyPI por back-compat até migração para o Fluxo B (item do plano; confirmar `publish.yml` dos dois `*-sql` antes de migrar).
 >
@@ -107,7 +107,24 @@ jobs:
         run: uv run --no-sync pytest
 ```
 
-Se o repo tem testes que exigem um extra opcional do próprio pacote, acrescente `--extra <nome>` ao `uv sync` acima (ex.: `anp`/`rtn` usam `--extra analysis`).
+Se o repo tem testes que exigem um extra opcional do próprio pacote, use a variante com `--extra <nome>` no `uv sync`. **Quando usar:** sempre que a suíte importar módulos do extra (ex.: `reader`/`contracts`/`wrangling` que importam `polars` via o extra `analysis`) — sem o extra, esses testes quebram com `ModuleNotFoundError` no CI mesmo passando no workspace. Já adotada em `anac`, `anp`, `cvm`, `inmet`, `rtn`, `pdet` e `datasus` (todos com `--extra analysis`):
+
+```yaml
+      - name: Install dependencies
+        run: |
+          for i in 1 2 3; do
+            if uv sync --group dev --extra analysis --python ${{ matrix.python-version }} \
+                --index https://index.quantilica.com/simple/ \
+                --index-strategy unsafe-best-match; then
+              exit 0
+            fi
+            echo "::warning::uv sync falhou (tentativa $i/3); nova tentativa em 10s"
+            sleep 10
+          done
+          exit 1
+```
+
+(todo o resto do `test.yml` permanece igual, sempre com `uv run --no-sync` — regra 2 acima).
 
 > **Deriva cross-repo:** workflows por pacote não enxergam a quebra de um vizinho (ex.: função removida de `sidra-fetcher` quebrando `sidra-sql` em silêncio por ~1 mês). Para isso existe `integration.yml` em `quantilica-core` (cron diário): monta o uv workspace com todos os members, roda o suite conjunto e veta o vazamento de `workspace = true`.
 
@@ -324,5 +341,5 @@ Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma al
 [ ] git tag vX.Y.Z && git push origin vX.Y.Z
 [ ] verificar: GitHub Release criado com .whl e .tar.gz anexados
 [ ] verificar: quantilica-index atualizado (~1 min após o dispatch)
-[ ] verificar: quantilica install <fonte> em venv limpa
+[ ] verificar: quantilica install <fonte> em venv limpa (<fonte> = chave do SOURCES_REGISTRY)
 ```
