@@ -5,7 +5,7 @@ description: Convenções canônicas para pyproject.toml nos pacotes Quantilica 
 
 # Padronização de `pyproject.toml`
 
-Este documento define as convenções adotadas no `pyproject.toml` dos pacotes Quantilica. Cada pacote é um **repositório git independente**, publicado standalone no PyPI (ver [Publicação e Release](publicacao.md)) — portanto o `pyproject.toml` de cada um é **auto-contido**.
+Este documento define as convenções adotadas no `pyproject.toml` dos pacotes Quantilica. Cada pacote é um **repositório git independente**, distribuído de forma standalone (PyPI ou índice próprio; ver [Publicação e Release](publicacao.md)) — portanto o `pyproject.toml` de cada um é **auto-contido**.
 
 ---
 
@@ -77,7 +77,7 @@ analysis = ["quantilica-analytics>=0.2.0"]
 
 Exemplos corretos:
 - **Fetchers** usam a tag `analysis` para dependências analíticas pesadas (como `quantilica-analytics`, `polars` ou `pandas`), já que fetchers são focados primariamente em extração leve. Subcomandos analíticos (como `convert` ou `pipeline`) devem tratar a ausência dessas dependências graciosamente.
-- **Declare `polars` explicitamente no extra `analysis`** sempre que um módulo do pacote importar `polars` diretamente (`import polars` / `from polars import ...` em `reader`, `contracts`, `wrangling` ou equivalentes). Não dependa da transitividade via `quantilica-analytics`: o pin transitivo pode mudar e o pacote quebra fora do workspace. Referência conforme: `cvm-fetcher` declara `"polars>=1.0.0"` ao lado de `"quantilica-analytics>=0.3.0"` no extra `analysis`.
+- **Declare `polars` explicitamente no extra `analysis`** sempre que um módulo do pacote importar `polars` diretamente (`import polars` / `from polars import ...` em `reader`, `contracts`, `wrangling` ou equivalentes). Não dependa da transitividade via `quantilica-analytics`: o pin transitivo pode mudar e o pacote quebra fora do workspace. Referência conforme: `cvm-fetcher` declara `"polars>=X.Y"` ao lado de `"quantilica-analytics>=X.Y"` no extra `analysis`.
 
 O teste canônico da importabilidade sem o extra e a mensagem de erro exigida para módulos analíticos estão em [Padronização de CLI](cli-fetchers.md#35-comandos-analíticos-e-dependências-opcionais).
 
