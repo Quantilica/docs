@@ -80,8 +80,8 @@ from pathlib import Path
 from tesouro_direto_fetcher import reader
 from tesouro_direto_fetcher.constants import Column as C, BondType
 
-# Ler CSV de preços baixado com `tesouro-direto-fetcher sync --dataset prices`
-prices = reader.read_prices(next(Path("./data").glob("taxas-dos-titulos*.csv")))
+# Ler CSV de preços baixado com `quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto`
+prices = reader.read_prices(next(Path("./data").rglob("taxas-dos-titulos*.csv")))
 
 # Escolher um título: NTN-B (Tesouro IPCA+ com Juros Semestrais) vencendo 2027-05-15
 bond = prices.filter(
@@ -278,26 +278,19 @@ print(f"Mercado espera inflação: {breakeven*100:.1f}%")
 ### Script de Atualização Diária
 
 ```python
-import asyncio
 import polars as pl
 from pathlib import Path
-from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher import reader
 from tesouro_direto_fetcher.constants import Column as C
 
 data_dir = Path("data/treasury")
 data_dir.mkdir(parents=True, exist_ok=True)
 
-# 1. Buscar CSV de preços mais recente (idempotente em Last-Modified)
-asyncio.run(
-    downloader.download(
-        data_dir,
-        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
-        max_concurrency=3,
-    )
-)
+# 1. Buscar CSV de preços mais recente pela CLI (idempotente em Last-Modified):
+#    quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o data/treasury
 
 # 2. Ler CSV mais novo
-latest_csv = max(data_dir.glob("taxas-dos-titulos*.csv"), key=lambda p: p.stat().st_mtime)
+latest_csv = max(data_dir.rglob("taxas-dos-titulos*.csv"), key=lambda p: p.stat().st_mtime)
 prices = reader.read_prices(latest_csv)
 
 # 3. Anexar ao histórico em execução (dedup por reference_date + bond_type + maturity)

@@ -18,20 +18,20 @@ Você trabalha com microdados do SUS — mortalidade (SIM), nascimentos (SINASC)
 ## Por onde começar
 
 1. **5 minutos:** baixe o SIH-RD para SP nos últimos 3 anos via [Quickstart aba Saúde](../quickstart.md).
-2. **15 minutos:** liste todos os 113 datasets do DATASUS com `datasus-fetcher list`. Veja a estrutura antes de comprometer disco.
+2. **15 minutos:** liste todos os 113 datasets do DATASUS com `quantilica datasus list`. Veja a estrutura antes de comprometer disco.
 3. **30 minutos:** combine mortalidade do SIM com população do SIDRA para taxa por 100k habitantes — receita em [Mortalidade infantil × SUS](../cookbook/mortalidade-sus.md).
 
 ### SIH-RD para SP em 3 linhas de CLI
 
 ```bash
 # Listar datasets disponíveis
-datasus-fetcher list
+quantilica datasus list
 
 # Baixar internações hospitalares para SP, 2022–2023
-datasus-fetcher sync sih-rd --regions sp --start 2022-01 --end 2023-12 -o /data/datasus
+quantilica datasus sync sih-rd --regions sp --start 2022-01 --end 2023-12 -o /data/datasus
 
 # Converter .dbc para Parquet (leitura 10× mais rápida)
-datasus-fetcher convert sih-rd -o /data/datasus/parquet
+quantilica datasus convert sih-rd -o /data/datasus/parquet
 ```
 
 ```python
@@ -49,7 +49,7 @@ print(df.shape)  # (linhas, colunas)
 
 - **Filtre cedo.** Use `--regions sp rj mg` e `--start 2020-01 --end 2023-12` antes de qualquer download massivo. 383 GB começam pequenos quando você sabe o recorte.
 - **`.dbc` precisa de leitor próprio.** Use `pyreaddbc` ou converta para Parquet via [`quantilica-analytics`](../fundacoes/quantilica-analytics.md). `pd.read_csv` não abre.
-- **Baixe dicionários junto.** `datasus-fetcher sync --docs` traz os PDFs de descrição dos campos — sem eles, códigos como `RACACOR=4` ou `CAUSABAS=I64` são opacos.
+- **Baixe dicionários junto.** `quantilica datasus sync --docs` traz os PDFs de descrição dos campos — sem eles, códigos como `RACACOR=4` ou `CAUSABAS=I64` são opacos.
 - **Use `--dry-run` antes do download real.** Mostra tamanho total e número de arquivos. Evita surpresa de 50 GB.
 
 ## Caminho de aprofundamento

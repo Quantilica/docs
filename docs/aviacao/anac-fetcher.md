@@ -31,13 +31,13 @@ uv add anac-fetcher --index https://index.quantilica.com/simple/
 
 ```bash
 # Baixar VRA e RAB apenas
-anac-fetcher sync vra rab -o ./dados/anac
+quantilica anac sync vra rab -o ./dados/anac
 
-# Baixar toda infraestrutura de aeródromos de uma vez
-anac-fetcher sync aerodromos
+# Baixar a lista de aeródromos públicos
+quantilica anac sync aero-lista-publicos -o ./dados/anac
 
 # Listar todo o catálogo
-anac-fetcher discover
+quantilica anac list
 ```
 
 ---
@@ -82,7 +82,7 @@ Ao invés de sincronizar bases soltas, o alias `aerodromos` resolve **14 subgrup
 - `aero-pzr` (Planos de Zoneamento de Ruído)
 - `aero-plano-diretor` (Planos Diretores Aeroportuários Aprovados e Validados)
 
-Basta rodar `anac-fetcher sync aerodromos` para ter a radiografia completa da infraestrutura do Brasil.
+Basta rodar `quantilica anac sync aero-lista-publicos` para ter a radiografia completa da infraestrutura do Brasil.
 
 ---
 

@@ -58,7 +58,6 @@ datasus-fetcher        inmet-fetcher              rtn-fetcher            bcb-sgs
 import asyncio
 from sidra_fetcher.fetcher import AsyncSidraClient
 from pathlib import Path
-from pdet_fetcher.fetch import fetch_rais
 from tesouro_direto_fetcher.analytics import calculate_portfolio_monthly_returns
 
 async def multi_source_analysis(my_transactions):
@@ -66,8 +65,8 @@ async def multi_source_analysis(my_transactions):
     async with AsyncSidraClient(timeout=60) as sidra:
         agregado = await sidra.get_agregado(1620)
 
-    # 2. RAIS labor data via FTP (fetch_rais gerencia a conexão internamente)
-    rais = fetch_rais(dest_dir=Path("raw/rais"))
+    # 2. RAIS: baixado antes pela CLI (quantilica pdet sync rais -o raw/rais) e lido de disco
+    rais = Path("raw/rais")
 
     # 3. Tesouro portfolio returns
     returns = calculate_portfolio_monthly_returns(my_transactions)
@@ -128,11 +127,11 @@ with SidraClient(timeout=60) as client:
 
 ```sh
 # Primeira execução: baixa tudo
-datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023
+quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023
 
 # Re-execução após falha parcial: tamanho remoto é comparado ao local;
 # apenas arquivos faltantes ou com mismatch são re-buscados.
-datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023
+quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023
 ```
 
 ### Filosofia de tratamento de erro
@@ -235,7 +234,7 @@ Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se 
 
 ```sh
 # Microdados + livros de códigos + tabelas de referência
-datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
+quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
 Cada `.dbc` baixado é nomeado `dataset_uf_periodo_YYYYMMDD.dbc`, então múltiplas revisões do DATASUS coexistem no disco. `datasus-fetcher archive` move versões antigas para auditoria.

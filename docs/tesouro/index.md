@@ -24,22 +24,22 @@ A planilha RTN apresenta outro desafio: 24 abas mensais/trimestrais/anuais em fo
 
 ### Stack 1 — Exploração (`tesouro-direto-fetcher` SDK + Polars)
 
-Para análise ad-hoc, notebooks Jupyter, modelagem de yield curve, análise de portfólio one-off. Use o downloader assíncrono + readers Polars + analytics direto.
+Para análise ad-hoc, notebooks Jupyter, modelagem de yield curve, análise de portfólio one-off. Use a CLI (`quantilica td sync`) para baixar e os readers Polars + analytics direto.
 
 ```mermaid
 graph LR
-    A[CKAN Tesouro Nacional] --> B[tesouro_direto_fetcher.downloader<br/>async + idempotente]
+    A[CKAN Tesouro Nacional] --> B[quantilica td sync<br/>idempotente via Last-Modified]
     B --> C[CSVs locais]
     C --> D[tesouro_direto_fetcher.reader / analytics<br/>Polars]
 ```
 
 ### Stack 2 — Produção (Pipeline `tesouro-direto-fetcher` + Parquet/PostgreSQL)
 
-Para análise diária recorrente: scheduler chama `tesouro-direto-fetcher sync` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
+Para análise diária recorrente: scheduler chama `quantilica td sync` (idempotente via `Last-Modified`), converte CSVs para Parquet, persiste em PostgreSQL para consumo BI.
 
 ```mermaid
 graph LR
-    A[CKAN Tesouro] --> B[tesouro-direto-fetcher sync<br/>scheduled]
+    A[CKAN Tesouro] --> B[quantilica td sync<br/>scheduled]
     B --> C[CSVs Parquet]
     C --> D[(PostgreSQL)]
     D --> E[Power BI / Metabase]

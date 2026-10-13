@@ -50,11 +50,11 @@ Não há flag `force_refresh` — para re-buscar, delete o arquivo local primeir
 
 ```sh
 # datasus-fetcher compara tamanho remoto vs. local e pula correspondências
-datasus-fetcher sync -o ./data sim-do-cid10 \
+quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 
 # Re-execução após interrupção: arquivos completos são pulados
-datasus-fetcher sync -o ./data sim-do-cid10 \
+quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
@@ -62,16 +62,14 @@ datasus-fetcher sync -o ./data sim-do-cid10 \
 
 ```python
 from pathlib import Path
-from pdet_fetcher import fetch_rais
-
-fetch_rais(dest_dir=Path("./raw"))  # idempotente: pula .7z já presentes
+# Baixe antes pela CLI: quantilica pdet sync rais -o ./raw  (idempotente: pula arquivos já presentes)
 ```
 
 ### Padrão: dry-run antes de bulk downloads
 
 ```sh
 # Visualize o que datasus-fetcher baixaria antes de confirmar
-datasus-fetcher sync -o ./data sim-do-cid10 \
+quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2018 --end 2023 --regions sp \
     --dry-run
 # Imprime nomes de arquivo + tamanhos + total — zero bytes transferidos
@@ -112,7 +110,7 @@ agregados = asyncio.run(fetch_multiple_metadata())
 
 ```sh
 # 5 fetchers FTP concorrentes
-datasus-fetcher sync -o ./data sim-do-cid10 \
+quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2018 --end 2023 \
     --threads 5
 
@@ -141,7 +139,7 @@ fetcher.download_data(
 
 ```bash
 # 1ª execução baixa tudo; execuções posteriores buscam só o que mudou.
-comex-fetcher sync 2014:2023 -o ./DATA
+quantilica comex sync trade-exp trade-imp -o ./DATA
 ```
 
 ```python
@@ -199,7 +197,7 @@ df = pl.read_parquet(
 
 ```bash
 # pdet-fetcher: descompacta cada .7z, faz parse com schema por-ano, escreve Parquet
-pdet-fetcher convert -i ./raw -o ./parquet
+quantilica pdet convert -i ./raw -o ./parquet
 ```
 
 ```python
@@ -290,7 +288,7 @@ by_sector = (
 `datasus-fetcher` retenta cada transferência FTP até 3× em erros transitórios antes de desistir do arquivo — outras threads continuam. Para um batch long-running sobreviver a falhas intermitentes, basta re-executar o comando; a verificação de idempotência por tamanho retoma de onde parou.
 
 ```sh
-datasus-fetcher sync -o ./data sim-do-cid10 \
+quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2023 --end 2023 --threads 5
 ```
 
@@ -495,7 +493,7 @@ parquet_path.with_suffix(".metadata.json").write_text(json.dumps(metadata, inden
 
 ```sh
 # Baixar dados + livros de códigos + tabelas auxiliares juntos
-datasus-fetcher sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
+quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
 Nomes de arquivo `.dbc` codificam `dataset_uf_period_YYYYMMDD`, então múltiplas revisões DATASUS coexistem em disco. `datasus-fetcher archive --archive-data-dir ./archive` rotaciona versões antigas sem perdê-las.

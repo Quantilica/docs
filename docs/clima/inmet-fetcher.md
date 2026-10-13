@@ -34,11 +34,11 @@ uv add inmet-fetcher --index https://index.quantilica.com/simple/
 Use o executor central unificado para extrair os lotes climáticos gigantescos. O comando sincroniza paralelamente os zips do governo:
 
 ```bash
-# Baixa todos os meses de um único ano para todas as 500+ estações
-quantilica inmet sync 2023 -o ./data
+# Baixa o grupo bdmep (dados das estações meteorológicas)
+quantilica inmet sync bdmep -o ./data
 
-# Baixa duas décadas com paralelismo intenso (8 workers)
-quantilica inmet sync 2000:2024 -o ./data --workers 8
+# Todos os grupos, com paralelismo intenso (8 workers)
+quantilica inmet sync -o ./data --workers 8
 ```
 
 ---
@@ -113,10 +113,9 @@ O catálogo impõe e padroniza as 17 medições abaixo em todos os arquivos de s
 Metadados automáticos também apensados na leitura: `regiao`, `uf`, `codigo_wmo`, `latitude`, `longitude`, `altitude`.
 
 ## Uso Isolado (Sem Quantilica)
-A CLI direta está disponível para servidores sem o host Quantilica:
+O binário `inmet-fetcher` funciona sem o host, para servidores que só precisam da coleta:
 ```bash
-inmet-fetcher sync 2023
-inmet-fetcher stations -o ./data --save-as estacoes.csv
+quantilica inmet sync bdmep -o ./data
 ```
 
 ## Saiba Mais

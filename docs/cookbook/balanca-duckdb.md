@@ -25,7 +25,7 @@ uv add comex-fetcher duckdb --index https://index.quantilica.com/simple/
 
 ```bash
 # Importações e exportações dos últimos 5 anos (+ tabelas de códigos)
-comex-fetcher sync 2020:2024 -o ./dados
+quantilica comex sync trade-exp trade-imp -o ./dados
 ```
 
 Você fica com algo como:

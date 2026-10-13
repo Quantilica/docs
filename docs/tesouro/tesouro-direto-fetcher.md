@@ -30,14 +30,15 @@ uv add "tesouro-direto-fetcher[analysis]" --index https://index.quantilica.com/s
 Use o executor unificado da Quantilica para contornar a API CKAN e extrair/converter as vastas bases:
 
 ```bash
-# Inspecionar (dry-run) os datasets de preços sem escrever no disco
-quantilica td sync --dataset prices --dry-run -o ./data
+# Inspecionar (dry-run) o grupo de preços sem escrever no disco
+quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto --dry-run -o ./data
 
-# Pipeline completo: baixar a base de investidores e já convertê-la para
-# arquivos Parquet limpos e serializados
-quantilica td pipeline --dataset investors -o ./data
+# Baixar a base de investidores e converter os CSVs para Parquet
+# (a conversão exige o extra de análise)
+quantilica td sync investidores-do-tesouro-direto -o ./data
+quantilica td convert ./data
 
-# Baixar o universo inteiro (Estoque, Operações, Preços, Investidores, Vendas)
+# Baixar o universo inteiro (todos os grupos)
 quantilica td sync -o ./data
 ```
 
@@ -45,13 +46,13 @@ quantilica td sync -o ./data
 
 ## Datasets Disponíveis (Macro-Grupos)
 
-Os parâmetros `--dataset` mapeiam diretamente para chaves CKAN de infraestrutura gigantesca:
+Os grupos (argumentos posicionais de `quantilica td sync`) correspondem aos recursos do Tesouro Transparente:
 
-- **`prices`** (`taxas-dos-titulos-ofertados-pelo-tesouro-direto`)
-- **`stock`** (`estoque-do-tesouro-direto`)
-- **`investors`** (`investidores-do-tesouro-direto`)
-- **`operations`** (`operacoes-do-tesouro-direto`)
-- **`buybacks`** / **`sales`** (recompras e emissões diretas)
+- **Preços e taxas** (`taxas-dos-titulos-ofertados-pelo-tesouro-direto`)
+- **Estoque** (`estoque-do-tesouro-direto`)
+- **Investidores** (`investidores-do-tesouro-direto`)
+- **Operações** (`operacoes-do-tesouro-direto`)
+- **Resgates** (`resgates-do-tesouro-direto`, inclui recompras) e **Vendas** (`vendas-do-tesouro-direto`)
 
 ## Cookbook Analítico: Plotando a Série de Taxas
 
@@ -64,7 +65,7 @@ from tesouro_direto_fetcher import reader, plot
 from tesouro_direto_fetcher.constants import Column
 
 # 1. Carrega os preços (já corrigindo formatos de data pt-BR sob os panos)
-caminho_csv = list(Path("./data").glob("taxas-dos-titulos*.csv"))[0]
+caminho_csv = list(Path("./data").rglob("taxas-dos-titulos*.csv"))[0]
 df_prices = reader.read_prices(caminho_csv)
 
 # 2. Utiliza o módulo plot nativo do fetcher para exibir o
@@ -95,24 +96,15 @@ plot.plot_investors_population_pyramid(df_investors).display()
 ## Uso Isolado (Sem Ambiente Unificado)
 
 ```bash
-tesouro-direto-fetcher pipeline -o ./data
-tesouro-direto-fetcher sync --dataset prices -o ./data
+quantilica td sync -o ./data
+quantilica td convert ./data
+quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./data
 ```
 
-E para downloads assíncronos diretamente em scripts backend (sem visualização):
+Para baixar sem visualização, em scripts ou cron, use a CLI:
 
-```python
-import asyncio
-from pathlib import Path
-from tesouro_direto_fetcher import downloader
-
-asyncio.run(
-    downloader.download(
-        dest_dir=Path("./data"),
-        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
-        max_concurrency=4,
-    )
-)
+```bash
+quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./data --workers 4
 ```
 
 ## Saiba Mais

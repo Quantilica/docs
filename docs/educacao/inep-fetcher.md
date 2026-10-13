@@ -21,10 +21,10 @@ quantilica install inep
 
 ## Como Usar
 
-Baixando o Censo Escolar para um ano específico:
+Baixando os microdados do ENEM (um grupo do catálogo; `quantilica inep list` mostra todos):
 
 ```bash
-quantilica inep censo-escolar --ano 2022 -o ./data/inep
+quantilica inep sync enem -o ./data/inep
 ```
 
-O download é salvo diretamente em `.parquet`, garantindo compressão e leitura rápida.
+Os arquivos são baixados no formato de origem (ZIP).

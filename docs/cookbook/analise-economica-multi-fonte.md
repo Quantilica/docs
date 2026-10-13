@@ -72,23 +72,15 @@ print(f"IPCA: {len(ipca)} meses")
 ### 2. Buscar yields do Tesouro Direto
 
 ```python
-import asyncio
 from pathlib import Path
-from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher import reader
 
-async def fetch_treasury():
-    await downloader.download(
-        Path("data/tesouro"),
-        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
-        max_concurrency=3,
-    )
-
-asyncio.run(fetch_treasury())
+# Baixe antes pela CLI: quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o data/tesouro
 
 # Ler CSV de preços/taxas em DataFrame Polars tipado
 from tesouro_direto_fetcher.constants import Column as C
 
-prices_csv = next(Path("data/tesouro").glob("taxas-dos-titulos*.csv"))
+prices_csv = next(Path("data/tesouro").rglob("taxas-dos-titulos*.csv"))
 prices = reader.read_prices(prices_csv)
 
 # Yield mensal médio por tipo de título (NTN-B prefixados longos vs LTN)
@@ -117,11 +109,9 @@ print(f"Yields: {len(yields_monthly)} meses")
 
 ```python
 from pathlib import Path
-from pdet_fetcher import fetch_rais, convert_rais
+from pdet_fetcher import convert_rais
 
-# Fetch + convert idempotentes; primeira execução leva tempo, demais são quase instantâneas
-fetch_rais(dest_dir=Path("data/rais/raw"))
-
+# Baixe antes pela CLI: quantilica pdet sync rais -o data/rais/raw
 convert_rais(Path("data/rais/raw"), Path("data/rais/parquet"))
 
 # Salário médio anual (todos os vínculos)
@@ -203,7 +193,7 @@ wages_real.write_parquet("data/wages_real.parquet")
 ## O que esta receita demonstra
 
 - **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`) sem dependências cruzadas, compostos em camada do usuário.
-- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `tesouro_direto_fetcher.downloader` verifica `last_modified` no CKAN, `pdet-fetcher sync` pula `.7z` já baixados.
+- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `quantilica td sync` verifica `last_modified` no CKAN, `quantilica pdet sync` pula `.7z` já baixados.
 - **Performance**: tudo em Polars com lazy evaluation; mesmo cobrindo 14 anos da RAIS (~700M registros), agregações finais rodam em segundos.
 - **Reprodutibilidade**: cada estágio salva um Parquet intermediário, então re-análises não exigem re-fetch.
 

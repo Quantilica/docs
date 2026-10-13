@@ -120,8 +120,8 @@ data/
 Caso você esteja construindo uma pipeline em Docker apenas para baixar saúde, sem depender do `quantilica-cli`, o pacote expõe o executável nativo:
 
 ```bash
-datasus-fetcher sync sim-do-cid10 -o /data --threads 4
-datasus-fetcher list
+quantilica datasus sync sim-do-cid10 -o /data --threads 4
+quantilica datasus list
 datasus-fetcher archive -o /data --archive-data-dir /archive
 ```
 

@@ -92,8 +92,8 @@ print(analise_ti)
 Para ambientes de container minimalistas onde o `quantilica-cli` não está presente, você pode invocar o pacote autônomo diretamente:
 
 ```bash
-pdet-fetcher sync -o ./data
-pdet-fetcher convert -i ./data -o ./parquet
+quantilica pdet sync -o ./data
+quantilica pdet convert -i ./data -o ./parquet
 ```
 
 Você também pode utilizar as rotinas de limpeza via Python, que já corrigem os encondings e os delimitadores defeituosos:

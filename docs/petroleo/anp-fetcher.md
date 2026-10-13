@@ -30,12 +30,12 @@ uv add anp-fetcher --index https://index.quantilica.com/simple/
 ## CLI
 
 ```text
-anp-fetcher <command> [args]
+quantilica anp <command> [args]
 
 Comandos:
   sync [GRUPOS...] [-o DIR] [--dry-run] [--verbose]
         Sincronizar datasets. Sem GRUPOS, baixa todos.
-  discover [--verbose]
+  list
         Listar todos os datasets do catálogo, sem baixar.
 ```
 
@@ -45,16 +45,16 @@ Comandos:
 
 ```bash
 # Baixar todos os grupos
-anp-fetcher sync
+quantilica anp sync
 
 # Dados estatísticos específicos
-anp-fetcher sync ie pp -o ./dados/anp
+quantilica anp sync ie pp -o ./dados/anp
 
 # Todos os grupos de preços de combustíveis (SHPC) de uma vez
-anp-fetcher sync shpc
+quantilica anp sync shpc
 
 # Listar sem baixar
-anp-fetcher sync --dry-run
+quantilica anp sync --dry-run
 ```
 
 ## Fases dos Dados: Abertos vs Estatísticos
@@ -70,7 +70,7 @@ O catálogo unifica duas fontes principais da ANP:
 
 O Sistema de Levantamento de Preços (SHPC) é vasto. Em vez de baixar subgrupos um por um, o `anp-fetcher` oferece o macro-alias `shpc`.
 
-Ao executar `anp-fetcher sync shpc`, o fetcher expande e coleta automaticamente **seis** verticais da base de preços desde 2004:
+Ao executar `quantilica anp sync shpc`, o fetcher expande e coleta automaticamente **seis** verticais da base de preços desde 2004:
 - `shpc-ca`: Combustíveis automotivos (Semestral, 2004–2025)
 - `shpc-glp`: GLP P13 (Semestral, 2004–2025)
 - `shpc-diesel-gnv`: Diesel e GNV (Mensal, 2023–hoje)
@@ -80,7 +80,7 @@ Ao executar `anp-fetcher sync shpc`, o fetcher expande e coleta automaticamente 
 
 ### Cookbook: Lendo o histórico do SHPC em Polars
 
-Uma vez que você baixou toda a base com `anp-fetcher sync shpc`, você terá dezenas de zips e csvs históricos. Para carregar tudo eficientemente:
+Uma vez que você baixou toda a base com `quantilica anp sync shpc`, você terá dezenas de zips e csvs históricos. Para carregar tudo eficientemente:
 
 ```python
 import polars as pl
@@ -145,7 +145,7 @@ gasolina_sp = (
 | `revendedores` / `revendas-glp` | Cadastro de revendedores varejistas |
 | `royalties` | Participações governamentais (royalties, participação especial) |
 
-Execute `anp-fetcher discover` para a lista completa.
+Execute `quantilica anp list` para a lista completa.
 
 ## Saiba Mais
 

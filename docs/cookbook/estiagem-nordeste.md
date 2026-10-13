@@ -24,7 +24,7 @@ uv add inmet-fetcher polars "altair[save]" --index https://index.quantilica.com/
 ### 1. Baixar 30 anos em paralelo
 
 ```bash
-inmet-fetcher sync 1995:2024 -o ./dados --workers 8
+quantilica inmet sync bdmep -o ./dados --workers 8
 ```
 
 O `--workers 8` paraleliza os downloads anuais. Para 30 ZIPs, fica em poucos minutos numa conexão razoável.

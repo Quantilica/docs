@@ -42,7 +42,7 @@ graph LR
 
 | Dimensão | Stack 1 | Stack 2 |
 |---|---|---|
-| Setup | minutos (`pip install`) | ~30 min (PostgreSQL + config) |
+| Setup | minutos (`quantilica install`) | ~30 min (PostgreSQL + config) |
 | Frequência | on-demand | horária / diária / semanal |
 | Escala | uso pessoal, notebooks | multi-usuário, enterprise |
 | Validação | manual | automatizada (constraints) |

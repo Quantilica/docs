@@ -24,7 +24,7 @@ Você acompanha PIB, IPCA, desemprego, juros e câmbio. Tira gráficos para reun
 ### IPCA em 10 linhas
 
 ```python
-from sidra_fetcher import SidraClient
+from sidra_fetcher.fetcher import SidraClient
 from sidra_fetcher.sidra import Parametro, Formato, Precisao
 import polars as pl
 

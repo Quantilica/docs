@@ -34,17 +34,11 @@ from pathlib import Path
 from datetime import date
 import polars as pl
 import altair as alt
-from tesouro_direto_fetcher import downloader, reader
+from tesouro_direto_fetcher import reader
 from tesouro_direto_fetcher.constants import Column as C
 
+# Baixe antes pela CLI: quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./dados
 dest = Path("./dados")
-asyncio.run(
-    downloader.download(
-        dest_dir=dest,
-        dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
-    )
-)
-
 csv = max(dest.rglob("taxas-*.csv"), key=lambda p: p.stat().st_mtime)
 df = reader.read_prices(csv)
 
@@ -73,7 +67,7 @@ chart.save("curva.html")
 
 ## O que está acontecendo
 
-- O `downloader.download` baixa o CSV mais recente de taxas (com timestamp no nome).
+- A CLI (`quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto`) baixa o CSV mais recente de taxas (com timestamp no nome).
 - O `reader.read_prices` já trata `dd/mm/aaaa`, decimal `,` e os nomes pt-BR das colunas.
 - Filtramos uma data-base, agrupamos por `Tipo Titulo` e plotamos `Taxa Compra Manha` por vencimento.
 
