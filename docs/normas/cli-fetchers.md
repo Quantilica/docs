@@ -417,7 +417,7 @@ def cmd_convert(
     except ImportError:
         console.print(
             "[red]Erro:[/red] convert requer extras de análise: "
-            "pip install <pacote-fetcher>[analysis]"
+            "instale o extra com: uv add '<pacote-fetcher>[analysis]' --index https://index.quantilica.com/simple/"
         )
         raise typer.Exit(1) from None
 
@@ -431,7 +431,7 @@ try:
     import polars as pl
 except ImportError as exc:
     raise ImportError(
-        "requer o extra 'analysis': pip install '<pacote-fetcher>[analysis]'"
+        "requer o extra 'analysis': uv add '<pacote-fetcher>[analysis]' --index https://index.quantilica.com/simple/"
     ) from exc
 ```
 
