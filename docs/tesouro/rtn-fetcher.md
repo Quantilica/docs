@@ -33,11 +33,8 @@ uv add rtn-fetcher --index https://index.quantilica.com/simple/
 A forma idomática de varrer os dados fiscais é utilizando o binário host `quantilica`. Ele cuidará de acessar a API APEX do Tesouro, encontrar a URL mais recente (cujo ID muda mensalmente) e converter a planilha para banco de dados ou Parquet:
 
 ```bash
-# Baixar o relatório da série histórica mais recente
-quantilica rtn sync --latest -o ./data
-
-# Pipeline completo: descobre URL, baixa o Excel e gera o banco SQLite estruturado
-quantilica rtn pipeline --format sqlite -o ./data
+# Baixar a série do RTN (relatório mais recente publicado)
+quantilica rtn sync -o ./data
 ```
 
 ---
@@ -56,6 +53,9 @@ O pacote domina as 24 abas mais cruciais de contas públicas do Excel do Tesouro
 | **4.1 a 4.2** | Orçamento Trimestral do Governo Central | Trimestral | Milhões de R$ |
 
 ---
+
+!!! warning "Em revisão"
+    O pipeline para banco SQLite (`quantilica rtn pipeline --format sqlite`) não existe na versão atual do `rtn-fetcher`: o comando disponível é `quantilica rtn sync`. A seção abaixo descreve um fluxo ainda não disponível e está em revisão.
 
 ## Cookbook Analítico: Modelagem Estrela com RTN
 

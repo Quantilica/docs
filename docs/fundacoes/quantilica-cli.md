@@ -64,7 +64,7 @@ Exemplos:
 
 ```bash
 quantilica comex --help
-quantilica comex sync 2023
+quantilica comex sync trade-exp
 quantilica sidra info 1737
 quantilica bcb-sgs series sync 432
 ```

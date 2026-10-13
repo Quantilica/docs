@@ -34,17 +34,17 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 A porta de entrada primária para baixar transações internacionais é o executável `quantilica`. A CLI orquestra automaticamente a validação temporal, os retries e o streaming:
 
 ```bash
-# Baixar exportações e importações completas para 2023 (+ tabelas auxiliares)
-quantilica comex sync 2023 -o ./data
+# Baixar exportações e importações por país e UF (NCM)
+quantilica comex sync trade-exp trade-imp -o ./data
 
-# Baixar apenas as importações (de 2018 até 2023), no nível granular de municípios
-quantilica comex sync 2018:2023 -imp -mun -o ./data
+# Baixar apenas as importações no nível municipal
+quantilica comex sync trade-imp-mun -o ./data
 
-# Longa duração (multi-GB): clonar a base completa (todos os anos) + tabelas de códigos
+# Longa duração (multi-GB): todos os grupos, sem recorte temporal
 quantilica comex sync -o ./data
 
 # Apenas atualizar as tabelas auxiliares
-quantilica comex sync --tables-only -o ./data
+quantilica comex sync auxiliary -o ./data
 ```
 
 ---
@@ -112,8 +112,8 @@ Se a sua conexão cair em 95% do download de um arquivo de 2 GB, o `comex-fetche
 
 Se necessário num container mínimo:
 ```bash
-comex-fetcher sync 2023 -exp -o /data
-comex-fetcher list
+quantilica comex sync trade-exp -o /data
+quantilica comex list
 ```
 
 ## Saiba Mais
