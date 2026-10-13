@@ -25,7 +25,7 @@ apoia em três pilares:
 
 Melhorias de baixo custo e alto impacto na experiência do desenvolvedor, fora da trilha das fases estratégicas:
 
-- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático. *(Parcialmente entregue: o padrão de empacotamento e o processo de release já estão documentados em [Publicação e Release](normas/publicacao.md), com workflows `test.yml`/`publish.yml` em uso nos 7 pacotes do PyPI; falta o repositório-template em si.)*
+- **Template de Projeto (Boilerplate)** — repositório template com `hatchling`, `ruff`, `pytest` e `quantilica-core` pré-configurados, mais GitHub Actions base para teste e lint automático. *(Parcialmente entregue: o padrão de empacotamento e o processo de release já estão documentados em [Publicação e Release](normas/publicacao.md), com workflows `test.yml`/`publish.yml` em uso nos pacotes publicáveis (Fluxo A para `quantilica-core` e `quantilica-cli`; Fluxo B para os demais); falta o repositório-template em si.)*
 
 ## Roadmap de Execução Detalhado
 
@@ -83,4 +83,4 @@ Transformar a Quantilica em referência para a comunidade analítica brasileira 
 *   **GitHub Sponsors / Open Collective:** sustentabilidade e transparência financeira para os custos de infraestrutura.
 
 ---
-*Atualizado em: 28 de setembro de 2026*
+*Atualizado em: 13 de outubro de 2026*
