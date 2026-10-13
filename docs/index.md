@@ -74,6 +74,8 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
 | **[inep-fetcher](educacao/inep-fetcher.md)** | Conversão robusta de bases educacionais (39 GB) para Parquet tipado |
 | **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo e conversão da base inteira de CNPJs (245 GB) |
+| **[cvm-fetcher](mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
+| **[tse-fetcher](politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-cli](fundacoes/quantilica-cli.md)** | O ponto de entrada único: `quantilica <fonte>` com instalação sob demanda |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
@@ -104,7 +106,9 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | Cruzar múltiplos domínios | [Cookbook](cookbook/index.md) |
 | Aviação civil e aeródromos | [Aviação Civil](aviacao/index.md) |
 | Preços de combustíveis e exploração | [Petróleo e Gás](petroleo/index.md) |
-| Dados educacionais (ENEM, Censo) | [Educação](educacao/index.md) |
+| Dados educacionais (ENEM, SAEB, ENADE) | [Educação](educacao/index.md) |
+| Mercado de capitais (companhias, fundos, ofertas) | [Mercado de Capitais](mercado-capitais/index.md) |
+| Eleições: candidaturas, bens e votação | [Política (TSE)](politica/index.md) |
 | Análise de CNPJs e quadros societários | [Empresas](empresas/index.md) |
 
 ---

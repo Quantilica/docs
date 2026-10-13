@@ -11,7 +11,7 @@ Como o Ecossistema Quantilica é organizado e como as partes se conectam. Esta p
 
 ```mermaid
 graph TD
-    Sources["Fontes de Dados Governamentais<br/>(IBGE, Tesouro, BCB, Trabalho, Saúde, Receita Federal, Educação, Aviação, etc)"]
+    Sources["Fontes de Dados Governamentais<br/>(IBGE, Tesouro, BCB, Trabalho, Saúde, Receita Federal, Educação, Aviação, CVM, TSE, etc)"]
 
     Sources -->|IBGE SIDRA| SF["sidra-fetcher"]
     Sources -->|IBGE SIDRA| SQL["sidra-sql"]
@@ -27,6 +27,8 @@ graph TD
     Sources -->|INEP| INEP["inep-fetcher"]
     Sources -->|ANP| ANP["anp-fetcher"]
     Sources -->|ANAC| ANAC["anac-fetcher"]
+    Sources -->|CVM| CVM["cvm-fetcher"]
+    Sources -->|TSE ODSele| TSE["tse-fetcher"]
 
     SP["sidra-pipelines<br/>catálogo declarativo"] --> SQL
     BP["bcb-sgs-pipelines<br/>catálogo declarativo"] --> BCBSQL
@@ -137,7 +139,7 @@ A camada de armazenamento foi desenhada para ser estritamente **agnóstica** —
 Para o usuário não lidar com 14 binários independentes, adotamos a estratégia de Hub Híbrido:
 
 ### CLI Nativa Autônoma
-Cada fetcher carrega um `cli.py` utilizando puro `argparse`. Isso garante que bibliotecas pesadas (como o Typer) não sujem os pipelines rodando em containers Docker minimais em produção.
+Cada fetcher expõe um `cli.py` que é um wrapper fino sobre o `plugin.py` (padrão em [Padronização de CLI](../normas/cli-fetchers.md)); só o `sidra-fetcher` mantém CLI própria em `argparse`. O import do host é protegido, então um ambiente sem `quantilica-cli` falha com a instrução `quantilica install <fonte>`.
 
 ### Hub Plugin Central
 Para exploração diária, todos os fetchers expõem uma ponte (entry point) Typer rica e em cores para o host `quantilica-cli` (como demonstrado extensivamente em toda a documentação, nos chamados "Uso com Ambiente Unificado").

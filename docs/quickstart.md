@@ -69,20 +69,13 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
     ```
 
     ```python
-    import asyncio
     from pathlib import Path
-    from tesouro_direto_fetcher import downloader, reader, plot
+    from tesouro_direto_fetcher import reader, plot
 
+    # Baixe antes pela CLI: quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./dados
     dest = Path("./dados")
 
-    asyncio.run(
-        downloader.download(
-            dest_dir=dest,
-            dataset_id="taxas-dos-titulos-ofertados-pelo-tesouro-direto",
-        )
-    )
-
-    csv = next(dest.glob("taxas-*.csv"))
+    csv = next(dest.rglob("taxas-*.csv"))
     df = reader.read_prices(csv)
 
     chart = plot.plot_prices(df, bond_type="Tesouro Selic", variable="buy_yield")
@@ -105,7 +98,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
     ```
 
     ```bash
-    datasus-fetcher sync sih-rd \
+    quantilica datasus sync sih-rd \
         -o ./dados \
         --start 2022-01 \
         --end 2024-12 \
@@ -131,7 +124,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
     ```
 
     ```bash
-    inmet-fetcher sync 2020:2024 -o ./dados --workers 4
+    quantilica inmet sync -o ./dados --workers 4
     inmet-fetcher read -o ./dados --uf SP,RJ --save-as sudeste.parquet
     ```
 
@@ -170,7 +163,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
 ## Outras fontes
 
-Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) e empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
+Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)), mercado de capitais ([CVM](mercado-capitais/cvm-fetcher.md)) e eleições ([TSE](politica/tse-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
 
 ---
 

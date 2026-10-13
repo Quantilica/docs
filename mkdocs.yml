@@ -111,6 +111,12 @@ nav:
       - Empresas (Receita Federal):
           - empresas/index.md
           - rfb-cnpj-fetcher: empresas/rfb-cnpj-fetcher.md
+      - Mercado de Capitais (CVM):
+          - mercado-capitais/index.md
+          - cvm-fetcher: mercado-capitais/cvm-fetcher.md
+      - Política (TSE):
+          - politica/index.md
+          - tse-fetcher: politica/tse-fetcher.md
 
   - Cookbook:
       - cookbook/index.md
