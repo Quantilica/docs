@@ -7,13 +7,17 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
-## 2026-09 — Sete pacotes no PyPI e quatro fetchers novos documentados
+## 2026-10 — Fluxo B para os fetchers, CVM e TSE documentados
 
-Versões no PyPI em 2026-09-28: `quantilica-core` 0.7.1, `quantilica-cli` 0.3.2,
-`sidra-fetcher` 0.10.3, `sidra-sql` 2.0.0, `datasus-fetcher` 0.7.0,
-`bcb-sgs-fetcher` 0.5.0, `bcb-sgs-sql` 0.2.1. (Confira o vigente no
-[PyPI](https://pypi.org/) ou nos `CHANGELOG.md` de cada repo; `quantilica-analytics` e
-`quantilica-catalog` seguem distribuídos pelo índice próprio — Fluxo B.)
+- **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
+- **Novos domínios documentados:** [Mercado de Capitais](mercado-capitais/index.md) (CVM) e [Política](politica/index.md) (TSE).
+- **Comandos corrigidos:** as páginas de fonte passam a usar `quantilica <fonte>` com os nomes reais de grupo. Removidos argumentos por ano e flags que não existem (`--dataset`, `discover`, `pipeline` onde o comando não existe).
+- **`check` obrigatório:** cada fetcher expõe `check`, separado de `sync`, para comparar o remoto com o local sem baixar.
+- **Em revisão:** o pipeline SQLite do `rtn-fetcher` descrito nesta documentação não existe na versão atual. A seção está marcada como em revisão.
+
+## 2026-09 — Publicação no PyPI e quatro fetchers novos documentados
+
+Sete pacotes foram publicados no PyPI nesta fase. A versão vigente de cada um está no [PyPI](https://pypi.org/) ou no `CHANGELOG.md` do repositório. Desde 2026-10, só `quantilica-core` e `quantilica-cli` seguem no PyPI (ver a entrada de 2026-10).
 
 - **Novos domínios documentados:** `anac-fetcher` (aviação civil),
   `anp-fetcher` (petróleo, gás e biocombustíveis), `inep-fetcher` (educação) e

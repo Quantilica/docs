@@ -1,6 +1,6 @@
 ---
 title: Status das fontes públicas brasileiras
-description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET, BCB, INEP, RFB, ANAC, ANP.
+description: Estado de saúde conhecido das fontes oficiais que a Quantilica consome — IBGE, DATASUS, Tesouro, INMET, Comex, PDET, BCB, INEP, RFB, ANAC, ANP, CVM e TSE.
 ---
 
 # Status das fontes oficiais
@@ -30,6 +30,8 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 | **RFB CNPJ** (`gov.br/receitafederal`) | ✅ estável | 2026-09-28 | Base completa (~245 GB) atualizada mensalmente (portal responde 200) |
 | **ANAC** (`gov.br/anac`) | ✅ estável | 2026-09-28 | Arquivos estáticos; schema razoavelmente consistente (portal responde 200) |
 | **ANP** (`gov.br/anp`) | ✅ estável | 2026-09-28 | Arquivos estáticos; atualizados periodicamente (portal responde 200) |
+| **CVM Dados Abertos** (`dados.cvm.gov.br`) | ✅ estável | 2026-10-13 | Diretório de dados responde 200; cada grupo é um conjunto de CSV/ZIP |
+| **TSE ODSele** (`cdn.tse.jus.br`) | ⚠️ não confirmado | 2026-10-13 | Listagem do diretório respondeu 403 na verificação; pode ser bloqueio a clientes sem navegador. Revalidar antes de tratar como indisponível |
 
 **Legenda:**
 - ✅ **Estável** — funciona sem intervenção; eventuais 502 curtos são normais.
@@ -61,4 +63,4 @@ Encontrou uma fonte fora do ar que esta página marca como estável (ou o contr�
 
 ---
 
-*Última revisão editorial desta página: 2026-09-28 (verificação ao vivo parcial via HTTP/FTP; linhas não re-verificadas mantêm a data anterior). Cadência pretendida: revisão mensal. Divergências, reporte como descrito acima.*
+*Última revisão editorial desta página: 2026-10-13 (verificação ao vivo parcial via HTTP/FTP; linhas não re-verificadas mantêm a data anterior). Cadência pretendida: revisão mensal. Divergências, reporte como descrito acima.*
