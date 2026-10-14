@@ -41,4 +41,4 @@ quantilica tse sync candidatos votacao --years 2022 -o ./data/tse
 quantilica tse sync prestacao_contas --years 2020:2024 -o ./data/tse
 ```
 
-Sem `--years` nem nomes de dataset, `sync` baixa todos os datasets de todos os anos. O padrão de saída é `/data/tse`.
+Sem `--years`, o `sync` baixa apenas o intervalo padrão 2018–2026, mesmo para datasets que começam antes (por exemplo, `--years 1994:2026` para o histórico completo de candidatos). Sem nomes de dataset, baixa todos eles. O padrão de saída é `/data/tse`.

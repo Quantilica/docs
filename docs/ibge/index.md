@@ -13,7 +13,7 @@ SIDRA é a fonte mais rica do Brasil, mas consumi-la em escala enfrenta três ob
 
 - **Instabilidade de rede** — servidores governamentais sofrem rate limiting e downtime; HTTP 429/500 são frequentes; timeouts exigem backoff.
 - **Complexidade paramétrica** — a API usa URLs crípticas, codificadas por prefixos de letra (`/t/1620/n1/all/v/116/p/all/d/m`); construção manual é frágil.
-- **Escala** — 30 000+ tabelas; algumas séries cobrem 50+ anos com granularidade mensal/diária; classificações aninhadas; documentação espalhada em português.
+- **Escala** — mais de 9 mil tabelas (agregados); algumas séries cobrem 50+ anos com granularidade mensal/diária; classificações aninhadas; documentação espalhada em português.
 
 ## Dois stacks: Exploração vs. Produção
 

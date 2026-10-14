@@ -51,7 +51,7 @@ quantilica anp sync
 quantilica anp sync ie pp -o ./dados/anp
 
 # Todos os grupos de preços de combustíveis (SHPC) de uma vez
-quantilica anp sync shpc
+quantilica anp sync shpc-ca shpc-glp shpc-diesel-gnv shpc-gasolina-etanol shpc-glp-mensal shpc-4s
 
 # Listar sem baixar
 quantilica anp sync --dry-run
@@ -62,15 +62,15 @@ quantilica anp sync --dry-run
 O catálogo unifica duas fontes principais da ANP:
 
 1. **Dados Estatísticos (Fase 1):** Consolidados em planilhas (`XLS/XLSX`). Trazem totalizadores agregados (ex: `ie` para Importações/Exportações, `pp` para Processamento). Útil para visões macro e anuários.
-2. **Dados Abertos (Fases 2 e 3a):** Microdados granulares (geralmente em `.csv` ou `.zip`). Trazem os registros linha a linha (ex: vendas por município, preços por posto). Essencial para modelos de machine learning e painéis interativos.
+2. **Dados Abertos:** Microdados granulares (geralmente em `.csv` ou `.zip`). Trazem os registros linha a linha (ex: vendas por município, preços por posto). Essencial para modelos de machine learning e painéis interativos.
 
 ---
 
-## O Macro-Alias `shpc` (Preços de Combustíveis)
+## Preços de Combustíveis (`shpc-*`)
 
-O Sistema de Levantamento de Preços (SHPC) é vasto. Em vez de baixar subgrupos um por um, o `anp-fetcher` oferece o macro-alias `shpc`.
+O Sistema de Levantamento de Preços (SHPC) é vasto e se divide em seis grupos. Não existe um macro-alias `shpc`: informe os grupos que precisar. O alias `precos-combustiveis` cobre apenas o `shpc-ca`.
 
-Ao executar `quantilica anp sync shpc`, o fetcher expande e coleta automaticamente **seis** verticais da base de preços desde 2004:
+Os seis grupos da base de preços, desde 2004:
 - `shpc-ca`: Combustíveis automotivos (Semestral, 2004–2025)
 - `shpc-glp`: GLP P13 (Semestral, 2004–2025)
 - `shpc-diesel-gnv`: Diesel e GNV (Mensal, 2023–hoje)
@@ -80,7 +80,7 @@ Ao executar `quantilica anp sync shpc`, o fetcher expande e coleta automaticamen
 
 ### Cookbook: Lendo o histórico do SHPC em Polars
 
-Uma vez que você baixou toda a base com `quantilica anp sync shpc`, você terá dezenas de zips e csvs históricos. Para carregar tudo eficientemente:
+Uma vez que você baixou os grupos `shpc-*`, você terá dezenas de zips e csvs históricos. Para carregar tudo eficientemente:
 
 ```python
 import polars as pl
@@ -88,6 +88,7 @@ from pathlib import Path
 
 # Como a ANP altera encodings e separadores, uma leitura unificada
 # robusta em LazyFrames usa inferência agressiva e preenchimento de nulos.
+# (arquivos antigos do `shpc-ca` vêm em .zip e ficam fora deste glob)
 df_lazy = pl.scan_csv(
     "data/anp/shpc-*/*.csv",
     separator=";",

@@ -1,6 +1,6 @@
 ---
 title: inmet-fetcher — Dados meteorológicos do BDMEP/INMET
-description: Baixa o BDMEP em paralelo, trata encoding latin-1, limpa cabeçalhos inconsistentes e exporta Parquet com colunas em snake_case e datetime nativo.
+description: Baixa o BDMEP em paralelo, trata encoding latin-1, descarta o bloco de metadados do cabeçalho e exporta Parquet com colunas em snake_case e datetime nativo.
 ---
 
 # Clima e Ambiente (INMET)
@@ -11,9 +11,9 @@ O **inmet-fetcher** domina a rede nacional de dados meteorológicos históricos 
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **Encoding caótico (`latin-1`).** Os ZIPs anuais vêm comprimidos e codificados em latin-1 (muitas vezes com *Byte Order Mark* intermitente). O módulo de leitura já engole essas falhas nativamente.
-    - **Header não é estável no tempo.** Várias estações (especialmente as mais antigas) possuem 8, 9 ou 10 linhas extras de metadados inúteis de texto livre *antes* do cabeçalho tabular, inclusive invertendo vírgula por ponto-e-vírgula em algumas eras. O fetcher auto-detecta a linha real de colunas.
-    - **A praga do `-9999`.** O INMET usa `-9999` magicamente no lugar de NULL para indicar ausência de leitura do sensor. **Perigo:** se não filtrado, a média da sua temperatura cairá para graus negativos absolutos. A biblioteca conserta isso mapeando nativamente para o `null` do Polars/Pandas na leitura.
+    - **Encoding caótico (`latin-1`).** Os ZIPs anuais vêm comprimidos e codificados em latin-1 O módulo de leitura decodifica em latin-1; não há tratamento explícito de *Byte Order Mark*.
+    - **Cabeçalho com metadados.** Cada arquivo traz um bloco de metadados da estação (região, UF, código WMO, latitude, longitude, altitude e data de fundação) antes da tabela. O leitor descarta 8 linhas fixas (`skip_rows=8`) antes do cabeçalho tabular; um arquivo com outro número de linhas de metadados não é tratado.
+    - **A praga do `-9999`.** O INMET usa `-9999` magicamente no lugar de NULL para indicar ausência de leitura do sensor. **Perigo:** se não filtrado, a média da sua temperatura cairá para graus negativos absolutos. A biblioteca conserta isso mapeando para o `null` do Polars na leitura.
     - **Time Series Separadas.** As colunas `data` e `hora` vêm cindidas e formatadas irregularmente. O código combina ambas num `datetime` nativo contínuo, salvando você de manipulações tediosas.
     - **Gap de Automação.** Há um abismo tecnológico: estacões convencionais (leitura humana rara) e estacões automáticas (códigos WMO `A###` com leituras horárias contínuas). Não interpole ambas as naturezas sem reamostragem cuidadosa.
 
@@ -106,16 +106,18 @@ O catálogo impõe e padroniza as 17 medições abaixo em todos os arquivos de s
 - `pressao_atmosferica` (mB), `pressao_atmosferica_maxima` / `_minima`
 - `radiacao` (kJ/m²)
 - `temperatura_ar` (°C), `temperatura_maxima` / `_minima`
-- `temperatura_orvalho` (°C)
-- `umidade_relativa` (%)
+- `temperatura_orvalho` (°C), `temperatura_orvalho_maxima` / `_minima`
+- `umidade_relativa` (%), `umidade_relativa_maxima` / `_minima`
 - `vento_velocidade` (m/s), `vento_rajada`, `vento_direcao`
 
 Metadados automáticos também apensados na leitura: `regiao`, `uf`, `codigo_wmo`, `latitude`, `longitude`, `altitude`.
 
-## Uso Isolado (Sem Quantilica)
-O binário `inmet-fetcher` funciona sem o host, para servidores que só precisam da coleta:
+## Binário `inmet-fetcher`
+
+O pacote também instala o comando `inmet-fetcher`, equivalente a `quantilica inmet`. Ele não dispensa o host: depende do `quantilica-cli` e, sem ele, imprime `Instale via "quantilica install inmet"` e sai com código 1.
+
 ```bash
-quantilica inmet sync bdmep -o ./data
+inmet-fetcher sync bdmep -o ./data
 ```
 
 ## Saiba Mais

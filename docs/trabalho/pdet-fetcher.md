@@ -1,6 +1,6 @@
 ---
 title: pdet-fetcher — Microdados RAIS e CAGED
-description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mensais) do PDET. 59+ GB de histórico laboral brasileiro.
+description: Baixa e converte microdados RAIS (censo anual) e CAGED (fluxos mensais) do PDET. Mais de 60 GB de histórico laboral brasileiro.
 ---
 
 # Mercado de Trabalho Brasileiro (PDET)
@@ -14,8 +14,7 @@ Cobre a **RAIS** (censo anual de emprego) e o **CAGED** (fluxos mensais de empre
     - **CAGED mudou em 2020.** Schema, separadores e colunas variam drasticamente entre o legado (`caged`) e o atual (`caged-2020`).
     - **CSVs são irregulares ("ragged").** Linhas com número variável de colunas, delimitador `;` falho, encoding `latin-1` mesclado com lixo invisível. O `read_csv` nativo do Pandas falhará silenciosamente ou quebrará. O fetcher possui tratativas robustas para varrer as impurezas.
     - **Formato `.7z` é nativo.** Os arquivos vêm em 7-Zip. Você *precisa* do binário `7z` instalado no sistema (`apt-get install p7zip-full` ou `brew install p7zip`), caso contrário as funções de conversão quebrarão com erro de subprocesso.
-    - **Volumes Inviáveis em RAM.** Um único ano da RAIS pode ter mais de 50 milhões de vínculos (~5 GB descomprimido). **Nunca carregue tudo em memória** usando `pd.read_csv()`. Sempre converta para Parquet e use LazyFrames.
-    - **Nulos como valores extremos.** O valor `-9999` frequentemente representa `NULL` em variáveis contínuas.
+    - **Volumes Inviáveis em RAM.** Um único ano da RAIS tem dezenas de milhões de vínculos, e o arquivo compactado de 2023 no FTP já passa de 3 GB. **Nunca carregue tudo em memória** usando `pd.read_csv()`. Sempre converta para Parquet e use LazyFrames.
 
 ## Instalação
 
@@ -67,18 +66,19 @@ A melhor maneira de analisar fluxos de trabalho é usar a API Lazy do Polars (ou
 ```python
 import polars as pl
 
-# Mapeia todos os anos dos vínculos da RAIS (ex: mais de 2 bilhões de linhas ao todo)
-df_rais = pl.scan_parquet("parquet/rais_vinculos_*.parquet")
+# Mapeia todos os anos dos vínculos da RAIS (ex: todos os anos disponíveis)
+df_rais = pl.scan_parquet("parquet/rais-vinculos/rais-vinculos_*.parquet", include_file_paths="arquivo")
 
-# Qual foi o salário médio por gênero (coluna 'sexo_trabalhador') no setor
+# Qual foi o salário médio por gênero (coluna 'sexo') no setor
 # de Tecnologia da Informação (CNAE 6204-0)?
 analise_ti = (
     df_rais
-    .filter(pl.col("cnae_20_classe") == "62040") # Filtro executado direto no disco!
-    .group_by(["ano", "sexo_trabalhador"])
+    .filter(pl.col("cnae_2_subclasse").cast(pl.String).str.starts_with("62040")) # Filtro executado direto no disco!
+    .with_columns(pl.col("arquivo").str.extract(r"_(\d{4})@", 1).alias("ano"))  # o ano está no nome do arquivo
+    .group_by(["ano", "sexo"])
     .agg(
-        pl.col("vl_remun_media_nom").mean().alias("salario_medio"),
-        pl.count().alias("total_trabalhadores")
+        pl.col("valor_remuneracao_media").mean().alias("salario_medio"),
+        pl.len().alias("total_trabalhadores")
     )
     .sort(["ano", "sexo_trabalhador"])
     .collect() # O processamento massivo só ocorre aqui
@@ -87,13 +87,13 @@ analise_ti = (
 print(analise_ti)
 ```
 
-## Uso sem o Ambiente Unificado (Isolado)
+## Binário `pdet-fetcher`
 
-Para ambientes de container minimalistas onde o `quantilica-cli` não está presente, você pode invocar o pacote autônomo diretamente:
+O pacote também instala o comando `pdet-fetcher`, equivalente a `quantilica pdet`. Ele não dispensa o host: depende do `quantilica-cli` e, sem ele, imprime `Instale via "quantilica install pdet"` e sai com código 1.
 
 ```bash
-quantilica pdet sync -o ./data
-quantilica pdet convert -i ./data -o ./parquet
+pdet-fetcher sync -o ./data
+pdet-fetcher convert -i ./data -o ./parquet
 ```
 
 Você também pode utilizar as rotinas de limpeza via Python, que já corrigem os encondings e os delimitadores defeituosos:
@@ -102,7 +102,7 @@ Você também pode utilizar as rotinas de limpeza via Python, que já corrigem o
 from pathlib import Path
 from pdet_fetcher.reader import read_rais, read_caged
 
-# Isso aplicará auto-detect de schema, truncamento de colunas extra, e conversão de 0/1 para Boolean.
+# Isso aplicará o mapeamento de colunas do ano, a detecção do separador e a conversão de 0/1 para Boolean.
 df_vinculos = read_rais(Path("data/rais_2023_vinculos.csv"), year=2023, dataset="vinculos")
 df_mov_caged = read_caged(Path("data/cagedmov_202401.csv"), date=202401, dataset="caged-2020-mov")
 ```
