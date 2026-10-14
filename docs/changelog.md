@@ -12,7 +12,7 @@ Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio
 - **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
 - **Novos domínios documentados:** [Mercado de Capitais](mercado-capitais/index.md) (CVM) e [Política](politica/index.md) (TSE).
 - **Comandos corrigidos:** as páginas de fonte passam a usar `quantilica <fonte>` com os nomes reais de grupo. Removidos argumentos por ano e flags que não existem (`--dataset`, `discover`, `pipeline` onde o comando não existe).
-- **`check` obrigatório:** cada fetcher expõe `check`, separado de `sync`, para comparar o remoto com o local sem baixar.
+- **`check` separado de `sync`:** os fetchers baseados em `FetcherApp` e o `sidra-fetcher` expõem `check`, que compara o remoto com o local sem baixar. O `bcb-sgs-fetcher` ainda não tem esse comando.
 - **Em revisão:** o pipeline SQLite do `rtn-fetcher` descrito nesta documentação não existe na versão atual. A seção está marcada como em revisão.
 
 ## 2026-09 — Publicação no PyPI e quatro fetchers novos documentados
@@ -30,7 +30,7 @@ Sete pacotes foram publicados no PyPI nesta fase. A versão vigente de cada um e
   todos os passos pós-sync com `uv run --no-sync`, `workflow_dispatch`, e
   `integration.yml` anti-deriva cross-repo em `quantilica-core` — ver
   [Publicação e Release](normas/publicacao.md).
-- **Padrão `FetcherApp` adotado em todo o ecossistema** (ver
+- **Padrão `FetcherApp` adotado nos fetchers de download** (exceto `sidra-fetcher` e `bcb-sgs-fetcher`, que mantêm CLI própria; ver
   [Padronização de CLI](normas/cli-fetchers.md)) e dependências analíticas
   opcionais padronizadas para fetchers.
 

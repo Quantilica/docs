@@ -17,19 +17,19 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 
 | Fonte | Status atual | Última verificação | Observações |
 |---|---|---|---|
-| **IBGE SIDRA** (`apisidra.ibge.gov.br`) | ✅ estável | 2026-05-17 | Rate limit não documentado; preferir horário não-comercial |
-| **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-05-17 | Janelas curtas de 502 em manutenção |
-| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-09-28 | Cai frequentemente em horário comercial; reduzir `--threads` (FTP alcançável na verificação) |
-| **Tesouro Transparente CKAN** | ✅ estável | 2026-09-28 | Dataset com timestamp no nome (API `package_list` responde 200) |
-| **INMET BDMEP** | ✅ estável | 2026-05-17 | ZIPs por ano; latin-1; valores `-9999` |
-| **Siscomex** (Comex) | ⚠️ instável | 2026-05-17 | SSL ruim em janelas curtas; arquivos GB |
-| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-05-17 | Cai com frequência; CAGED schema diferente em 2020+ |
-| **Tesouro Nacional RTN** | ✅ estável | 2026-05-17 | Excel multi-aba publicado mensalmente |
-| **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-09-28 | API JSON de valores estável (200); metadados só via scraping HTML sequencial (não paralelizável); séries diárias truncadas (varredura ano a ano) |
-| **INEP** (`download.inep.gov.br`) | ✅ estável | 2026-08-09 | Arquivos muito grandes, preferir download particionado |
-| **RFB CNPJ** (`gov.br/receitafederal`) | ✅ estável | 2026-09-28 | Base completa (~245 GB) atualizada mensalmente (portal responde 200) |
-| **ANAC** (`gov.br/anac`) | ✅ estável | 2026-09-28 | Arquivos estáticos; schema razoavelmente consistente (portal responde 200) |
-| **ANP** (`gov.br/anp`) | ✅ estável | 2026-09-28 | Arquivos estáticos; atualizados periodicamente (portal responde 200) |
+| **IBGE SIDRA** (`apisidra.ibge.gov.br`) | ✅ estável | 2026-10-13 | Rate limit não documentado; preferir horário não-comercial |
+| **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-10-13 | Janelas curtas de 502 em manutenção |
+| **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-10-13 | Cai frequentemente em horário comercial; reduzir `--threads` (FTP alcançável na verificação) |
+| **Tesouro Transparente CKAN** | ✅ estável | 2026-10-13 | Dataset com timestamp no nome (API `package_list` responde 200) |
+| **INMET BDMEP** | ✅ estável | 2026-10-13 | ZIPs por ano; latin-1; valores `-9999` |
+| **Siscomex** (Comex) | ⚠️ instável | 2026-10-13 | Falha de verificação do certificado SSL na verificação (`balanca.economia.gov.br`); arquivos GB |
+| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-10-13 | Cai com frequência (FTP alcançável na verificação); CAGED schema diferente em 2020+ |
+| **Tesouro Nacional RTN** | ✅ estável | 2026-10-13 | Excel multi-aba publicado mensalmente |
+| **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-10-13 | API JSON de valores estável (200); metadados só via scraping HTML (a árvore de grupos é sequencial; a coleta em lote dos metadados aceita `--workers`); séries diárias truncadas (varredura ano a ano) |
+| **INEP** (`download.inep.gov.br`) | ⚠️ não confirmado | 2026-10-13 | Conexão reiniciada pelo servidor na verificação (e falha de handshake TLS com `urllib`). Arquivos muito grandes, preferir download particionado. Revalidar antes de tratar como indisponível |
+| **RFB CNPJ** (`arquivos.receitafederal.gov.br`) | ⚠️ não confirmado | 2026-10-13 | Timeout de leitura no host de arquivos na verificação. Base completa (~245 GB) atualizada mensalmente. Revalidar antes de tratar como indisponível |
+| **ANAC** (`sistemas.anac.gov.br`) | ✅ estável | 2026-10-13 | Arquivos estáticos; schema razoavelmente consistente (arquivo do catálogo responde 200) |
+| **ANP** (`gov.br/anp`) | ✅ estável | 2026-10-13 | Arquivos estáticos; atualizados periodicamente (arquivo do catálogo responde) |
 | **CVM Dados Abertos** (`dados.cvm.gov.br`) | ✅ estável | 2026-10-13 | Diretório de dados responde 200; cada grupo é um conjunto de CSV/ZIP |
 | **TSE ODSele** (`cdn.tse.jus.br`) | ⚠️ não confirmado | 2026-10-13 | Listagem do diretório respondeu 403 na verificação; pode ser bloqueio a clientes sem navegador. Revalidar antes de tratar como indisponível |
 
