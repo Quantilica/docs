@@ -11,7 +11,7 @@ description: 20 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, PEVS, PN
 
     - **IDs de tabela SIDRA mudam.** Quando o IBGE descontinua uma tabela e publica outra equivalente, o pipeline quebra silenciosamente com `404`. Os pipelines do catálogo são versionados — atualize com `sidra-sql plugin update std`.
     - **Wide format ≠ long format.** Os pipelines pivotam variáveis para colunas (`valor`, `ano`, `id_municipio`, `variavel`, `unidade`). Se você esperava long format puro, transforme com `UNPIVOT` ou Polars.
-    - **Primeiras execuções são longas.** Censo, PAM municipal, PPM rebanhos têm milhões de linhas. Use `--start-period` / `--end-period` no `fetch.toml` para começar pequeno.
+    - **Primeiras execuções são longas.** Censo, PAM municipal, PPM rebanhos têm milhões de linhas. Para começar pequeno, rode um pipeline por vez e limite `territories` e `classifications` no `fetch.toml`; não há filtro de período.
     - **Pipelines de agropecuária têm sazonalidade IBGE.** PAM publica entre setembro e dezembro do ano seguinte; PPM entre outubro e janeiro. Rodar fora dessa janela retorna o ano anterior.
 
 ## O Que É
@@ -101,8 +101,6 @@ host          = localhost
 port          = 5432
 dbname        = dados
 schema        = ibge_sidra
-tablespace    = pg_default
-readonly_role = readonly_role
 ```
 
 ### 3. Instalar Este Catálogo
@@ -140,9 +138,9 @@ sidra-sql run std pib_municipal
 SELECT
     ano,
     id_municipio,
-    variavel,
-    unidade,
-    valor
+    nome_municipio,
+    pib,
+    vab_total
 FROM analytics.pib_municipal
 WHERE ano >= 2020
 ORDER BY id_municipio, ano DESC;
@@ -159,7 +157,7 @@ done
 
 ## Estrutura do Pipeline
 
-Cada pipeline é um diretório com três arquivos:
+Cada pipeline é um diretório com um `fetch.toml`, um `transform.toml` e um ou mais arquivos `.sql`:
 
 ### fetch.toml
 
@@ -168,13 +166,13 @@ Especifica quais tabelas e variáveis SIDRA baixar:
 ```toml
 [[tabelas]]
 tabela_sidra = "5938"      # ID da tabela de PIB
-variables    = ["37"]      # Variável de PIB
+variables    = ["37"]      # exemplo simplificado; o pipeline real usa mais variáveis
 territories  = {6 = []}    # Lista vazia = todos os municípios
 ```
 
 ### transform.toml
 
-Declara uma ou mais tabelas analíticas de saída (uma entrada `[[table]]` por tabela):
+Declara uma ou mais tabelas analíticas de saída (uma entrada `[[table]]` por tabela). Exemplo simplificado; `primary_key` é opcional:
 
 ```toml
 [[table]]
@@ -291,7 +289,7 @@ Cache hit para dados inalterados = conclusão quase instantânea.
 Rastreie o desempenho macroeconômico do Brasil em tempo real:
 
 ```sql
-SELECT periodo, item, variacao, peso
+SELECT periodo, nome_item, variacao, peso
 FROM analytics.ipca
 WHERE periodo >= '2024-01-01'
 ORDER BY periodo DESC;
@@ -308,7 +306,7 @@ Tabelas analíticas prontas para importação BI imediata:
 ├── analytics.ipca15
 ├── analytics.inpc
 ├── analytics.estimativa_populacao
-└── ... (8 mais)
+└── ... (veja a tabela de pipelines acima)
 ```
 
 ### Pesquisa Acadêmica
@@ -317,7 +315,7 @@ Baixe dados históricos limpos e normalizados:
 
 ```sql
 SELECT * FROM analytics.censo_populacao
-WHERE ano IN (1991, 2000, 2010, 2020);
+WHERE ano >= 2000;
 ```
 
 ### Análise Agrícola
@@ -327,10 +325,10 @@ Analise produção agrícola e rebanhos:
 ```sql
 SELECT
     id_municipio,
-    variavel,
-    SUM(valor) AS total_producao
+    produto,
+    SUM(valor_producao) AS total_producao
 FROM analytics.pam_lavouras_temporarias
-GROUP BY id_municipio, variavel
+GROUP BY id_municipio, produto
 ORDER BY total_producao DESC;
 ```
 
@@ -356,7 +354,7 @@ IDs de tabelas SIDRA mudam ocasionalmente. Verifique portal oficial:
 ### Downloads lentos
 
 - API pode estar com rate limiting durante horas de pico; tente mais tarde
-- Use versão Python recente (3.11+) para melhor performance
+- Use Python 3.12+
 - Verifique sua conexão de internet
 
 ### Erro de conexão PostgreSQL

@@ -10,7 +10,7 @@ description: 13 pipelines BCB prontos para rodar (preços, juros, câmbio, ativi
 !!! warning "Pegadinhas da fonte e do carregamento"
 
     - **Seletores `themes` exigem catálogo carregado.** Um `[[series]]` com `themes` filtra `series_metadata` — rode primeiro um pipeline por `ids` (ou `load --kind metadata`) para popular o catálogo.
-    - **Séries diárias demoram na primeira carga.** O fetcher varre ano a ano via API `/dados`; `juros` e `cambio` são os pipelines mais lentos no primeiro `run`.
+    - **Séries diárias demoram na primeira carga.** O fetcher varre ano a ano via API `/dados`; os pipelines com séries diárias (como `juros` e `cambio`) demoram mais no primeiro `run`.
     - **O BCB revisa valores sem aviso.** Recargas idênticas são no-op (detecção-de-mudança); valores alterados geram nova revisão (`ativo`/`loaded_at`), nunca overwrite.
     - **Requer PostgreSQL ≥ 15** (índice único parcial com `NULLS NOT DISTINCT`) — mesma exigência do [bcb-sgs-sql](bcb-sgs-sql.md).
 
@@ -69,7 +69,7 @@ A lista canônica está em [`manifest.toml`](https://github.com/Quantilica/bcb-s
 | `desembolsos_bndes` | Desembolsos do BNDES por setor | `analytics.desembolsos_bndes` |
 | `energia_eletrica` | Consumo de energia elétrica por setor | `analytics.energia_eletrica` |
 
-As tabelas de output seguem o padrão wide-pivot (uma coluna por série, em português legível), indexadas por data.
+As tabelas de output são, em sua maioria, longas (uma linha por série e data, com a coluna `valor`). Só `credito` e `monetario` fazem pivot para uma coluna por série.
 
 ## Instalação
 
@@ -117,7 +117,7 @@ bcb-sgs-sql plugin list
 ```bash
 # Índices de preços (IPCA, IPCA-15, INPC, IGP-M)
 bcb-sgs-sql run std precos
-# Saída esperada:
+# Saída ilustrativa (as mensagens reais variam):
 # ✓ Buscando metadados das séries
 # ✓ Baixando observações (com cache TTL)
 # ✓ Carregando em bcb_sgs.series_data (soft-versioned)
@@ -169,19 +169,29 @@ sql = "precos.sql"
 
 ### transform.sql
 
-A SELECT wide-pivot — uma coluna por série, apenas revisões ativas:
+O `precos/precos.sql` real é um SELECT longo (uma linha por série e data), apenas revisões ativas:
 
 ```sql
+-- analytics.precos
 SELECT
     sd.date,
-    MAX(CASE WHEN sd.series_id = 433   THEN sd.value END) AS ipca_mensal,
-    MAX(CASE WHEN sd.series_id = 13522 THEN sd.value END) AS ipca_acum_12m,
-    MAX(CASE WHEN sd.series_id = 189   THEN sd.value END) AS igpm_mensal
+    CASE sd.series_id
+        WHEN 433 THEN 'IPCA'
+        WHEN 13522 THEN 'IPCA-12M'
+        WHEN 188 THEN 'INPC'
+        WHEN 189 THEN 'IGP-M'
+        WHEN 7478 THEN 'IPCA-15'
+        ELSE sm.name
+    END AS indice,
+    sm.name AS nome_serie,
+    sm.unit AS unidade,
+    sm.frequency AS frequencia,
+    sd.value::double precision AS valor
 FROM series_data sd
-WHERE sd.series_id IN (433, 13522, 189)
+    INNER JOIN series_metadata sm ON sd.series_id = sm.series_id
+WHERE sm.theme_hierarchy @> ARRAY['Atividade econômica e preços', 'Preços']
   AND sd.ativo = TRUE
-GROUP BY sd.date
-ORDER BY sd.date;
+ORDER BY sd.date, indice;
 ```
 
 ## Extensão: Adicionar Seu Próprio Pipeline
