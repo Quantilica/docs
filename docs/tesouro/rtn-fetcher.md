@@ -7,7 +7,7 @@ description: Baixa, lê e normaliza a gigantesca planilha Excel do RTN em tabela
 
 **rtn-fetcher** domina a extração dos relatórios fiscais do Governo Federal Brasileiro.
 
-O Tesouro Nacional publica os resultados primários (receitas e despesas) em uma pasta de trabalho Excel incrivelmente complexa. Este agente automatiza o pipeline de `fetch-and-normalize`: vai da URL oficial a uma tabela Parquet tipada em formato longo, preservando a hierarquia contábil.
+O Tesouro Nacional publica os resultados primários (receitas e despesas) em uma pasta de trabalho Excel incrivelmente complexa. Este agente automatiza o `fetch-and-normalize`: baixa a planilha da URL oficial e a lê em tabelas tipadas em formato longo, preservando a hierarquia contábil; a gravação em CSV ou Parquet fica com a API Python.
 
 !!! warning "Pegadinhas da fonte oficial"
 
@@ -53,46 +53,6 @@ O pacote domina as 24 abas mais cruciais de contas públicas do Excel do Tesouro
 | **4.1 a 4.2** | Orçamento Trimestral do Governo Central | Trimestral | Milhões de R$ |
 
 ---
-
-!!! warning "Em revisão"
-    O pipeline para banco SQLite (`quantilica rtn pipeline --format sqlite`) não existe na versão atual do `rtn-fetcher`: o comando disponível é `quantilica rtn sync`. A seção abaixo descreve um fluxo ainda não disponível e está em revisão.
-
-## Cookbook Analítico: Modelagem Estrela com RTN
-
-Após rodar o pipeline para banco relacional (`quantilica rtn pipeline --format sqlite`), o banco de dados gerado terá dezenas de tabelas de Fato (os dados em si) e Tabelas de Dimensão (as hierarquias contábeis reconstruídas).
-
-Veja como consultar usando o motor analítico embarcado do DuckDB para cruzar as receitas correntes:
-
-```python
-import duckdb
-import polars as pl
-
-# Conecta ao banco gerado pela CLI da Quantilica
-con = duckdb.connect("data/rtn_data.db")
-
-# Vamos cruzar a tabela de fatos da Aba 1.1 com a dimensão de Contas
-# para descobrir os maiores ofensores de despesas no ano de 2024
-query = """
-    SELECT
-        dim.account_name,
-        SUM(fato.value) as total_gasto_milhoes
-    FROM
-        'sheet_1.1' as fato
-    JOIN
-        'accounts_1.1' as dim ON fato.account = dim.account_code
-    WHERE
-        fato.year = 2024
-        AND dim.account_level = 2 -- Pegar apenas o nível macro
-    GROUP BY
-        dim.account_name
-    ORDER BY
-        total_gasto_milhoes DESC
-    LIMIT 5;
-"""
-
-df_resultado = con.execute(query).pl()
-print(df_resultado)
-```
 
 ## Uso via Python Puro (Engine Tbl Interna)
 

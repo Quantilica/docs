@@ -45,12 +45,12 @@ graph LR
     D --> E[Power BI / Metabase]
 ```
 
-Para dados fiscais (RTN), o fluxo é mais simples: `rtn-fetcher` baixa a planilha mais recente, normaliza para formato longo e exporta para Excel/SQLite.
+Para dados fiscais (RTN), o fluxo é mais simples: `rtn-fetcher` baixa a planilha mais recente e, pela API Python, normaliza para formato longo e grava em CSV ou Parquet.
 
 ## Pacotes
 
 - **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — suíte de engenharia financeira: async fetching com idempotência, processamento Polars (10× vs. Pandas), matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
-- **[rtn-fetcher](rtn-fetcher.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI de exportação Excel/SQLite.
+- **[rtn-fetcher](rtn-fetcher.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI com `check`, `list` e `sync`, e gravação em CSV ou Parquet pela API Python.
 Para a teoria por trás dos números — YTM, duration, Modified Dietz, retornos reais para títulos indexados à inflação — consulte **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)** na seção Conceitos.
 
 Os [Princípios de Design](../concepts/principios.md) do ecossistema se manifestam aqui de forma especialmente visível: idempotência via `last_modified`, FIFO determinístico e Modified Dietz auditável. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Idempotência](../concepts/padroes.md#processamento-idempotente), [Concorrência para I/O](../concepts/padroes.md#concorrencia-io), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation).

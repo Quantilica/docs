@@ -35,6 +35,10 @@ O `quantilica-cli` faz o download da distribuição do fetcher a partir do índi
   ```bash
   quantilica install <fonte>
   ```
+- **Instalar uma fonte com extras** (por exemplo, o `analysis`, que habilita os comandos `convert` e `pipeline`; vale também para uma fonte já instalada):
+  ```bash
+  quantilica install pdet --extra analysis
+  ```
 - **Desinstalar uma fonte:**
   ```bash
   quantilica uninstall <fonte>

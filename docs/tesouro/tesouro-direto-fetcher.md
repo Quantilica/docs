@@ -19,6 +19,9 @@ description: Download e visualização de dados históricos do programa Tesouro 
 # Via CLI unificada (recomendado)
 quantilica install tesouro-direto
 
+# Com o extra de análise, para os comandos convert e pipeline da CLI
+quantilica install tesouro-direto --extra analysis
+
 # Ou como biblioteca no seu projeto
 uv add "tesouro-direto-fetcher[analysis]" --index https://index.quantilica.com/simple/
 ```
