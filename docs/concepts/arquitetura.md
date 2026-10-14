@@ -94,7 +94,7 @@ Obter dados de APIs, páginas de HTML arcaicas e servidores FTP falhos com resil
 - Exporta em formatos unificados limpos e salva Manifestos SHA-256 de auditoria para tudo.
 
 **Não faz:**
-- Tabelões analíticos mágicos em memória. Se a base do CNPJ tem 245 GB, ela baixa os ZIPs em streaming (chunks de 64 KiB) e grava cada arquivo de forma atômica.
+- Tabelões analíticos mágicos em memória. Se a base do CNPJ tem cerca de 29 GB descompactados, ela baixa os ZIPs em streaming (chunks de 64 KiB) e grava cada arquivo de forma atômica.
 
 ### Processamento (Polars, DuckDB)
 

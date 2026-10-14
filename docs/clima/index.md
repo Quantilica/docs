@@ -9,7 +9,7 @@ Uma estação do INMET no interior do Piauí registra 40 °C num dia de outubro 
 
 ## O desafio
 
-Recuperar e unificar dados climáticos das mais de 500 estações brasileiras apresenta dificuldades recorrentes:
+Recuperar e unificar dados climáticos de cerca de 600 estações brasileiras (o ZIP de 2025 traz 594 arquivos, um por estação, 565 delas automáticas) apresenta dificuldades recorrentes:
 
 - **Encoding inconsistente** — os arquivos anuais compactados pelo INMET usam codificação `latin-1` com marcas de ordem de byte (BOM) intermitentes, gerando erros de leitura.
 - **Cabeçalhos variáveis** — o formato dos arquivos CSV gerados pelas estações varia de ano para ano, possuindo metadados extras na parte superior e separadores de coluna inconsistentes (`,` vs. `;`).

@@ -27,7 +27,7 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 | **Tesouro Nacional RTN** | ✅ estável | 2026-10-13 | Excel multi-aba publicado mensalmente |
 | **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-10-13 | API JSON de valores estável (200); metadados só via scraping HTML (a árvore de grupos é sequencial; a coleta em lote dos metadados aceita `--workers`); séries diárias truncadas (varredura ano a ano) |
 | **INEP** (`download.inep.gov.br`) | ⚠️ não confirmado | 2026-10-13 | Conexão reiniciada pelo servidor na verificação (e falha de handshake TLS com `urllib`). Arquivos muito grandes, preferir download particionado. Revalidar antes de tratar como indisponível |
-| **RFB CNPJ** (`arquivos.receitafederal.gov.br`) | ⚠️ não confirmado | 2026-10-13 | Timeout de leitura no host de arquivos na verificação. Base completa (~245 GB) atualizada mensalmente. Revalidar antes de tratar como indisponível |
+| **RFB CNPJ** (`arquivos.receitafederal.gov.br`) | ✅ estável, lento | 2026-10-13 | `HEAD` responde 200 e há suporte a `Range`, mas cada requisição leva cerca de 20 s. Referência de 2026-09: 37 ZIPs, 7,8 GB compactados e 28,7 GB descompactados (soma lida do diretório central dos ZIPs). Atualizada mensalmente |
 | **ANAC** (`sistemas.anac.gov.br`) | ✅ estável | 2026-10-13 | Arquivos estáticos; schema razoavelmente consistente (arquivo do catálogo responde 200) |
 | **ANP** (`gov.br/anp`) | ✅ estável | 2026-10-13 | Arquivos estáticos; atualizados periodicamente (arquivo do catálogo responde) |
 | **CVM Dados Abertos** (`dados.cvm.gov.br`) | ✅ estável | 2026-10-13 | Diretório de dados responde 200; cada grupo é um conjunto de CSV/ZIP |
