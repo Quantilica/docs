@@ -1,6 +1,6 @@
 ---
 title: datasus-fetcher — Microdados do SUS via FTP, em paralelo
-description: Crawler multithread para os 113 datasets do DATASUS (SIM, SINASC, SIH, SIA, CNES, SINAN). 383+ GB cobrindo 1979 até hoje, com retomada e versionamento.
+description: Crawler multithread para os 113 datasets do DATASUS (SIM, SINASC, SIH, SIA, CNES, SINAN). Mais de 400 GB cobrindo 1979 até hoje, com retomada e versionamento.
 ---
 
 # Saúde Pública (Saúde)
@@ -14,8 +14,8 @@ Dados de vigilância de saúde brasileira do DATASUS (Departamento de Dados de S
     - **`.dbc` não é `.dbf`.** É um formato proprietário compactado do DATASUS. Para abrir em Python, use `pyreaddbc` ou converta em massa com os pipelines da Quantilica.
     - **Nome de arquivo carrega significado.** `RDSP2001.dbc` = AIH Reduzido, SP, 2020, mês 01. O fetcher parseia isso para filtrar antes de baixar — não tente regex manual.
     - **FTP cai. Muito.** O servidor `ftp.datasus.gov.br` tem janelas de instabilidade quase diárias, especialmente em horário comercial. A CLI fará retries automáticos silenciosos.
-    - **Volume é colossal.** Baixar tudo são 383+ GB e milhares de arquivos minúsculos. Sempre filtre por `--start`/`--end` e/ou `--regions` no primeiro recorte.
-    - **Atualizações retroativas acontecem.** O DATASUS republica arquivos antigos quando há correção. O versionamento do fetcher arquiva os antigos no diretório `archive/`.
+    - **Volume é colossal.** Baixar tudo são mais de 400 GB e centenas de milhares de arquivos (o catálogo lista mais de 184 mil). Sempre filtre por `--start`/`--end` e/ou `--regions` no primeiro recorte.
+    - **Atualizações retroativas acontecem.** O DATASUS republica arquivos antigos quando há correção. Os arquivos antigos ficam com a data da fonte no próprio nome (`@AAAAMMDD`), e `quantilica datasus archive --archive-data-dir <dir>` move os que deixaram de ser os mais recentes para `<dir>`.
     - **Dicionário de dados está em PDFs.** Sem os manuais baixados via `--docs`, códigos numéricos como `RACACOR=4` são opacos e intraduzíveis.
 
 ## Instalação
@@ -39,7 +39,7 @@ A forma recomendada de interagir com os dados de saúde é através do executáv
 quantilica datasus sync sih-rd -o /caminho/para/dados \
     --start 2020-01 \
     --end 2023-12 \
-    --regions sp rj mg es
+    --regions sp --regions rj --regions mg --regions es
 
 # Baixar notificações de dengue (todos os anos, todos os estados)
 quantilica datasus sync sinan-deng -o ./data
@@ -54,10 +54,10 @@ quantilica datasus list
 
 A biblioteca agrupa as dezenas de siglas crípticas do DATASUS em 113 *datasets* lógicos. Os principais incluem:
 
-- **`sih-rd`** — Admissões hospitalares (SIHSUS Reduzido)
+- **`sih-rd`** — AIH Reduzida (admissões hospitalares)
 - **`sim-do-cid10`** — Registros de mortalidade (ICD-10)
-- **`sim-do-cid9`** — Registros de mortalidade (ICD-9, séries históricas)
-- **`sinasc`** — Registros de nascimento
+- **`sim-do-cid09`** — Registros de mortalidade (ICD-9, séries históricas)
+- **`sinasc-dn`** — Registros de nascimento
 - **`sia-pa`** — Produção ambulatorial
 - **`cnes-st`** / **`cnes-pf`** — Estabelecimentos de saúde e profissionais do CNES
 - **`sinan-deng`** / **`sinan-zika`** — Notificações de doenças
@@ -87,7 +87,7 @@ tendencia_mortalidade = (
     .filter(pl.col("CAUSABAS").str.starts_with("I2"))
     # Agrega por ano e unidade federativa
     .group_by(["DTOBITO_ANO", "SIGLA_UF"])
-    .agg(pl.count().alias("Total_Obitos"))
+    .agg(pl.len().alias("Total_Obitos"))
     .collect()
 )
 
@@ -109,19 +109,19 @@ Arquivos baixados são organizados hierarquicamente para evitar estouros de limi
 data/
 └── sih-rd/
     ├── 202001/
-    │   ├── sih-rd_sp_202001_20250218.dbc
-    │   └── sih-rd_rj_202001_20250218.dbc
+    │   ├── sih-rd_202001-sp@20210405.dbc
+    │   └── sih-rd_202001-rj@20210405.dbc
     └── 202312/
-        └── sih-rd_mg_202312_20250218.dbc
+        └── sih-rd_202312-mg@20250105.dbc
 ```
 
-## Uso sem o Ambiente Unificado (Isolado)
+## Binário `datasus-fetcher`
 
-Caso você esteja construindo uma pipeline em Docker apenas para baixar saúde, sem depender do `quantilica-cli`, o pacote expõe o executável nativo:
+O pacote também instala o comando `datasus-fetcher`, equivalente a `quantilica datasus`. Ele não dispensa o host: depende do `quantilica-cli` e, sem ele, imprime `Instale via "quantilica install datasus"` e sai com código 1.
 
 ```bash
-quantilica datasus sync sim-do-cid10 -o /data --threads 4
-quantilica datasus list
+datasus-fetcher sync sim-do-cid10 -o /data --threads 4
+datasus-fetcher list
 datasus-fetcher archive -o /data --archive-data-dir /archive
 ```
 

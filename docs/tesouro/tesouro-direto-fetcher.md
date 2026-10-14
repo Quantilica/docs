@@ -11,7 +11,7 @@ description: Download e visualização de dados históricos do programa Tesouro 
 
     - **Nomenclaturas Vivas via CKAN.** O CKAN governamental embute um *timestamp* dinâmico nos IDs de download. A CLI resolve isso automaticamente nomeando os arquivos para `taxas-...@20251230T102010.csv`. Nunca utilize caminhos de arquivo fixos no seu código; use resoluções `glob`.
     - **CSVs Crípticos Brasileiros.** Datas vêm nativamente no formato dia-mês-ano (pt-BR) e frações monetárias vêm com vírgula (`,`) ao invés de ponto decimal. Se importar em Pandas diretamente você vai corromper a base. Use as ferramentas de conversão nativas da Quantilica.
-    - **Loop Eventuais Assíncronos.** O core de extração roda via `asyncio`. Se você tentar baixar dados diretamente no escopo de um Jupyter Notebook que já tenha o próprio `loop`, acontecerá conflito. Use o `nest_asyncio` no Jupyter ou acesse os dados indiretamente via CLI.
+    - **Download em threads, sem `asyncio`.** O pacote não usa `asyncio`: o download é síncrono e paraleliza com threads (`--workers`), então não há conflito de event loop em Jupyter.
 
 ## Instalação
 
@@ -93,18 +93,14 @@ df_investors = reader.read_investors(caminho_investidores_csv)
 plot.plot_investors_population_pyramid(df_investors).display()
 ```
 
-## Uso Isolado (Sem Ambiente Unificado)
+## Binário `tesouro-direto-fetcher`
+
+O pacote também instala o comando `tesouro-direto-fetcher`, equivalente a `quantilica td`. Ele não dispensa o host: depende do `quantilica-cli` e, sem ele, imprime `Instale via "quantilica install td"` e sai com código 1. Para baixar sem visualização, em scripts ou cron:
 
 ```bash
-quantilica td sync -o ./data
-quantilica td convert ./data
-quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./data
-```
-
-Para baixar sem visualização, em scripts ou cron, use a CLI:
-
-```bash
-quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./data --workers 4
+tesouro-direto-fetcher sync -o ./data
+tesouro-direto-fetcher convert ./data
+tesouro-direto-fetcher sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o ./data --workers 4
 ```
 
 ## Saiba Mais

@@ -14,7 +14,7 @@ Dados de importação e exportação brasileira extraídos do Siscomex (Sistema 
     - **Arquivos em escala de GB.** Cada arquivo anual de transações (NCM 4-dígitos) atinge facilmente múltiplos gigabytes. Utilize `polars.scan_csv` (avaliação lazy) ou os converta para `.parquet`; um mero `pd.read_csv` causará Out Of Memory (OOM).
     - **SSL frequentemente quebrado.** O servidor do Siscomex e do MDIC possui a fama de deixar a cadeia de certificados incompleta em curtas janelas de tempo. A CLI possui um fallback não-verificado (unverified context) configurável para não quebrar pipelines noturnos.
     - **Schema NCM vs NBM.** A classificação NCM cobre as transações de 1997 em diante; a NBM cobre o buraco negro de 1989 a 1996 e possui colunas diferentes. Não os concatene de olhos fechados.
-    - **A matrix dimensional.** Os arquivos principais trazem apenas IDs numéricos (País=23, UF=1). O real valor analítico só surge quando você faz JOIN com as 20+ tabelas auxiliares (países, municípios, vias de transporte) que a CLI baixa automaticamente.
+    - **A matrix dimensional.** Os arquivos principais trazem apenas IDs numéricos (País=23, UF=1). O real valor analítico só surge quando você faz JOIN com as 20 tabelas auxiliares (países, municípios, vias de transporte), baixadas no grupo `auxiliary`.
     - **Idempotência é temporal.** Como não há API moderna fornecendo Hashes, o fetcher usa requisições `HEAD` para validar o cabeçalho `Last-Modified` do servidor FTP/HTTP. Se o MDIC corrigir uma linha do passado, ele baixará novamente o arquivo modificado de forma indetectável para você.
 
 ## Instalação
@@ -52,15 +52,18 @@ quantilica comex sync auxiliary -o ./data
 ## Datasets e Tabelas (Macro-Grupos)
 
 ### Transações Comerciais Fato
-- `exp` / `imp`: Exportações/Importações normais (1997+, nível UF)
-- `exp-mun` / `imp-mun`: Exportações/Importações mais granulares, rastreando o município emissor/receptor.
-- `exp-nbm` / `imp-nbm`: Legado histórico (1989-1996) sob a classificação NBM.
+- `trade-exp` / `trade-imp`: Exportações/Importações normais (1997+, nível UF), em `exp/` e `imp/`.
+- `trade-exp-mun` / `trade-imp-mun`: Exportações/Importações mais granulares, rastreando o município emissor/receptor, em `exp-mun/` e `imp-mun/`.
+- `trade-exp-nbm` / `trade-imp-nbm`: Legado histórico (1989-1996) sob a classificação NBM.
 
 ### Tabelas Auxiliares (Dimensões)
-Ao sincronizar o Comex, a ferramenta puxa silenciosamente dicionários indispensáveis, salvos em `auxiliary-tables/`:
+O grupo `auxiliary` (incluído no `sync` sem argumentos, mas não nos grupos `trade-*`) traz 20 dicionários, salvos em `auxiliary-tables/`:
 - `ncm` (Nomenclatura Comum do Mercosul), `sh` (Sistema Harmonizado)
-- `pais`, `pais-bloco` (Mercosul, União Europeia, etc)
-- `uf-mun` (Municípios), `via` (Marítima, Aérea, etc), `urf` (Unidade da Receita Federal)
+- `pais`, `pais_bloco` (Mercosul, União Europeia, etc)
+- `uf`, `uf_mun` (UFs e municípios), `via` (Marítima, Aérea, etc), `urf` (Unidade da Receita Federal)
+- e outras, como `cuci`, `isic`, `nbm`, `unidade` e `grupo`
+
+Os arquivos levam a data da fonte no nome (por exemplo, `auxiliary-tables/ncm@20240315.csv`).
 
 ---
 
@@ -76,7 +79,7 @@ from pathlib import Path
 
 # 1. Carrega as tabelas pequenas de metadados em memória (Eager)
 df_ncm = pl.read_csv(
-    "data/secex-comex/auxiliary-tables/ncm.csv",
+    max(Path("data").glob("auxiliary-tables/ncm@*.csv")),  # nome carimbado com a data da fonte
     separator=";",
     encoding="latin-1"
 )
@@ -84,7 +87,7 @@ df_ncm = pl.read_csv(
 # 2. Registra todos os anos de exportação no motor Lazy
 # (O Polars não lê os GBs agora, apenas examina o schema)
 df_export = pl.scan_csv(
-    "data/secex-comex/exp-mun/*.csv",
+    "data/exp-mun/*.csv",
     separator=";",
     encoding="latin-1"
 )
@@ -108,12 +111,13 @@ print(top_commodities)
 ## Resiliência de Rede Oculta
 Se a sua conexão cair em 95% do download de um arquivo de 2 GB, o `comex-fetcher` não perde o trabalho. Ele baixa nativamente todos os *chunks* para extensões `.tmp`. Somente após o checksum e sucesso a transferência é efetivada, garantindo escritas 100% atômicas no seu datalake.
 
-## Uso sem Ambiente Unificado (Isolado)
+## Binário `comex-fetcher`
 
-Se necessário num container mínimo:
+O pacote também instala o comando `comex-fetcher`, equivalente a `quantilica comex`. Ele não dispensa o host: depende do `quantilica-cli` e, sem ele, imprime `Instale via "quantilica install comex"` e sai com código 1.
+
 ```bash
-quantilica comex sync trade-exp -o /data
-quantilica comex list
+comex-fetcher sync trade-exp -o /data
+comex-fetcher list
 ```
 
 ## Saiba Mais

@@ -1,11 +1,11 @@
 ---
 title: inep-fetcher — Microdados do INEP
-description: Downloader e conversor para os microdados massivos do INEP (Censo Escolar e ENEM).
+description: Downloader dos microdados do INEP (ENEM, SAEB, ENADE e outros grupos do catálogo).
 ---
 
 # `inep-fetcher`
 
-O `inep-fetcher` é a ferramenta dedicada para coletar, unificar e converter os mais de **39 GB** de microdados divulgados pelo INEP.
+O `inep-fetcher` baixa os microdados abertos do INEP, organizados em grupos (`enem`, `saeb`, `enade` e outros). O histórico completo passa de 20 GB. O pacote só baixa: não extrai nem converte os arquivos.
 
 ## Instalação
 
@@ -15,9 +15,9 @@ quantilica install inep
 
 ## Características
 
-- **Streaming Chunked:** Evita estouro de memória ao processar CSVs de mais de 5 GB.
-- **Conversão automática:** Transforma tudo em Parquet tipado.
-- **Unificação de dicionários:** Padroniza encodings e delimitadores problemáticos.
+- **Catálogo por grupo:** `quantilica inep list` mostra os grupos disponíveis (ENEM, SAEB, ENADE, ANA, Encceja e outros).
+- **Download concorrente:** `sync` baixa em paralelo (`--workers`) e pula os arquivos locais que já estão atualizados; `check` mostra o plano antes de baixar.
+- **Manifestos SHA-256:** cada download grava um manifesto de proveniência.
 
 ## Como Usar
 

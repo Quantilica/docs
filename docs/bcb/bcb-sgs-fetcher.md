@@ -12,7 +12,7 @@ O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de in
 !!! warning "Pegadinhas da fonte oficial"
 
     - **Séries diárias capadas silenciosamente:** a API `/dados` do BCB não retorna o histórico completo para séries de alta frequência se você não passar uma janela de data estrita; ela apenas trunca os resultados velhos. A CLI da Quantilica resolve isso ancorando uma data recente e fazendo paginação retroativa ano a ano até secar o poço.
-    - **Metadados invisíveis:** Não existe API pública para descobrir os nomes das séries. A CLI faz um scraping HTML com sessão stateful para descobrir isso. Por isso, a coleta do catálogo inteiro não pode ser paralelizável.
+    - **Metadados invisíveis:** Não existe API pública para descobrir os nomes das séries. A CLI faz um scraping HTML com sessão stateful para descobrir isso. Por isso, a descoberta da árvore de grupos (`catalogo arvore-grupos`) é sequencial; a coleta em lote dos metadados (`catalogo metadata-bulk`) aceita `--workers`.
     - **Séries Zumbis:** Séries encerradas pelo BCB (como antigas taxas do mercado livre) ainda existem no SGS mas podem retornar conjuntos de dados vazios ou corrompidos.
 
 ## Instalação
@@ -75,33 +75,29 @@ O `bcb-sgs-fetcher` despeja JSONs contendo as séries no disco, pois é uma pont
 import polars as pl
 from pathlib import Path
 
-# Supondo que baixamos a SELIC Mensal (11) e o IPCA (433)
-# O JSON do BCB segue o formato [{"data": "01/01/2024", "valor": "10.5"}]
-df_selic = pl.read_json("dados/series_11.json")
-df_ipca = pl.read_json("dados/series_433.json")
-
-# Vamos limpar os dados (datas vêm em DD/MM/YYYY)
-def limpa_serie(df, id_nome):
-    return (
-        df
-        .with_columns(
-            pl.col("data").str.to_date("%d/%m/%Y"),
-            pl.col("valor").cast(pl.Float64)
-        )
-        .rename({"valor": id_nome})
+# Supondo que baixamos a SELIC acumulada no mês (4390) e o IPCA (433) com
+#   quantilica bcb-sgs series sync 4390 -o ./dados
+#   quantilica bcb-sgs series sync 433 -o ./dados
+# Cada série vira dados/data/series_<id>@<AAAAMMDDTHHMMSS>.json: uma lista de
+# objetos {"series_id": 433, "date": "2026-08-01", "value": "-0.32", "date_end": null}
+def le_serie(serie_id, nome):
+    arquivo = max(Path("dados/data").glob(f"series_{serie_id}@*.json"))  # snapshot mais recente
+    return pl.read_json(arquivo).select(
+        pl.col("date").str.to_date(),                 # datas já vêm em ISO (AAAA-MM-DD)
+        pl.col("value").cast(pl.Float64).alias(nome),
     )
 
-df_selic_clean = limpa_serie(df_selic, "selic_mensal")
-df_ipca_clean = limpa_serie(df_ipca, "ipca_mensal")
+df_selic_clean = le_serie(4390, "selic_mensal")
+df_ipca_clean = le_serie(433, "ipca_mensal")
 
 # Juntar (JOIN) a inflação e a Selic para calcular Juro Real
 juros_reais = (
     df_selic_clean
-    .join(df_ipca_clean, on="data", how="inner")
+    .join(df_ipca_clean, on="date", how="inner")
     .with_columns(
         (pl.col("selic_mensal") - pl.col("ipca_mensal")).alias("juro_real")
     )
-    .sort("data", descending=True)
+    .sort("date", descending=True)
 )
 
 print(juros_reais.head())

@@ -15,10 +15,10 @@ Toda empresa formal do Brasil — da multinacional ao MEI da esquina — está n
 
 ## A solução
 
-O pacote `rfb-cnpj-fetcher` coordena o download em lote de todos os arquivos do site oficial da Receita Federal, realiza verificações SHA-256 e extrai tudo para um modelo normalizado em Parquet ou DuckDB diretamente, viabilizando consultas relampâgo sem precisar hospedar um banco de dados gigante.
+O pacote `rfb-cnpj-fetcher` coordena o download em lote de todos os arquivos do site oficial da Receita Federal, e registra um manifesto SHA-256 de cada ZIP. A extração e a modelagem (por exemplo, em Parquet ou DuckDB) ficam por conta de quem analisa.
 
 ---
 
 | Ferramenta | O que faz |
 |---|---|
-| **[rfb-cnpj-fetcher](rfb-cnpj-fetcher.md)** | Baixa, descompacta e converte todos os fragmentos da base de CNPJs em Parquet altamente comprimido. |
+| **[rfb-cnpj-fetcher](rfb-cnpj-fetcher.md)** | Baixa em paralelo os ZIPs da base de CNPJs, com manifestos SHA-256 e checagem de frescor. |

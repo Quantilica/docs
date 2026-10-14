@@ -65,15 +65,15 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[rtn-fetcher](tesouro/rtn-fetcher.md)** | Planilhas hierárquicas do RTN viradas em DataFrame tipado |
 | **[pdet-fetcher](trabalho/pdet-fetcher.md)** | CAGED/RAIS de 50M+ linhas, processadas com Polars sem estourar memória |
 | **[comex-fetcher](comex/comex-fetcher.md)** | Siscomex com SSL ruim, arquivos GB, downtime governamental |
-| **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, 383+ GB de microdados |
+| **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, mais de 400 GB de microdados |
 | **[inmet-fetcher](clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
 | **[bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
 | **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
 | **[bcb-sgs-pipelines](bcb/bcb-sgs-pipelines.md)** | Catálogo declarativo de 13 pipelines macro BCB prontos para rodar |
 | **[anac-fetcher](aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
 | **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
-| **[inep-fetcher](educacao/inep-fetcher.md)** | Conversão robusta de bases educacionais (39 GB) para Parquet tipado |
-| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo e conversão da base inteira de CNPJs (245 GB) |
+| **[inep-fetcher](educacao/inep-fetcher.md)** | Download dos microdados educacionais do INEP por grupo (ENEM, SAEB, ENADE e outros) |
+| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (245 GB descompactada) |
 | **[cvm-fetcher](mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
 | **[tse-fetcher](politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |

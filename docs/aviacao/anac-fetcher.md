@@ -13,7 +13,7 @@ Dados abertos da ANAC (Agência Nacional de Aviação Civil).
 
     - **Sem API.** O `sistemas.anac.gov.br` é um índice de diretórios cru. O catálogo hardcoda caminhos conhecidos.
     - **Convenção de nome varia:** VRA usa `VRA_{ano}{mês}.csv` sem zero à esquerda (`VRA_20001.csv` = Jan/2000); RAB usa `{AAAA-MM}.{ext}`.
-    - **Atrasos de publicação:** A ANAC publica o VRA com 1 a 2 meses de atraso; se o script tentar baixar o mês atual e der 404, ele ignora sem interromper os demais.
+    - **Atrasos de publicação:** A ANAC publica o VRA com cerca de 2 meses de atraso; por isso o catálogo encerra a série do ano corrente dois meses antes do mês atual, em vez de pedir arquivos ainda inexistentes.
 
 ## Instalação
 
@@ -52,7 +52,7 @@ quantilica anac list
 
 ### Lacunas Históricas no RAB
 
-O histórico do **Registro Aeronáutico Brasileiro (RAB)** é turbulento. O catálogo gerencia inteligentemente esses formatos variáveis, tentando primeiro `.csv`, depois `.json` e `.xls`:
+O histórico do **Registro Aeronáutico Brasileiro (RAB)** é turbulento. O catálogo gerencia inteligentemente esses formatos variáveis, listando `.json` e `.xls` em todo o histórico e `.csv` apenas a partir de 2024-09:
 
 | Período | Extensão de Arquivo Disponível |
 |---|---|
@@ -82,13 +82,13 @@ Ao invés de sincronizar bases soltas, o alias `aerodromos` resolve **14 subgrup
 - `aero-pzr` (Planos de Zoneamento de Ruído)
 - `aero-plano-diretor` (Planos Diretores Aeroportuários Aprovados e Validados)
 
-Basta rodar `quantilica anac sync aero-lista-publicos` para ter a radiografia completa da infraestrutura do Brasil.
+Sincronize os grupos `aero-*` (são 14; `quantilica anac list` mostra todos) para ter a radiografia completa da infraestrutura do Brasil. O ponto de partida é `aero-lista-publicos`.
 
 ---
 
 ## Cookbook: Analisando VRA com Polars
 
-O grupo `vra` baixa centenas de arquivos (um por mês desde 2000). Para não estourar a memória (o VRA acumula milhões de registros), o ideal é usar `polars.scan_csv`:
+O grupo `vra` baixa centenas de arquivos (CSV e JSON de cada mês desde 2000). Para não estourar a memória (o VRA acumula milhões de registros), o ideal é usar `polars.scan_csv`:
 
 ```python
 import polars as pl
@@ -96,7 +96,7 @@ import polars as pl
 # O VRA é distribuído em CSVs separados por ponto-e-vírgula.
 # Utilizamos o scan_csv para criar um LazyFrame (avaliação preguiçosa)
 df_vra = pl.scan_csv(
-    "data/anac/voo-regular-ativo/*.csv",
+    "dados/anac/voo-regular-ativo/*.csv",
     separator=";",
     infer_schema_length=10000,
     ignore_errors=True
@@ -106,8 +106,8 @@ df_vra = pl.scan_csv(
 cancelamentos = (
     df_vra
     .filter(pl.col("Situação Voo") == "CANCELADO")
-    .group_by("Empresa Aérea")
-    .agg(pl.count().alias("Total_Cancelamentos"))
+    .group_by("ICAO Empresa Aérea")
+    .agg(pl.len().alias("Total_Cancelamentos"))
     .sort("Total_Cancelamentos", descending=True)
     .collect()
 )

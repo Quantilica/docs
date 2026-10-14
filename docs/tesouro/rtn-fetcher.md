@@ -13,7 +13,7 @@ O Tesouro Nacional publica os resultados primários (receitas e despesas) em uma
 
     - **Tabela Viva.** Os headers não estão em uma linha fixa. Cada uma das 24 abas tem cabeçalhos em linhas diferentes e células mescladas caóticas. O `rtn-fetcher` varre a planilha descobrindo o escopo dos dados dinamicamente; não tente carregar isso via `pd.read_excel(header=3)`.
     - **Hierarquia Implícita.** Um código contábil `1.2.3` na planilha não explica quem são seus pais. O fetcher reconstrói a árvore inteira gerando duas tabelas separadas: Tabela de Fatos e Tabela de Dimensão (Hierarquia de Contas).
-    - **Mistura de Unidades Lógicas.** Abas `1.x` estão em milhões de Reais correntes; `2.x-A` são frações do PIB percentual; `1.2-B` deflacionadas pelo IPCA. O fetcher rastreia essas unidades via *Data Contracts*.
+    - **Mistura de Unidades Lógicas.** Abas `1.x` estão em milhões de Reais correntes; `2.x-A` são frações do PIB percentual; `1.2-B` deflacionadas pelo IPCA. O Data Contract tipa o período e as colunas; a conversão de valores em milhões de reais é aplicada na leitura (`convert_value`).
     - **Períodos Misturados.** Meses, trimestres e anos coabitam a mesma aba. O motor divide inteligentemente os esquemas para `year/month` ou `year/quarter`.
 
 ## Instalação
@@ -30,7 +30,7 @@ uv add rtn-fetcher --index https://index.quantilica.com/simple/
 
 ## CLI Oficial (Ambiente Unificado)
 
-A forma idomática de varrer os dados fiscais é utilizando o binário host `quantilica`. Ele cuidará de acessar a API APEX do Tesouro, encontrar a URL mais recente (cujo ID muda mensalmente) e converter a planilha para banco de dados ou Parquet:
+A forma idomática de varrer os dados fiscais é utilizando o binário host `quantilica`. Ele cuidará de acessar a API APEX do Tesouro, encontrar a URL mais recente (cujo ID muda mensalmente) e baixar a planilha. A leitura e a conversão para CSV ou Parquet ficam com a API Python (veja abaixo):
 
 ```bash
 # Baixar a série do RTN (relatório mais recente publicado)
@@ -96,13 +96,13 @@ print(df_resultado)
 
 ## Uso via Python Puro (Engine Tbl Interna)
 
-Para cenários isolados (sem a CLI unificada e sem gerar um banco relacional), o fetcher possui uma class própria ultraleve chamada `Tbl` para leitura imutável na memória:
+Para cenários sem a CLI, o fetcher tem uma classe própria e leve, a `Tbl`, para leitura em memória:
 
 ```python
 from pathlib import Path
 from rtn_fetcher import read_sheet, write_table_to_csv
 
-filepath = Path("data/rtn_202412301200.xlsx")
+filepath = Path("data/rtn@20241230T120000.xlsx")
 
 # Extrai os Fatos e as Dimensões Contábeis de uma vez
 fato, contas = read_sheet(filepath, "1.2")

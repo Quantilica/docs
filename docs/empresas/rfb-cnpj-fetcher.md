@@ -1,11 +1,11 @@
 ---
 title: rfb-cnpj-fetcher — Base de CNPJs
-description: Downloader resiliente e conversor otimizado para a base de 245 GB de CNPJs da Receita Federal.
+description: Downloader dos ZIPs da base pública de CNPJs da Receita Federal.
 ---
 
 # `rfb-cnpj-fetcher`
 
-O `rfb-cnpj-fetcher` orquestra o download paralelo, extração e tipagem da base pública de CNPJs da Receita Federal, transformando mais de **245 GB** de dados brutos em Parquet.
+O `rfb-cnpj-fetcher` baixa, em paralelo, os ZIPs da base pública de CNPJs da Receita Federal (cerca de **245 GB** descompactados). O pacote só baixa: não extrai os ZIPs nem converte os dados.
 
 ## Instalação
 
@@ -15,9 +15,10 @@ quantilica install rfb-cnpj
 
 ## Características
 
-- **Download Concorrente:** Baixa os ZIPs do site da Receita Federal explorando a largura de banda máxima disponível.
-- **Transformação Direta:** Os arquivos ZIP são lidos sob demanda (streaming) e transformados em Parquet, pulando a necessidade de ocupar dezenas de gigabytes com CSVs intermediários.
-- **Merge (Opcional):** Fornece opções para consolidar `Estabelecimentos`, `Empresas` e `Sócios` em um único banco DuckDB para análises imediatas.
+- **Download concorrente:** baixa os ZIPs do site da Receita Federal em paralelo (`--workers`).
+- **Frescor:** `sync` pula os ZIPs locais que já estão atualizados, e `check` mostra o plano antes de baixar.
+- **Manifestos SHA-256:** cada download grava um manifesto de proveniência.
+- **Fora do pacote:** a extração dos ZIPs e a conversão para Parquet ou DuckDB não fazem parte do `rfb-cnpj-fetcher`.
 
 ## Como Usar
 

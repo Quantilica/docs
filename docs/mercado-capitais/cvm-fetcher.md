@@ -15,7 +15,7 @@ quantilica install cvm
 
 ## Grupos disponíveis
 
-Cada conjunto pertence a um grupo. Para a lista completa, use `quantilica cvm list`. Os principais:
+Cada conjunto pertence a um grupo; `quantilica cvm list` mostra os arquivos de cada um. Todos os grupos:
 
 | Área | Grupos (ID) |
 |---|---|
