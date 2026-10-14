@@ -196,5 +196,20 @@
    "bytes": 3784840940,
    "files": 6
   }
- }
+ },
+ "files_not_counted": [
+  {
+   "file": "RAIS_VINC_PUB_NORDESTE.7z",
+   "compressed_bytes": 595420317
+  },
+  {
+   "file": "RAIS_VINC_PUB_NORTE.7z",
+   "compressed_bytes": 196258746
+  },
+  {
+   "file": "RAIS_VINC_PUB_SUL.7z",
+   "compressed_bytes": 680693192
+  }
+ ],
+ "note": "Três dos seis arquivos de 2024 foram contados (SP, MG/ES/RJ, Centro-Oeste). Os outros três (1,47 GB compactados) não foram baixados: o FTP do MTE ficou em dezenas de KB/s na sessão de medição. Não há estimativa do total nacional neste arquivo."
 }

@@ -48,7 +48,10 @@ def compression_chart(data: dict, out_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(8.5, 4.8))
     ax.bar(x - width / 2, csv_mib, width, label="CSV", color=CSV_COLOR)
     bars = ax.bar(
-        x + width / 2, pq_mib, width, label="Parquet (zstd, padrão do Polars)",
+        x + width / 2,
+        pq_mib,
+        width,
+        label="Parquet (zstd, padrão do Polars)",
         color=PARQUET_COLOR,
     )
     for bar, c, m in zip(bars, cut, pq_mib, strict=True):
@@ -56,12 +59,21 @@ def compression_chart(data: dict, out_dir: Path) -> Path:
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() * 1.08,
             f"−{c:.0f}%\n{_fmt_size(m)}",
-            ha="center", va="bottom", fontsize=8.5, color="#4d6b30", fontweight="bold",
+            ha="center",
+            va="bottom",
+            fontsize=8.5,
+            color="#4d6b30",
+            fontweight="bold",
         )
     for i, m in enumerate(csv_mib):
         ax.text(
-            x[i] - width / 2, m * 1.08, _fmt_size(m),
-            ha="center", va="bottom", fontsize=8.5, color="#3b5a8a",
+            x[i] - width / 2,
+            m * 1.08,
+            _fmt_size(m),
+            ha="center",
+            va="bottom",
+            fontsize=8.5,
+            color="#3b5a8a",
         )
 
     ax.set_yscale("log")
@@ -76,9 +88,11 @@ def compression_chart(data: dict, out_dir: Path) -> Path:
 
     env = data["environment"]
     fig.text(
-        0.01, 0.005,
+        0.01,
+        0.005,
         f"Polars {env['polars']}, medido em {env['date']}. Dados e script: docs/benchmarks/.",
-        fontsize=7.5, color="#666666",
+        fontsize=7.5,
+        color="#666666",
     )
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -103,16 +117,18 @@ def performance_chart(data: dict, out_dir: Path) -> Path:
     for k, (name, key) in enumerate(series):
         vals = np.array([r.get(key, np.nan) for r in rows], dtype=float)
         top = max(top, np.nanmax(vals))
-        bars = ax.bar(
-            x + (k - 1.5) * width, vals, width, label=name, color=READ_COLORS[k]
-        )
+        bars = ax.bar(x + (k - 1.5) * width, vals, width, label=name, color=READ_COLORS[k])
         for bar, v in zip(bars, vals, strict=True):
             if np.isnan(v):
                 continue
             label = f"{v:.2f}s" if v >= 0.1 else f"{v * 1000:.0f}ms"
             ax.text(
-                bar.get_x() + bar.get_width() / 2, v * 1.12, label,
-                ha="center", va="bottom", fontsize=7.5,
+                bar.get_x() + bar.get_width() / 2,
+                v * 1.12,
+                label,
+                ha="center",
+                va="bottom",
+                fontsize=7.5,
             )
     ax.set_yscale("log")
     ax.set_ylim(top=top * 8)
@@ -131,10 +147,12 @@ def performance_chart(data: dict, out_dir: Path) -> Path:
 
     env = data["environment"]
     fig.text(
-        0.01, 0.005,
+        0.01,
+        0.005,
         f"{env['cores']} núcleos, {env['memory']} de RAM, Polars {env['polars']}, "
         f"{env['date']}; arquivos no cache de página. Dados e script: docs/benchmarks/.",
-        fontsize=7.5, color="#666666",
+        fontsize=7.5,
+        color="#666666",
     )
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     out_dir.mkdir(parents=True, exist_ok=True)

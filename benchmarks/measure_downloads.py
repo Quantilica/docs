@@ -40,10 +40,15 @@ def run(urls: list[str], workers: int) -> tuple[float, int]:
 
     tmp = Path(tempfile.mkdtemp(prefix="dl-bench-"))
     try:
+
         def one(url: str) -> int:
             dest = tmp / url.rsplit("/", 1)[1]
             client().download_with_manifest(
-                url, dest, source_id="cvm", dataset_id=GROUP, producer="docs-benchmark",
+                url,
+                dest,
+                source_id="cvm",
+                dataset_id=GROUP,
+                producer="docs-benchmark",
                 force=True,
             )
             return dest.stat().st_size
@@ -73,7 +78,10 @@ def main() -> int:
         for w in args.modes:
             t, nbytes = run(urls, w)
             times[w].append(t)
-            print(f"rodada {r + 1} | {w} thread(s): {t:.1f}s ({nbytes / 2**20:.0f} MiB)", flush=True)
+            print(
+                f"rodada {r + 1} | {w} thread(s): {t:.1f}s ({nbytes / 2**20:.0f} MiB)",
+                flush=True,
+            )
     med = {w: statistics.median(v) for w, v in times.items()}
     base = med[args.modes[0]]
     result = {
