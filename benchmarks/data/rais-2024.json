@@ -26,10 +26,37 @@
    "lines": 24636059,
    "records": 24636058,
    "note": "arquivo local do cron; contado em streaming"
+  },
+  {
+   "file": "RAIS_VINC_PUB_NORTE.7z",
+   "compressed_bytes": 196258746,
+   "sha256_matches_manifest": true,
+   "csv_bytes": 1401390640,
+   "lines": 5197237,
+   "records": 5197236,
+   "note": "baixado do espelho no Google Drive"
+  },
+  {
+   "file": "RAIS_VINC_PUB_NORDESTE.7z",
+   "compressed_bytes": 595420317,
+   "sha256_matches_manifest": true,
+   "csv_bytes": 4191644822,
+   "lines": 15465157,
+   "records": 15465156,
+   "note": "baixado do espelho no Google Drive"
+  },
+  {
+   "file": "RAIS_VINC_PUB_SUL.7z",
+   "compressed_bytes": 680693192,
+   "sha256_matches_manifest": true,
+   "csv_bytes": 4203292541,
+   "lines": 15637218,
+   "records": 15637217,
+   "note": "baixado do espelho no Google Drive"
   }
  ],
- "records_counted": 51431067,
- "csv_bytes_counted": 13819521823,
+ "records_counted": 87730676,
+ "csv_bytes_counted": 23615849826,
  "files_in_year": 6,
  "manifest_compressed_bytes_by_year": {
   "1985": {
@@ -197,19 +224,5 @@
    "files": 6
   }
  },
- "files_not_counted": [
-  {
-   "file": "RAIS_VINC_PUB_NORDESTE.7z",
-   "compressed_bytes": 595420317
-  },
-  {
-   "file": "RAIS_VINC_PUB_NORTE.7z",
-   "compressed_bytes": 196258746
-  },
-  {
-   "file": "RAIS_VINC_PUB_SUL.7z",
-   "compressed_bytes": 680693192
-  }
- ],
- "note": "Três dos seis arquivos de 2024 foram contados (SP, MG/ES/RJ, Centro-Oeste). Os outros três (1,47 GB compactados) não foram baixados: o FTP do MTE ficou em dezenas de KB/s na sessão de medição. Não há estimativa do total nacional neste arquivo."
+ "files_counted_n": 6
 }

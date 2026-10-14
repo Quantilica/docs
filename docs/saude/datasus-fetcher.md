@@ -72,6 +72,9 @@ quantilica datasus sync --system sim --start 2022 -o ./data
 
 Passar um sistema como argumento posicional, onde se espera um dataset, encerra com erro de uso (código 2) antes de qualquer conexão.
 
+!!! note "Arquivos grandes e o SIA"
+    `read_dbc` e `convert` leem o `.dbf` em pedaços de 32 MiB e tipam cada pedaço antes de juntá-los. Num `.dbc` de 166 MB do SIA-PA (4,7 milhões de linhas, 62 colunas), o pico de memória foi de 18,8 GB para 4,7 GB, com o mesmo resultado. Os arquivos do SIA têm campos numéricos com lixo que o `fastdbf` recusa; nesses, cada pedaço cai para o `dbfread`, mais lento (cerca de 3,5 s por pedaço), e o arquivo acima levou cerca de 4,5 min. Evite `--workers` alto na conversão de SIA grande.
+
 ---
 
 ## Cookbook Analítico: Processando o DATASUS com Polars
