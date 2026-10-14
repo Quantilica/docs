@@ -12,9 +12,9 @@ description: Motor ETL com plugin architecture, bulk load via COPY, star schema 
     - **O IBGE revisa dados sem aviso.** PIB Q3 2020 publicado em janeiro de 2021 pode estar diferente em 2026. O `sidra-sql` usa SCD Type II (`ativo`, `modificacao`) — nunca sobrescreve, sempre acrescenta. Queries com `WHERE modificacao <= 'YYYY-MM-DD' AND ativo = TRUE` reproduzem qualquer snapshot histórico.
     - **Códigos de tabela são strings.** `"1620"`, não `1620`. Inteiro causa `404` silencioso.
     - **`unnest_classifications = true` é uma arma carregada.** Tabelas com 6 classificações fazem cross-product explosivo. Comece com `false` e expanda só quando souber o volume.
-    - **`INSERT` linha-a-linha leva horas.** O motor usa `COPY FROM STDIN` + tabela de staging — 400k linhas/s em hardware comum. Não tente "otimizar" via SQLAlchemy ORM.
+    - **`INSERT` linha-a-linha leva horas.** O motor usa `COPY FROM STDIN` + tabela de staging. Não tente "otimizar" via SQLAlchemy ORM.
     - **Períodos têm formatos heterogêneos.** Mensal `202301`, trimestral `202301`, anual `2023`, plurianual `2020-2023`. A dimensão `periodo` já normaliza com `ano`, `mes`, `trimestre`, `data_inicio`, `data_fim` — joine pela coluna que faz sentido.
-    - **`config.ini` lê do CWD.** Se você roda de outro diretório, ele falha sem mensagem clara. `os.chdir()` ou caminho absoluto.
+    - **`config.ini` lê do CWD.** Se você roda de outro diretório, `Config()` levanta um `ConfigError` com as instruções de configuração. Use `os.chdir()` ou o config global (`config set --global`).
 
 ![sidra-sql banner](../assets/banner.png)
 
@@ -73,7 +73,7 @@ Para volumes massivos de dados sem exaustão de memória:
 - **Upsert Atômico**: Usa `ON CONFLICT DO NOTHING` para deduplicação
 - **Tabelas de Staging**: Tabela temporária `_staging_dados` para operações atômicas
 
-**Performance**: Inserir 10M linhas em ~30 segundos (vs horas com `INSERT` tradicional)
+**Performance**: o `COPY` em lote evita o custo de um `INSERT` por linha.
 
 ### 2. Star Schema Dimensional
 
@@ -145,7 +145,7 @@ Lógica de negócio isolada de código:
 [[tabelas]]
 tabela_sidra = "1620"
 variables = ["116"]                    # Variável PIB
-territories = {6 = []}                 # Total Brasil
+territories = {1 = []}                 # nível 1 (Brasil)
 
 [[tabelas]]
 tabela_sidra = "1737"
@@ -183,7 +183,7 @@ sidra-sql run std pib_municipal
 
 ### Recursos Adicionais
 
-- ✅ Busca full-text em metadados SIDRA (JSONB português)
+- ✅ Metadados SIDRA armazenados em JSONB
 - ✅ Cache de metadados para performance (arquivos JSON locais)
 - ✅ Integração PostgreSQL (transações ACID)
 - ✅ Operações idempotentes (re-execução segura)
@@ -215,8 +215,6 @@ host = localhost
 port = 5432
 dbname = dados
 schema = ibge_sidra
-tablespace = pg_default
-readonly_role = readonly_role
 ```
 
 Carregue a config em Python:
@@ -323,12 +321,16 @@ with Fetcher(config, storage=storage, max_workers=4) as fetcher:
     metadata = fetcher.fetch_metadata("1620")
     save_agregado(engine, metadata)
 
-    # 2. BAIXAR arquivos de dados para armazenamento local
-    data_files = fetcher.download_table(
-        tabela_sidra="1620",
-        territories={"6": []},  # Total Brasil
-        variables=["116"],
-    )
+    # 2. PLANEJAR e BAIXAR arquivos de dados para armazenamento local
+    plan = [
+        (None, parametro, modificacao)
+        for parametro, modificacao in fetcher.plan_periods(
+            tabela_sidra="1620",
+            territories={"1": []},  # nível 1 (Brasil)
+            variables=["116"],
+        )
+    ]
+    data_files = fetcher.download_periods(plan)
 
 # 3. CARREGAR em PostgreSQL via COPY FROM STDIN
 load_dados(engine, storage, data_files)
@@ -411,7 +413,7 @@ config = Config()
 engine = get_engine(config)
 storage = Storage.default(config)
 
-# data_files é a lista retornada por Fetcher.download_table()
+# data_files é a lista retornada por Fetcher.download_periods(plan)
 load_dados(engine, storage, data_files)  # COPY FROM STDIN, two-pass
 ```
 
@@ -478,7 +480,7 @@ sidra-sql config get <section.option>
 sidra-sql config list [--global] [--local]
 ```
 
-Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local. Com `--global`, usa `~/.config/sidra-sql/config.ini`. O `config list` sem flags mostra a visão mesclada (local sobrescreve global).
+Gerencia `config.ini`. Sem `--global`, lê/escreve o arquivo local. Com `--global`, usa `~/.config/quantilica/sidra-sql/config.ini`. O `config list` sem flags mostra a visão mesclada (local sobrescreve global).
 
 ---
 
@@ -490,7 +492,7 @@ Os pontos de entrada do pacote, na ordem de um ETL. Assinaturas completas no
 | Símbolo | Papel |
 |---|---|
 | `Config()` | Lê `config.ini` do diretório atual (storage + conexão PostgreSQL) |
-| `Fetcher(config, storage=, max_workers=)` | Extração: `fetch_metadata(tabela)`, `download_table(tabela, territories, variables)` |
+| `Fetcher(config, storage=, max_workers=)` | Extração: `fetch_metadata(tabela)`, `plan_periods(tabela, territories, variables)`, `download_periods(plan)` |
 | `Storage.default(config)` | Arquivos JSON locais: `write_data`, `read_data`, `write_metadata` |
 | `TomlScript(config, toml_path)` | ETL declarativo: baixa + carrega as tabelas do `fetch.toml` |
 | `TransformRunner(config, toml_path)` | Executa o `transform.toml` + `.sql` pareado |
@@ -613,16 +615,7 @@ Primeira execução:  baixa do IBGE (segundos a minutos)
 Re-execução:        verifica cache local, pula arquivos existentes (overhead <1s)
 ```
 
-Force re-download deletando diretório de dados ou usando `--force-metadata`.
-
-### Benchmarks de Ingestão Streaming
-
-Performance no mundo real em hardware padrão (8-core, 16 GB RAM):
-
-| Dataset | Linhas | Tempo | Throughput |
-|---------|--------|-------|-----------|
-| IPCA mensal | 3.2M | 8s | 400k linhas/sec |
-| PIB trimestral | 50k | <1s | — |
+Force re-download deletando o diretório de dados. A flag `--force-metadata` renova apenas os metadados.
 
 ## Melhores Práticas para Governança de Dados
 
@@ -692,7 +685,7 @@ Códigos de tabela SIDRA devem ser strings, não inteiros. Use `"1620"`, não `1
 
 ```python
 metadata = fetcher.fetch_metadata("1620")   # ✅
-metadata = fetcher.fetch_metadata(1620)     # ❌
+metadata = fetcher.fetch_metadata(1620)     # ❌ por convenção (o código converte com int())
 ```
 
 ### ID de Variável Desconhecido

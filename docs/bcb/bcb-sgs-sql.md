@@ -34,8 +34,8 @@ Levar séries do SGS para análise rigorosa ou modelagem envolve desafios além 
 
 O SGS tem mais de 17.000 séries, cada uma com metadados ricos (nome, frequência, unidade,
 fonte, hierarquia de temas) e um histórico de observações `(data, valor)`. O `bcb-sgs-sql`
-separa isso em três tabelas — `series_metadata` (catálogo), `series_data` (observações) e
-`theme` (hierarquia auto-referente) — em vez de achatar tudo num CSV que perde integridade.
+separa isso em quatro tabelas — `series_metadata` (catálogo), `series_data` (observações),
+`theme` (hierarquia auto-referente) e `arquivo_carregado` (controle de idempotência) — em vez de achatar tudo num CSV que perde integridade.
 
 ### 2. Gargalos de I/O de ingestão
 
@@ -315,7 +315,7 @@ from bcb_sgs_sql import database, sgs
 
 config = Config()
 engine = database.get_engine(config)
-database.create_all(engine)
+database.create_all(engine, config.db_schema)
 
 with sgs.Fetcher(config.data_dir, max_workers=4) as fetcher:
     series_ids = [433, 13522]
@@ -495,7 +495,6 @@ completas no [código-fonte do repositório](https://github.com/Quantilica/bcb-s
 | `Config()` | Lê `config.ini` do diretório atual (storage + conexão PostgreSQL) |
 | `sgs.Fetcher(storage, max_workers=)` | **Via A**: `plan_series`, `fetch_metadata`, `download_series` |
 | `loader.load(config, path, kind=)` | **Via B**: carrega JSON de observações/metadados em disco, sem rede |
-| `Storage.default(config)` | Arquivos JSON locais: observações + metadados em cache |
 | `TomlScript(config, toml_path)` | ETL declarativo: metadados → observações → carga |
 | `TransformRunner(config, toml_path)` | Executa o `transform.toml` + `.sql` pareado |
 | `database.*` | `get_engine`, `create_all`, `save_series_metadata`, `load_series_data` (COPY soft-versioned) |
@@ -561,7 +560,7 @@ path = "precos"
 ## Schema
 
 Quatro tabelas no schema configurado (ex.: `bcb_sgs`), criadas por
-`database.create_all(engine)` — o diagrama está acima:
+`database.create_all(engine, schema)` — o diagrama está acima:
 
 - **`series_metadata`** — catálogo da série (nomes, frequência, unidade, fonte,
   `theme_hierarchy` com índice GIN, `search_vector` para busca full-text).
