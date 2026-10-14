@@ -22,9 +22,9 @@ Os três blocos de construção que todo coletor do ecossistema usa:
 ```python
 from quantilica.core.http import HttpClient
 from quantilica.core.storage import LocalStorage
-from quantilica.core.manifests import DownloadManifest
+from quantilica.core.manifests import DownloadManifest, write_manifest_sidecar
 
-# 1. HTTP resiliente — retry com backoff exponencial e jitter
+# 1. HTTP resiliente — retry com backoff exponencial
 client = HttpClient(attempts=3)
 response = client.get("https://servicodados.ibge.gov.br/api/v3/agregados/1705/metadados")
 
@@ -40,7 +40,7 @@ manifest = DownloadManifest.from_file(
     file_path=stat.path,
     producer="sidra-fetcher",
 )
-manifest.write_json(stat.path.with_suffix(".manifest.json"))
+write_manifest_sidecar(stat.path, manifest)
 ```
 
 Resultado em disco:
@@ -48,19 +48,18 @@ Resultado em disco:
 ```
 dados/raw/sidra/
 ├── agregado-1705.json
-└── agregado-1705.manifest.json    ← SHA-256, URL, timestamp, producer
+└── agregado-1705.json.manifest.json    ← SHA-256, URL, timestamp, producer
 ```
 
 ## Módulos
 
 | Módulo | Responsabilidade |
 |---|---|
-| `http` | `HttpClient` e `AsyncHttpClient` com backoff exponencial e jitter |
+| `http` | `HttpClient` e `AsyncHttpClient` com retentativas e backoff exponencial |
 | `ftp` | Cliente FTP resiliente para fontes legadas (DATASUS, etc.) |
 | `retry` | Lógica configurável para falhas de rede e erros transientes |
 | `storage` | `LocalStorage` para artefatos brutos e processados, com escrita atômica |
 | `manifests` | `DownloadManifest`, `DatasetManifest`, `RunManifest` — rastreabilidade SHA-256 |
-| `metadata` | `MetadataCatalog`, `Source`, `Dataset` — interoperabilidade entre coletores |
 | `logging` | `get_logger`, `log_step` — logging estruturado padronizado |
 | `exceptions` | Hierarquia comum: `FetchError`, `ParseError`, `StorageError` |
 
@@ -79,7 +78,7 @@ Com o core, esses são problemas resolvidos uma vez para sempre. O fetcher fica 
 
 1. **Neutralidade de domínio** — o core nunca sabe que existe IBGE, DATASUS, INMET.
 2. **Leveza** — dependências mínimas no núcleo; integrações pesadas ficam em [`quantilica-analytics`](quantilica-analytics.md).
-3. **Estabilidade** — alta cobertura de testes em toda a infraestrutura.
+3. **Estabilidade** — testes automatizados para HTTP, storage, manifestos, FTP, retry e sync.
 4. **DX** — APIs tipadas e tratamento de erro consistente em toda a organização.
 
 Veja também os [Princípios de Design](../concepts/principios.md) do ecossistema como um todo.

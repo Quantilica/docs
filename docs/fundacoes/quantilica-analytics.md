@@ -7,7 +7,7 @@ description: Camada analítica da Quantilica — leitura multi-formato, convers�
 
 Camada de processamento e padronização analítica da Quantilica. Transforma arquivos brutos baixados pelos coletores em ativos analíticos prontos para consumo — Parquet tipado, com proveniência embarcada no próprio header do arquivo.
 
-> **Por que separado do core?** Porque processamento analítico exige Polars e PyArrow — somando 50 MB+ de dependências binárias. Quem só quer baixar dados não deveria pagar esse preço. A divisão `core` (leve) / `io` (pesado) é deliberada.
+> **Por que separado do core?** Porque processamento analítico exige Polars e PyArrow — somando 50 MB+ de dependências binárias. Quem só quer baixar dados não deveria pagar esse preço. A divisão `quantilica-core` (leve) / `quantilica-analytics` (pesado) é deliberada.
 
 ## Instalação
 
@@ -41,15 +41,15 @@ O `.parquet` resultante já contém, no próprio header (key-value metadata):
 - O SHA-256 do arquivo bruto original.
 - A URL de origem e o `producer` que baixou.
 - O timestamp do download.
-- O schema declarado (se um `DataContract` foi usado — ver seção abaixo).
+- A identidade do contrato (id e versão), se um `DataContract` foi usado — ver seção abaixo.
 
 Isso é **time travel real**: meses depois, você consegue provar exatamente qual versão do dado oficial foi usada em uma análise. Reprodutibilidade que sobrevive a mudanças silenciosas das fontes.
 
 ## Recursos
 
-- **Reader multi-formato**: interface unificada para CSV, Excel, DBF (comum no DATASUS) e JSON.
-- **Detecção automática de encoding**: `latin-1`, `utf-8`, `windows-1252` — sem ter que adivinhar.
-- **Parquet otimizado**: compressão `zstd`, particionamento por metadados do dataset.
+- **Reader multi-formato**: interface unificada para CSV, Parquet, Excel (`.xlsx`/`.xls`) e JSON.
+- **Fallback de encoding**: se o encoding pedido falhar, recua para `latin-1` — sem ter que adivinhar.
+- **Parquet otimizado**: compressão `zstd` e metadados de proveniência. `partition_by` não é suportado, porque a escrita é atômica.
 - **Data Contracts**: validação preventiva de schema — erro imediato se a fonte oficial alterar o layout.
 - **Proveniência injetada**: manifesto do `quantilica-core` embutido no header do Parquet.
 
@@ -89,7 +89,7 @@ df = SGS_CONTRACT.cast(df)
 to_parquet(df, "output.parquet", manifest=manifest)
 ```
 
-Sem o `cast`, Polars pode inferir `Int32` em vez de `Int64` dependendo da amostra — Parquets do mesmo dataset sairiam com schemas divergentes.
+O `cast` fixa o dtype independentemente da amostra: sem ele, o tipo depende do que o Polars infere de cada arquivo, e Parquets do mesmo dataset podem sair com schemas divergentes.
 
 ### Validate: falhar cedo quando a fonte muda
 
@@ -108,8 +108,9 @@ Quando o BCB renomear `valor` para `value_eur` em uma série, o teste falha — 
 | Cobre | Não cobre |
 |---|---|
 | Presença de colunas obrigatórias | Range de valores (`x > 0`, `x < 100`) |
-| Tipo de cada coluna | Not-null por linha |
-| `DataFrame` ou `LazyFrame` | Regex / formato de string |
+| Tipo de cada coluna | Regex / formato de string |
+| Not-null por coluna (`nullable=False`) | |
+| `DataFrame` ou `LazyFrame` | |
 
 Para validações de valor, combine `DataContract` com Polars expressions ou Pydantic na camada de aplicação.
 
@@ -129,7 +130,7 @@ embutem Parquet nem contratos: a serialização fica a cargo da camada de ETL.
 ## Princípios
 
 1. **Reuso de boilerplate** — a lógica de lidar com `latin-1` e separador `;` do governo brasileiro é escrita **uma vez**.
-2. **Interoperabilidade Parquet** — todos os arquivos gerados pelo ecossistema seguem o mesmo padrão, permitindo SQL via DuckDB sobre múltiplos datasets sem conflito de tipos.
+2. **Interoperabilidade Parquet** — todos os arquivos gerados por `to_parquet` seguem o mesmo padrão, permitindo SQL via DuckDB sobre múltiplos datasets sem conflito de tipos.
 3. **Proveniência embarcada** — o arquivo Parquet é auto-suficiente. Não precisa de um JSON ao lado para provar de onde veio.
 
 Veja também:

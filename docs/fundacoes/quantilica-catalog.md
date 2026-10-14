@@ -66,8 +66,8 @@ Adaptadores disponíveis e formato do `indicator_id` gerado:
 |---|---|---|
 | `adapters.bcb_sgs` | BCB-SGS | `"bcb-sgs:{series_id}"` |
 | `adapters.rtn` | Tesouro Nacional RTN | `"rtn:{planilha}:{coluna}"` |
-| `adapters.inmet` | INMET BDMEP | `"inmet:{variável}"` |
-| `adapters.tesouro_direto` | Tesouro Direto | `"td:{tipo_titulo}"` |
+| `adapters.inmet` | INMET BDMEP | `"inmet:{codigo_wmo}:{medida}"` |
+| `adapters.tesouro_direto` | Tesouro Direto | `"td:{bond_type}:{maturity_date}:{metric}"` |
 | `adapters.sidra` | IBGE SIDRA | `"sidra:{agregado_id}:{variavel_id}"` (ou `:{categoria_ids}` se classificado) |
 
 !!! note "SIDRA com categorias"
