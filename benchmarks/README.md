@@ -7,7 +7,7 @@ Tudo o que o site afirma com número de tamanho ou de tempo vem daqui. Cada scri
 | CSV × Parquet: tamanhos e tempos de leitura | `measure_formats.py` | `data/results.json` |
 | Gráficos `compression_comparison.svg` e `read_performance.svg` | `charts.py` | `data/results.json` |
 | Ganho de baixar em paralelo (threads) | `measure_downloads.py` | `data/downloads.json` |
-| `AsyncSidraClient` × `SidraClient` | `measure_sidra_async.py` | `data/sidra-async.json` |
+| Reuso de conexão e `AsyncSidraClient` × `SidraClient` | `measure_sidra_connections.py` | `data/sidra-connections.json` |
 | Tamanho da base de CNPJ, compactada e descompactada | `measure_remote_zip.py` | `data/cnpj-2026-09.json` |
 | Tamanho e linhas da RAIS | comandos abaixo | `data/rais-2024.json` |
 | Estações do INMET | comandos abaixo | `data/inmet-2025.json` |
@@ -21,14 +21,14 @@ Rode da raiz do workspace, onde os fetchers estão instalados (`uv sync --all-pa
 # Dados de entrada, no layout que measure_formats.py espera em <dados>/
 quantilica td sync taxas-dos-titulos-ofertados-pelo-tesouro-direto -o <dados>/td
 #   <dados>/caged/CAGEDMOV202608.txt     <- 7z x do arquivo baixado por: quantilica pdet sync caged-2020-mov
-#   <dados>/rais/RAIS_VINC_PUB_NORTE.COMT e RAIS_VINC_PUB_CENTRO_OESTE.COMT  <- 7z x dos arquivos de 2024
+#   <dados>/rais/RAIS_VINC_PUB_CENTRO_OESTE.COMT  <- 7z x do arquivo de 2024 (o script também aceita o do Norte)
 
 uv run --with pandas --with pyarrow python docs/benchmarks/measure_formats.py \
     --data-dir <dados> --out docs/benchmarks/data/results.json
 uv run --with matplotlib --with numpy python docs/benchmarks/charts.py
 
 uv run python docs/benchmarks/measure_downloads.py   --out docs/benchmarks/data/downloads.json
-uv run python docs/benchmarks/measure_sidra_async.py --out docs/benchmarks/data/sidra-async.json
+uv run python docs/benchmarks/measure_sidra_connections.py --out docs/benchmarks/data/sidra-connections.json
 ```
 
 Tamanho descompactado de um ZIP remoto, sem baixá-lo (lê só o fim do arquivo por `Range`):

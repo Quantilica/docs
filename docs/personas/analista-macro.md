@@ -51,7 +51,7 @@ print(df.select(["D2N", "V"]).tail(12))  # últimos 12 meses
 
 - **Cacheie metadados** com `save_agregado`/`load_agregado` — eles mudam pouco. Salve uma vez, recarregue do disco nas próximas execuções.
 - **Filtre períodos no servidor** — não baixe a série inteira se você só precisa dos últimos 5 anos. Use `Parametro(periodos=["202301", ...])`.
-- **Meça antes de usar `AsyncSidraClient`** — ao buscar os metadados de 8 agregados, o cliente assíncrono levou mediana de 6,6 s contra 1,9 s do `SidraClient` em sequência (medição de 2026-10-13; [dados e script](https://github.com/Quantilica/docs/tree/main/benchmarks)).
+- **Abra o cliente com `with` (ou `async with`)** — fora do gerenciador de contexto, cada requisição abre uma conexão nova: 1.154 ms contra 139 ms por requisição no `SidraClient`. O `AsyncSidraClient` não mostrou ganho consistente sobre o síncrono na busca de metadados de 8 agregados; veja a [medição](https://github.com/Quantilica/docs/tree/main/benchmarks).
 
 ## Caminho de aprofundamento
 

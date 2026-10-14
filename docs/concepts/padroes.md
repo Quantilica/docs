@@ -102,8 +102,10 @@ async def fetch_multiple_metadata():
 agregados = asyncio.run(fetch_multiple_metadata())
 ```
 
-!!! warning "Meça antes de assumir ganho"
-    Ao buscar os metadados de 8 agregados (`get_agregado_metadados`), o `AsyncSidraClient` levou mediana de 6,6 s, contra 1,9 s do `SidraClient` em sequência (medição de 2026-10-13, 5 rodadas alternadas; [dados e script](https://github.com/Quantilica/docs/tree/main/benchmarks)). Chamado uma requisição por vez, o cliente assíncrono já foi mais lento que o síncrono, então o custo está no cliente, não na falta de paralelismo.
+!!! warning "Abra o cliente com `with` ou `async with`"
+    Os clientes HTTP só reaproveitam a conexão dentro do gerenciador de contexto. Fora dele, cada requisição abre e fecha o seu próprio cliente, com novo handshake TLS. Em 15 requisições pequenas seguidas ao SIDRA, a mediana por requisição foi de 139 ms com `with` e 1.154 ms sem, no `SidraClient`; e de 216 ms com `async with` e 829 ms sem, no `AsyncSidraClient` (medição de 2026-10-13; [dados e script](https://github.com/Quantilica/docs/tree/main/benchmarks)).
+
+    Entre síncrono e assíncrono, a busca de metadados de 8 agregados não mostrou diferença consistente: mediana de 1,7 s no síncrono (mínimo 1,4, máximo 7,6) e 1,5 s no assíncrono (mínimo 0,8, máximo 22,4). A variação da API do IBGE entre rodadas é maior que qualquer ganho de concorrência.
 
 ### Padrão: crawling FTP multithreaded
 
