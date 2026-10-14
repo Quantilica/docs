@@ -22,6 +22,8 @@ Parquet contorna todos os três:
 - **Predicate pushdown** — filtros são aplicados antes da leitura completa.
 - **Schema preservado** — sem adivinhação de tipos.
 
+*Valores ilustrativos de ordem de grandeza; não são medições dos arquivos oficiais.*
+
 | Volume típico | CSV | Parquet | Compressão |
 |---|---|---|---|
 | Tesouro 20 anos | ~5 MB | ~1 MB | 80% |

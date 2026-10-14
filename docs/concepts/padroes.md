@@ -28,23 +28,20 @@ Este guia cobre nove padrões usados em todas as ferramentas do ecossistema. Cad
 ### Por quê?
 
 - **Economiza banda**: não re-baixe datasets inalterados.
-- **Economiza tempo**: speedup 57× em re-runs cacheados (`comex-fetcher`).
+- **Economiza tempo**: re-execuções sem mudança custam uma consulta ao remoto por arquivo (`comex-fetcher`).
 - **Tolerância a falhas**: resume do meio em vez de recomeçar.
 - **Seguro para retry**: rodar duas vezes produz o mesmo resultado que rodar uma vez.
 
 ### Padrão: verificar antes de baixar
 
-```python
-from pathlib import Path
-import comex_fetcher
-
-# comex-fetcher HEAD-verifica Last-Modified antes de cada GET
-comex_fetcher.get_year(Path("./DATA"), year=2023)
-# 1ª execução: stream do CSV em chunks de 8 KiB
-# Re-execuções: HEAD mostra Last-Modified == mtime local; GET é pulado
+```bash
+# O sync consulta o remoto (tamanho, Last-Modified e ETag) antes de cada download
+quantilica comex sync trade-exp -o ./DATA
+# 1ª execução: baixa os arquivos em streaming
+# Re-execuções: os arquivos locais já atualizados são pulados
 ```
 
-Não há flag `force_refresh` — para re-buscar, delete o arquivo local primeiro.
+Para re-buscar mesmo assim, use `--force`. Para ver o plano sem baixar, use `quantilica comex check`.
 
 ### Padrão: retomada inteligente
 
@@ -135,19 +132,11 @@ fetcher.download_data(
 
 ### Padrão: batches multi-ano com re-runs idempotentes
 
-`comex-fetcher` é sequencial por design — depende de idempotência temporal em vez de paralelismo. Passe um range de anos e deixe a verificação HEAD/`Last-Modified` fazer re-runs baratos:
+O `comex-fetcher` baixa em paralelo (`--workers`, padrão 4) e usa a verificação de frescor (tamanho, `Last-Modified` e `ETag`) para fazer re-runs baratos. Não há recorte por ano: a seleção é por grupo.
 
 ```bash
 # 1ª execução baixa tudo; execuções posteriores buscam só o que mudou.
 quantilica comex sync trade-exp trade-imp -o ./DATA
-```
-
-```python
-from pathlib import Path
-import comex_fetcher
-
-for year in range(2014, 2024):
-    comex_fetcher.get_year(Path("./DATA"), year=year)  # HEAD-cached
 ```
 
 Se quiser sobrepor trabalho não relacionado (download SECEX em paralelo com fetch SIDRA), faça na camada de orquestração com `asyncio` ou `concurrent.futures` — mas mantenha a concorrência em um único nível para evitar explosão de threads.
@@ -204,7 +193,7 @@ quantilica pdet convert -i ./raw -o ./parquet
 import polars as pl
 
 # Após converter, mantenha tudo em Parquet para análise
-df = pl.read_parquet("parquet/rais-vinculos/2023.parquet")
+df = pl.read_parquet("parquet/rais-vinculos/rais-vinculos_2023@*.parquet")
 # CSV apenas para compartilhar com stakeholders não-técnicos
 ```
 
@@ -374,7 +363,7 @@ df = RAIS_CONTRACT.cast(df)
 df.write_parquet("rais_2023.parquet")
 ```
 
-Os fetchers que parsam dados (`inmet`, `rtn`, `bcb-sgs`) já expõem seus próprios contratos — ver [`quantilica-analytics`](../fundacoes/quantilica-analytics.md#data-contracts).
+Os fetchers que parsam dados (`inmet` e `rtn`) já expõem seus próprios contratos — ver [`quantilica-analytics`](../fundacoes/quantilica-analytics.md#data-contracts).
 
 ### Padrão: validação de contagem de linhas
 
@@ -407,14 +396,11 @@ def validate_rais_row_count(df: pl.DataFrame, year: int) -> bool:
 
 ### Padrão: streaming chunks
 
-```python
-from pathlib import Path
-import comex_fetcher
-
-# comex-fetcher faz stream de cada download em chunks de 8 KiB via urllib —
-# memória constante independente do tamanho do arquivo;
-# escrita atômica via *.tmp -> rename no sucesso
-comex_fetcher.get_year(Path("./DATA"), year=2023)
+```bash
+# O download é feito em streaming (chunks de 64 KiB) pelo cliente HTTP do core:
+# memória constante, independente do tamanho do arquivo, e escrita atômica
+# via arquivo temporário renomeado no sucesso.
+quantilica comex sync trade-exp -o ./DATA
 ```
 
 ### Padrão: lazy Polars
@@ -470,7 +456,7 @@ from datetime import datetime
 from pathlib import Path
 import polars as pl
 
-parquet_path = Path("parquet/rais-vinculos/2023.parquet")
+parquet_path = next(Path("parquet/rais-vinculos").glob("rais-vinculos_2023@*.parquet"))
 df = pl.read_parquet(parquet_path)
 
 metadata = {
@@ -496,7 +482,7 @@ parquet_path.with_suffix(".metadata.json").write_text(json.dumps(metadata, inden
 quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
-Nomes de arquivo `.dbc` codificam `dataset_uf_period_YYYYMMDD`, então múltiplas revisões DATASUS coexistem em disco. `datasus-fetcher archive --archive-data-dir ./archive` rotaciona versões antigas sem perdê-las.
+Os arquivos `.dbc` são gravados como `{dataset}_{AAAAMM}-{uf}@{AAAAMMDD}.dbc`, com a data de modificação da fonte após o `@`, então múltiplas revisões DATASUS coexistem em disco. `datasus-fetcher archive --archive-data-dir ./archive` rotaciona versões antigas sem perdê-las.
 
 ### Padrão: log de transformação
 
@@ -539,11 +525,14 @@ logger.info("Salvo em output.parquet")
 
 ### Padrão: barra de contagem de arquivos por dataset
 
-Usando `quantilica.core.progress.batch_progress` e suprimindo o logger para `WARNING`:
+!!! warning "Em revisão"
+    O módulo `quantilica.core.progress` não existe: `batch_progress` vive em `quantilica.cli.progress`, no pacote `quantilica-cli`, que só o `plugin.py` de cada fetcher pode importar. A lista de adotantes abaixo não foi reverificada.
+
+Usando `batch_progress` e suprimindo o logger para `WARNING`:
 
 ```python
 # downloader.py
-from quantilica.core.progress import batch_progress
+from quantilica.cli.progress import batch_progress
 
 async def download(dest_dir, dataset_id, show_progress=True):
     resources = await get_dataset_resources(dataset_id)
@@ -603,7 +592,7 @@ estão na referência do contribuidor [Padronização de CLI para Fetchers](../n
 - `inmet-fetcher` — migrado neste padrão
 - `rtn-fetcher` — migrado neste padrão
 - `pdet-fetcher` — migrado neste padrão
-- `sidra-fetcher` — migrado neste padrão (somente comandos de metadados; sem download)
+- `sidra-fetcher` — migrado neste padrão
 
 ---
 

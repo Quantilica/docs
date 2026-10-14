@@ -38,15 +38,18 @@ Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a 
 
 ### Como aplicamos
 
-```
-sidra-fetcher       tesouro-direto-fetcher               pdet-fetcher            comex-fetcher
-├─ httpx2, tenacity ├─ httpx2, tqdm      ├─ polars, tqdm      ├─ stdlib only
-└─ no cross-deps    └─ no cross-deps     └─ no cross-deps     └─ no cross-deps
+| Fetcher | Dependências de runtime | Extra `analysis` |
+|---|---|---|
+| `sidra-fetcher` | `quantilica-core` | — |
+| `tesouro-direto-fetcher` | `quantilica-core` | `altair`, `quantilica-analytics` |
+| `pdet-fetcher` | `quantilica-core` | `polars` |
+| `comex-fetcher` | `quantilica-core` | — |
+| `datasus-fetcher` | `quantilica-core` | `polars`, `pyarrow`, `fastdbf`, `dbfread` |
+| `inmet-fetcher` | `quantilica-core` | `polars`, `quantilica-analytics` |
+| `rtn-fetcher` | `quantilica-core`, `beautifulsoup4`, `openpyxl` | `quantilica-analytics` |
+| `bcb-sgs-fetcher` | `quantilica-core`, `httpx2`, `beautifulsoup4`, `lxml`, `markdownify` | — |
 
-datasus-fetcher        inmet-fetcher              rtn-fetcher            bcb-sgs-fetcher
-├─ stdlib only         ├─ httpx2, pandas, pyarrow ├─ httpx2, openpyxl    ├─ httpx2, beautifulsoup4
-└─ no cross-deps       └─ no cross-deps           └─ no cross-deps       └─ no cross-deps
-```
+Nenhum fetcher depende de outro fetcher.
 
 - Sem dependências internas compartilhadas entre ferramentas.
 - Cada uma tem sua própria lógica de retry, tratamento de erro e estratégia de cache.
@@ -88,9 +91,9 @@ Infraestrutura legada é instável. Ferramentas que caem em falhas transitórias
 
 ### Como aplicamos
 
-- **Auto-retry com backoff exponencial**: falhas transitórias são retentadas 3-5 vezes com delays crescentes (`tenacity`).
-- **Smart resume**: se um download falha a 70%, execuções subsequentes resumem dali, não do começo.
-- **Resiliência SSL**: lidamos com certificados governamentais expirados/mal configurados (`comex-fetcher`).
+- **Auto-retry com backoff exponencial**: falhas transitórias são retentadas (3 tentativas por padrão) com delays crescentes, via `quantilica.core.retry`.
+- **Smart resume**: downloads HTTP interrompidos são retomados por `Range` a partir do arquivo parcial, em vez de recomeçar.
+- **Resiliência SSL**: a verificação de certificado do `quantilica-core` é configurável (variável `QUANTILICA_SSL_VERIFY`), para lidar com certificados governamentais mal configurados.
 - **Idempotência baseada em tamanho**: comparamos tamanho remoto vs. local; pulamos se idêntico (`datasus-fetcher`).
 - **Validação na fonte**: detectamos corrupção/truncamento imediatamente, antes de transformações caras.
 - **Tolerância a falha parcial**: continuamos com dados parciais (registrados), em vez de abortar tudo.
@@ -168,16 +171,16 @@ Escolhas ruins aqui prendem você em infraestrutura lenta e cara. Toda ferrament
 
 ### Como aplicamos
 
-- **Concorrência multithreaded** onde aplicável (`datasus-fetcher`: 6-10× speedup).
-- **Async/await** onde aplicável (`sidra-fetcher`: 3× em harvest de metadata).
-- **Processamento vetorial Polars** onde aplicável (`pdet-fetcher`: 10× vs. Pandas).
-- **Cache + verificações de idempotência** (`comex-fetcher`: 57× em re-runs).
-- **Streaming/chunked** para arquivos grandes (`comex-fetcher`: memória O(1)).
-- **Formatos colunares** (Parquet: 88% compressão vs. CSV).
+- **Concorrência multithreaded** onde aplicável (`datasus-fetcher`).
+- **Async/await** onde aplicável (`sidra-fetcher`, na coleta de metadados).
+- **Processamento vetorial Polars** onde aplicável (`pdet-fetcher`).
+- **Cache + verificações de idempotência** (`comex-fetcher`: re-runs sem mudança custam uma consulta ao remoto por arquivo).
+- **Streaming/chunked** para arquivos grandes (`comex-fetcher`, em chunks de 64 KiB).
+- **Formatos colunares** (Parquet comprime muito mais que CSV).
 
 ### Volumes típicos
 
-Compressão típica: 80-90% vs. CSV — RAIS 2023 de 850 MB cabe em 100 MB de Parquet. Volumes completos em [Parquet + Polars](parquet-polars.md#por-que-parquet).
+Compressão típica: 80-90% vs. CSV (ordem de grandeza ilustrativa). Volumes completos em [Parquet + Polars](parquet-polars.md#por-que-parquet).
 
 ### Exemplo: lazy evaluation com Polars
 
@@ -197,16 +200,13 @@ result = df.filter(pl.col("state") == "SP").collect()
 
 ### Exemplo: idempotência com `HEAD` + `Last-Modified`
 
-```python
-from pathlib import Path
-import comex_fetcher
+```bash
+# Primeira execução: baixa os CSVs do SECEX em streaming
+quantilica comex sync trade-exp -o ./DATA
 
-# Primeira execução: transmite os CSVs do SECEX em chunks de 8 KiB
-comex_fetcher.get_year(Path("./DATA"), year=2023)
-
-# Segunda execução: HEAD detecta Last-Modified == mtime local; GET é pulado
-comex_fetcher.get_year(Path("./DATA"), year=2023)
-# Re-execuções custam apenas um round-trip HEAD por arquivo quando nada mudou.
+# Segunda execução: o remoto é consultado e, se tamanho e Last-Modified não mudaram, o arquivo é pulado
+quantilica comex sync trade-exp -o ./DATA
+# Re-execuções custam apenas uma consulta ao remoto por arquivo quando nada mudou.
 ```
 
 > **Padrões relacionados:** [Lazy evaluation](padroes.md), [Concorrência explícita](padroes.md), [Streaming chunked](padroes.md), [Parquet em vez de CSV](padroes.md).
@@ -237,7 +237,7 @@ Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se 
 quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
-Cada `.dbc` baixado é nomeado `dataset_uf_periodo_YYYYMMDD.dbc`, então múltiplas revisões do DATASUS coexistem no disco. `datasus-fetcher archive` move versões antigas para auditoria.
+Cada `.dbc` baixado é nomeado `{dataset}_{AAAAMM}-{uf}@{AAAAMMDD}.dbc`, então múltiplas revisões do DATASUS coexistem no disco. `datasus-fetcher archive` move versões antigas para auditoria.
 
 ### Exemplo: linhagem completa em JSON
 

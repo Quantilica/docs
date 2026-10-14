@@ -66,15 +66,15 @@ A infraestrutura da Quantilica repousa sobre o princípio da **Neutralidade de D
 
 A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
-1.  **`quantilica-core` (Infraestrutura de I/O):** Base estável e sem dependências binárias pesadas. Contém clientes HTTP/FTP resilientes, gerenciamento de manifestos (proveniência) e abstrações de leitura resilientes para os péssimos encodings do Brasil.
-2.  **`quantilica-analytics` (Data Access Layer):** Camada analítica construída sobre o Polars e DuckDB. Responsável por leitura lazy multi-formato, conversão otimizada para Parquet e contratos de dados (schemas). O `quantilica-catalog` acompanha definindo a visão sistêmica unificada.
+1.  **`quantilica-core` (Infraestrutura de I/O):** Base estável e sem dependências binárias pesadas. Contém clientes HTTP/FTP resilientes, gerenciamento de manifestos (proveniência) e utilitários de armazenamento atômico. A leitura resiliente de CSV com os péssimos encodings do Brasil fica no `quantilica-analytics`.
+2.  **`quantilica-analytics` (Data Access Layer):** Camada analítica construída sobre o Polars e o PyArrow. Responsável por leitura lazy multi-formato, conversão otimizada para Parquet e contratos de dados (schemas). O `quantilica-catalog` acompanha definindo a visão sistêmica unificada.
 
 ### Tipos de Pacotes no Ecossistema
 
 | Tipo | Padrão Esperado | Exemplos |
 | :--- | :--- | :--- |
 | **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `bcb-sgs-fetcher` |
-| **Data Extractor (Bulk)** | Download Massivo + Transformação + Parquet | `rfb-cnpj-fetcher`, `inep-fetcher`, `pdet-fetcher` |
+| **Data Extractor (Bulk)** | Download massivo com manifestos. Só alguns têm `convert` para Parquet (extra `analysis`) | `rfb-cnpj-fetcher` e `inep-fetcher` (só baixam); `pdet-fetcher` e `datasus-fetcher` (também convertem) |
 | **Pipeline DB** | Motor ETL + definições TOML/SQL | `sidra-sql`, `bcb-sgs-sql` |
 | **Catálogo de pipelines** | Repositório Git com `manifest.toml` + `fetch.toml`/`transform.sql` por pipeline | `sidra-pipelines`, `bcb-sgs-pipelines` |
 | **CLI Host** | Hub unificado (PyPI) com instalação de fontes sob demanda (`quantilica install`) | `quantilica-cli` |
@@ -86,22 +86,22 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 ### Extração (Os Fetchers)
 
 Obter dados de APIs, páginas de HTML arcaicas e servidores FTP falhos com resiliência militar.
-*Tamanho somado: Mais de 800 GB em centenas de partições!*
+*Tamanho somado: centenas de GB em centenas de milhares de arquivos (só o catálogo do DATASUS lista mais de 184 mil).*
 
 **Faz:**
-- Trata pegadinhas governamentais: paginação silenciosa, fallbacks de extensões, rate limits de servidores defasados (como o SISCOMEX) e falhas transitórias do FTP (DATASUS).
+- Trata pegadinhas governamentais: paginação silenciosa, fallbacks de extensões, instabilidade de servidores defasados (como o SISCOMEX) e falhas transitórias do FTP (DATASUS).
 - Corrige anomalias na fronteira (ex: converte `-9999` do INMET para nulo).
 - Exporta em formatos unificados limpos e salva Manifestos SHA-256 de auditoria para tudo.
 
 **Não faz:**
-- Tabelões analíticos mágicos em memória. Se a base do CNPJ tem 240 GB, ela baixa e escreve em chunk streaming.
+- Tabelões analíticos mágicos em memória. Se a base do CNPJ tem 245 GB, ela baixa os ZIPs em streaming (chunks de 64 KiB) e grava cada arquivo de forma atômica.
 
 ### Processamento (Polars, DuckDB)
 
 Transformação em ultra-velocidade.
 
-- **Polars** — Padrão oficial da Quantilica. Essencial para varrer os zips de 59 GB da RAIS e importações granulares em modo `LazyFrame` (sem estourar RAM).
-- **DuckDB** — Motor SQL analítico utilizado para joins complexos sobre as toneladas de arquivos Parquets criados pelos fetchers.
+- **Polars** — Padrão oficial da Quantilica. Essencial para varrer os zips de cerca de 58 GB da RAIS e importações granulares em modo `LazyFrame` (sem estourar RAM).
+- **DuckDB** — Motor SQL analítico que você pode usar para joins complexos sobre arquivos Parquet (por exemplo, os gerados pelos comandos `convert`). Nenhum pacote do ecossistema depende dele.
 
 ### Armazenamento (Parquet, PostgreSQL)
 
@@ -111,7 +111,7 @@ Persistência eficiente e confiável.
 |---|---|---|
 | Uso Ideal | Censo INEP, RAIS, DATASUS, CNPJ | BCB SGS, IPCA Mensal |
 | Tamanho Típico | 50 GB a 500 GB em disco | 100M+ linhas indexadas |
-| Compressão | 80-90% vs. CSV Governamental | Moderada |
+| Compressão | Tipicamente 80-90% vs. CSV Governamental (varia por dataset) | Moderada |
 | I/O | Escaneamento em massa colunar | Consultas pontuais ACID |
 
 ## ETL vs. ELT
@@ -136,9 +136,9 @@ A camada de armazenamento foi desenhada para ser estritamente **agnóstica** —
 <a id="arquitetura-de-cli"></a>
 ## Arquitetura de CLI Híbrida
 
-Para o usuário não lidar com 14 binários independentes, adotamos a estratégia de Hub Híbrido:
+Para o usuário não lidar com um binário independente por fonte, adotamos a estratégia de Hub Híbrido:
 
-### CLI Nativa Autônoma
+### CLI dos fetchers
 Cada fetcher expõe um `cli.py` que é um wrapper fino sobre o `plugin.py` (padrão em [Padronização de CLI](../normas/cli-fetchers.md)); só o `sidra-fetcher` mantém CLI própria em `argparse`. O import do host é protegido, então um ambiente sem `quantilica-cli` falha com a instrução `quantilica install <fonte>`.
 
 ### Hub Plugin Central

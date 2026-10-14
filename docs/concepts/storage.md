@@ -39,7 +39,7 @@ Quando o servidor não retorna timestamp, o arquivo é salvo sem `@` — sem inv
 | `comex-fetcher` | `exp_2023@20240315.csv` |
 | `datasus-fetcher` | `sih-rd_202001-sp@20240115.dbc` |
 | `inmet-fetcher` | `inmet-bdmep_2023@20240101.zip` |
-| `pdet-fetcher` | `caged_202001@20210315.csv` |
+| `pdet-fetcher` | `caged_202001@20210315.7z` |
 | `rtn-fetcher` | `rtn@20240315T101500.xlsx` |
 | `tesouro-direto-fetcher` | `taxas-dos-titulos-ofertados-pelo-tesouro-direto@20240315T101530.csv` |
 
@@ -147,16 +147,22 @@ Abaixo estão definidos os diretórios de saída padrão (`default` de `--output
 
 | Pacote | Diretório Padrão (`--output`) |
 |---|---|
+| `anac-fetcher` | `/data/anac` |
+| `anp-fetcher` | `/data/anp` |
 | `bcb-sgs-fetcher` | `/data/bcb-sgs` |
-| `comex-fetcher` | `/data/secex-comex` |
+| `comex-fetcher` | `/data/comex` |
+| `cvm-fetcher` | `/data/cvm` |
 | `datasus-fetcher` | `/data/datasus` |
+| `inep-fetcher` | `/data/inep` |
 | `inmet-fetcher` | `/data/inmet` |
 | `pdet-fetcher` | `/data/pdet` |
+| `rfb-cnpj-fetcher` | `/data/rfb-cnpj` |
 | `rtn-fetcher` | `/data/rtn` |
 | `sidra-fetcher` | `/data/sidra` |
 | `tesouro-direto-fetcher` | `/data/tesouro-direto` |
+| `tse-fetcher` | `/data/tse` |
 
-Fetchers novos com catálogo (`anac`, `anp`, `inep`, `rfb-cnpj`) não têm um padrão global único — o destino é passado por comando.
+Os fetchers baseados em `FetcherApp` derivam o padrão do nome do pacote (`/data/<fonte>`). O `-o`/`--output` sobrescreve em qualquer um.
 
 ---
 

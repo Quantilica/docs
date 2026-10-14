@@ -21,10 +21,10 @@ Para cada `dataset.csv` baixado, existe um `dataset.csv.manifest.json`:
   "source_id": "ibge",
   "dataset_id": "sidra-1705",
   "url": "https://servicodados.ibge.gov.br/api/v3/agregados/1705/metadados",
-  "filename": "agregado-1705.json",
+  "path": "agregado-1705.json",
   "size_bytes": 27843,
   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "downloaded_at": "2026-05-10T14:23:01.392Z",
+  "fetched_at": "2026-05-10T14:23:01.392Z",
   "producer": "sidra-fetcher",
   "producer_version": "1.2.0"
 }
@@ -34,7 +34,7 @@ Nada de mágico. É um par `(arquivo, hash)` carimbado com tempo e origem.
 
 ## Escrevendo um manifesto
 
-A maioria dos coletores escreve o manifesto automaticamente. Para construir um à mão, siga a sequência em [`quantilica-core` — Anatomia de um download](../fundacoes/quantilica-core.md#anatomia-de-um-download-quantilica). O passo-chave é:
+O `sync` dos fetchers baseados em `FetcherApp` escreve o manifesto automaticamente. Para construir um à mão, siga a sequência em [`quantilica-core` — Anatomia de um download](../fundacoes/quantilica-core.md#anatomia-de-um-download-quantilica). O passo-chave é:
 
 ```python
 manifest = DownloadManifest.from_file(
@@ -44,7 +44,7 @@ manifest = DownloadManifest.from_file(
     file_path=stat.path,
     producer="sidra-fetcher",
 )
-manifest.write_json(stat.path.with_suffix(".manifest.json"))
+write_manifest_sidecar(stat.path, manifest)
 ```
 
 ## Lendo um manifesto para verificar integridade
@@ -116,7 +116,7 @@ import pyarrow.parquet as pq
 pf = pq.ParquetFile("dados/processed/dataset.parquet")
 meta = {k.decode(): v.decode() for k, v in pf.metadata.metadata.items()}
 print(meta)
-# {'quantilica.source_id': 'ibge', 'quantilica.sha256': 'e3b0c4...', ...}
+# {'quantilica.source_id': 'ibge', 'quantilica.origin_sha256': 'e3b0c4...', ...}
 ```
 
 ## Detecção de mudança silenciosa
