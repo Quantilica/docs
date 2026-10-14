@@ -73,7 +73,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[anac-fetcher](aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
 | **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
 | **[inep-fetcher](educacao/inep-fetcher.md)** | Download dos microdados educacionais do INEP por grupo (ENEM, SAEB, ENADE e outros) |
-| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (245 GB descompactada) |
+| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (cerca de 29 GB descompactada) |
 | **[cvm-fetcher](mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
 | **[tse-fetcher](politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |

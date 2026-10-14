@@ -5,7 +5,7 @@ description: Downloader dos ZIPs da base pública de CNPJs da Receita Federal.
 
 # `rfb-cnpj-fetcher`
 
-O `rfb-cnpj-fetcher` baixa, em paralelo, os ZIPs da base pública de CNPJs da Receita Federal (cerca de **245 GB** descompactados). O pacote só baixa: não extrai os ZIPs nem converte os dados.
+O `rfb-cnpj-fetcher` baixa, em paralelo, os ZIPs da base pública de CNPJs da Receita Federal (37 arquivos: cerca de **7,8 GB** em ZIP e **28,7 GB** descompactados, medidos na referência de setembro de 2026). O pacote só baixa: não extrai os ZIPs nem converte os dados.
 
 ## Instalação
 
@@ -28,4 +28,4 @@ Sincronizando a base inteira:
 quantilica rfb-cnpj sync -o ./data/rfb
 ```
 
-Aviso: Devido ao tamanho da base (245 GB), certifique-se de que há espaço em disco suficiente no diretório de destino.
+Aviso: a base ocupa cerca de 8 GB em ZIP (29 GB depois de extraída); certifique-se de que há espaço em disco suficiente no diretório de destino.

@@ -45,7 +45,7 @@ quantilica inmet sync -o ./data --workers 8
 
 ## Cookbook Analítico: Meteorologia Escalonável
 
-O banco do INMET cresceu enormemente após 2008 devido ao auge das estações automáticas. Quando descompactado, os CSVs são de leitura dolorosa. O ecossistema Quantilica disponibiliza a conversão forte e tipada para `Parquet` obedecendo contratos exatos de schemas (`BDMEP_CONTRACT`).
+O ZIP anual do BDMEP passou de 17 MB em 2006 para 88 MB em 2009, acompanhando a expansão das estações automáticas (565 dos 594 arquivos do ZIP de 2025), e desde 2010 fica entre 81 e 137 MB. Quando descompactado, os CSVs são de leitura dolorosa. O ecossistema Quantilica disponibiliza a conversão forte e tipada para `Parquet` obedecendo contratos exatos de schemas (`BDMEP_CONTRACT`).
 
 Para ler o diretório de dados massivos e visualizar anomalias térmicas, use o `Polars`:
 
