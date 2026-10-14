@@ -577,7 +577,8 @@ tabela estão nos [modelos SQLAlchemy do repositório](https://github.com/Quanti
 from sqlalchemy import select
 from sidra_sql.models import Dados, Localidade, Periodo, Dimensao
 
-# PIB por estado (apenas registros ativos)
+# PIB por estado: tabela 5938 (PIB dos Municípios, anual, com níveis N1, N2, N3 e N6),
+# variável 37 (PIB a preços correntes), apenas registros ativos
 query = (
     select(
         Localidade.d1n.label("estado"),
@@ -591,7 +592,8 @@ query = (
     .where(
         Dados.ativo == True,
         Localidade.nc == "N3",          # estados
-        Dados.tabela_sidra_id == "1620",
+        Dados.tabela_sidra_id == "5938",
+        Dimensao.d2c == "37",           # PIB a preços correntes
     )
     .order_by(Periodo.codigo.desc())
 )
