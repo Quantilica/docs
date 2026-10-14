@@ -80,7 +80,10 @@ Regras de ouro:
   de uma entidade. Exceção: `check` (ADR 2026-10-07) não é listagem — é
   verificação remoto × local com plano consumível (`--json` →
   `sync --from-plan`), etapa operacional distinta do download.
-- **Exceção declarada: `bcb-sgs-fetcher`** (ADR `2026-10-07-check-obrigatorio-e-sidra-sync-rename.md`): API de séries temporais (SGS): um endpoint REST dinâmico, sem `Last-Modified`/`ETag`/`Content-Length` de arquivo estático para comparar contra o snapshot JSON local, então o padrão `check` não se aplica. A freshness por série usa o metadado de última atualização da própria API (mecanismo distinto). A carga no Postgres é responsabilidade do `bcb-sgs-sql`.
+- **Exceção declarada: `bcb-sgs-fetcher`** (ADR `2026-10-07-check-obrigatorio-e-sidra-sync-rename.md`): o SGS é uma API de séries temporais, consultada por janela de datas num endpoint REST dinâmico (`/dados/serie/bcdata.sgs.<n>/dados`), e não uma URL estável por arquivo. O fetcher grava um snapshot JSON por série e por dia (`--skip-existing` pula as séries cujo snapshot do dia já existe), sem o plano remoto × local do `check`. A carga no Postgres é responsabilidade do `bcb-sgs-sql`.
+
+    !!! note "O que a API oferece (verificado em 2026-10-13, série 11)"
+        A API aceita `HEAD`, não envia `Last-Modified` e devolve um `ETag` fraco que acompanha o corpo da resposta (muda com a janela pedida), com `304` para `If-None-Match`. Um `check` baseado nesse `ETag` seria viável; o ADR de 2026-10-07 o descartou por outro motivo e a exceção continua em vigor até que alguém o implemente.
 - **Fetchers FTP (`pdet-fetcher`, `datasus-fetcher`) — `check` herdado é conforme.** Servidores
   FTP não provêm `HEAD` nem `Last-Modified` confiável; o `check` canônico do
   `FetcherApp` (HEAD sobre os mesmos URLs do `download_entry`) pressupõe
@@ -404,7 +407,7 @@ Nesses casos, adote o seguinte padrão:
 
 1. Registre as dependências pesadas em `[project.optional-dependencies]` sob o grupo `analysis` no `pyproject.toml` do fetcher.
 2. Atrase as importações do módulo de conversão (ex: `from .reader import convert`) para o momento da execução do comando, isolando em um bloco `try...except ImportError`.
-3. Avise graciosamente o usuário caso o módulo não esteja disponível:
+3. Avise graciosamente o usuário caso o módulo não esteja disponível. O `plugin.py` roda dentro da CLI, então a mensagem é o comando que instala o extra no ambiente dela: `quantilica install <chave> --extra analysis`, em que `<chave>` é o nome do entry point (`pdet`, `anac`, `td`). A mensagem não tem colchetes de propósito: o Rich trata `[analysis]` como marcação e o descartaria. Os comandos de `FetcherApp` (`command_convert`, `command_archive`, `command_pipeline`) já imprimem essa mensagem.
 
 ```python
 @app.command("convert")
@@ -417,14 +420,14 @@ def cmd_convert(
     except ImportError:
         console.print(
             "[red]Erro:[/red] convert requer extras de análise: "
-            "instale o extra com: uv add '<pacote-fetcher>[analysis]' --index https://index.quantilica.com/simple/"
+            "quantilica install <chave> --extra analysis"
         )
         raise typer.Exit(1) from None
 
     converte_dados(input)
 ```
 
-4. Módulos analíticos (`reader`, `contracts`, `wrangling` ou equivalentes) que importam `polars` (ou outra dependência do extra `analysis`) diretamente **devem** converter a ausência do extra num `ImportError` de mensagem acionável — nunca `ModuleNotFoundError` cru. Padrão: guarda no topo do módulo que re-levanta com a instrução de instalação:
+4. Módulos analíticos (`reader`, `contracts`, `wrangling` ou equivalentes) que importam `polars` (ou outra dependência do extra `analysis`) diretamente **devem** converter a ausência do extra num `ImportError` de mensagem acionável — nunca `ModuleNotFoundError` cru. Esses módulos atendem quem importa o pacote num projeto, então a instrução é a do `uv add`. Padrão: guarda no topo do módulo que re-levanta com ela:
 
 ```python
 try:
