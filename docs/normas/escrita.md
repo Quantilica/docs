@@ -44,7 +44,7 @@ Páginas de domínio (`*/index.md`) e receitas do Cookbook abrem com narrativa; 
 Regras:
 
 - **Narrativa não é hype.** Continuam proibidos "revolucionário", superlativos vazios e promessas sem mecanismo. A cena cria contexto; a prova continua sendo comando executável e número verificável.
-- **Toda afirmação factual da cena deve ser defensável** — use os números que a própria página já documenta (245 GB, 17.000 séries, 39 GB) ou hedge ("costuma", "pode"). Sem depoimentos inventados, sem estatísticas sem fonte.
+- **Toda afirmação factual da cena deve ser defensável** — use os números que a própria página já documenta (29 GB descompactados do CNPJ, 19.607 séries do SGS, 594 estações do INMET em 2025) ou hedge ("costuma", "pode"). Sem depoimentos inventados, sem estatísticas sem fonte. Tamanhos e tempos vêm de medições versionadas em [`benchmarks/`](https://github.com/Quantilica/docs/tree/main/benchmarks); número que não tem JSON lá não entra na página.
 - **Normas, referência de API e configuração ficam fora** — texto normativo e contratual permanece seco e literal.
 - Front-matter (`title`/`description`) permanece factual para SEO/Open Graph, mesmo quando a abertura é narrativa.
 

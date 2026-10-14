@@ -49,7 +49,7 @@ Para dados fiscais (RTN), o fluxo é mais simples: `rtn-fetcher` baixa a planilh
 
 ## Pacotes
 
-- **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — suíte de engenharia financeira: async fetching com idempotência, processamento Polars (10× vs. Pandas), matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
+- **[tesouro-direto-fetcher](tesouro-direto-fetcher.md)** — suíte de engenharia financeira: download paralelo em threads com idempotência, leitura de CSV com Polars 14× a 22× mais rápida que a do pandas nos arquivos medidos, matching FIFO de lotes com injeção de cupom, retornos Modified Dietz GIPS-compliant. Suporta LTN, NTN-B/F/C, LFT.
 - **[rtn-fetcher](rtn-fetcher.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI com `check`, `list` e `sync`, e gravação em CSV ou Parquet pela API Python.
 Para a teoria por trás dos números — YTM, duration, Modified Dietz, retornos reais para títulos indexados à inflação — consulte **[Cálculo de Retornos de Renda Fixa](../concepts/calculo-retornos-renda-fixa.md)** na seção Conceitos.
 

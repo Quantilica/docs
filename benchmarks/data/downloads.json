@@ -1,0 +1,47 @@
+{
+ "date": "2026-10-13",
+ "what": "12 ZIPs mensais de fi-inf-diario (CVM), ~131 MiB no total",
+ "files": [
+  "inf_diario_fi_202510.zip",
+  "inf_diario_fi_202511.zip",
+  "inf_diario_fi_202512.zip",
+  "inf_diario_fi_202601.zip",
+  "inf_diario_fi_202602.zip",
+  "inf_diario_fi_202603.zip",
+  "inf_diario_fi_202604.zip",
+  "inf_diario_fi_202605.zip",
+  "inf_diario_fi_202606.zip",
+  "inf_diario_fi_202607.zip",
+  "inf_diario_fi_202608.zip",
+  "inf_diario_fi_202609.zip"
+ ],
+ "bytes": 137809456,
+ "runs": 3,
+ "seconds": {
+  "1": [
+   136.42595046199858,
+   98.73840703698806,
+   66.06244524702197
+  ],
+  "4": [
+   107.53963582299184,
+   68.5904830210493,
+   64.8884156839922
+  ],
+  "8": [
+   74.38412499800324,
+   49.41170132695697,
+   117.29644342599204
+  ]
+ },
+ "median_s": {
+  "1": 98.73840703698806,
+  "4": 68.5904830210493,
+  "8": 74.38412499800324
+ },
+ "speedup_vs_first": {
+  "1": 1.0,
+  "4": 1.4395350883691382,
+  "8": 1.3274123617053852
+ }
+}

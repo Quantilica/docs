@@ -9,7 +9,7 @@ Tutorial dedicado ao formato (Parquet) e biblioteca (Polars) que formam a espinh
 
 ## Por que Parquet?
 
-Datasets brasileiros variam de pequenos (séries macroeconômicas SIDRA: KB) a massivos (RAIS anual: GB; Siscomex anual: dezenas de GB). CSV tem três limitações que aparecem rapidamente:
+Datasets brasileiros variam de pequenos (séries macroeconômicas SIDRA: KB) a massivos (RAIS 2024: 12,9 GiB de CSV só em três dos seis arquivos do ano). CSV tem três limitações que aparecem rapidamente:
 
 - carrega arquivo inteiro em memória,
 - faz parse de todos os tipos a cada leitura,
@@ -18,18 +18,17 @@ Datasets brasileiros variam de pequenos (séries macroeconômicas SIDRA: KB) a m
 Parquet contorna todos os três:
 
 - **Armazenamento colunar** — lê apenas as colunas necessárias.
-- **Comprimido** — ~80-90% menor que CSV equivalente.
+- **Comprimido** — 82% a 87% menor que o CSV equivalente nos dados que medimos.
 - **Predicate pushdown** — filtros são aplicados antes da leitura completa.
 - **Schema preservado** — sem adivinhação de tipos.
 
-*Valores ilustrativos de ordem de grandeza; não são medições dos arquivos oficiais.*
+Medido em 2026-10-13 com Polars 1.41.2, nos arquivos oficiais ([dados e scripts](https://github.com/Quantilica/docs/tree/main/benchmarks)). O Parquet é o que `write_parquet` grava por padrão, com compressão `zstd`; com `snappy`, os mesmos dados do CAGED ficam 31% maiores.
 
-| Volume típico | CSV | Parquet | Compressão |
+| Dataset | CSV | Parquet | Redução |
 |---|---|---|---|
-| Tesouro 20 anos | ~5 MB | ~1 MB | 80% |
-| CAGED mensal | ~50 MB | ~6 MB | 88% |
-| RAIS 2023 | ~850 MB | ~100 MB | 88% |
-| Siscomex anual | ~500 MB | ~50 MB | 90% |
+| Tesouro Direto, preços e taxas (histórico completo) | 13,9 MiB | 2,5 MiB | 82% |
+| Novo CAGED, movimentações de ago/2026 | 443,6 MiB | 58,1 MiB | 87% |
+| RAIS 2024, arquivo do Centro-Oeste | 2,2 GiB | 405,5 MiB | 82% |
 
 ![Comparação de tamanho CSV vs. Parquet por dataset](../assets/generated/compression_comparison.svg)
 
@@ -43,7 +42,7 @@ import polars as pl
 # RAIS bruto (CSV grande)
 df = pl.read_csv("rais_2023.csv")
 df.write_parquet("rais_2023.parquet")
-# CSV: 850 MB → Parquet: 100 MB
+# Medido: CSV de 2,2 GiB → Parquet de 405,5 MiB (RAIS 2024, Centro-Oeste)
 
 # Tesouro bruto (CSV pequeno)
 df = pl.read_csv("PrecoTaxaTesouroDireto.csv", separator=";")
@@ -297,13 +296,21 @@ df = df.with_columns([
 
 ## Performance
 
-### CSV vs. Parquet em arquivo de 1 GB
+### CSV vs. Parquet: tempos medidos
 
-| Operação | Tempo |
-|---|---|
-| `read_csv` (eager) | ~12 s |
-| `read_parquet` (eager) | ~0,3 s (40× mais rápido) |
-| `scan_parquet().filter().collect()` | ~0,05 s (240× mais rápido) |
+Mediana de execuções repetidas, com o arquivo no cache de página do sistema, em 8 núcleos e 31 GiB de RAM, Polars 1.41.2 ([dados e scripts](https://github.com/Quantilica/docs/tree/main/benchmarks)). O "leitor tipado" é o do próprio fetcher (`read_prices`, `read_caged`, `read_rais`), que entrega o DataFrame já com tipos; o Parquet guarda os tipos.
+
+| Dataset | `read_csv` (só texto) | Leitor tipado (CSV) | `read_parquet` | `scan_parquet().filter()` |
+|---|---|---|---|---|
+| Tesouro Direto (13,9 MiB) | 12 ms | 76 ms | 7 ms | 1 ms |
+| Novo CAGED (443,6 MiB) | 0,81 s | 4,54 s | 0,82 s | 89 ms |
+| RAIS Centro-Oeste (2,2 GiB) | 3,87 s | 27,54 s | 2,58 s | 0,28 s |
+
+O que a medição mostra:
+
+- **Ler o texto do CSV é rápido no Polars.** No CAGED, `read_csv` sem converter tipos levou 0,81 s, o mesmo que `read_parquet` (0,82 s). O Parquet não ganha por parsear mais rápido, e sim por já guardar os tipos: do CSV ao DataFrame tipado, a leitura foi 5,6× (CAGED) e 10,7× (RAIS) mais lenta que `read_parquet`.
+- **Filtro e colunas.** `scan_parquet` com filtro e três colunas foi 9,1× (CAGED) e 9,4× (RAIS) mais rápido que `read_parquet` inteiro, e 51× e 100× mais rápido que o CSV tipado.
+- **Polars e pandas no mesmo CSV, lido como texto.** CAGED: 0,81 s contra 11,70 s (14×). Tesouro: 12 ms contra 0,25 s (22×). O arquivo da RAIS não foi medido no pandas.
 
 ![Tempo de leitura: CSV vs. Parquet com Polars](../assets/generated/read_performance.svg)
 

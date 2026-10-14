@@ -1,0 +1,200 @@
+{
+ "date": "2026-10-13",
+ "what": "RAIS vínculos 2024 (pdet-fetcher): linhas e bytes do CSV contados em streaming (7z x -so); soma de size_bytes dos manifestos por ano",
+ "files_counted": [
+  {
+   "file": "RAIS_VINC_PUB_CENTRO_OESTE.7z",
+   "compressed_bytes": 343753235,
+   "sha256_matches_manifest": true,
+   "csv_bytes": 2332489517,
+   "lines": 8732360,
+   "records": 8732359
+  },
+  {
+   "file": "RAIS_VINC_PUB_MG_ES_RJ.7z",
+   "compressed_bytes": 747149815,
+   "sha256_matches_manifest": true,
+   "csv_bytes": 4864880258,
+   "lines": 18062651,
+   "records": 18062650
+  },
+  {
+   "file": "RAIS_VINC_PUB_SP.7z",
+   "compressed_bytes": 1066197453,
+   "sha256_matches_manifest": null,
+   "csv_bytes": 6622152048,
+   "lines": 24636059,
+   "records": 24636058,
+   "note": "arquivo local do cron; contado em streaming"
+  }
+ ],
+ "records_counted": 51431067,
+ "csv_bytes_counted": 13819521823,
+ "files_in_year": 6,
+ "manifest_compressed_bytes_by_year": {
+  "1985": {
+   "bytes": 312451915,
+   "files": 26
+  },
+  "1986": {
+   "bytes": 362914374,
+   "files": 26
+  },
+  "1987": {
+   "bytes": 384114274,
+   "files": 27
+  },
+  "1988": {
+   "bytes": 388874757,
+   "files": 27
+  },
+  "1989": {
+   "bytes": 403353424,
+   "files": 28
+  },
+  "1990": {
+   "bytes": 405653419,
+   "files": 28
+  },
+  "1991": {
+   "bytes": 388366450,
+   "files": 28
+  },
+  "1992": {
+   "bytes": 356966379,
+   "files": 28
+  },
+  "1993": {
+   "bytes": 360140535,
+   "files": 28
+  },
+  "1994": {
+   "bytes": 463391709,
+   "files": 28
+  },
+  "1995": {
+   "bytes": 492905978,
+   "files": 28
+  },
+  "1996": {
+   "bytes": 511887229,
+   "files": 28
+  },
+  "1997": {
+   "bytes": 516887240,
+   "files": 28
+  },
+  "1998": {
+   "bytes": 524208168,
+   "files": 27
+  },
+  "1999": {
+   "bytes": 665377973,
+   "files": 27
+  },
+  "2000": {
+   "bytes": 705607398,
+   "files": 27
+  },
+  "2001": {
+   "bytes": 745663959,
+   "files": 27
+  },
+  "2002": {
+   "bytes": 762975719,
+   "files": 27
+  },
+  "2003": {
+   "bytes": 812858460,
+   "files": 27
+  },
+  "2004": {
+   "bytes": 862669964,
+   "files": 27
+  },
+  "2005": {
+   "bytes": 935963979,
+   "files": 27
+  },
+  "2006": {
+   "bytes": 964313898,
+   "files": 27
+  },
+  "2007": {
+   "bytes": 1126688883,
+   "files": 27
+  },
+  "2008": {
+   "bytes": 1239209157,
+   "files": 27
+  },
+  "2009": {
+   "bytes": 1267615094,
+   "files": 27
+  },
+  "2010": {
+   "bytes": 1403246422,
+   "files": 27
+  },
+  "2011": {
+   "bytes": 1508438864,
+   "files": 27
+  },
+  "2012": {
+   "bytes": 1573744527,
+   "files": 27
+  },
+  "2013": {
+   "bytes": 1599552708,
+   "files": 27
+  },
+  "2014": {
+   "bytes": 1608048277,
+   "files": 27
+  },
+  "2015": {
+   "bytes": 2537132193,
+   "files": 27
+  },
+  "2016": {
+   "bytes": 2618897242,
+   "files": 27
+  },
+  "2017": {
+   "bytes": 2542866618,
+   "files": 27
+  },
+  "2018": {
+   "bytes": 2694823128,
+   "files": 6
+  },
+  "2019": {
+   "bytes": 2572685471,
+   "files": 6
+  },
+  "2020": {
+   "bytes": 2529091407,
+   "files": 6
+  },
+  "2021": {
+   "bytes": 2786434215,
+   "files": 6
+  },
+  "2022": {
+   "bytes": 3073257610,
+   "files": 6
+  },
+  "2023": {
+   "bytes": 3473080133,
+   "files": 6
+  },
+  "2024": {
+   "bytes": 3629472758,
+   "files": 6
+  },
+  "2025": {
+   "bytes": 3784840940,
+   "files": 6
+  }
+ }
+}

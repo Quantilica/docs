@@ -21,9 +21,9 @@ Um snapshot informal do estado conhecido das fontes oficiais brasileiras que os 
 | **IBGE Agregados v3** (`servicodados.ibge.gov.br`) | ✅ estável | 2026-10-13 | Janelas curtas de 502 em manutenção |
 | **DATASUS FTP** (`ftp.datasus.gov.br`) | ⚠️ intermitente | 2026-10-13 | Cai frequentemente em horário comercial; reduzir `--threads` (FTP alcançável na verificação) |
 | **Tesouro Transparente CKAN** | ✅ estável | 2026-10-13 | Dataset com timestamp no nome (API `package_list` responde 200) |
-| **INMET BDMEP** | ✅ estável | 2026-10-13 | ZIPs por ano; latin-1; valores `-9999` |
+| **INMET BDMEP** | ⚠️ intermitente | 2026-10-13 | ZIPs por ano; latin-1; valores `-9999`. O cron da madrugada baixou os 27 ZIPs (1,9 GB) em cerca de 11 min, mas à noite o portal reiniciou conexões de `curl` e `urllib` e um ZIP de 91 MB levou 7 min 40 s pelo cliente do fetcher |
 | **Siscomex** (Comex) | ⚠️ instável | 2026-10-13 | Falha de verificação do certificado SSL na verificação (`balanca.economia.gov.br`); arquivos GB |
-| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-10-13 | Cai com frequência (FTP alcançável na verificação); CAGED schema diferente em 2020+ |
+| **PDET FTP** (`ftp.mtps.gov.br`) | ⚠️ intermitente | 2026-10-13 | Cai com frequência (FTP alcançável na verificação); a velocidade oscila de dezenas a centenas de KB/s por conexão (um CAGED de 51 MB levou 1 min 46 s); CAGED schema diferente em 2020+ |
 | **Tesouro Nacional RTN** | ✅ estável | 2026-10-13 | Excel multi-aba publicado mensalmente |
 | **BCB SGS** (`api.bcb.gov.br` + `www3.bcb.gov.br/sgspub`) | ✅ estável | 2026-10-13 | API JSON de valores estável (200); metadados só via scraping HTML (a árvore de grupos é sequencial; a coleta em lote dos metadados aceita `--workers`); séries diárias truncadas (varredura ano a ano) |
 | **INEP** (`download.inep.gov.br`) | ⚠️ não confirmado | 2026-10-13 | Conexão reiniciada pelo servidor na verificação (e falha de handshake TLS com `urllib`). Arquivos muito grandes, preferir download particionado. Revalidar antes de tratar como indisponível |

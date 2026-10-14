@@ -21,7 +21,7 @@ O ecossistema fornece **dois stacks complementares** para SIDRA — escolha base
 
 ### Stack 1 — Exploração (`sidra-fetcher`)
 
-Para análise ad-hoc, notebooks Jupyter, lógica customizada e fetching on-demand. SDK Python com clientes sync (`SidraClient`) e async (`AsyncSidraClient`, ~3× mais rápido em multi-tabela).
+Para análise ad-hoc, notebooks Jupyter, lógica customizada e fetching on-demand. SDK Python com clientes sync (`SidraClient`) e async (`AsyncSidraClient`).
 
 ```mermaid
 graph LR

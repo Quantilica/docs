@@ -30,7 +30,7 @@ quantilica datasus list
 # Baixar internações hospitalares para SP, 2022–2023
 quantilica datasus sync sih-rd --regions sp --start 2022-01 --end 2023-12 -o /data/datasus
 
-# Converter .dbc para Parquet (leitura 10× mais rápida)
+# Converter .dbc para Parquet (formato colunar e tipado, lido com Polars)
 quantilica datasus convert -i /data/datasus -o /data/datasus/parquet
 ```
 

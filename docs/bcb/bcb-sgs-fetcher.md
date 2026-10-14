@@ -5,7 +5,7 @@ description: Coleta séries temporais do SGS/BCB via API JSON e scraping HTML �
 
 # Banco Central do Brasil (SGS)
 
-O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de indicadores macroeconômicos do BCB. São mais de 17.000 séries, muitas com histórico desde a década de 1980.
+O Sistema Gerenciador de Séries Temporais (SGS) é o repositório oficial de indicadores macroeconômicos do BCB. O catálogo lista 19.607 séries (6.841 delas desativadas; contagem de 2026-10-13), muitas com histórico desde a década de 1980.
 
 **bcb-sgs-fetcher** expõe dois clientes resilientes: o `SgsDataClient` para a API JSON pública, e o `ScraperClient` para contornar a ausência de uma API de metadados via scraping.
 
