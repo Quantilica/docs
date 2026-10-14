@@ -9,7 +9,7 @@ Tutorial dedicado ao formato (Parquet) e biblioteca (Polars) que formam a espinh
 
 ## Por que Parquet?
 
-Datasets brasileiros variam de pequenos (séries macroeconômicas SIDRA: KB) a massivos (RAIS 2024: 12,9 GiB de CSV só em três dos seis arquivos do ano). CSV tem três limitações que aparecem rapidamente:
+Datasets brasileiros variam de pequenos (séries macroeconômicas SIDRA: KB) a massivos (RAIS 2024: 22,0 GiB de CSV e 87,7 milhões de vínculos em seis arquivos). CSV tem três limitações que aparecem rapidamente:
 
 - carrega arquivo inteiro em memória,
 - faz parse de todos os tipos a cada leitura,

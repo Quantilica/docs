@@ -7,12 +7,12 @@ description: Microdados de emprego formal (CAGED, RAIS) processados com Polars s
 
 Seu notebook abre o CSV da RAIS — só o arquivo de São Paulo em 2024 tem 24,6 milhões de linhas e 6,6 GB — e o Pandas morre antes do primeiro `groupby`. Esse é o batismo de quem estuda emprego formal no Brasil: os microdados administrativos do Ministério do Trabalho são um censo do país inteiro, e cobram pedágio em memória de quem chega despreparado. Duas fontes, dois ritmos:
 
-- **RAIS** (Relação Anual de Informações Sociais) — censo anual de todas as relações de emprego formal. Série de 1985 até hoje. Em 2024 são 6 arquivos (3,4 GiB compactados); os três que contamos, SP, MG/ES/RJ e Centro-Oeste, somam 51,4 milhões de vínculos e 12,9 GiB de CSV.
+- **RAIS** (Relação Anual de Informações Sociais) — censo anual de todas as relações de emprego formal. Série de 1985 até hoje. Em 2024 são 6 arquivos: 3,4 GiB compactados, 87,7 milhões de vínculos e 22,0 GiB (23,6 GB) de CSV.
 - **CAGED** (Cadastro Geral de Empregados e Desempregados) — registro mensal de fluxos (admissões e desligamentos) por setor/região. O Novo CAGED (desde 2020) tem cerca de 465 MB de CSV por mês de movimentações (ago/2026: 4,4 milhões de linhas, 51 MB compactados); o CAGED antigo vai de 2007 a 2019, com arquivos de ajustes desde 2002.
 
 ## O desafio
 
-- **Esgotamento de memória** — a RAIS tem dezenas de milhões de linhas (24,6 milhões só em SP em 2024), o que pede leitura lazy, filtro cedo e Parquet.
+- **Esgotamento de memória** — a RAIS de 2024 tem 87,7 milhões de linhas (24,6 milhões só em SP), o que pede leitura lazy, filtro cedo e Parquet.
 - **Ineficiência de formato** — CSV/TXT legados são lentos, não-tipados e desperdiçam espaço (CSV: 8 GB; Parquet equivalente: 0.4 GB).
 - **Explosão de arquivos temporários** — descompressão `.7z` exige espaço em disco frequentemente indisponível em VMs cloud.
 - **Esquema variável** — colunas e tipos mudam ao longo dos anos (década de 1990 vs. 2020 são quase incompatíveis).
