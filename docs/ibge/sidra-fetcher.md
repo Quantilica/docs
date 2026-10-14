@@ -35,7 +35,7 @@ quantilica sidra list pesquisas
 # Descobrir metadados detalhados de uma tabela específica (ex: IPCA 1737)
 quantilica sidra info 1737
 
-# Verificar todos os períodos suportados
+# Listar os períodos disponíveis (id, rótulo, frequência e data da última modificação)
 quantilica sidra periods 1620
 
 # Verificar o que mudou sem baixar (plano de freshness por nível)
