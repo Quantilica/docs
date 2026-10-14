@@ -39,9 +39,7 @@ import polars as pl
 def _tesouro(data_dir: Path) -> dict[str, Any]:
     from tesouro_direto_fetcher.reader import read_prices
 
-    path = Path(
-        glob.glob(str(data_dir / "td" / "taxas-dos-titulos-*" / "*.csv"))[0]
-    )
+    path = Path(glob.glob(str(data_dir / "td" / "taxas-dos-titulos-*" / "*.csv"))[0])
     return {
         "name": "tesouro-precos",
         "label": "Tesouro Direto\npreços e taxas",
@@ -133,16 +131,12 @@ def _environment() -> dict[str, Any]:
 def measure(spec: dict[str, Any], runs: int, with_pandas: bool) -> dict[str, Any]:
     csv: Path = spec["csv"]
     sep, enc = spec["separator"], spec["encoding"]
-    out: dict[str, Any] = {
-        k: spec[k] for k in ("name", "label", "source", "separator", "encoding")
-    }
+    out: dict[str, Any] = {k: spec[k] for k in ("name", "label", "source", "separator", "encoding")}
     out["csv_file"] = csv.name
     out["csv_bytes"] = csv.stat().st_size
 
     def raw() -> pl.DataFrame:
-        return pl.read_csv(
-            csv, separator=sep, encoding=enc, infer_schema_length=0, has_header=True
-        )
+        return pl.read_csv(csv, separator=sep, encoding=enc, infer_schema_length=0, has_header=True)
 
     out["rows"], out["columns"] = raw().shape
     out["read_csv_strings_s"] = _median(raw, runs)
@@ -197,9 +191,7 @@ def main() -> int:
     ap.add_argument("--data-dir", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--runs", type=int, default=5)
-    ap.add_argument(
-        "--only", nargs="*", help="nomes dos datasets (padrão: todos os disponíveis)"
-    )
+    ap.add_argument("--only", nargs="*", help="nomes dos datasets (padrão: todos os disponíveis)")
     ap.add_argument(
         "--pandas-max-mb",
         type=int,
