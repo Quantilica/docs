@@ -1,0 +1,9 @@
+{
+ "date": "2026-10-13",
+ "what": "IDs únicos extraídos das páginas HTML do catálogo do SGS (bcb-sgs catalogo arvore-grupos e series-desativadas)",
+ "arvore_grupos": 19607,
+ "series_desativadas": 6841,
+ "uniao": 19607,
+ "intersecao": 6841,
+ "grupos_principais": 14
+}

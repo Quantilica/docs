@@ -32,7 +32,7 @@ Levar séries do SGS para análise rigorosa ou modelagem envolve desafios além 
 
 ### 1. Catálogo, observações e temas em um modelo coerente
 
-O SGS tem mais de 17.000 séries, cada uma com metadados ricos (nome, frequência, unidade,
+O catálogo do SGS lista 19.607 séries (6.841 desativadas, em 2026-10-13), cada uma com metadados ricos (nome, frequência, unidade,
 fonte, hierarquia de temas) e um histórico de observações `(data, valor)`. O `bcb-sgs-sql`
 separa isso em quatro tabelas — `series_metadata` (catálogo), `series_data` (observações),
 `theme` (hierarquia auto-referente) e `arquivo_carregado` (controle de idempotência) — em vez de achatar tudo num CSV que perde integridade.

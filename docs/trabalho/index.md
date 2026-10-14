@@ -5,14 +5,14 @@ description: Microdados de emprego formal (CAGED, RAIS) processados com Polars s
 
 # Mercado de Trabalho
 
-Seu notebook abre o CSV da RAIS — 50 milhões de linhas, 8 GB — e o Pandas morre antes do primeiro `groupby`. Esse é o batismo de quem estuda emprego formal no Brasil: os microdados administrativos do Ministério do Trabalho são um censo do país inteiro, e cobram pedágio em memória de quem chega despreparado. Duas fontes, dois ritmos:
+Seu notebook abre o CSV da RAIS — só o arquivo de São Paulo em 2024 tem 24,6 milhões de linhas e 6,6 GB — e o Pandas morre antes do primeiro `groupby`. Esse é o batismo de quem estuda emprego formal no Brasil: os microdados administrativos do Ministério do Trabalho são um censo do país inteiro, e cobram pedágio em memória de quem chega despreparado. Duas fontes, dois ritmos:
 
-- **RAIS** (Relação Anual de Informações Sociais) — censo anual de todas as relações de emprego formal. ~60M registros/ano, 1985–presente, ~8 GB CSV/ano.
-- **CAGED** (Cadastro Geral de Empregados e Desempregados) — registro mensal de fluxos (admissões e desligamentos) por setor/região. 1992–presente, 200-500 MB/mês.
+- **RAIS** (Relação Anual de Informações Sociais) — censo anual de todas as relações de emprego formal. Série de 1985 até hoje. Em 2024 são 6 arquivos (3,4 GiB compactados); os três que contamos, SP, MG/ES/RJ e Centro-Oeste, somam 51,4 milhões de vínculos e 12,9 GiB de CSV.
+- **CAGED** (Cadastro Geral de Empregados e Desempregados) — registro mensal de fluxos (admissões e desligamentos) por setor/região. O Novo CAGED (desde 2020) tem cerca de 465 MB de CSV por mês de movimentações (ago/2026: 4,4 milhões de linhas, 51 MB compactados); o CAGED antigo vai de 2007 a 2019, com arquivos de ajustes desde 2002.
 
 ## O desafio
 
-- **Esgotamento de memória** — arquivos RAIS (50M+ linhas) quebram Pandas em máquinas típicas.
+- **Esgotamento de memória** — a RAIS tem dezenas de milhões de linhas (24,6 milhões só em SP em 2024), o que pede leitura lazy, filtro cedo e Parquet.
 - **Ineficiência de formato** — CSV/TXT legados são lentos, não-tipados e desperdiçam espaço (CSV: 8 GB; Parquet equivalente: 0.4 GB).
 - **Explosão de arquivos temporários** — descompressão `.7z` exige espaço em disco frequentemente indisponível em VMs cloud.
 - **Esquema variável** — colunas e tipos mudam ao longo dos anos (década de 1990 vs. 2020 são quase incompatíveis).
@@ -49,7 +49,7 @@ graph LR
 
 Para o tutorial de Parquet + Polars (não específico de RAIS, aplicável a qualquer dataset grande), veja **[Parquet + Polars](../concepts/parquet-polars.md)** em Conceitos.
 
-Os [Princípios de Design](../concepts/principios.md) do ecossistema — especialmente Performance e Sem Mágica — são centrais aqui: Polars 10× Pandas, conversão determinística, sem caching escondido. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
+Os [Princípios de Design](../concepts/principios.md) do ecossistema — especialmente Performance e Sem Mágica — são centrais aqui: leitura de CSV com Polars 14× a 22× mais rápida que o pandas nos arquivos medidos, conversão determinística, sem caching escondido. Receitas táticas em [Padrões Práticos](../concepts/padroes.md): [Parquet vs. CSV](../concepts/padroes.md#parquet-vs-csv), [Lazy evaluation](../concepts/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../concepts/padroes.md#memoria-arquivos-grandes).
 
 ## Estrutura de dados
 

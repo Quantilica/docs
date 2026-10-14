@@ -81,7 +81,7 @@ quantilica datasus sync -o ./data sim-do-cid10 \
 ### Por quê?
 
 - **Network I/O é lenta**: uma requisição pode levar 1 s. Enquanto espera resposta, você pode iniciar mais 5.
-- **Speedup**: 4-10× mais rápido que sequencial.
+- **O ganho depende do servidor.** Em 12 ZIPs de cerca de 11 MiB da CVM, 4 threads levaram mediana de 68,6 s contra 98,7 s com uma (1,4×), e 8 threads não melhoraram (74,4 s). A variação entre rodadas foi maior que o ganho: de 66 s a 136 s com uma thread ([dados e script](https://github.com/Quantilica/docs/tree/main/benchmarks)).
 - **Speedup gratuito**: não exige hardware mais rápido — só melhor uso dos recursos.
 
 ### Padrão: async/await para APIs REST
@@ -98,10 +98,12 @@ async def fetch_multiple_metadata():
             client.get_agregado(6381),  # Desemprego (PNADC)
         )
 
-# Sequencial: ~6 s
-# Concorrente: ~2 s (3× mais rápido)
+# As três chamadas saem juntas. O ganho depende da API: veja a medição abaixo.
 agregados = asyncio.run(fetch_multiple_metadata())
 ```
+
+!!! warning "Meça antes de assumir ganho"
+    Ao buscar os metadados de 8 agregados (`get_agregado_metadados`), o `AsyncSidraClient` levou mediana de 6,6 s, contra 1,9 s do `SidraClient` em sequência (medição de 2026-10-13, 5 rodadas alternadas; [dados e script](https://github.com/Quantilica/docs/tree/main/benchmarks)). Chamado uma requisição por vez, o cliente assíncrono já foi mais lento que o síncrono, então o custo está no cliente, não na falta de paralelismo.
 
 ### Padrão: crawling FTP multithreaded
 
@@ -111,8 +113,8 @@ quantilica datasus sync -o ./data sim-do-cid10 \
     --start 2018 --end 2023 \
     --threads 5
 
-# Sequencial (--threads 1): 300 min
-# Concorrente (--threads 5):  50 min (~6× mais rápido)
+# --threads 1 baixa um arquivo por vez; --threads 5 baixa cinco juntos.
+# O ganho depende do servidor FTP: meça com a sua fonte.
 ```
 
 Equivalente em Python:
@@ -149,8 +151,8 @@ Se quiser sobrepor trabalho não relacionado (download SECEX em paralelo com fet
 
 ### Por quê?
 
-- **95%+ menor**: 8 GB CSV → 0,4 GB Parquet.
-- **100× mais rápido para ler**: formato colunar permite pular dados irrelevantes.
+- **82% a 87% menor** nos dados medidos (RAIS 2024, Centro-Oeste: 2,2 GiB de CSV → 406 MiB de Parquet).
+- **Rápido para ler o que importa**: o formato colunar pula colunas e linhas irrelevantes; com filtro e 3 colunas, a leitura foi 51× a 100× mais rápida que a do CSV tipado nos dados medidos.
 - **Tipado**: sem adivinhar se uma coluna é string ou número.
 - **Comprimido**: compressão embutida; sem `.gz` separado.
 
@@ -159,14 +161,14 @@ Se quiser sobrepor trabalho não relacionado (download SECEX em paralelo com fet
 ```python
 import polars as pl
 
-# ❌ Lento e grande
-df = pl.read_csv("large_file.csv")  # 8 GB, 30 s para ler
-df.write_csv("output.csv")          # 4 GB, 60 s para escrever
-
-# ✅ Rápido e pequeno
+# CSV: texto sem tipos; toda leitura repete o parse e a conversão
 df = pl.read_csv("large_file.csv")
-df.write_parquet("output.parquet")          # 0,4 GB, 2 s para escrever
-df = pl.read_parquet("output.parquet")      # 0,5 s para ler
+df.write_csv("output.csv")
+
+# Parquet: tipado e comprimido (5× a 8× menor nos dados medidos)
+df = pl.read_csv("large_file.csv")
+df.write_parquet("output.parquet")
+df = pl.read_parquet("output.parquet")      # já vem tipado
 ```
 
 ### Padrão: leitura seletiva de colunas
@@ -174,7 +176,7 @@ df = pl.read_parquet("output.parquet")      # 0,5 s para ler
 ```python
 import polars as pl
 
-# Lê apenas as colunas necessárias (100× mais rápido que CSV)
+# Lê apenas as colunas necessárias
 df = pl.read_parquet(
     "large_file.parquet",
     columns=["year", "state", "salary", "employee_id"]
