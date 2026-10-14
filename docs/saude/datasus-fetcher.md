@@ -64,6 +64,14 @@ A biblioteca agrupa as dezenas de siglas crípticas do DATASUS em 113 *datasets*
 
 Execute `quantilica datasus list` para o catálogo completo atualizado em tempo real.
 
+Os nomes `sim`, `sinasc` ou `sih` identificam *sistemas*, não datasets. Para baixar todos os datasets de um sistema, use `--system`:
+
+```bash
+quantilica datasus sync --system sim --start 2022 -o ./data
+```
+
+Passar um sistema como argumento posicional, onde se espera um dataset, encerra com erro de uso (código 2) antes de qualquer conexão.
+
 ---
 
 ## Cookbook Analítico: Processando o DATASUS com Polars

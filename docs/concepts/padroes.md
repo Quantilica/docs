@@ -515,84 +515,66 @@ logger.info("Salvo em output.parquet")
 
 ## UX de CLI: progresso vs. logs {#cli-ux}
 
-**Definição:** CLIs de fetchers exibem barras de progresso tqdm por padrão. O flag `--verbose` troca para logs estruturados, sem atalho `-v`.
+**Definição:** Os comandos de fetchers exibem barras de progresso Rich e só deixam passar logs de `WARNING` para cima. O flag `--verbose` baixa o nível para `DEBUG`, sem atalho `-v`; as barras continuam na tela e os logs aparecem entre elas.
 
 ### Por quê?
 
-- **Progresso é o padrão**: quem roda o CLI interativamente quer saber "quantos arquivos faltam", não timestamps de log.
+- **Progresso é o padrão**: quem roda o CLI interativamente quer saber "quantos arquivos faltam", não ler timestamps de log.
 - **Logs para debugging**: operadores e pipelines automatizados precisam de texto estruturado, não de barras ANSI.
-- **Um flag, dois modos**: evita estados inconsistentes onde logs e barras se misturam no terminal.
+- **Um flag, dois níveis**: logs e barras passam pelo mesmo `Console` do Rich, então nunca se atropelam, nem com `--verbose`.
 
-### Padrão: barra de contagem de arquivos por dataset
+### Padrão: uma barra de lote e um pool fixo de barras por worker
 
-!!! warning "Em revisão"
-    O módulo `quantilica.core.progress` não existe: `batch_progress` vive em `quantilica.cli.progress`, no pacote `quantilica-cli`, que só o `plugin.py` de cada fetcher pode importar. A lista de adotantes abaixo não foi reverificada.
-
-Usando `batch_progress` e suprimindo o logger para `WARNING`:
+O `sync` do `FetcherApp` já implementa o padrão, então todo fetcher que usa o SDK o herda sem escrever código. Só `sidra-fetcher` e `bcb-sgs-fetcher`, que não usam `FetcherApp`, o implementam no próprio `plugin.py`. Os helpers vêm de `quantilica.cli.ui`, que só o `plugin.py` de um fetcher pode importar:
 
 ```python
-# downloader.py
-from quantilica.cli.progress import batch_progress
-
-async def download(dest_dir, dataset_id, show_progress=True):
-    resources = await get_dataset_resources(dataset_id)
-    remote = _to_remote_resources(resources, repo)
-
-    if show_progress:
-        with batch_progress(dataset_id, total=len(remote)) as pbar:
-            def _on_file_done(result):
-                pbar.update(1)
-            return await download_resources(..., on_file_done=_on_file_done)
-
-    # modo verbose: log_step + logger.info
-    with log_step(logger, "download-dataset", dataset_id=dataset_id):
-        ...
-```
-
-```python
-# cli.py
-parser.add_argument(
-    "--verbose",
-    action="store_true",
-    default=False,
-    help="Exibir logs detalhados em vez de barra de progresso",
+# plugin.py
+from quantilica.cli.ui import (
+    ProgressPool,
+    get_console,
+    make_batch_progress,
+    make_download_progress,
+    setup_rich_logging,
 )
+from rich.console import Group
+from rich.live import Live
 
-def main():
-    ...
-    configure_cli_logging(verbose=args.verbose)
-    if not args.verbose:
-        logging.getLogger("<package>").setLevel(logging.WARNING)
-    asyncio.run(run_download(args, show_progress=not args.verbose))
+console = get_console()
+
+def sync(entries, workers=4, verbose=False):
+    setup_rich_logging(verbose, console=console)  # WARNING; DEBUG com --verbose
+
+    batch = make_batch_progress(console)          # arquivos concluídos / total
+    files = make_download_progress(console)       # bytes e velocidade
+    pool = ProgressPool(workers=workers, file_prog=files)
+
+    with Live(Group(batch, files), console=console, refresh_per_second=10):
+        task = batch.add_task("Arquivos", total=len(entries))
+        for entry in entries:  # em produção, dentro de um ThreadPoolExecutor
+            with pool.acquire(description=entry["id"]) as on_progress:
+                ...  # client.download_with_manifest(..., progress=on_progress)
+            batch.update(task, advance=1)
 ```
+
+`ProgressPool` cria `workers` barras fixas. Cada thread pega uma barra ociosa com `acquire()`, que devolve o callback `(baixado, total)` aceito pelo parâmetro `progress` de `HttpClient.download_with_manifest`, e a devolve ao pool ao terminar. Assim o terminal nunca tem mais barras que workers.
 
 ### Comportamento esperado
 
 | Invocação | Saída |
 |---|---|
-| `fetcher sync` | `prices \| 3/7 arquivo [00:10, ...]` |
-| `fetcher sync --verbose` | `2025-01-10T14:22:01 INFO ... sync-dataset start` |
+| `quantilica <fonte> sync` | barra de lote (`MofN`, tempo restante) e uma barra por worker; só `WARNING` e erros |
+| `quantilica <fonte> sync --verbose` | as mesmas barras, mais logs `DEBUG` formatados pelo `RichHandler` |
 
 ### Regras do padrão
 
 - **`--verbose` sem shorthand `-v`**: evita conflito com flags globais em wrappers.
-- **Modo padrão silencia INFO**: `logging.getLogger("<pacote>").setLevel(logging.WARNING)` — erros e warnings ainda aparecem.
-- **`batch_progress` de `quantilica.core.progress`**: não crie barras tqdm diretamente no CLI.
-- **`on_file_done` callback**: atualize a barra conforme cada arquivo termina (incluindo skips), não apenas no final.
+- **Sem `--verbose`, o nível é `WARNING`**: `setup_rich_logging(verbose=False)` cuida disso; erros e warnings ainda aparecem.
+- **Use os helpers de `quantilica.cli.ui`**: não crie barras `tqdm` nem instâncias próprias de `Progress`.
+- **Conte todo arquivo concluído**: atualize a barra de lote também para os que foram ignorados por já estarem atualizados, não só ao final.
 
 Este padrão descreve o *porquê* e a forma geral. As regras completas de implementação —
 estrutura de `cli.py`/`plugin.py`, logging, Rich, registro de entry points e checklist —
 estão na referência do contribuidor [Padronização de CLI para Fetchers](../normas/cli-fetchers.md).
-
-### Fetchers que adotam este padrão
-
-- `datasus-fetcher` — implementação de referência
-- `tesouro-direto-fetcher` — migrado neste padrão
-- `comex-fetcher` — migrado neste padrão
-- `inmet-fetcher` — migrado neste padrão
-- `rtn-fetcher` — migrado neste padrão
-- `pdet-fetcher` — migrado neste padrão
-- `sidra-fetcher` — migrado neste padrão
 
 ---
 
@@ -608,7 +590,7 @@ Quando construir pipelines com o ecossistema:
 - [ ] **Valide**: cheque qualidade imediatamente após buscar.
 - [ ] **Memória**: stream ou chunk para arquivos grandes.
 - [ ] **Documente**: registre transformações e metadados.
-- [ ] **CLI UX**: barra de progresso por padrão; `--verbose` para logs.
+- [ ] **CLI UX**: barras de progresso Rich sempre; `--verbose` sobe o log para `DEBUG`.
 
 ---
 
