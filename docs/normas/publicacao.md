@@ -126,6 +126,14 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, use a vari
 
 > **Deriva cross-repo:** workflows por pacote não enxergam a quebra de um vizinho (ex.: função removida de `sidra-fetcher` quebrando `sidra-sql` em silêncio por ~1 mês). Para isso existe `integration.yml` em `quantilica-core` (cron diário): monta o uv workspace com todos os members, roda o suite conjunto e veta o vazamento de `workspace = true`.
 
+### `public-hygiene.yml` — termos internos (todos os repositórios públicos)
+
+Workflow idêntico em todos os repositórios públicos, independente do fluxo de
+publicação. Veta termos internos (planos, decisões, repositórios privados,
+infraestrutura) em `CHANGELOG.md`, `README*` e nas mensagens de commit dos PRs. A
+regra e as categorias estão em [Padronização de CHANGELOG.md](changelog.md#51-o-que-um-changelog-nunca-cita);
+deve estar verde no `main` antes de criar a tag, como o `test.yml`.
+
 ### `publish.yml` — Fluxo A: build → TestPyPI → PyPI (OIDC)
 
 Para `quantilica-core` e `quantilica-cli`. Dispara em push de tag `v*`. Um job de `build` isolado, depois dois jobs de publish em cadeia (TestPyPI → PyPI), cada um num Environment com `id-token: write`.
