@@ -31,8 +31,8 @@ instalável, ele tem um `CHANGELOG.md`.
   rastreadas pelo git.
 - **Repositórios de artefato de dados** (ex.: `datasus-metadata`) — versionam
   dados gerados, não código de API.
-- **Aplicações web privadas** (`*-app`, `*-db`, `quantilica-web`, `docs`) — não
-  seguem esta norma; se registrarem mudanças, é em `docs-internal/`.
+- **Aplicações web** que não são publicadas como biblioteca — não seguem esta
+  norma.
 
 ---
 
@@ -105,6 +105,38 @@ Seguindo a [norma de escrita](escrita.md):
 - **Concisão:** uma linha por mudança sempre que possível; quebre em ~88 colunas
   para casar com o `line-length` do repo.
 - Sem emoji decorativo (idem README).
+
+### 5.1 O que um changelog nunca cita
+
+O `CHANGELOG.md` descreve **o que mudou para quem usa o pacote** — comportamento,
+API, dependências, formatos de arquivo, fontes de dados. Ele mora num repositório
+público e fica no histórico para sempre, inclusive depois de editado. Por isso
+**nunca** cita:
+
+| Categoria | Exemplos do que não escrever | Escreva em vez disso |
+|---|---|---|
+| **Planos e fases de trabalho** | "Onda 3A", "Fase 2 do plano `AAAA-MM-DD-nome`", nomes de arquivos de planejamento | A mudança em si: "`reader.write_parquet` delega ao `to_parquet` do `quantilica-analytics`" |
+| **Decisões internas** | "ADR de distribuição", "decisão `AAAA-MM-DD-nome`" | O efeito: "a URL do índice mudou para `https://index.quantilica.com/simple/`" |
+| **Repositórios e serviços privados** | Nome de qualquer repositório, aplicação ou plugin que não seja público; "consumidores internos" | Descreva o contrato: "quem guarda contas pelo código passa a ver `10` no lugar de `1.0`" |
+| **Infraestrutura e operação** | Agendadores, horários de execução, servidores, ambientes de ingestão, filas, armazenamento interno, "o cron falhou" | O sintoma público: "centenas de respostas 404", "o servidor derruba a conexão a cada ~4 MB" |
+| **Ferramentas e processo de desenvolvimento** | Arquivos de agentes de IA, "workspace" privado de desenvolvimento, auditorias e relatórios internos | Omita. Se não muda nada para quem usa o pacote, não é entrada de changelog |
+| **Credenciais e caminhos** | Tokens, hosts, IPs, e-mails, caminhos de máquina | Nunca, em nenhuma circunstância |
+
+Teste prático antes de commitar: _"alguém que só vê o GitHub e o PyPI entenderia
+essa linha e conseguiria agir sobre ela?"_ Se a frase só faz sentido para quem
+tem acesso a um repositório privado, ela não entra — mesmo que seja verdadeira.
+
+A mesma regra vale para **README** e para as **mensagens de commit**: o histórico
+git é público e permanente, e reescrevê-lo depois exige _force-push_.
+
+**Verificação automática.** Todo repositório público tem o workflow
+`.github/workflows/public-hygiene.yml`, idêntico em todos eles. Ele roda em
+`push`, em `pull_request` e sob demanda, e falha o CI quando encontra termos
+internos em `CHANGELOG.md`, `README*` e `docs/changelog.md` — e, nos PRs, nas
+mensagens dos commits. A lista de termos fica no próprio arquivo; ao alterá-la,
+altere em todos os repositórios. Falso positivo legítimo: termine a linha com
+`<!-- hygiene-ok -->`. O workflow é uma rede de segurança, não um substituto
+para o teste prático acima: ele só conhece os termos que já vazaram.
 
 ---
 
@@ -182,6 +214,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 [ ] entrada da nova versão no topo: ## [x.y.z] - AAAA-MM-DD (§3)
 [ ] só as categorias de §4, sem seções vazias nem inventadas
 [ ] versão casa com pyproject.toml e com a tag vX.Y.Z
+[ ] nenhuma entrada cita planos, decisões, repositórios privados ou infraestrutura (§5.1)
 [ ] README aponta para o CHANGELOG.md (ver norma de escrita)
 [ ] entrada escrita antes de criar a tag de release
 ```
