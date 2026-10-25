@@ -75,6 +75,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[inep-fetcher](educacao/inep-fetcher.md)** | Download dos microdados educacionais do INEP por grupo (ENEM, SAEB, ENADE e outros) |
 | **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (cerca de 29 GB descompactada) |
 | **[cvm-fetcher](mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
+| **[b3-fetcher](mercado-capitais/b3-fetcher.md)** | Cotações históricas da B3 desde 1986: arquivos de largura fixa lidos em Polars, com preços em `Decimal` exato |
 | **[tse-fetcher](politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-cli](fundacoes/quantilica-cli.md)** | O ponto de entrada único: `quantilica <fonte>` com instalação sob demanda |
@@ -107,7 +108,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | Aviação civil e aeródromos | [Aviação Civil](aviacao/index.md) |
 | Preços de combustíveis e exploração | [Petróleo e Gás](petroleo/index.md) |
 | Dados educacionais (ENEM, SAEB, ENADE) | [Educação](educacao/index.md) |
-| Mercado de capitais (companhias, fundos, ofertas) | [Mercado de Capitais](mercado-capitais/index.md) |
+| Mercado de capitais (companhias, fundos, ofertas, cotações) | [Mercado de Capitais](mercado-capitais/index.md) |
 | Eleições: candidaturas, bens e votação | [Política (TSE)](politica/index.md) |
 | Análise de CNPJs e quadros societários | [Empresas](empresas/index.md) |
 

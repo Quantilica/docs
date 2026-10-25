@@ -163,7 +163,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
 ## Outras fontes
 
-Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)), mercado de capitais ([CVM](mercado-capitais/cvm-fetcher.md)) e eleições ([TSE](politica/tse-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
+Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)), mercado de capitais ([CVM](mercado-capitais/cvm-fetcher.md) e [B3](mercado-capitais/b3-fetcher.md)) e eleições ([TSE](politica/tse-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
 
 ---
 
