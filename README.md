@@ -1,18 +1,18 @@
 # Quantilica — Documentação
 
-Portal público da Quantilica (`docs.quantilica.com`), construído com [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+Portal público da Quantilica (`docs.quantilica.com`), construído com [ProperDocs](https://properdocs.org/) (continuação do MkDocs 1.x) e o tema [Material](https://squidfunk.github.io/mkdocs-material/). O `mkdocs` 1.6.1 segue instalado só como dependência do tema e dos plugins; o build usa `properdocs`.
 
 ## Desenvolvimento local
 
 ```bash
 uv sync
-uv run mkdocs serve
+uv run properdocs serve
 ```
 
-As URLs antigas (`concepts/`, `cookbook/`, `personas/` e as pastas de domínio na raiz) continuam funcionando por redirecionamento (`mkdocs-redirects`). Depois de mover uma página, adicione-a em `redirect_maps` e confira com:
+As URLs antigas (`concepts/`, `cookbook/`, `personas/` e as pastas de domínio na raiz) continuam funcionando por redirecionamento (`mkdocs-redirects`). Depois de mover uma página, adicione-a em `redirect_maps` (em `properdocs.yml`) e confira com:
 
 ```bash
-uv run mkdocs build -d site && uv run --with pyyaml python tools/check_redirects.py site
+uv run properdocs build -d site && uv run --with pyyaml python tools/check_redirects.py site
 ```
 
 O site local sobe em `http://127.0.0.1:8000/`; a versão publicada fica em `https://docs.quantilica.com/`.
@@ -34,7 +34,7 @@ docs/
 │   ├── main.html          # meta tags Open Graph / Twitter
 │   └── partials/integrations/analytics/custom.html # analytics (consent-aware)
 ├── tools/check_redirects.py  # confere o mapa de redirects contra o site construído
-└── mkdocs.yml
+└── properdocs.yml
 ```
 
 ## O que nunca entra neste site (privacidade)
@@ -56,7 +56,7 @@ Para gerar **cards Open Graph automáticos por página** (com título, descriç�
 uv add "mkdocs-material[imaging]"
 ```
 
-Depois descomente o bloco `- social:` em `mkdocs.yml`. Esse plugin requer Cairo e Pango no sistema (no Windows, geralmente via MSYS2 ou WSL).
+Depois descomente o bloco `- social:` em `properdocs.yml`. Esse plugin requer Cairo e Pango no sistema (no Windows, geralmente via MSYS2 ou WSL).
 
 ### `og-image.png`
 

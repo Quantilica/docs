@@ -1,6 +1,6 @@
-"""Confere o mapa de redirects do mkdocs.yml contra o site construído.
+"""Confere o mapa de redirects do properdocs.yml contra o site construído.
 
-Uso: uv run mkdocs build -d site && uv run python tools/check_redirects.py site
+Uso: uv run properdocs build -d site && uv run python tools/check_redirects.py site
 Falha se uma URL antiga não gerou página de redirecionamento ou se o destino não existe.
 """
 
@@ -20,9 +20,9 @@ def main(site: str) -> int:
     class _Loader(yaml.SafeLoader):
         pass
 
-    # mkdocs.yml usa tags python/!ENV; só o bloco de plugins interessa.
+    # properdocs.yml usa tags python/!ENV; só o bloco de plugins interessa.
     _Loader.add_multi_constructor("", lambda loader, suffix, node: None)
-    cfg = yaml.load(Path("mkdocs.yml").read_text(encoding="utf-8"), Loader=_Loader)
+    cfg = yaml.load(Path("properdocs.yml").read_text(encoding="utf-8"), Loader=_Loader)
     maps: dict[str, str] = {}
     for plugin in cfg.get("plugins", []):
         if isinstance(plugin, dict) and "redirects" in plugin:
