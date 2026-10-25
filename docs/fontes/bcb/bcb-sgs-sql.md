@@ -1,6 +1,6 @@
 ---
 title: bcb-sgs-sql — Data warehouse PostgreSQL para séries do BCB SGS
-description: Camada SQL/ETL sobre o bcb-sgs-fetcher — carrega catálogo, temas e observações do SGS em PostgreSQL com soft-versioning (histórico de revisões sem tabela de auditoria), via fetch-and-load ou load-from-files.
+description: Camada SQL sobre o bcb-sgs-fetcher: carrega catálogo, temas e observações do SGS em PostgreSQL com histórico de revisões (soft-versioning).
 ---
 
 # bcb-sgs-sql

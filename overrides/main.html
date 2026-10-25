@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block extrahead %}
+  {#- O plugin `social` já emite og:* e twitter:* (com card por página); evita duplicar. -#}
+  {% if "material/social" not in config.plugins %}
   {#-
     Open Graph + Twitter Card básicos.
     Funcionam sem dependências extras (não precisam do plugin `social`).
@@ -8,7 +10,7 @@
     por cards gerados por página.
   -#}
   {% set title = page.meta.title if page.meta and page.meta.title
-                 else (page.title ~ ' — ' ~ config.site_name if page.title and not page.is_homepage
+                 else (page.title ~ ' — ' ~ config.site_name if page.title and page.url != ""
                        else config.site_name) %}
   {% set description = page.meta.description if page.meta and page.meta.description
                        else config.site_description %}
@@ -27,4 +29,17 @@
   <meta name="twitter:title" content="{{ title }}">
   <meta name="twitter:description" content="{{ description }}">
   <meta name="twitter:image" content="{{ image }}">
+  {% endif %}
+
+  {#- Dados estruturados (JSON-LD) para buscadores. -#}
+  {% set ld_base = (config.site_url | default('', true)).rstrip('/') %}
+  {% if page.url == "" %}
+  <script type="application/ld+json">
+  {{ {"@context": "https://schema.org", "@type": "WebSite", "name": config.site_name, "url": ld_base ~ "/", "inLanguage": "pt-BR", "description": config.site_description, "publisher": {"@type": "Organization", "name": "Quantilica", "url": "https://github.com/Quantilica"}} | tojson }}
+  </script>
+  {% elif page.meta and page.meta.title %}
+  <script type="application/ld+json">
+  {{ {"@context": "https://schema.org", "@type": "TechArticle", "headline": page.meta.title, "description": page.meta.description | default(config.site_description, true), "inLanguage": "pt-BR", "url": page.canonical_url, "dateModified": page.meta.git_revision_date_localized_raw_iso_date | default(none), "publisher": {"@type": "Organization", "name": "Quantilica", "url": "https://github.com/Quantilica"}} | tojson }}
+  </script>
+  {% endif %}
 {% endblock %}

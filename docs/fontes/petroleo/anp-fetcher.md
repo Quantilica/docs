@@ -1,6 +1,6 @@
 ---
 title: anp-fetcher — Dados abertos e estatísticos da ANP
-description: Catálogo declarativo cobrindo preços de combustíveis (SHPC), vendas e produção, comércio exterior, royalties, movimentação e qualidade de combustíveis, produção por poço.
+description: Catálogo da ANP: preços de combustíveis, vendas, produção, comércio exterior, royalties, movimentação, qualidade e produção por poço.
 ---
 
 # Petróleo, Gás e Biocombustíveis (ANP)
