@@ -81,6 +81,3 @@ Transformar a Quantilica em referência para a comunidade analítica brasileira 
 *   **Quantilica Cookbook:** notebooks com cruzamentos de alto valor (ex.: *"como o desemprego do CAGED se correlaciona com a inflação do IPCA em SP"*).
 *   **Presença técnica (storytelling):** artigos sobre os desafios de minerar FTPs do DATASUS e APIs obsoletas.
 *   **GitHub Sponsors / Open Collective:** sustentabilidade e transparência financeira para os custos de infraestrutura.
-
----
-*Atualizado em: 13 de outubro de 2026*
