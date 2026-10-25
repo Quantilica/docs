@@ -81,6 +81,8 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | **[quantilica-cli](fundacoes/quantilica-cli.md)** | O ponto de entrada único: `quantilica <fonte>` com instalação sob demanda |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
 | **[quantilica-catalog](fundacoes/quantilica-catalog.md)** | Modelo canônico de observações para cruzamento multi-fonte |
+| **[quantilica-sql](fundacoes/quantilica-sql.md)** | Carga idempotente em PostgreSQL das 15 fontes e execução de pipelines analíticos |
+| **[quantilica-pipelines](fundacoes/quantilica-pipelines.md)** | Catálogo de 34 pipelines SQL declarativos, por domínio, para o quantilica-sql |
 
 ---
 

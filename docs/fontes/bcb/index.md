@@ -24,6 +24,10 @@ Trabalhar com o SGS encontra barreiras específicas:
 
 ## Dois stacks: Exploração vs. Produção
 
+!!! note "Motor SQL unificado"
+
+    O stack de produção (`bcb-sgs-sql` e `bcb-sgs-pipelines`) tem substituto: o [quantilica-sql](../../fundacoes/quantilica-sql.md) e o [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md). Os pacotes legados seguem documentados abaixo.
+
 ### Stack 1 — Exploração (`bcb-sgs-fetcher` + Polars)
 
 Para análise ad-hoc, notebooks, modelagem one-off. Use os clientes (`SgsDataClient` para

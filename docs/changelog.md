@@ -11,6 +11,7 @@ Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio
 
 - **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
 - **Novos domínios documentados:** [Mercado de Capitais](fontes/mercado-capitais/index.md) (CVM) e [Política](fontes/politica/index.md) (TSE).
+- **Motor SQL unificado:** o [`quantilica-sql`](fundacoes/quantilica-sql.md) (versão 0.1.1, 15 fontes) e o catálogo [`quantilica-pipelines`](fundacoes/quantilica-pipelines.md) (1.0.0, 34 pipelines) foram publicados e substituem `sidra-sql`, `bcb-sgs-sql` e os catálogos `sidra-pipelines` e `bcb-sgs-pipelines`, que seguem documentados.
 - **Nova fonte:** o [`b3-fetcher`](fontes/mercado-capitais/b3-fetcher.md) (cotações históricas da B3, COTAHIST) chegou à versão 0.1.0 e ganhou página no domínio de Mercado de Capitais.
 - **Comandos corrigidos:** as páginas de fonte passam a usar `quantilica <fonte>` com os nomes reais de grupo. Removidos argumentos por ano e flags que não existem (`--dataset`, `discover`, `pipeline` onde o comando não existe).
 - **`check` separado de `sync`:** os fetchers baseados em `FetcherApp` e o `sidra-fetcher` expõem `check`, que compara o remoto com o local sem baixar. O `bcb-sgs-fetcher` ainda não tem esse comando.

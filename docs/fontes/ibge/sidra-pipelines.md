@@ -5,6 +5,11 @@ description: 20 pipelines IBGE prontos para rodar (IPCA, PIB, PAM, PPM, PEVS, PN
 
 # sidra-pipelines
 
+!!! warning "Substituído pelo quantilica-pipelines"
+
+    Este pacote continua instalável e documentado, mas o catálogo unificado [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-pipelines.
+
+
 **Catálogo oficial de pipelines ETL pré-construídos para o motor sidra-sql.**
 
 !!! warning "Pegadinhas da fonte oficial"

@@ -114,6 +114,8 @@ nav:
       - quantilica-analytics: fundacoes/quantilica-analytics.md
       - quantilica-cli: fundacoes/quantilica-cli.md
       - quantilica-catalog: fundacoes/quantilica-catalog.md
+      - quantilica-sql: fundacoes/quantilica-sql.md
+      - quantilica-pipelines: fundacoes/quantilica-pipelines.md
 
   - Guias:
       - guias/index.md

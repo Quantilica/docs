@@ -5,6 +5,11 @@ description: 13 pipelines BCB prontos para rodar (preços, juros, câmbio, ativi
 
 # bcb-sgs-pipelines
 
+!!! warning "Substituído pelo quantilica-pipelines"
+
+    Este pacote continua instalável e documentado, mas o catálogo unificado [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-pipelines.
+
+
 **Catálogo de referência de pipelines declarativos para o motor bcb-sgs-sql.**
 
 !!! warning "Pegadinhas da fonte e do carregamento"
