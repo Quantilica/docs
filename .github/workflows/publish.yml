@@ -71,7 +71,7 @@ jobs:
           args: >-
             --no-progress --scheme https --max-concurrency 8 --max-retries 2
             --timeout 20 --accept 200..=299,403,429
-            --exclude '^https://github.com/Quantilica/'
+            --exclude '^https://github.com/Quantilica/' --exclude '^https://docs.quantilica.com/'
             'site/**/*.html'
           fail: false
 
