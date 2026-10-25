@@ -117,9 +117,9 @@ Para validações de valor, combine `DataContract` com Polars expressions ou Pyd
 ### Contratos no ecossistema
 
 Cada fetcher que grava Parquet define e aplica seu próprio `DataContract`, documentado na
-página do pacote correspondente (ex.: [`inmet-fetcher`](../clima/inmet-fetcher.md),
-[`rtn-fetcher`](../tesouro/rtn-fetcher.md)) — os writers Parquet aplicam o `cast()` antes de
-gravar. Adaptadores de fonte puros como o [`bcb-sgs-fetcher`](../bcb/bcb-sgs-fetcher.md) não
+página do pacote correspondente (ex.: [`inmet-fetcher`](../fontes/clima/inmet-fetcher.md),
+[`rtn-fetcher`](../fontes/tesouro/rtn-fetcher.md)) — os writers Parquet aplicam o `cast()` antes de
+gravar. Adaptadores de fonte puros como o [`bcb-sgs-fetcher`](../fontes/bcb/bcb-sgs-fetcher.md) não
 embutem Parquet nem contratos: a serialização fica a cargo da camada de ETL.
 
 ## Quando NÃO usar
@@ -135,8 +135,8 @@ embutem Parquet nem contratos: a serialização fica a cargo da camada de ETL.
 
 Veja também:
 
-- [Parquet + Polars](../concepts/parquet-polars.md) — o porquê do formato.
-- [Princípios de Design](../concepts/principios.md) — Reprodutibilidade e Sem Mágica.
+- [Parquet + Polars](../conceitos/parquet-polars.md) — o porquê do formato.
+- [Princípios de Design](../conceitos/principios.md) — Reprodutibilidade e Sem Mágica.
 
 ## Repositório
 

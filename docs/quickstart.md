@@ -56,9 +56,9 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Construa uma URL `/values` SIDRA com `Parametro`](ibge/sidra-fetcher.md)
-    - [Carregue tudo em PostgreSQL com `sidra-sql`](ibge/sidra-sql.md)
-    - [Use um pipeline pronto do catálogo](ibge/sidra-pipelines.md)
+    - [Construa uma URL `/values` SIDRA com `Parametro`](fontes/ibge/sidra-fetcher.md)
+    - [Carregue tudo em PostgreSQL com `sidra-sql`](fontes/ibge/sidra-sql.md)
+    - [Use um pipeline pronto do catálogo](fontes/ibge/sidra-pipelines.md)
 
 === "Tesouro — Yield Curve"
 
@@ -86,8 +86,8 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Calcule retornos GIPS-compliant](concepts/calculo-retornos-renda-fixa.md)
-    - [Combine com o RTN para a foto fiscal mensal](tesouro/rtn-fetcher.md)
+    - [Calcule retornos GIPS-compliant](conceitos/calculo-retornos-renda-fixa.md)
+    - [Combine com o RTN para a foto fiscal mensal](fontes/tesouro/rtn-fetcher.md)
 
 === "Saúde — DATASUS"
 
@@ -112,8 +112,8 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Liste todos os 113 datasets disponíveis](saude/datasus-fetcher.md)
-    - [Cruze óbitos do SIM com população do SIDRA](cookbook/index.md)
+    - [Liste todos os 113 datasets disponíveis](fontes/saude/datasus-fetcher.md)
+    - [Cruze óbitos do SIM com população do SIDRA](guias/receitas/index.md)
 
 === "Clima — INMET"
 
@@ -132,8 +132,8 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Filtrar por estação e período](clima/inmet-fetcher.md)
-    - [Series climáticas históricas + IPCA agrícola](cookbook/index.md)
+    - [Filtrar por estação e período](fontes/clima/inmet-fetcher.md)
+    - [Series climáticas históricas + IPCA agrícola](guias/receitas/index.md)
 
 === "BCB — Câmbio e Selic"
 
@@ -155,15 +155,15 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Catálogo completo de metadados e séries importantes](bcb/bcb-sgs-fetcher.md)
-    - [Carregue em PostgreSQL com histórico de revisões](bcb/bcb-sgs-sql.md)
-    - [Use um pipeline pronto do catálogo](bcb/bcb-sgs-pipelines.md)
+    - [Catálogo completo de metadados e séries importantes](fontes/bcb/bcb-sgs-fetcher.md)
+    - [Carregue em PostgreSQL com histórico de revisões](fontes/bcb/bcb-sgs-sql.md)
+    - [Use um pipeline pronto do catálogo](fontes/bcb/bcb-sgs-pipelines.md)
 
 ---
 
 ## Outras fontes
 
-Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](trabalho/pdet-fetcher.md)), aviação civil ([ANAC](aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](petroleo/anp-fetcher.md)), educação ([INEP](educacao/inep-fetcher.md)) empresas ([RFB-CNPJ](empresas/rfb-cnpj-fetcher.md)), mercado de capitais ([CVM](mercado-capitais/cvm-fetcher.md) e [B3](mercado-capitais/b3-fetcher.md)) e eleições ([TSE](politica/tse-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
+Os cinco caminhos acima são portas de entrada. O ecossistema cobre ainda comércio exterior ([Comex](fontes/comex/comex-fetcher.md)), mercado de trabalho ([CAGED/RAIS](fontes/trabalho/pdet-fetcher.md)), aviação civil ([ANAC](fontes/aviacao/anac-fetcher.md)), petróleo e combustíveis ([ANP](fontes/petroleo/anp-fetcher.md)), educação ([INEP](fontes/educacao/inep-fetcher.md)) empresas ([RFB-CNPJ](fontes/empresas/rfb-cnpj-fetcher.md)), mercado de capitais ([CVM](fontes/mercado-capitais/cvm-fetcher.md) e [B3](fontes/mercado-capitais/b3-fetcher.md)) e eleições ([TSE](fontes/politica/tse-fetcher.md)) — todos instaláveis com `quantilica install <fonte>`.
 
 ---
 
@@ -183,6 +183,6 @@ Esses comportamentos vêm do pacote de fundação [`quantilica-core`](fundacoes/
 
 ## Próximos passos
 
-1. **[Princípios de Design](concepts/principios.md)** — entenda por que o sistema tem essa forma.
-2. **[Cookbook](cookbook/index.md)** — receitas que combinam múltiplos domínios.
-3. **[Arquitetura](concepts/arquitetura.md)** — como `-fetcher`, `-sql` e `-pipelines` se conectam.
+1. **[Princípios de Design](conceitos/principios.md)** — entenda por que o sistema tem essa forma.
+2. **[Cookbook](guias/receitas/index.md)** — receitas que combinam múltiplos domínios.
+3. **[Arquitetura](conceitos/arquitetura.md)** — como `-fetcher`, `-sql` e `-pipelines` se conectam.

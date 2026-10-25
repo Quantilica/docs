@@ -31,9 +31,9 @@ Quer ver `pnad-covid-fetcher` ou `siscomex-servicos-fetcher`?
 Receitas do Cookbook são o melhor jeito de contribuir sem mexer em código de coletor.
 
 1. Fork do repositório de docs.
-2. Crie um arquivo em `docs/cookbook/<slug>.md` seguindo a estrutura das receitas existentes (front-matter, "O que você vai produzir", "Setup", "A receita", "Pegadinhas", "Variações").
+2. Crie um arquivo em `docs/guias/receitas/<slug>.md` seguindo a estrutura das receitas existentes (front-matter, "O que você vai produzir", "Setup", "A receita", "Pegadinhas", "Variações").
 3. Inclua código que **roda** — não pseudocódigo.
-4. Adicione a receita ao índice em `docs/cookbook/index.md`.
+4. Adicione a receita ao índice em `docs/guias/receitas/index.md`.
 5. Abra PR.
 
 ## Padrões técnicos (para PRs em código)

@@ -5,9 +5,9 @@ description: Guia normativo para a interface de linha de comando de fetchers Qua
 
 # Padronização de CLI para Fetchers
 
-> Esta é a referência do **contribuidor**: como implementar convenções de CLI e armazenamento num fetcher. Para entender como os arquivos são organizados como **usuário final**, veja [Convenções de Armazenamento](../concepts/storage.md).
+> Esta é a referência do **contribuidor**: como implementar convenções de CLI e armazenamento num fetcher. Para entender como os arquivos são organizados como **usuário final**, veja [Convenções de Armazenamento](../conceitos/storage.md).
 >
-> Para o contexto conceitual por trás destas regras, veja [Arquitetura de CLI](../concepts/arquitetura.md#arquitetura-de-cli) (os dois níveis) e o padrão [UX de CLI: progresso vs. logs](../concepts/padroes.md#cli-ux).
+> Para o contexto conceitual por trás destas regras, veja [Arquitetura de CLI](../conceitos/arquitetura.md#arquitetura-de-cli) (os dois níveis) e o padrão [UX de CLI: progresso vs. logs](../conceitos/padroes.md#cli-ux).
 
 Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher implementa: o **wrapper da CLI standalone** (`cli.py`) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich). A estrutura canônica de `cli.py` segue o ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`: para fetchers baseados no `FetcherApp`, `cli.py` é apenas um **wrapper fino** do app Typer do `plugin.py`; `argparse` completo (§2) fica restrito a fetchers com comandos customizados fora do `FetcherApp` (hoje, `sidra-fetcher`).
 
@@ -1350,7 +1350,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 ## Saiba mais
 
-- [Arquitetura de CLI e Estratégia de Dependências](../concepts/arquitetura.md#arquitetura-de-cli) — visão arquitetural de alto nível.
+- [Arquitetura de CLI e Estratégia de Dependências](../conceitos/arquitetura.md#arquitetura-de-cli) — visão arquitetural de alto nível.
 - [quantilica-cli](../fundacoes/quantilica-cli.md) — como o hub descobre e monta os plugins.
-- [Padrões Práticos — UX de CLI](../concepts/padroes.md#cli-ux) — padrão progresso vs. logs.
+- [Padrões Práticos — UX de CLI](../conceitos/padroes.md#cli-ux) — padrão progresso vs. logs.
 - [Padronização de Versão](python.md) — como expor `__version__` em argparse e Typer.

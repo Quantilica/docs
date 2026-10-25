@@ -14,7 +14,7 @@ hide:
 **Quantilica** é um ecossistema aberto de coletores Python para os dados públicos brasileiros — IBGE, Tesouro Nacional, DATASUS, INMET, CAGED, RAIS, Comex e adjacentes. Uma ferramenta especializada por fonte, todas seguindo os mesmos princípios: resiliência, proveniência e Parquet tipado na saída.
 
 [Comece em 5 minutos →](quickstart.md){ .md-button .md-button--primary }
-[Ver o Cookbook](cookbook/index.md){ .md-button }
+[Ver as receitas](guias/receitas/index.md){ .md-button }
 [GitHub](https://github.com/Quantilica){ .md-button }
 
 ---
@@ -34,7 +34,7 @@ Você está fazendo trabalho que outra pessoa já fez ontem. E vai refazer amanh
 
 ## A virada
 
-Quantilica resolve isso de uma vez, **para todo mundo**. Uma ferramenta por fonte, todas seguindo os mesmos cinco [Princípios de Design](concepts/principios.md): Modularidade, Resiliência, Performance, Reprodutibilidade e Sem Mágica.
+Quantilica resolve isso de uma vez, **para todo mundo**. Uma ferramenta por fonte, todas seguindo os mesmos cinco [Princípios de Design](conceitos/principios.md): Modularidade, Resiliência, Performance, Reprodutibilidade e Sem Mágica.
 
 ```python
 # Baixar o IPCA cheio em 3 linhas
@@ -58,25 +58,25 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 
 | Ferramenta | A dor que ela elimina |
 |---|---|
-| **[sidra-fetcher](ibge/sidra-fetcher.md)** | API REST do IBGE instável, rate limiting, períodos em strings ambíguas |
-| **[sidra-sql](ibge/sidra-sql.md)** | Bulk load de SIDRA em PostgreSQL com histórico de revisões (SCD II) |
-| **[sidra-pipelines](ibge/sidra-pipelines.md)** | Catálogo declarativo de pipelines IBGE prontos para rodar |
-| **[tesouro-direto-fetcher](tesouro/tesouro-direto-fetcher.md)** | CKAN do Tesouro, leitores por dataset, gráficos prontos |
-| **[rtn-fetcher](tesouro/rtn-fetcher.md)** | Planilhas hierárquicas do RTN viradas em DataFrame tipado |
-| **[pdet-fetcher](trabalho/pdet-fetcher.md)** | CAGED/RAIS de 50M+ linhas, processadas com Polars sem estourar memória |
-| **[comex-fetcher](comex/comex-fetcher.md)** | Siscomex com SSL ruim, arquivos GB, downtime governamental |
-| **[datasus-fetcher](saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, mais de 400 GB de microdados |
-| **[inmet-fetcher](clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
-| **[bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
-| **[bcb-sgs-sql](bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
-| **[bcb-sgs-pipelines](bcb/bcb-sgs-pipelines.md)** | Catálogo declarativo de 13 pipelines macro BCB prontos para rodar |
-| **[anac-fetcher](aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
-| **[anp-fetcher](petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
-| **[inep-fetcher](educacao/inep-fetcher.md)** | Download dos microdados educacionais do INEP por grupo (ENEM, SAEB, ENADE e outros) |
-| **[rfb-cnpj-fetcher](empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (cerca de 29 GB descompactada) |
-| **[cvm-fetcher](mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
-| **[b3-fetcher](mercado-capitais/b3-fetcher.md)** | Cotações históricas da B3 desde 1986: arquivos de largura fixa lidos em Polars, com preços em `Decimal` exato |
-| **[tse-fetcher](politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
+| **[sidra-fetcher](fontes/ibge/sidra-fetcher.md)** | API REST do IBGE instável, rate limiting, períodos em strings ambíguas |
+| **[sidra-sql](fontes/ibge/sidra-sql.md)** | Bulk load de SIDRA em PostgreSQL com histórico de revisões (SCD II) |
+| **[sidra-pipelines](fontes/ibge/sidra-pipelines.md)** | Catálogo declarativo de pipelines IBGE prontos para rodar |
+| **[tesouro-direto-fetcher](fontes/tesouro/tesouro-direto-fetcher.md)** | CKAN do Tesouro, leitores por dataset, gráficos prontos |
+| **[rtn-fetcher](fontes/tesouro/rtn-fetcher.md)** | Planilhas hierárquicas do RTN viradas em DataFrame tipado |
+| **[pdet-fetcher](fontes/trabalho/pdet-fetcher.md)** | CAGED/RAIS de 50M+ linhas, processadas com Polars sem estourar memória |
+| **[comex-fetcher](fontes/comex/comex-fetcher.md)** | Siscomex com SSL ruim, arquivos GB, downtime governamental |
+| **[datasus-fetcher](fontes/saude/datasus-fetcher.md)** | FTP legado do DATASUS, crawler multithread, mais de 400 GB de microdados |
+| **[inmet-fetcher](fontes/clima/inmet-fetcher.md)** | INMET BDMEP, séries climáticas históricas com encoding limpo |
+| **[bcb-sgs-fetcher](fontes/bcb/bcb-sgs-fetcher.md)** | SGS/BCB sem API de metadados, séries diárias truncadas, scraping stateful |
+| **[bcb-sgs-sql](fontes/bcb/bcb-sgs-sql.md)** | Bulk load de séries do BCB SGS em PostgreSQL com histórico de revisões (soft-versioning) |
+| **[bcb-sgs-pipelines](fontes/bcb/bcb-sgs-pipelines.md)** | Catálogo declarativo de 13 pipelines macro BCB prontos para rodar |
+| **[anac-fetcher](fontes/aviacao/anac-fetcher.md)** | Dados abertos da Aviação Civil (voos, aeronaves, aeródromos) |
+| **[anp-fetcher](fontes/petroleo/anp-fetcher.md)** | Dados de preços de combustíveis, produção, vendas e royalties |
+| **[inep-fetcher](fontes/educacao/inep-fetcher.md)** | Download dos microdados educacionais do INEP por grupo (ENEM, SAEB, ENADE e outros) |
+| **[rfb-cnpj-fetcher](fontes/empresas/rfb-cnpj-fetcher.md)** | Download paralelo dos ZIPs da base inteira de CNPJs (cerca de 29 GB descompactada) |
+| **[cvm-fetcher](fontes/mercado-capitais/cvm-fetcher.md)** | Cadastros, companhias, fundos e ofertas da CVM, por grupo, com download independente |
+| **[b3-fetcher](fontes/mercado-capitais/b3-fetcher.md)** | Cotações históricas da B3 desde 1986: arquivos de largura fixa lidos em Polars, com preços em `Decimal` exato |
+| **[tse-fetcher](fontes/politica/tse-fetcher.md)** | Candidaturas, bens, prestação de contas e votação por município e zona, por ano |
 | **[quantilica-core](fundacoes/quantilica-core.md)** | A fundação: HTTP resiliente, storage atômico, manifestos SHA-256 |
 | **[quantilica-cli](fundacoes/quantilica-cli.md)** | O ponto de entrada único: `quantilica <fonte>` com instalação sob demanda |
 | **[quantilica-analytics](fundacoes/quantilica-analytics.md)** | Parquet tipado com proveniência injetada no header |
@@ -90,27 +90,27 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 - **[Quickstart](quickstart.md)** — instala, baixa um dataset real, plota um gráfico. Quatro caminhos prontos: IBGE, Tesouro, Saúde e Clima.
 
 ### Aprofundar
-1. **[Arquitetura do Ecossistema](concepts/arquitetura.md)** — como as partes se conectam.
-2. **[Princípios de Design](concepts/principios.md)** — por que o sistema tem essa forma.
-3. **[Padrões Práticos](concepts/padroes.md)** — receitas táticas que materializam os princípios.
-4. **[Parquet + Polars](concepts/parquet-polars.md)** — o formato e a biblioteca que sustentam tudo.
+1. **[Arquitetura do Ecossistema](conceitos/arquitetura.md)** — como as partes se conectam.
+2. **[Princípios de Design](conceitos/principios.md)** — por que o sistema tem essa forma.
+3. **[Padrões Práticos](conceitos/padroes.md)** — receitas táticas que materializam os princípios.
+4. **[Parquet + Polars](conceitos/parquet-polars.md)** — o formato e a biblioteca que sustentam tudo.
 
 ### Pela dor
 | Você quer… | Vá para |
 |---|---|
-| Indicadores macro (PIB, IPCA, desemprego) | [IBGE](ibge/index.md) |
-| Yield curve e retornos do Tesouro Direto | [Tesouro](tesouro/index.md) |
-| Salários e fluxos de emprego (CAGED/RAIS) | [Trabalho](trabalho/index.md) |
-| Fluxos de comércio exterior | [Comércio Exterior](comex/comex-fetcher.md) |
-| Microdados de saúde pública | [Saúde Pública](saude/datasus-fetcher.md) |
-| Séries climáticas históricas | [Clima](clima/inmet-fetcher.md) |
-| Cruzar múltiplos domínios | [Cookbook](cookbook/index.md) |
-| Aviação civil e aeródromos | [Aviação Civil](aviacao/index.md) |
-| Preços de combustíveis e exploração | [Petróleo e Gás](petroleo/index.md) |
-| Dados educacionais (ENEM, SAEB, ENADE) | [Educação](educacao/index.md) |
-| Mercado de capitais (companhias, fundos, ofertas, cotações) | [Mercado de Capitais](mercado-capitais/index.md) |
-| Eleições: candidaturas, bens e votação | [Política (TSE)](politica/index.md) |
-| Análise de CNPJs e quadros societários | [Empresas](empresas/index.md) |
+| Indicadores macro (PIB, IPCA, desemprego) | [IBGE](fontes/ibge/index.md) |
+| Yield curve e retornos do Tesouro Direto | [Tesouro](fontes/tesouro/index.md) |
+| Salários e fluxos de emprego (CAGED/RAIS) | [Trabalho](fontes/trabalho/index.md) |
+| Fluxos de comércio exterior | [Comércio Exterior](fontes/comex/comex-fetcher.md) |
+| Microdados de saúde pública | [Saúde Pública](fontes/saude/datasus-fetcher.md) |
+| Séries climáticas históricas | [Clima](fontes/clima/inmet-fetcher.md) |
+| Cruzar múltiplos domínios | [Receitas](guias/receitas/index.md) |
+| Aviação civil e aeródromos | [Aviação Civil](fontes/aviacao/index.md) |
+| Preços de combustíveis e exploração | [Petróleo e Gás](fontes/petroleo/index.md) |
+| Dados educacionais (ENEM, SAEB, ENADE) | [Educação](fontes/educacao/index.md) |
+| Mercado de capitais (companhias, fundos, ofertas, cotações) | [Mercado de Capitais](fontes/mercado-capitais/index.md) |
+| Eleições: candidaturas, bens e votação | [Política (TSE)](fontes/politica/index.md) |
+| Análise de CNPJs e quadros societários | [Empresas](fontes/empresas/index.md) |
 
 ---
 
@@ -119,7 +119,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 Todo o ecossistema é **Python 3.12+** com `uv`, saída analítica padronizada em
 **Parquet + Polars** e licença **MIT**. O detalhe de stack, distribuição e padrões técnicos
 está em [Contribuir](contribuir.md); o porquê das escolhas, em
-[Princípios de Design](concepts/principios.md).
+[Princípios de Design](conceitos/principios.md).
 
 ---
 
@@ -129,6 +129,6 @@ Encontrou um fetcher quebrado porque o governo mudou um endpoint? Quer sugerir u
 
 - **Bug em fetcher** → abra uma issue no repositório específico.
 - **Nova fonte de dados** → use o template *Feature Request* no GitHub.
-- **Receita de cruzamento** → PR no `docs/` com um novo arquivo em `cookbook/`.
+- **Receita de cruzamento** → PR no `docs/` com um novo arquivo em `guias/receitas/`.
 
 Os padrões técnicos estão em [Contribuir](contribuir.md) e em [Padrões de Escrita](normas/escrita.md).

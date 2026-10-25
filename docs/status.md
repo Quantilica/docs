@@ -53,7 +53,7 @@ A maioria das fontes governamentais tem mais incidentes nesse intervalo. Se poss
 
 ### Republicações silenciosas
 
-Várias fontes republicam arquivos antigos sem mudar o nome. O manifesto SHA-256 da Quantilica detecta isso automaticamente — veja [Proveniência](concepts/proveniencia.md#detecção-de-mudança-silenciosa).
+Várias fontes republicam arquivos antigos sem mudar o nome. O manifesto SHA-256 da Quantilica detecta isso automaticamente — veja [Proveniência](conceitos/proveniencia.md#detecção-de-mudança-silenciosa).
 
 ## Reportar um problema
 

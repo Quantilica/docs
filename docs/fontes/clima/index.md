@@ -1,0 +1,33 @@
+---
+title: Clima e Meio Ambiente — dados do INMET
+description: Séries meteorológicas históricas do INMET BDMEP com encoding e cabeçalhos tratados — inmet-fetcher.
+---
+
+# Clima e Meio Ambiente
+
+Uma estação do INMET no interior do Piauí registra 40 °C num dia de outubro — ou registra `-9999`, que é o jeito do BDMEP dizer "sensor quebrou". Séries meteorológicas históricas das estações automáticas e convencionais do Instituto Nacional de Meteorologia: décadas de chuva, temperatura e vento, servidas em ZIPs anuais com encoding latin-1 e cabeçalhos que mudam sem aviso.
+
+## O desafio
+
+Recuperar e unificar dados climáticos de cerca de 600 estações brasileiras (o ZIP de 2025 traz 594 arquivos, um por estação, 565 delas automáticas) apresenta dificuldades recorrentes:
+
+- **Encoding inconsistente** — os arquivos anuais compactados pelo INMET usam codificação `latin-1` com marcas de ordem de byte (BOM) intermitentes, gerando erros de leitura.
+- **Cabeçalhos variáveis** — o formato dos arquivos CSV gerados pelas estações varia de ano para ano, possuindo metadados extras na parte superior e separadores de coluna inconsistentes (`,` vs. `;`).
+- **Valores nulos ocultos** — o INMET registra a ausência de leitura meteorológica usando a sentinela `-9999`. É necessário substituir explicitamente este valor por nulo para evitar erros de cálculo estatístico.
+- **Data e hora separadas** — as observações registram datas e horas em colunas diferentes, exigindo parse e unificação em um campo `datetime` nativo.
+- **Tipos de estações** — a rede divide-se em estações automáticas (leituras horárias) e convencionais (leituras manuais diárias/periódicas), que não devem ser misturadas sem um tratamento de reamostragem temporal.
+
+## Pacotes
+
+- **[inmet-fetcher](inmet-fetcher.md)** — Downloader e parser para o BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa). Permite a sincronização paralela de arquivos anuais e a exportação direta em arquivos consolidados Parquet, CSV ou JSON com colunas normalizadas em `snake_case` e tipos de dados limpos.
+
+## Próximos passos
+
+- Para começar a baixar dados climáticos: vá para **[inmet-fetcher](inmet-fetcher.md)**.
+- Para cruzar temperatura e chuva com índices de preços agrícolas: veja o cookbook **[Estiagem no Nordeste × Preços](../../guias/receitas/estiagem-nordeste.md)**.
+- Para entender as vantagens de usar arquivos Parquet na análise climatológica: consulte o tutorial **[Parquet + Polars](../../conceitos/parquet-polars.md)**.
+
+## Recursos externos
+
+- [Portal oficial do INMET](https://portal.inmet.gov.br/)
+- [Banco de Dados Meteorológicos (BDMEP)](https://portal.inmet.gov.br/dadoshistoricos)
