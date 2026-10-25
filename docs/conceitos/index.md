@@ -23,9 +23,9 @@ Os cinco princípios que orientam toda decisão de projeto: **Modularidade**, **
 
 **Leia depois da Arquitetura** para entender por que o sistema é assim.
 
-## [Padrões Práticos](padroes.md)
+## Padrões Práticos: [execução](padroes.md) e [dados](padroes-dados.md)
 
-Os oito padrões táticos que materializam os princípios em código: idempotência, concorrência explícita, Parquet em vez de CSV, lazy evaluation, auto-retry com backoff, validação de dados, gestão de memória, documentação inline.
+Os padrões táticos que materializam os princípios em código. Execução: idempotência, concorrência explícita, auto-retry com backoff, validação na fonte e UX de CLI. Dados: Parquet em vez de CSV, lazy evaluation, gestão de memória e documentação inline.
 
 **Consulte sob demanda** quando estiver implementando um pipeline.
 
