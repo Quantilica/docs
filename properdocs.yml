@@ -146,7 +146,13 @@ nav:
       - Configuração Global: normas/configuracao.md
       - Versão em pacotes Python: normas/python.md
       - Padrões de Escrita: normas/escrita.md
-      - Padronização de CLI: normas/cli-fetchers.md
+      - Padronização de CLI:
+          - normas/cli-fetchers.md
+          - CLI nativa (cli.py): normas/cli-fetchers/cli-nativa.md
+          - Plugin (plugin.py): normas/cli-fetchers/plugin.md
+          - Padrões visuais Rich: normas/cli-fetchers/rich.md
+          - Progresso e logging: normas/cli-fetchers/progresso-e-logging.md
+          - Erros, fluxos e anti-padrões: normas/cli-fetchers/erros-e-fluxos.md
       - Padronização de .gitignore: normas/gitignore.md
       - Padronização de pyproject.toml: normas/pyproject.md
       - Padronização de CHANGELOG.md: normas/changelog.md

@@ -79,7 +79,7 @@ Exemplos corretos:
 - **Fetchers** usam a tag `analysis` para dependências analíticas pesadas (como `quantilica-analytics`, `polars` ou `pandas`), já que fetchers são focados primariamente em extração leve. Subcomandos analíticos (como `convert` ou `pipeline`) devem tratar a ausência dessas dependências graciosamente.
 - **Declare `polars` explicitamente no extra `analysis`** sempre que um módulo do pacote importar `polars` diretamente (`import polars` / `from polars import ...` em `reader`, `contracts`, `wrangling` ou equivalentes). Não dependa da transitividade via `quantilica-analytics`: o pin transitivo pode mudar e o pacote quebra fora do workspace. Referência conforme: `cvm-fetcher` declara `"polars>=X.Y"` ao lado de `"quantilica-analytics>=X.Y"` no extra `analysis`.
 
-O teste canônico da importabilidade sem o extra e a mensagem de erro exigida para módulos analíticos estão em [Padronização de CLI](cli-fetchers.md#35-comandos-analíticos-e-dependências-opcionais).
+O teste canônico da importabilidade sem o extra e a mensagem de erro exigida para módulos analíticos estão em [Padronização de CLI](cli-fetchers/plugin.md#35-comandos-analíticos-e-dependências-opcionais).
 
 ---
 
