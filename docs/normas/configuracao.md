@@ -167,6 +167,6 @@ rm -rf ~/.config/sidra-sql
 
 ## Saiba mais
 
-- [bcb-sgs-sql](../bcb/bcb-sgs-sql.md) — carregar séries do SGS/BCB no PostgreSQL.
-- [sidra-sql](../ibge/sidra-sql.md) — carregar agregados do IBGE SIDRA no PostgreSQL.
-- [Convenções de Armazenamento](../concepts/storage.md) — onde os fetchers salvam os dados brutos.
+- [bcb-sgs-sql](../fontes/bcb/bcb-sgs-sql.md) — carregar séries do SGS/BCB no PostgreSQL.
+- [sidra-sql](../fontes/ibge/sidra-sql.md) — carregar agregados do IBGE SIDRA no PostgreSQL.
+- [Convenções de Armazenamento](../conceitos/storage.md) — onde os fetchers salvam os dados brutos.

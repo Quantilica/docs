@@ -9,7 +9,13 @@ uv sync
 uv run mkdocs serve
 ```
 
-Site disponível em `https://docs.quantilica.com/`.
+As URLs antigas (`concepts/`, `cookbook/`, `personas/` e as pastas de domínio na raiz) continuam funcionando por redirecionamento (`mkdocs-redirects`). Depois de mover uma página, adicione-a em `redirect_maps` e confira com:
+
+```bash
+uv run mkdocs build -d site && uv run --with pyyaml python tools/check_redirects.py site
+```
+
+O site local sobe em `http://127.0.0.1:8000/`; a versão publicada fica em `https://docs.quantilica.com/`.
 
 ## Estrutura
 
@@ -18,13 +24,16 @@ docs/
 ├── docs/                  # conteúdo (Markdown)
 │   ├── index.md           # hero e narrativa de abertura
 │   ├── quickstart.md      # 5 minutos para o primeiro dado
-│   ├── concepts/          # arquitetura, princípios, padrões
+│   ├── fontes/            # uma pasta por domínio (ibge, tesouro, saude, ...) e uma página por coletor
 │   ├── fundacoes/         # núcleo, camada analítica, CLI, catálogo
-│   ├── ibge/ tesouro/ ... # domínios e ferramentas
-│   └── cookbook/          # receitas multi-fonte
+│   ├── guias/             # perfis/ (por onde começar) e receitas/ (cruzamentos passo a passo)
+│   ├── conceitos/         # arquitetura, princípios, padrões (explicação)
+│   ├── normas/            # normas de contribuição (referência)
+│   └── status.md roadmap.md changelog.md
 ├── overrides/             # extensões do tema Material
 │   ├── main.html          # meta tags Open Graph / Twitter
 │   └── partials/integrations/analytics/custom.html # analytics (consent-aware)
+├── tools/check_redirects.py  # confere o mapa de redirects contra o site construído
 └── mkdocs.yml
 ```
 

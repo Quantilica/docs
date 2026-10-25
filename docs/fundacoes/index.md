@@ -40,7 +40,7 @@ Um cientista de dados que só quer baixar séries do SIDRA não deveria precisar
 
 Por isso a base é dividida em camadas — `core` (I/O leve) e `analytics` (processamento pesado com Polars/PyArrow) — cada uma com responsabilidade única, sem desperdício de dependências. O host de CLI e o catálogo canônico completam a base sem acoplamento.
 
-Veja o desenho completo na [Arquitetura do Ecossistema](../concepts/arquitetura.md).
+Veja o desenho completo na [Arquitetura do Ecossistema](../conceitos/arquitetura.md).
 
 ## E o host de CLI?
 

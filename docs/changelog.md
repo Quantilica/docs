@@ -10,8 +10,8 @@ Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio
 ## 2026-10 — Fluxo B para os fetchers, CVM e TSE documentados
 
 - **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
-- **Novos domínios documentados:** [Mercado de Capitais](mercado-capitais/index.md) (CVM) e [Política](politica/index.md) (TSE).
-- **Nova fonte:** o [`b3-fetcher`](mercado-capitais/b3-fetcher.md) (cotações históricas da B3, COTAHIST) chegou à versão 0.1.0 e ganhou página no domínio de Mercado de Capitais.
+- **Novos domínios documentados:** [Mercado de Capitais](fontes/mercado-capitais/index.md) (CVM) e [Política](fontes/politica/index.md) (TSE).
+- **Nova fonte:** o [`b3-fetcher`](fontes/mercado-capitais/b3-fetcher.md) (cotações históricas da B3, COTAHIST) chegou à versão 0.1.0 e ganhou página no domínio de Mercado de Capitais.
 - **Comandos corrigidos:** as páginas de fonte passam a usar `quantilica <fonte>` com os nomes reais de grupo. Removidos argumentos por ano e flags que não existem (`--dataset`, `discover`, `pipeline` onde o comando não existe).
 - **`check` separado de `sync`:** os fetchers baseados em `FetcherApp` e o `sidra-fetcher` expõem `check`, que compara o remoto com o local sem baixar. O `bcb-sgs-fetcher` ainda não tem esse comando.
 - **Removido:** a seção de pipeline SQLite do `rtn-fetcher` saiu da documentação, porque o comando não existe na versão atual.
@@ -22,9 +22,9 @@ Sete pacotes foram publicados no PyPI nesta fase. A versão vigente de cada um e
 
 - **Novos domínios documentados:** `anac-fetcher` (aviação civil),
   `anp-fetcher` (petróleo, gás e biocombustíveis), `inep-fetcher` (educação) e
-  `rfb-cnpj-fetcher` (base de CNPJs) ganharam páginas em [Aviação](aviacao/index.md),
-  [Petróleo](petroleo/index.md), [Educação](educacao/index.md) e
-  [Empresas](empresas/index.md). Versões granulares nos `CHANGELOG.md` de cada repo.
+  `rfb-cnpj-fetcher` (base de CNPJs) ganharam páginas em [Aviação](fontes/aviacao/index.md),
+  [Petróleo](fontes/petroleo/index.md), [Educação](fontes/educacao/index.md) e
+  [Empresas](fontes/empresas/index.md). Versões granulares nos `CHANGELOG.md` de cada repo.
 - **Cliente HTTP padronizado em `httpx2`:** normas, princípios e fundações
   migrados do `httpx` direto para o cliente resiliente do `quantilica-core`.
 - **CI canônico formalizado:** `test.yml` com `uv sync` único e retry no índice,
@@ -77,7 +77,7 @@ clonar o monorepo.
 - **Dependências por versão de registro:** `sidra-fetcher` passa a depender de
   `quantilica-core>=0.3.1` e `sidra-sql` de `sidra-fetcher>=0.7.2` — ambos antes
   fixados via `git+https`. (`typer`/`rich` continuam fornecidos pelo host
-  `quantilica-cli`, não pelos fetchers — ver [Arquitetura de CLI](concepts/arquitetura.md#arquitetura-de-cli).)
+  `quantilica-cli`, não pelos fetchers — ver [Arquitetura de CLI](conceitos/arquitetura.md#arquitetura-de-cli).)
 - **Publicação automatizada:** cada repositório ganhou um workflow de CI com
   **Trusted Publishing (OIDC)** via GitHub Actions, sem tokens de API de longa
   duração — TestPyPI primeiro, PyPI em seguida, a cada tag `v*`.

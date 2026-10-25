@@ -51,19 +51,57 @@ theme:
         name: Modo claro
 
 nav:
-  - Início: index.md
-  - Começar em 5 minutos: quickstart.md
+  - Início:
+      - index.md
+      - Começar em 5 minutos: quickstart.md
 
-  - Conceitos:
-      - concepts/index.md
-      - Princípios de Design: concepts/principios.md
-      - Arquitetura do Ecossistema: concepts/arquitetura.md
-      - Padrões Práticos: concepts/padroes.md
-      - Parquet + Polars: concepts/parquet-polars.md
-      - Convenções de Armazenamento: concepts/storage.md
-      - Proveniência & Manifestos: concepts/proveniencia.md
-      - Bulk Load & Versionamento: concepts/bulk-load.md
-      - Cálculo de Retornos (Renda Fixa): concepts/calculo-retornos-renda-fixa.md
+  - Fontes de dados:
+      - fontes/index.md
+      - IBGE (Macroeconomia):
+          - fontes/ibge/index.md
+          - sidra-fetcher: fontes/ibge/sidra-fetcher.md
+          - sidra-sql: fontes/ibge/sidra-sql.md
+          - sidra-pipelines: fontes/ibge/sidra-pipelines.md
+      - Tesouro (Finanças):
+          - fontes/tesouro/index.md
+          - tesouro-direto-fetcher: fontes/tesouro/tesouro-direto-fetcher.md
+          - rtn-fetcher: fontes/tesouro/rtn-fetcher.md
+      - Banco Central (BCB):
+          - fontes/bcb/index.md
+          - bcb-sgs-fetcher: fontes/bcb/bcb-sgs-fetcher.md
+          - bcb-sgs-sql: fontes/bcb/bcb-sgs-sql.md
+          - bcb-sgs-pipelines: fontes/bcb/bcb-sgs-pipelines.md
+      - Mercado de Trabalho:
+          - fontes/trabalho/index.md
+          - pdet-fetcher: fontes/trabalho/pdet-fetcher.md
+      - Comércio Exterior:
+          - fontes/comex/index.md
+          - comex-fetcher: fontes/comex/comex-fetcher.md
+      - Saúde Pública:
+          - fontes/saude/index.md
+          - datasus-fetcher: fontes/saude/datasus-fetcher.md
+      - Clima & Meio Ambiente:
+          - fontes/clima/index.md
+          - inmet-fetcher: fontes/clima/inmet-fetcher.md
+      - Aviação Civil (ANAC):
+          - fontes/aviacao/index.md
+          - anac-fetcher: fontes/aviacao/anac-fetcher.md
+      - Petróleo, Gás e Biocombustíveis (ANP):
+          - fontes/petroleo/index.md
+          - anp-fetcher: fontes/petroleo/anp-fetcher.md
+      - Educação (INEP):
+          - fontes/educacao/index.md
+          - inep-fetcher: fontes/educacao/inep-fetcher.md
+      - Empresas (Receita Federal):
+          - fontes/empresas/index.md
+          - rfb-cnpj-fetcher: fontes/empresas/rfb-cnpj-fetcher.md
+      - Mercado de Capitais (CVM e B3):
+          - fontes/mercado-capitais/index.md
+          - cvm-fetcher: fontes/mercado-capitais/cvm-fetcher.md
+          - b3-fetcher: fontes/mercado-capitais/b3-fetcher.md
+      - Política (TSE):
+          - fontes/politica/index.md
+          - tse-fetcher: fontes/politica/tse-fetcher.md
 
   - Fundações:
       - fundacoes/index.md
@@ -72,72 +110,39 @@ nav:
       - quantilica-cli: fundacoes/quantilica-cli.md
       - quantilica-catalog: fundacoes/quantilica-catalog.md
 
-  - Domínios & Ferramentas:
-      - IBGE (Macroeconomia):
-          - ibge/index.md
-          - sidra-fetcher: ibge/sidra-fetcher.md
-          - sidra-sql: ibge/sidra-sql.md
-          - sidra-pipelines: ibge/sidra-pipelines.md
-      - Tesouro (Finanças):
-          - tesouro/index.md
-          - tesouro-direto-fetcher: tesouro/tesouro-direto-fetcher.md
-          - rtn-fetcher: tesouro/rtn-fetcher.md
-      - Banco Central (BCB):
-          - bcb/index.md
-          - bcb-sgs-fetcher: bcb/bcb-sgs-fetcher.md
-          - bcb-sgs-sql: bcb/bcb-sgs-sql.md
-          - bcb-sgs-pipelines: bcb/bcb-sgs-pipelines.md
-      - Mercado de Trabalho:
-          - trabalho/index.md
-          - pdet-fetcher: trabalho/pdet-fetcher.md
-      - Comércio Exterior:
-          - comex/index.md
-          - comex-fetcher: comex/comex-fetcher.md
-      - Saúde Pública:
-          - saude/index.md
-          - datasus-fetcher: saude/datasus-fetcher.md
-      - Clima & Meio Ambiente:
-          - clima/index.md
-          - inmet-fetcher: clima/inmet-fetcher.md
-      - Aviação Civil (ANAC):
-          - aviacao/index.md
-          - anac-fetcher: aviacao/anac-fetcher.md
-      - Petróleo, Gás e Biocombustíveis (ANP):
-          - petroleo/index.md
-          - anp-fetcher: petroleo/anp-fetcher.md
-      - Educação (INEP):
-          - educacao/index.md
-          - inep-fetcher: educacao/inep-fetcher.md
-      - Empresas (Receita Federal):
-          - empresas/index.md
-          - rfb-cnpj-fetcher: empresas/rfb-cnpj-fetcher.md
-      - Mercado de Capitais (CVM):
-          - mercado-capitais/index.md
-          - cvm-fetcher: mercado-capitais/cvm-fetcher.md
-          - b3-fetcher: mercado-capitais/b3-fetcher.md
-      - Política (TSE):
-          - politica/index.md
-          - tse-fetcher: politica/tse-fetcher.md
+  - Guias:
+      - guias/index.md
+      - Por perfil:
+          - guias/perfis/index.md
+          - Analista macroeconômico: guias/perfis/analista-macro.md
+          - Cientista de saúde pública: guias/perfis/cientista-saude.md
+          - Engenheiro de dados: guias/perfis/engenheiro-dados.md
+          - Pesquisador acadêmico: guias/perfis/pesquisador.md
+      - Receitas:
+          - guias/receitas/index.md
+          - Curva de Phillips brasileira: guias/receitas/curva-phillips.md
+          - Yield Curve em 10 linhas: guias/receitas/yield-curve.md
+          - Taxa real ex-post (Selic × IPCA): guias/receitas/taxa-real-ipca-selic.md
+          - Mortalidade infantil × SUS: guias/receitas/mortalidade-sus.md
+          - Estiagem no Nordeste: guias/receitas/estiagem-nordeste.md
+          - Balança comercial em DuckDB: guias/receitas/balanca-duckdb.md
+          - Time Travel — paper de 2019: guias/receitas/time-travel.md
+          - Análise Econômica Multi-Fonte: guias/receitas/analise-economica-multi-fonte.md
 
-  - Cookbook:
-      - cookbook/index.md
-      - Curva de Phillips brasileira: cookbook/curva-phillips.md
-      - Yield Curve em 10 linhas: cookbook/yield-curve.md
-      - Taxa real ex-post (Selic × IPCA): cookbook/taxa-real-ipca-selic.md
-      - Mortalidade infantil × SUS: cookbook/mortalidade-sus.md
-      - Estiagem no Nordeste: cookbook/estiagem-nordeste.md
-      - Balança comercial em DuckDB: cookbook/balanca-duckdb.md
-      - Time Travel — paper de 2019: cookbook/time-travel.md
-      - Análise Econômica Multi-Fonte: cookbook/analise-economica-multi-fonte.md
+  - Conceitos:
+      - conceitos/index.md
+      - Princípios de Design: conceitos/principios.md
+      - Arquitetura do Ecossistema: conceitos/arquitetura.md
+      - Padrões Práticos: conceitos/padroes.md
+      - Parquet + Polars: conceitos/parquet-polars.md
+      - Convenções de Armazenamento: conceitos/storage.md
+      - Proveniência & Manifestos: conceitos/proveniencia.md
+      - Bulk Load & Versionamento: conceitos/bulk-load.md
+      - Cálculo de Retornos (Renda Fixa): conceitos/calculo-retornos-renda-fixa.md
 
-  - Por persona:
-      - personas/index.md
-      - Analista macroeconômico: personas/analista-macro.md
-      - Cientista de saúde pública: personas/cientista-saude.md
-      - Engenheiro de dados: personas/engenheiro-dados.md
-      - Pesquisador acadêmico: personas/pesquisador.md
-
-  - Desenvolvimento:
+  - Contribuir:
+      - contribuir.md
+      - Configuração Global: normas/configuracao.md
       - Versão em pacotes Python: normas/python.md
       - Padrões de Escrita: normas/escrita.md
       - Padronização de CLI: normas/cli-fetchers.md
@@ -145,14 +150,70 @@ nav:
       - Padronização de pyproject.toml: normas/pyproject.md
       - Padronização de CHANGELOG.md: normas/changelog.md
       - Publicação e Release: normas/publicacao.md
-      - Configuração Global: normas/configuracao.md
 
-  - Contribuir: contribuir.md
-  - Status das fontes: status.md
-  - Roadmap: roadmap.md
-  - Changelog: changelog.md
+  - Projeto:
+      - Status das fontes: status.md
+      - Roadmap: roadmap.md
+      - Changelog: changelog.md
 
 plugins:
+  - redirects:
+      redirect_maps:
+        aviacao/anac-fetcher.md: fontes/aviacao/anac-fetcher.md
+        aviacao/index.md: fontes/aviacao/index.md
+        bcb/bcb-sgs-fetcher.md: fontes/bcb/bcb-sgs-fetcher.md
+        bcb/bcb-sgs-pipelines.md: fontes/bcb/bcb-sgs-pipelines.md
+        bcb/bcb-sgs-sql.md: fontes/bcb/bcb-sgs-sql.md
+        bcb/index.md: fontes/bcb/index.md
+        clima/index.md: fontes/clima/index.md
+        clima/inmet-fetcher.md: fontes/clima/inmet-fetcher.md
+        comex/comex-fetcher.md: fontes/comex/comex-fetcher.md
+        comex/index.md: fontes/comex/index.md
+        concepts/arquitetura.md: conceitos/arquitetura.md
+        concepts/bulk-load.md: conceitos/bulk-load.md
+        concepts/calculo-retornos-renda-fixa.md: conceitos/calculo-retornos-renda-fixa.md
+        concepts/index.md: conceitos/index.md
+        concepts/padroes.md: conceitos/padroes.md
+        concepts/parquet-polars.md: conceitos/parquet-polars.md
+        concepts/principios.md: conceitos/principios.md
+        concepts/proveniencia.md: conceitos/proveniencia.md
+        concepts/storage.md: conceitos/storage.md
+        cookbook/analise-economica-multi-fonte.md: guias/receitas/analise-economica-multi-fonte.md
+        cookbook/balanca-duckdb.md: guias/receitas/balanca-duckdb.md
+        cookbook/curva-phillips.md: guias/receitas/curva-phillips.md
+        cookbook/estiagem-nordeste.md: guias/receitas/estiagem-nordeste.md
+        cookbook/index.md: guias/receitas/index.md
+        cookbook/mortalidade-sus.md: guias/receitas/mortalidade-sus.md
+        cookbook/taxa-real-ipca-selic.md: guias/receitas/taxa-real-ipca-selic.md
+        cookbook/time-travel.md: guias/receitas/time-travel.md
+        cookbook/yield-curve.md: guias/receitas/yield-curve.md
+        educacao/index.md: fontes/educacao/index.md
+        educacao/inep-fetcher.md: fontes/educacao/inep-fetcher.md
+        empresas/index.md: fontes/empresas/index.md
+        empresas/rfb-cnpj-fetcher.md: fontes/empresas/rfb-cnpj-fetcher.md
+        ibge/index.md: fontes/ibge/index.md
+        ibge/sidra-fetcher.md: fontes/ibge/sidra-fetcher.md
+        ibge/sidra-pipelines.md: fontes/ibge/sidra-pipelines.md
+        ibge/sidra-sql.md: fontes/ibge/sidra-sql.md
+        mercado-capitais/b3-fetcher.md: fontes/mercado-capitais/b3-fetcher.md
+        mercado-capitais/cvm-fetcher.md: fontes/mercado-capitais/cvm-fetcher.md
+        mercado-capitais/index.md: fontes/mercado-capitais/index.md
+        personas/analista-macro.md: guias/perfis/analista-macro.md
+        personas/cientista-saude.md: guias/perfis/cientista-saude.md
+        personas/engenheiro-dados.md: guias/perfis/engenheiro-dados.md
+        personas/index.md: guias/perfis/index.md
+        personas/pesquisador.md: guias/perfis/pesquisador.md
+        petroleo/anp-fetcher.md: fontes/petroleo/anp-fetcher.md
+        petroleo/index.md: fontes/petroleo/index.md
+        politica/index.md: fontes/politica/index.md
+        politica/tse-fetcher.md: fontes/politica/tse-fetcher.md
+        saude/datasus-fetcher.md: fontes/saude/datasus-fetcher.md
+        saude/index.md: fontes/saude/index.md
+        tesouro/index.md: fontes/tesouro/index.md
+        tesouro/rtn-fetcher.md: fontes/tesouro/rtn-fetcher.md
+        tesouro/tesouro-direto-fetcher.md: fontes/tesouro/tesouro-direto-fetcher.md
+        trabalho/index.md: fontes/trabalho/index.md
+        trabalho/pdet-fetcher.md: fontes/trabalho/pdet-fetcher.md
   - search:
       lang:
         - pt

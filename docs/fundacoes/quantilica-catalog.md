@@ -165,8 +165,8 @@ O catálogo faz isso **uma vez**, tornando os dados inter-operáveis por constru
 ## Saiba Mais
 
 - [quantilica-analytics](quantilica-analytics.md) — os `DataContract`s em que o catálogo se apoia
-- [Proveniência & Manifestos](../concepts/proveniencia.md) — rastreabilidade dos dados
-- [Cookbook — Análise econômica multi-fonte](../cookbook/analise-economica-multi-fonte.md)
+- [Proveniência & Manifestos](../conceitos/proveniencia.md) — rastreabilidade dos dados
+- [Cookbook — Análise econômica multi-fonte](../guias/receitas/analise-economica-multi-fonte.md)
 
 ## Repositório
 

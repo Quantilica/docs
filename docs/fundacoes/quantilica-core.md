@@ -81,7 +81,7 @@ Com o core, esses são problemas resolvidos uma vez para sempre. O fetcher fica 
 3. **Estabilidade** — testes automatizados para HTTP, storage, manifestos, FTP, retry e sync.
 4. **DX** — APIs tipadas e tratamento de erro consistente em toda a organização.
 
-Veja também os [Princípios de Design](../concepts/principios.md) do ecossistema como um todo.
+Veja também os [Princípios de Design](../conceitos/principios.md) do ecossistema como um todo.
 
 ## Repositório
 
