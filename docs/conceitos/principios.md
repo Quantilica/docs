@@ -209,7 +209,7 @@ quantilica comex sync trade-exp -o ./DATA
 # Re-execuções custam apenas uma consulta ao remoto por arquivo quando nada mudou.
 ```
 
-> **Padrões relacionados:** [Lazy evaluation](padroes.md), [Concorrência explícita](padroes.md), [Streaming chunked](padroes.md), [Parquet em vez de CSV](padroes.md).
+> **Padrões relacionados:** [Lazy evaluation](padroes-dados.md#lazy-evaluation), [Concorrência explícita](padroes.md#concorrencia-io), [Streaming chunked](padroes-dados.md#memoria-arquivos-grandes), [Parquet em vez de CSV](padroes-dados.md#parquet-vs-csv).
 
 ---
 
@@ -278,7 +278,7 @@ combined = pl.concat([existing, df]).unique()
 combined.write_parquet("output.parquet")
 ```
 
-> **Padrões relacionados:** [Linhagem em JSON](padroes.md), [Versionamento por timestamp](padroes.md), [Documentação como código](padroes.md).
+> **Padrões relacionados:** [Linhagem em JSON](padroes-dados.md#documentacao-reprodutibilidade), [Versionamento por timestamp](padroes-dados.md#documentacao-reprodutibilidade), [Documentação como código](padroes-dados.md#documentacao-reprodutibilidade).
 
 ---
 

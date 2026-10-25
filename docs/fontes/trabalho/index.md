@@ -49,7 +49,7 @@ graph LR
 
 Para o tutorial de Parquet + Polars (não específico de RAIS, aplicável a qualquer dataset grande), veja **[Parquet + Polars](../../conceitos/parquet-polars.md)** em Conceitos.
 
-Os [Princípios de Design](../../conceitos/principios.md) do ecossistema — especialmente Performance e Sem Mágica — são centrais aqui: leitura de CSV com Polars 14× a 22× mais rápida que o pandas nos arquivos medidos, conversão determinística, sem caching escondido. Receitas táticas em [Padrões Práticos](../../conceitos/padroes.md): [Parquet vs. CSV](../../conceitos/padroes.md#parquet-vs-csv), [Lazy evaluation](../../conceitos/padroes.md#lazy-evaluation), [Memória para arquivos grandes](../../conceitos/padroes.md#memoria-arquivos-grandes).
+Os [Princípios de Design](../../conceitos/principios.md) do ecossistema — especialmente Performance e Sem Mágica — são centrais aqui: leitura de CSV com Polars 14× a 22× mais rápida que o pandas nos arquivos medidos, conversão determinística, sem caching escondido. Receitas táticas em [Padrões Práticos](../../conceitos/padroes.md): [Parquet vs. CSV](../../conceitos/padroes-dados.md#parquet-vs-csv), [Lazy evaluation](../../conceitos/padroes-dados.md#lazy-evaluation), [Memória para arquivos grandes](../../conceitos/padroes-dados.md#memoria-arquivos-grandes).
 
 ## Estrutura de dados
 

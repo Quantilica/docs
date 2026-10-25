@@ -134,7 +134,8 @@ nav:
       - conceitos/index.md
       - Princípios de Design: conceitos/principios.md
       - Arquitetura do Ecossistema: conceitos/arquitetura.md
-      - Padrões Práticos: conceitos/padroes.md
+      - Padrões de execução: conceitos/padroes.md
+      - Padrões de dados: conceitos/padroes-dados.md
       - Parquet + Polars: conceitos/parquet-polars.md
       - Convenções de Armazenamento: conceitos/storage.md
       - Proveniência & Manifestos: conceitos/proveniencia.md

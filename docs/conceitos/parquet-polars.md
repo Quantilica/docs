@@ -413,6 +413,6 @@ df.write_parquet("rais_fixed.parquet")
 
 ## Saiba mais
 
-- [Padrões Práticos](padroes.md) — `Parquet em vez de CSV`, `Lazy evaluation`, `Memória para arquivos grandes`.
+- [Padrões Práticos de dados](padroes-dados.md) — `Parquet em vez de CSV`, `Lazy evaluation`, `Memória para arquivos grandes`.
 - [Princípios de Design](principios.md#performance) — por que Parquet é o default do ecossistema.
 - [Documentação Polars](https://docs.pola.rs/) — referência oficial.

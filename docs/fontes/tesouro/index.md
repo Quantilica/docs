@@ -53,7 +53,7 @@ Para dados fiscais (RTN), o fluxo é mais simples: `rtn-fetcher` baixa a planilh
 - **[rtn-fetcher](rtn-fetcher.md)** — downloader e normalizador da planilha RTN: 24 abas mensais/trimestrais/anuais (corrente / constante / % do PIB), normalização em formato longo com expansão de hierarquia de contas, CLI com `check`, `list` e `sync`, e gravação em CSV ou Parquet pela API Python.
 Para a teoria por trás dos números — YTM, duration, Modified Dietz, retornos reais para títulos indexados à inflação — consulte **[Cálculo de Retornos de Renda Fixa](../../conceitos/calculo-retornos-renda-fixa.md)** na seção Conceitos.
 
-Os [Princípios de Design](../../conceitos/principios.md) do ecossistema se manifestam aqui de forma especialmente visível: idempotência via `last_modified`, FIFO determinístico e Modified Dietz auditável. Receitas táticas em [Padrões Práticos](../../conceitos/padroes.md): [Idempotência](../../conceitos/padroes.md#processamento-idempotente), [Concorrência para I/O](../../conceitos/padroes.md#concorrencia-io), [Lazy evaluation](../../conceitos/padroes.md#lazy-evaluation).
+Os [Princípios de Design](../../conceitos/principios.md) do ecossistema se manifestam aqui de forma especialmente visível: idempotência via `last_modified`, FIFO determinístico e Modified Dietz auditável. Receitas táticas em [Padrões Práticos](../../conceitos/padroes.md): [Idempotência](../../conceitos/padroes.md#processamento-idempotente), [Concorrência para I/O](../../conceitos/padroes.md#concorrencia-io), [Lazy evaluation](../../conceitos/padroes-dados.md#lazy-evaluation).
 
 ## Tipos de títulos do Tesouro Direto
 
