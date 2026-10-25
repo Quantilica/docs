@@ -178,7 +178,7 @@ Reforço da separação de camadas: o fetcher volta a ser um **adaptador de font
 ## 2026-05 — Padronização das CLIs dos fetchers (breaking change)
 
 Unificação do vocabulário de subcomandos das CLIs dos fetchers. **Mudança
-incompatível**: scripts, cron jobs e contêineres que chamam os comandos
+incompatível**: scripts, tarefas agendadas e contêineres que chamam os comandos
 antigos precisam ser atualizados.
 
 - **`sync` é o verbo único de download.** Substitui `trade` (comex), `fetch`
@@ -204,7 +204,7 @@ antigos precisam ser atualizados.
 - **`quantilica-catalog`** lançado: modelo de observação canônico (star schema) com adaptadores para BCB-SGS, RTN, INMET, Tesouro Direto e SIDRA. Resolve o cruzamento multi-fonte com um único `JOIN` em `indicator_id + geo_id + date`. O modelo geográfico foi posteriormente generalizado (breaking change interna) para suportar múltiplas granularidades geográficas.
 - **`quantilica-analytics` 0.2.0** acrescentou `read_brazilian_csv`: leitura robusta de CSV com encoding CP-1252/Latin-1, separadores `;`, datas em DD/MM/AAAA e notação decimal brasileira — em uso pelos fetchers que consomem planilhas do governo.
 - **`quantilica-analytics` integrado nos fetchers**: `bcb-sgs-fetcher`, `rtn-fetcher` e `inmet-fetcher` agora exportam Parquet tipado via `save_parquet` / `write_to_parquet` com `DataContract` e manifesto embutido no header.
-- **`bcb-sgs-fetcher` padronizado** para as convenções do workspace: logging estruturado, `HttpClient` em `data.py`, `ScraperClient` mantido com httpx direto por precisar de sessão stateful.
+- **`bcb-sgs-fetcher` padronizado** para as convenções do ecossistema: logging estruturado, `HttpClient` em `data.py`, `ScraperClient` mantido com httpx direto por precisar de sessão stateful.
 
 ## 2026-05 — Reescrita do portal de documentação
 
