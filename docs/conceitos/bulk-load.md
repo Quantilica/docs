@@ -1,6 +1,6 @@
 ---
 title: Bulk Load & Versionamento de Revisões
-description: Como os data warehouses do ecossistema (sidra-sql, bcb-sgs-sql) ingerem milhões de linhas via COPY FROM STDIN e preservam o histórico de revisões oficiais sem sobrescrever dados.
+description: Como sidra-sql e bcb-sgs-sql ingerem milhões de linhas via COPY FROM STDIN e preservam o histórico de revisões oficiais.
 ---
 
 # Bulk Load & Versionamento de Revisões

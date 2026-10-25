@@ -1,6 +1,6 @@
 ---
 title: Publicação e Release
-description: Processo canônico de release dos pacotes Quantilica — Fluxo A (PyPI/OIDC) para pacotes âncora e Fluxo B (GitHub Releases + índice estático) para fetchers. Inclui workflows de CI, CHANGELOG e versionamento por tags.
+description: Processo de release dos pacotes: Fluxo A (PyPI/OIDC) para os pacotes âncora e Fluxo B (GitHub Releases + índice) para os fetchers.
 ---
 
 # Publicação e Release

@@ -1,6 +1,6 @@
 ---
 title: Padronização de CLI para Fetchers
-description: Guia normativo para a interface de linha de comando de fetchers Quantilica — cli.py (wrapper fino do plugin, com import protegido; argparse apenas para fetchers customizados) e plugin.py (Typer + Rich), logging, barras de progresso, UX e entry points.
+description: Norma da interface de linha de comando dos fetchers: cli.py (wrapper fino), plugin.py (Typer + Rich), logging, progresso, UX e entry points.
 ---
 
 # Padronização de CLI para Fetchers
