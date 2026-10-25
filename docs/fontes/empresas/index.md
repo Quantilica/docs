@@ -15,7 +15,7 @@ Toda empresa formal do Brasil — da multinacional ao MEI da esquina — está n
 
 ## A solução
 
-O pacote `rfb-cnpj-fetcher` coordena o download em lote de todos os arquivos do site oficial da Receita Federal, e registra um manifesto SHA-256 de cada ZIP. A extração e a modelagem (por exemplo, em Parquet ou DuckDB) ficam por conta de quem analisa.
+O pacote `rfb-cnpj-fetcher` coordena o download em lote de todos os arquivos do site oficial da Receita Federal, e registra um manifesto SHA-256 de cada ZIP. Com o extra `analysis`, o pacote também lê cada ZIP em um DataFrame tipado do Polars (códigos como texto, capital social em `Decimal`) e grava Parquet. A extração em disco e a modelagem relacional (por exemplo, em DuckDB) ficam por conta de quem analisa.
 
 ---
 
