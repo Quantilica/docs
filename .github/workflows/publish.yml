@@ -64,6 +64,8 @@ jobs:
       - name: Conferir redirects das URLs antigas
         run: uv run --no-sync python tools/check_redirects.py site
 
+      # Excluídos: portais gov.br e BCB que respondem 404/502 a clientes sem navegador
+      # ou ficam fora do ar por horas; os links foram conferidos à mão.
       - name: Conferir links externos (aviso, não bloqueia)
         uses: lycheeverse/lychee-action@v2
         continue-on-error: true
@@ -72,6 +74,8 @@ jobs:
             --no-progress --scheme https --max-concurrency 8 --max-retries 2
             --timeout 20 --accept 200..=299,403,429
             --exclude '^https://github.com/Quantilica/' --exclude '^https://docs.quantilica.com/'
+            --exclude '^https://www.gov.br/' --exclude '^https://datasus.saude.gov.br/'
+            --exclude '^https://www.tesourotransparente.gov.br/' --exclude '^https://www3.bcb.gov.br/'
             'site/**/*.html'
           fail: false
 
