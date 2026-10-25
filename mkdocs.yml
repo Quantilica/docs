@@ -114,6 +114,7 @@ nav:
       - Mercado de Capitais (CVM):
           - mercado-capitais/index.md
           - cvm-fetcher: mercado-capitais/cvm-fetcher.md
+          - b3-fetcher: mercado-capitais/b3-fetcher.md
       - Política (TSE):
           - politica/index.md
           - tse-fetcher: politica/tse-fetcher.md

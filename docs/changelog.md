@@ -11,9 +11,10 @@ Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio
 
 - **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
 - **Novos domínios documentados:** [Mercado de Capitais](mercado-capitais/index.md) (CVM) e [Política](politica/index.md) (TSE).
+- **Nova fonte:** o [`b3-fetcher`](mercado-capitais/b3-fetcher.md) (cotações históricas da B3, COTAHIST) chegou à versão 0.1.0 e ganhou página no domínio de Mercado de Capitais.
 - **Comandos corrigidos:** as páginas de fonte passam a usar `quantilica <fonte>` com os nomes reais de grupo. Removidos argumentos por ano e flags que não existem (`--dataset`, `discover`, `pipeline` onde o comando não existe).
 - **`check` separado de `sync`:** os fetchers baseados em `FetcherApp` e o `sidra-fetcher` expõem `check`, que compara o remoto com o local sem baixar. O `bcb-sgs-fetcher` ainda não tem esse comando.
-- **Em revisão:** o pipeline SQLite do `rtn-fetcher` descrito nesta documentação não existe na versão atual. A seção está marcada como em revisão.
+- **Removido:** a seção de pipeline SQLite do `rtn-fetcher` saiu da documentação, porque o comando não existe na versão atual.
 
 ## 2026-09 — Publicação no PyPI e quatro fetchers novos documentados
 
