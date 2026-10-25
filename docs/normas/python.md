@@ -31,7 +31,7 @@ __all__ = ["__version__"]
 
 ### Usando `argparse`
 
-O `argparse` possui uma ação nativa para lidar com flags de versão. A função que constrói o parser chama-se **`get_parser()`** (não `get_args`) — mesma exigência da [Padronização de CLI](cli-fetchers.md#21-esqueleto-obrigatório); referência: `sidra-fetcher/src/sidra_fetcher/cli.py`.
+O `argparse` possui uma ação nativa para lidar com flags de versão. A função que constrói o parser chama-se **`get_parser()`** (não `get_args`) — mesma exigência da [Padronização de CLI](cli-fetchers/cli-nativa.md#21-esqueleto-obrigatório); referência: `sidra-fetcher/src/sidra_fetcher/cli.py`.
 
 ```python
 import argparse
