@@ -85,5 +85,4 @@ Os [Princípios de Design](../../conceitos/principios.md) do ecossistema — esp
 
 ## Recursos externos
 
-- [RAIS (oficial)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/rais)
-- [CAGED (oficial)](https://www.gov.br/trabalho/pt-br/acesso-a-informacao/dados-abertos/caged)
+- [Microdados RAIS e CAGED (Ministério do Trabalho e Emprego)](https://www.gov.br/trabalho-e-emprego/pt-br/assuntos/estatisticas-trabalho/microdados-rais-e-caged)
