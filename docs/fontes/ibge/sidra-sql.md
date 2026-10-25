@@ -5,6 +5,11 @@ description: Motor ETL com plugin architecture, bulk load via COPY, star schema 
 
 # sidra-sql
 
+!!! warning "Substituído pelo quantilica-sql"
+
+    Este pacote continua instalável e documentado, mas o motor unificado [quantilica-sql](../../fundacoes/quantilica-sql.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-sql.
+
+
 **Infraestrutura avançada de ETL e Data Warehousing para dados SIDRA do IBGE.**
 
 !!! warning "Pegadinhas da fonte oficial"

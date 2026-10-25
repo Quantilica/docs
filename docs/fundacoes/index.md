@@ -52,6 +52,12 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 
 → [Documentação completa](quantilica-catalog.md)
 
+## `quantilica-sql` e `quantilica-pipelines` — do arquivo à tabela analítica
+
+Quando a análise pede um banco, o `quantilica-sql` carrega os arquivos baixados pelos coletores em PostgreSQL, sem repetir cargas já feitas, e executa pipelines SQL declarativos. O `quantilica-pipelines` é o catálogo oficial desses pipelines, organizado por domínio. Juntos substituem os motores e catálogos específicos de SIDRA e BCB.
+
+→ [quantilica-sql](quantilica-sql.md) · [quantilica-pipelines](quantilica-pipelines.md)
+
 ---
 
 ## Visão geral das camadas de infraestrutura
@@ -62,3 +68,5 @@ Resolve o cruzamento multi-fonte: define um star schema comum (`fact_observation
 | Analítica | `quantilica-analytics` | core + Polars + PyArrow | Pesado | Quem processa dados para análise |
 | CLI unificada | `quantilica-cli` | core | Leve | Quem interage via linha de comando |
 | Catálogo unificado | `quantilica-catalog` | io + Polars | Pesado | Quem cruza dados de múltiplas fontes |
+| Carga em banco | `quantilica-sql` | core + psycopg | Médio | Quem precisa dos dados em PostgreSQL |
+| Pipelines SQL | `quantilica-pipelines` | quantilica-sql | Só texto | Quem quer tabelas analíticas prontas |

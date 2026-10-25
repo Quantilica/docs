@@ -19,6 +19,10 @@ SIDRA é a fonte mais rica do Brasil, mas consumi-la em escala enfrenta três ob
 
 O ecossistema fornece **dois stacks complementares** para SIDRA — escolha baseado em maturidade do pipeline e requisitos.
 
+!!! note "Motor SQL unificado"
+
+    O stack de produção (`sidra-sql` e `sidra-pipelines`) tem substituto: o [quantilica-sql](../../fundacoes/quantilica-sql.md) e o [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md). Os pacotes legados seguem documentados abaixo.
+
 ### Stack 1 — Exploração (`sidra-fetcher`)
 
 Para análise ad-hoc, notebooks Jupyter, lógica customizada e fetching on-demand. SDK Python com clientes sync (`SidraClient`) e async (`AsyncSidraClient`).
