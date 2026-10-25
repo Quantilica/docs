@@ -132,19 +132,19 @@ name = "docs"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocs-redirects" },
     { name = "mkdocstrings", extra = ["python"] },
+    { name = "properdocs" },
     { name = "pymdown-extensions" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "mkdocs", specifier = ">=1.6.1,<2.0.0" },
     { name = "mkdocs-material", specifier = ">=9.5.0" },
     { name = "mkdocs-redirects", specifier = ">=1.2.3" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.6" },
+    { name = "properdocs", specifier = ">=1.6.7" },
     { name = "pymdown-extensions", specifier = ">=10.21.2" },
 ]
 

@@ -1,4 +1,4 @@
-name: Publish MkDocs Site
+name: Publish docs site
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "docs/**"
-      - "mkdocs.yml"
+      - "properdocs.yml"
       - ".github/workflows/publish.yml"
   pull_request:
     branches:
@@ -39,7 +39,7 @@ jobs:
         run: uv sync --locked
 
       - name: Build documentation
-        run: uv run --no-sync mkdocs build --strict
+        run: uv run --no-sync properdocs build --strict
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
           UMAMI_WEBSITE_ID: ${{ secrets.UMAMI_WEBSITE_ID }}
