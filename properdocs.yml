@@ -161,6 +161,7 @@ nav:
           - Progresso e logging: normas/cli-fetchers/progresso-e-logging.md
           - Erros, fluxos e anti-padrões: normas/cli-fetchers/erros-e-fluxos.md
       - Padronização de .gitignore: normas/gitignore.md
+      - Padronização de Lake Hive: normas/lake.md
       - Padronização de pyproject.toml: normas/pyproject.md
       - Padronização de CHANGELOG.md: normas/changelog.md
       - Publicação e Release: normas/publicacao.md
