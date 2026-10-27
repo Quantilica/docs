@@ -111,6 +111,37 @@ Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `da
 
 As seções a seguir (2 a 5) devem ser aplicadas **apenas** para o entendimento da engenharia por trás do `FetcherApp` ou quando, em último caso, um fetcher precisar estender a CLI nativamente e customizar intensamente.
 
+#### 1.3.1 Suporte a Lake Hive: `command_convert` e `command_pipeline`
+
+Coletores que oferecem transformação de seus microdados para Parquet particionado em Hive utilizam os decorators do `FetcherApp`:
+
+- **`fetcher.command_convert(func)`**: Registra o subcomando canônico `convert`. Expõe opções padronizadas (`-i/--input`, `--lake` / `-o/--output`, `--dataset`, `--force`, `--verbose`), delega para `func(input, lake, dataset=..., force=...)` e intercepta ausência de dependências analíticas.
+- **`fetcher.command_pipeline(func)`**: Registra o subcomando canônico `pipeline`, encadeando o passo 1/2 (`sync`) e o passo 2/2 (`convert`). Suporta `--dry-run` para inspecionar os planos antes da execução.
+
+```python
+# plugin.py
+from pathlib import Path
+from typing import Any
+from quantilica.cli.sdk import FetcherApp
+
+fetcher = FetcherApp(name="pdet-fetcher", help="Microdados do PDET.")
+
+def convert(input_dir: Path, lake_dir: Path, dataset: list[str] | None = None, force: bool = False) -> Any:
+    from pdet_fetcher import lake
+    return lake.converter.convert(input_dir, lake_dir, datasets=dataset, force=force)
+
+fetcher.command_convert(convert)
+fetcher.command_pipeline(convert)
+```
+
+#### 1.3.2 Fronteira autorizada do Lake Hive: `lake.py`
+
+A escrita e conversão de dados para o lake analítico seguem estritamente a norma [Padronização de Lake Hive (Parquet)](lake.md).
+
+- O módulo **`lake.py`** (ou submódulo `lake/`) dentro do coletor é a **única fronteira autorizada** para ingestão e gravação no lake.
+- Dependências pesadas (`polars`, `duckdb`, `quantilica-analytics`) residem exclusivamente sob o extra opcional `[project.optional-dependencies]` no grupo `analysis`.
+- Os coletores registram seus conversores no grupo de entry points **`quantilica.lake`** do `pyproject.toml` (ex.: `pdet = "pdet_fetcher.lake:converter"`), ao lado do entry point de comandos **`quantilica.fetchers`**.
+
 !!! warning "Sobreposição de comandos do `FetcherApp` — paridade de flags"
     Um fetcher que re-registra `sync`/`list`/`check` por cima dos defaults do `FetcherApp` (caso `datasus-fetcher/plugin.py`, que re-registra `list` e `sync`; o `check` permanece o do SDK, com `check_entry` próprio) **deve** manter paridade de flags com o comando do SDK: o `sync` próprio inclui `--from-plan` (plano do `check`, já presente no `datasus-fetcher` desde 2026-10-08) e o `check` próprio inclui `--json`. No Typer, o último registro vence — a sobreposição substitui o default, não o estende; flags omitidas deixam de existir para o usuário.
 
@@ -181,8 +212,10 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] Erros usam `[red]Erro:[/red]` + `raise typer.Exit(code=1)`.
 - [ ] Avisos usam `[yellow]Aviso:[/yellow]`.
 - [ ] Entry point declarado em `[project.entry-points."quantilica.fetchers"]`.
+- [ ] Entry point de conversão declarado em `[project.entry-points."quantilica.lake"]` (quando houver suporte a conversão para lake Hive).
 - [ ] `typer` e `rich` **não** estão em `[project.dependencies]`.
 - [ ] **Fronteira**: `quantilica.cli.sdk`/`quantilica.cli.ui` são importados **somente aqui** — nenhum outro módulo do fetcher os importa ([§3.2](cli-fetchers/plugin.md)).
+- [ ] **Fronteira do Lake**: a conversão para Parquet Hive vive exclusivamente em `lake.py` sob o extra `[analysis]`, exposta via `fetcher.command_convert()` e `fetcher.command_pipeline()` ([Padronização de Lake Hive](lake.md)).
 
 ---
 

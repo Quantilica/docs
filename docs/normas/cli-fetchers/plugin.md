@@ -122,13 +122,59 @@ Regras:
 
 ## 3.5 Comandos Analíticos e Dependências Opcionais
 
-Fetchers são, por definição, ferramentas de extração leve. Subcomandos que exigem processamento de dados denso (como `convert` ou `pipeline`, que utilizam bibliotecas como `polars` ou `quantilica-analytics`) **não devem** impor essas dependências aos usuários que apenas desejam fazer o download (`sync`).
+Fetchers são, por definição, ferramentas de extração leve. Subcomandos que exigem processamento de dados denso (como `convert` ou `pipeline`, que utilizam bibliotecas como `polars`, `duckdb` ou `quantilica-analytics`) **não devem** impor essas dependências aos usuários que apenas desejam fazer o download (`sync`).
 
-Nesses casos, adote o seguinte padrão:
+### A fronteira autorizada do Lake Hive: `lake.py`
+
+A conversão para o formato analítico Parquet particionado em Hive segue a especificação canônica definida em [Padronização de Lake Hive (Parquet)](../lake.md). Para assegurar a pureza arquitetural do coletor:
+
+- O módulo **`lake.py`** (ou subpacote `lake/`) é a **fronteira exclusiva e autorizada** para escrita no lake Hive.
+- Todos os imports de motores pesados (`duckdb`, `polars`, `quantilica.analytics.lake`) residem dentro de `lake.py`.
+- O pacote base do fetcher nunca declara essas bibliotecas em `[project.dependencies]`: elas pertencem estritamente ao extra opcional `[project.optional-dependencies]` sob a chave `analysis`.
+
+### Registro padrão com `FetcherApp.command_convert` e `FetcherApp.command_pipeline`
+
+Em vez de registrar comandos analíticos manualmente com decorators Typer genéricos, coletores baseados em `FetcherApp` devem utilizar os métodos do SDK `fetcher.command_convert()` e `fetcher.command_pipeline()`:
+
+```python
+# plugin.py
+from pathlib import Path
+from typing import Any
+from quantilica.cli.sdk import FetcherApp
+
+fetcher = FetcherApp(name="pdet-fetcher", help="Microdados do PDET.")
+app = fetcher.app
+
+def convert(
+    input_dir: Path,
+    lake_dir: Path,
+    dataset: list[str] | None = None,
+    force: bool = False,
+) -> Any:
+    """Converter dados brutos sob input_dir para o lake em lake_dir."""
+    from pdet_fetcher import lake
+    return lake.converter.convert(input_dir, lake_dir, datasets=dataset, force=force)
+
+# Registra o comando canônico `convert` (-i, --lake, --dataset, --force, --verbose):
+fetcher.command_convert(convert)
+
+# Registra o comando encadeado `pipeline` (sync -> convert):
+fetcher.command_pipeline(convert)
+```
+
+Benefícios do padrão:
+
+1. **Paridade de flags**: expõe automaticamente as opções canônicas `-i/--input`, `--lake` (aliases `-o`/`--output`, resolvendo para `lake_root()`), `--dataset` (repetível), `--force` e `--verbose`.
+2. **Tratamento gracioso de dependências**: caso o usuário execute `convert` ou `pipeline` sem o extra instalado, o `FetcherApp` captura o `ImportError` e imprime automaticamente a instrução de instalação adequada (`quantilica install <fonte> --extra analysis`), encerrando com código 1 sem despejar tracebacks no terminal.
+3. **Resumo padronizado**: formata o relatório de conversão com itens convertidos, pulados (*skipped*) e eventuais falhas.
+
+### Padrão para fetchers customizados com comandos manuais
+
+Fetchers customizados que não utilizam `FetcherApp` para `convert` devem adotar o mesmo isolamento:
 
 1. Registre as dependências pesadas em `[project.optional-dependencies]` sob o grupo `analysis` no `pyproject.toml` do fetcher.
-2. Atrase as importações do módulo de conversão (ex: `from .reader import convert`) para o momento da execução do comando, isolando em um bloco `try...except ImportError`.
-3. Avise graciosamente o usuário caso o módulo não esteja disponível. O `plugin.py` roda dentro da CLI, então a mensagem é o comando que instala o extra no ambiente dela: `quantilica install <chave> --extra analysis`, em que `<chave>` é o nome do entry point (`pdet`, `anac`, `td`). A mensagem não tem colchetes de propósito: o Rich trata `[analysis]` como marcação e o descartaria. Os comandos de `FetcherApp` (`command_convert`, `command_archive`, `command_pipeline`) já imprimem essa mensagem.
+2. Atrase as importações do módulo de conversão (`from .lake import convert`) para o momento da execução do comando, isolando em um bloco `try...except ImportError`.
+3. Avise graciosamente o usuário caso o módulo não esteja disponível com a mensagem `quantilica install <chave> --extra analysis`, saindo com código 1.
 
 ```python
 @app.command("convert")
@@ -137,7 +183,7 @@ def cmd_convert(
 ) -> None:
     """Converter dados brutos para Parquet (requer extra 'analysis')."""
     try:
-        from .reader import converte_dados
+        from .lake import converte_dados
     except ImportError:
         console.print(
             "[red]Erro:[/red] convert requer extras de análise: "
@@ -148,21 +194,22 @@ def cmd_convert(
     converte_dados(input)
 ```
 
-4. Módulos analíticos (`reader`, `contracts`, `wrangling` ou equivalentes) que importam `polars` (ou outra dependência do extra `analysis`) diretamente **devem** converter a ausência do extra num `ImportError` de mensagem acionável — nunca `ModuleNotFoundError` cru. Esses módulos atendem quem importa o pacote num projeto, então a instrução é a do `uv add`. Padrão: guarda no topo do módulo que re-levanta com ela:
+4. Módulos analíticos (`lake`, `reader`, `contracts` ou equivalentes) que importam `polars`, `duckdb` ou `quantilica-analytics` diretamente **devem** converter a ausência do extra num `ImportError` com instrução acionável:
 
 ```python
 try:
-    import polars as pl
+    import duckdb
+    from quantilica.analytics.lake import LakeWriter
 except ImportError as exc:
     raise ImportError(
         "requer o extra 'analysis': uv add '<pacote-fetcher>[analysis]' --index https://index.quantilica.com/simple/"
     ) from exc
 ```
 
-Teste canônico da condição (c) do ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`, num ambiente **sem** o extra `analysis` instalado:
+Teste canônico no ambiente **sem** o extra `analysis` instalado:
 
-- `python -c "import <pacote>"` deve funcionar (o pacote base nunca exige o extra);
-- `python -c "from <pacote>.reader import <simbolo>"` (ou `contracts`/`wrangling` importados diretamente) deve falhar com o `ImportError` acionável acima — nunca `ModuleNotFoundError` cru.
+- `python -c "import <pacote>"` funciona normalmente;
+- `python -c "from <pacote>.lake import <simbolo>"` falha com o `ImportError` acionável acima — nunca `ModuleNotFoundError` cru.
 
 ## 3.6 Subcommands aninhados
 
@@ -201,7 +248,11 @@ significado ("trazer o local em linha com o remoto"), apenas em escopos
 diferentes. Use subcommands aninhados quando há mais de um grupo semântico
 distinto. Para fetchers simples (3-6 comandos), um único nível é suficiente.
 
-## 3.6 Registro no `pyproject.toml`
+## 3.7 Registro no `pyproject.toml`
+
+Os coletores registram dois grupos de entry points: um para a montagem de comandos na CLI e outro para os conversores do Lake Hive.
+
+### 3.7.1 Entry point da CLI: `quantilica.fetchers`
 
 ```toml
 [project.entry-points."quantilica.fetchers"]
@@ -219,11 +270,38 @@ comex = "comex_fetcher.plugin:app"
 [project.entry-points."quantilica.fetchers"]
 bcb-sgs = "bcb_sgs_fetcher.plugin:app"
 
-# sidra-fetcher/pyproject.toml
+# pdet-fetcher/pyproject.toml
 [project.entry-points."quantilica.fetchers"]
-sidra = "sidra_fetcher.plugin:app"
+pdet = "pdet_fetcher.plugin:app"
 ```
 
-O `<nome-curto>` é o que o usuário digitará: `quantilica <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
+O `<nome-curto>` é o subcomando na raiz da CLI: `quantilica <nome-curto>`. Use kebab-case quando necessário (`bcb-sgs`), mas prefira nomes de uma palavra quando possível.
 
-> **Nota sobre instalação sob demanda:** O `quantilica-cli` descobre os entry points registrados em `quantilica.fetchers` automaticamente assim que o pacote é instalado via `quantilica install <fonte>`. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` local (`quantilica-cli/src/quantilica/cli/sources.py`) mesclada com o `sources.json` remoto do índice (o local tem precedência), que mapeia chave → distribuição — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`). Chaves remotas atuais: `anac`, `anp`, `bcb-sgs`, `bcb-sgs-sql`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb-cnpj`, `rtn`, `sidra`, `sidra-sql`, `tesouro-direto`, `tse`, `quantilica-analytics`, `quantilica-catalog`; o registro local tem também `td`. O comando resolve via `registry.get(source, source)` — chave desconhecida é passada adiante como nome de distribuição.
+### 3.7.2 Entry point de conversão para Lake: `quantilica.lake`
+
+Fetchers que disponibilizam conversão de seus microdados para o formato Parquet Hive registram adicionalmente o conversor no grupo `quantilica.lake`:
+
+```toml
+[project.entry-points."quantilica.lake"]
+<nome-curto> = "<modulo>.lake:converter"
+```
+
+Exemplos reais:
+
+```toml
+# pdet-fetcher/pyproject.toml
+[project.entry-points."quantilica.lake"]
+pdet = "pdet_fetcher.lake:converter"
+
+# anac-fetcher/pyproject.toml
+[project.entry-points."quantilica.lake"]
+anac = "anac_fetcher.lake:converter"
+
+# datasus-fetcher/pyproject.toml
+[project.entry-points."quantilica.lake"]
+datasus = "datasus_fetcher.lake:converter"
+```
+
+O `quantilica-cli` e o `quantilica-analytics` descobrem os conversores dinamicamente via `quantilica.core.lake.load_lake_converter("<nome-curto>")`, permitindo que pipelines e automações executem conversões padronizadas em qualquer fonte sem acoplamento direto de código.
+
+> **Nota sobre instalação sob demanda:** O `quantilica-cli` descobre os entry points registrados em `quantilica.fetchers` e `quantilica.lake` automaticamente assim que o pacote é instalado via `quantilica install <fonte>`. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` local (`quantilica-cli/src/quantilica/cli/sources.py`) mesclada com o `sources.json` remoto do índice (o local tem precedência), que mapeia chave → distribuição — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`). Chaves remotas atuais: `anac`, `anp`, `bcb-sgs`, `bcb-sgs-sql`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb-cnpj`, `rtn`, `sidra`, `sidra-sql`, `tesouro-direto`, `tse`, `quantilica-analytics`, `quantilica-catalog`; o registro local tem também `td`. O comando resolve via `registry.get(source, source)` — chave desconhecida é passada adiante como nome de distribuição.
