@@ -74,7 +74,9 @@ Cada conjunto de dados possui, em sua raiz:
 
 > **Regra de ouro:** As colunas que compõem o caminho de partição Hive **NÃO** podem ser armazenadas como colunas de dados dentro do arquivo Parquet físico.
 
-Motores analíticos compatíveis com particionamento Hive (DuckDB, Polars e PyArrow) extraem as colunas de partição dinamicamente a partir dos nomes dos diretórios no momento da leitura. Duplicar essas colunas no payload interno dos arquivos Parquet desperdiça espaço em disco, sobrecarrega a descompressão e gera inconsistências de schema. O checker de conformidade recusa datasets que apresentem colunas de partição no interior dos arquivos físicos.
+Motores analíticos compatíveis com particionamento Hive (DuckDB, Polars e PyArrow) extraem as colunas de partição dinamicamente a partir dos nomes dos diretórios no momento da leitura. Duplicar essas colunas no payload interno dos arquivos Parquet desperdiça espaço em disco, sobrecarrega a descompressão e gera inconsistências de schema. O checker de conformidade (`check_dataset`) recusa sumariamente datasets que apresentem colunas de partição no interior dos arquivos físicos.
+
+Para assegurar conformidade sem sobrecarregar os coletores, o `LakeWriter` realiza o **descarte automático e preventivo** (*drop*) de quaisquer colunas da fonte cujo nome coincida com as chaves de partição do conjunto de dados (`partition_keys`) antes de gravar os arquivos Parquet físicos (tanto no motor DuckDB quanto no Polars). O contrato de schema (`DataContract`) pode declarar essas colunas como campos do modelo conceitual sem que isso cause erro na persistência física colunar.
 
 ---
 
@@ -153,7 +155,9 @@ A escrita no lago é realizada prioritariamente pela classe `LakeWriter` de `qua
 
 ### 5.1 Escrita temporária e publicação atômica
 
-Todo arquivo Parquet é inicialmente gravado em um subdiretório temporário de trabalho (`.tmp/`) ou com extensão `.tmp`, residindo **obrigatoriamente no mesmo filesystem** do diretório final de destino. Uma vez concluída e verificada a escrita, a publicação para o caminho definitivo é realizada por meio da chamada de sistema `os.replace` (semântica POSIX atômica). Dessa forma, leitores concorrentes nunca encontram arquivos Parquet incompletos ou parcialmente transferidos.
+Todo arquivo Parquet é inicialmente gravado em um subdiretório temporário de trabalho (`.tmp/`) com extensão temporária (`.parquet.tmp`), residindo **obrigatoriamente no mesmo filesystem** do diretório final de destino. O uso da extensão temporária durante o staging é obrigatório: arquivos Parquet nunca devem ser nomeados como `*.parquet` dentro de `.tmp/`, pois motores como DuckDB e Polars realizam a expansão de globs recursivos (`dataset_dir/**/*.parquet`) e capturariam partes intermediárias incompletas em diretórios ocultos durante a escrita.
+
+Uma vez concluída e verificada a escrita, a publicação para o caminho definitivo é realizada por meio da chamada de sistema `os.replace` (semântica POSIX atômica), renomeando do arquivo temporário `.parquet.tmp` para o nome final `.parquet`. Dessa forma, leitores concorrentes nunca encontram arquivos Parquet incompletos, corrompidos ou parcialmente transferidos.
 
 ### 5.2 Publicação de arquivos particionados em múltiplas partes
 
