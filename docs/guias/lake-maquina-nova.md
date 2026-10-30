@@ -140,7 +140,7 @@ quantilica lake build --input /data/vigente --lake /data/lake \
 
 - **Uma tarefa por (fonte, dataset)**, descoberta pelo conversor instalado de cada fonte; `--sources rtn,inmet` limita a obra a fontes específicas.
 - **Um processo por tarefa**: uma falha não derruba as outras; ao interromper (Ctrl+C), o processo pai encerra também os filhos.
-- **Retomável**: o estado fica em `<lake>/.build/<execução>.jsonl`, uma linha por tarefa concluída. Rodar o mesmo comando de novo pula o que terminou sem erro; `--retry-errors` refaz só as que falharam; `--force` reconverte tudo.
+- **Retomável**: o estado fica em `<lake>/.build/<execução>.jsonl`, uma linha por tarefa concluída e uma linha de fechamento quando a execução termina. Se a execução foi interrompida, rodar o mesmo comando a retoma e pula as tarefas que já terminaram sem erro. Depois de uma execução terminada, rodar de novo começa outra que passa por todas as tarefas, e os conversores só reconvertem os arquivos que mudaram (pelo SHA-256). `--retry-errors` refaz só as tarefas que falharam na execução mais recente; `--force` reconverte tudo.
 - **Recursos**: `--workers` (processos em paralelo), `--memory` (limite de memória do DuckDB por tarefa), `--threads` (threads do DuckDB por tarefa) e `--scratch` (diretório temporário).
 - **Suspensão**: enquanto roda, o `build` impede a suspensão do sistema — `SetThreadExecutionState` no Windows, `caffeinate` no macOS, `systemd-inhibit` no Linux quando disponível. `--allow-sleep` devolve o controle ao sistema.
 
@@ -152,7 +152,7 @@ lake build 20261030T153000Z (48s)
   result: ok
 ```
 
-Códigos de saída: **0** sem erros; **1** se alguma tarefa falhou; **130** se interrompido — em qualquer caso, rodar de novo retoma sem refazer o que está pronto. Se a obra parou por falta de espaço (a pré-checagem aborta com erro), libere disco e rode o mesmo comando.
+Códigos de saída: **0** sem erros; **1** se alguma tarefa falhou; **130** se interrompido — depois de uma interrupção, rodar de novo retoma sem refazer o que está pronto. Se a obra parou por falta de espaço (a pré-checagem aborta com erro), libere disco e rode o mesmo comando.
 
 ### 4. Auditoria: `quantilica lake audit`
 
