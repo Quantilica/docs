@@ -39,8 +39,8 @@ Tutorial dedicado ao formato e biblioteca centrais do ecossistema. Mostra workfl
 
 Páginas conceituais focadas em um tema específico:
 
-- **[Convenções de Armazenamento](storage.md)** — como os arquivos são nomeados e organizados.
-- **[Proveniência & Manifestos](proveniencia.md)** — checksums SHA-256 e reprodução *time-travel*.
+- **[Convenções de Armazenamento](storage.md)** — nomenclatura `@timestamp`, organização de pastas e preservação histórica imutável na camada bruta ("nada se apaga").
+- **[Proveniência & Manifestos](proveniencia.md)** — manifestos `.manifest.json` (schema v2, SHA-256), coexistência de revisões e reprodução *time-travel*.
 - **[Bulk Load & Versionamento de Revisões](bulk-load.md)** — ingestão via COPY e histórico de revisões nos warehouses SQL.
 - **[Cálculo de Retornos de Renda Fixa](calculo-retornos-renda-fixa.md)** — a matemática de YTM, duration e retorno real.
 

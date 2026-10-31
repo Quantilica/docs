@@ -223,12 +223,12 @@ Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se 
 
 ### Como aplicamos
 
-- **Outputs versionados**: cada download inclui metadados (timestamp, versão da fonte, schema).
+- **Outputs versionados e preservação histórica ("nada se apaga")**: na camada bruta (`raw`), cada download incorpora o carimbo temporal da publicação oficial (`{base}@{timestamp}.{ext}`) e seu manifesto `.manifest.json`. Quando o órgão público retifica um arquivo passado, a nova versão é salva ao lado da anterior — nenhum arquivo bruto histórico é apagado ou sobrescrito.
 - **Ordenação determinística**: resultados sempre ordenados de forma consistente.
 - **Linhagem completa**: rastreamos quais arquivos brutos produziram quais Parquet.
 - **Trilhas de auditoria**: cada transformação é registrada; nada é descartado silenciosamente.
 - **Documentação extraída na fonte**: layouts, PDFs e tabelas de lookup baixados junto aos dados (`datasus-fetcher`).
-- **Idempotência**: operações são seguras para re-executar — `write_parquet()` sobrescreve previsivelmente; nunca usamos append cego.
+- **Idempotência**: operações são seguras para re-executar — na camada analítica (Lake Hive), `select_current()` elege deterministicamente a revisão bruta vigente e `write_parquet()` / `LakeWriter` atualiza o Parquet de forma atômica, sem append cego.
 
 ### Exemplo: outputs versionados com nome datado
 
@@ -237,7 +237,7 @@ Em pesquisa, finanças e saúde pública, reprodutibilidade é inegociável. Se 
 quantilica datasus sync -o ./data sim-do-cid10 --start 2023 --end 2023 --docs --aux
 ```
 
-Cada `.dbc` baixado é nomeado `{dataset}_{AAAAMM}-{uf}@{AAAAMMDD}.dbc`, então múltiplas revisões do DATASUS coexistem no disco. `datasus-fetcher archive` move versões antigas para auditoria.
+Cada `.dbc` baixado é nomeado `{dataset}_{AAAAMM}-{uf}@{AAAAMMDD}.dbc`, então múltiplas revisões do DATASUS coexistem permanentemente no disco ("nada se apaga"). Na conversão para o Lake Hive, `select_current()` (`quantilica.core.lake`) seleciona a versão vigente de cada partição, enquanto `datasus-fetcher archive` também permite organizar versões antigas para auditoria dedicada.
 
 ### Exemplo: linhagem completa em JSON
 

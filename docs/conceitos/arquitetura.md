@@ -114,11 +114,14 @@ Persistência eficiente e confiável.
 | Compressão | Tipicamente 80-90% vs. CSV Governamental (varia por dataset) | Moderada |
 | I/O | Escaneamento em massa colunar | Consultas pontuais ACID |
 
-## ETL vs. ELT
+## ETL vs. ELT e Preservação Histórica ("Nada se Apaga")
 
-O ecossistema adota predominantemente **ELT** (Extract → Load → Transform).
+O ecossistema adota predominantemente **ELT** (Extract → Load → Transform) com **preservação integral da camada bruta**:
 
-Os datasets brasileiros são gigantescos e as fontes costumam retificar planilhas silenciosamente (ex: CAGED, Tesouro Direto). Preservar a linha bruta localmente antes de transformar é mandatório para não precisar fazer download de 50GB novamente em caso de quebra no código de agregação.
+Os datasets brasileiros são volumosos e as fontes oficiais costumam retificar planilhas e microdados silenciosamente — ou retirar séries antigas do ar. Por isso, um dos objetivos centrais da Quantilica é possibilitar e facilitar o **arquivamento e a preservação histórica de dados públicos brutos**:
+
+- **Na camada bruta (`raw`), nada se apaga:** cada arquivo baixado recebe o carimbo de publicação da origem (`{base}@{timestamp}.{ext}`) e um sidecar `.manifest.json` com hash SHA-256. Quando um órgão público republica um arquivo com dados retificados, o novo artefato é gravado ao lado do anterior (*append-only*), preservando todas as versões históricas já divulgadas.
+- **Reprocessamento e auditoria (*time-travel*):** preservar o bruto localmente permite tanto reconstruir ou evoluir o Lake Hive sem depender da disponibilidade futura do servidor governamental quanto auditar exatamente o que estava publicado em qualquer data passada.
 
 ## Integração com ferramentas externas
 

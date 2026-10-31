@@ -13,7 +13,7 @@ Esta norma técnica estabelece o padrão canônico para o lago de dados particio
 
 O ecossistema adota uma arquitetura em três camadas fundamentais para o processamento de dados públicos:
 
-1. **Camada Bruta (`raw`)**: Armazena os artefatos originais obtidos diretamente dos portais governamentais (arquivos compactados em formatos como `.zip` ou `.7z`, tabelas em `.csv`, `.txt`, `.dbf`, entre outros). Cada arquivo baixado é acompanhado de um manifesto de proveniência (`.manifest.json`) contendo a URL de origem, o carimbo de data/hora do download e o hash SHA-256 de validação.
+1. **Camada Bruta (`raw` — Imutável, "Nada se Apaga")**: Armazena os artefatos originais obtidos diretamente dos portais governamentais (arquivos compactados em formatos como `.zip` ou `.7z`, tabelas em `.csv`, `.txt`, `.dbf`, entre outros). Opera em regime estritamente *append-only*: cada versão publicada pela fonte é gravada com seu carimbo `@timestamp` (`{base}@{YYYYMMDD}.{ext}`) e acompanhada de um manifesto de proveniência (`.manifest.json`) contendo a URL de origem, o carimbo de data/hora do download e o hash SHA-256. Republicações ou retificações governamentais geram novos arquivos brutos lado a lado, sem jamais apagar ou sobrescrever versões históricas anteriores. A seleção da versão vigente para conversão ao Lake é feita deterministicamente por `select_current()` (`quantilica.core.lake`).
 2. **Camada de Lake (`lake`)**: Armazena os dados descompactados, normalizados e convertidos para arquivos colunares Parquet particionados segundo o layout Hive. É projetada para análise massiva em disco local ou armazenamento compartilhado.
 3. **Camada de Serviço / Marts (`marts` e PostgreSQL)**: Armazena exclusivamente séries consolidadas, agregações analíticas e tabelas de consulta direta necessárias para aplicações e interfaces web.
 
@@ -68,7 +68,9 @@ Cada conjunto de dados possui, em sua raiz:
   __HIVE_DEFAULT_PARTITION__
   ```
 - **Identificador de arquivo (`file_key`)**: O nome base do arquivo Parquet corresponde ao `file_key` extraído pela função `file_key()` de `quantilica.core.lake`. Essa função remove extensões compostas brutas (como `.csv`, `.tsv`, `.7z`, `.zip`, `.tar.gz`) e sufixos de carimbo de download iniciados por `@` (como `@20261021`). Exemplo: o arquivo `caged_202401@20260513.7z` gera o arquivo `caged_202401.parquet`.
+- **Identificador composto para arquivos multi-membro e planilhas multi-aba (`composite_file_key`)**: Quando um único arquivo bruto (`.zip`, `.7z` ou `.xlsx`) contém múltiplos membros ou abas distintos que são convertidos separadamente para o mesmo diretório de partição, o nome base de cada Parquet deve ser formado por `composite_file_key(raw_file, member)` no formato `<file_key>__<member_slug>.parquet` (com duplo sublinhado `__` separando o identificador do pacote bruto e o identificador sanitizado do membro interno). Isso garante rastreabilidade individual e impede que a conversão de um membro sobrescreva os demais membros do mesmo pacote.
 - **Particionamento em partes (`-NNN`)**: Quando um arquivo gerador é subdividido em blocos menores (para atender a um limite máximo de tamanho em bytes), os arquivos recebem um sufixo numérico de três dígitos a partir de `001`: `<file_key>-001.parquet`, `<file_key>-002.parquet`, etc. Se não houver divisão, o arquivo é gravado sem sufixo numérico: `<file_key>.parquet`.
+- **Resolução da versão bruta vigente (`select_current`)**: Como a camada bruta preserva todas as revisões históricas sem deleção ("nada se apaga"), um mesmo diretório bruto pode conter múltiplas safras de um mesmo `file_key` (ex.: `caged_202401@20260401.7z` e `caged_202401@20260513.7z`). A função `select_current()` (e `materialize_view()`) de `quantilica.core.lake` agrupa os candidatos por diretório relativo + `file_key()` e elege a versão de maior carimbo `@AAAAMMDD` / `@AAAAMMDDTHHMMSS` (tratando arquivos sem `@` como a versão mais antiga), mantendo arquivos gêmeos de formatos distintos da mesma versão e seu `.manifest.json`. Assim, o acervo bruto retém 100% da memória histórica, enquanto o Lake Hive materializa apenas a versão vigente em `<file_key>.parquet` (registrando nos metadados do Parquet qual arquivo bruto `@timestamp` e qual `origin_sha256` a geraram).
 
 ### Regra fundamental de não redundância
 
@@ -139,13 +141,26 @@ O arquivo `_dataset.json` localiza-se na raiz de cada conjunto de dados (`$QUANT
 - `alias` (*string*): Identificador amigável em snake_case ASCII utilizado na criação de views automáticas em SQL e DuckDB.
 - `layout_version` (*inteiro*): Versão do contrato de layout, atualmente fixado em `1`.
 - `partition_keys` (*lista de strings*): Chaves ordenadas que formam a estrutura de diretórios Hive. A ordem da lista reflete a profundidade hierárquica dos diretórios (`k1/k2/...`).
-- `partition_types` (*objeto*): Mapeamento entre cada chave de partição e o respectivo tipo lógico declarado (`varchar`, `int`, `bigint`, `date`, `double`, `boolean`). Garante que valores como `mes=09` não sejam interpretados erroneamente como inteiros e percam o zero à esquerda durante a leitura.
+- `partition_types` (*objeto*): Mapeamento entre cada chave de partição e o respectivo tipo lógico declarado pertencente ao vocabulário canônico (`CANONICAL_PARTITION_TYPES`). Garante que valores como `mes=09` ou `uf=SP` não sejam interpretados erroneamente ou percam zeros à esquerda durante a leitura. Chaves omitidas assumem `"varchar"` por padrão.
 - `partition_source` (*string*): Origem das partições. Atualmente `"file"` (partições derivadas da identidade ou nome do arquivo de origem) ou `"rows"` (partições derivadas dos valores das linhas).
 - `contract_id` (*string | null*): Identificador do contrato de schema associado ao dataset.
 - `contract_version` (*inteiro | null*): Versão do contrato de schema.
 - `converter` (*string | null*): Nome do componente de software responsável pela conversão.
 
 O descritor é manipulado e gravado atomicamente por meio da classe `DatasetDescriptor` de `quantilica.core.lake`.
+
+### Vocabulário canônico de tipos de partição (`CANONICAL_PARTITION_TYPES`)
+
+Os tipos declarados em `partition_types` dentro do `_dataset.json` restringem-se ao vocabulário canônico suportado simultaneamente por DuckDB, Polars e PyArrow:
+
+| Tipo canônico (`CANONICAL_PARTITION_TYPES`) | Aliases aceitos | Tipo DuckDB (`hive_types`) | Tipo Polars | Tipo PyArrow | Uso típico em partições |
+|---|---|---|---|---|---|
+| `varchar` | `string`, `str` | `VARCHAR` | `pl.String` | `pa.string()` | `uf`, `regiao`, `mes` (`"01"`..`"12"`), códigos com zero à esquerda |
+| `int` | `integer`, `bigint`, `int64` | `BIGINT` | `pl.Int64` | `pa.int64()` | `ano` (`2024`), `eleicao`, `semestre` |
+| `smallint` | `int16` | `SMALLINT` | `pl.Int16` | `pa.int16()` | Partições numéricas compactas |
+| `double` | `float`, `float64` | `DOUBLE` | `pl.Float64` | `pa.float64()` | Partições numéricas contínuas |
+| `date` | — | `DATE` | `pl.Date` | `pa.date32()` | `data_referencia` (`YYYY-MM-DD`) |
+| `boolean` | `bool` | `BOOLEAN` | `pl.Boolean` | `pa.bool_()` | Flags binárias de partição |
 
 ---
 
@@ -292,6 +307,12 @@ Conforme as normas arquiteturais do ecossistema, os coletores são ferramentas l
 
 Caso o usuário invoque `convert` ou `pipeline` sem o extra instalado, a CLI intercepta o `ImportError` e emite uma mensagem com a instrução de instalação adequada (`quantilica install <fonte> --extra analysis`), encerrando com código de saída 1 de maneira limpa.
 
+### 7.5 Isenção de `[analysis]` e `lake.py` para coletores de séries JSON puras
+
+Coletores cuja fonte primária entrega exclusivamente **séries temporais ou agregados leves em formato JSON** via API REST — especificamente **`sidra-fetcher`** (API de Agregados do IBGE) e **`bcb-sgs-fetcher`** (Sistema Gerenciador de Séries Temporais do Banco Central) — são **isentos** de declarar o extra opcional `[analysis]`, o módulo `lake.py` e o entry point `quantilica.lake`.
+
+A justificativa arquitetural decorre do princípio da separação de carga ([§1](#1-visão-geral-e-princípios-fundamentais)): essas duas fontes produzem séries macroeconômicas e agregadas compactas que são ingeridas diretamente no banco de dados relacional (PostgreSQL) pelos adaptadores do `quantilica-sql`, não constituindo bases volumosas de microdados brutos que demandem estágio intermediário no Lake Hive em Parquet.
+
 ---
 
 ## 8. Verificação e Conformidade (`check_dataset`)
@@ -321,3 +342,42 @@ A função `check_dataset` realiza as seguintes auditorias sequenciais:
 6. **Paridade cruzada de motores**: Executa uma leitura completa utilizando DuckDB, Polars e PyArrow, conferindo se todos os três motores reportam exatamente a mesma contagem de linhas e preservam os tipos de partição declarados.
 
 Qualquer discrepância encontrada é retornada como item em uma lista de erros. A lista vazia indica conformidade plena com o padrão.
+
+---
+
+## 9. Modelagem de Dados, Evolução de Layout e Casos Especiais
+
+Para o guia completo de cenários de coleta e conversão, consulte também [Cenários, arquétipos de fonte e casos especiais](cli-fetchers/cenarios-e-casos.md).
+
+### 9.1 Tratamento de *Schema Drift* e múltiplas eras históricas
+
+Bases históricas de microdados brasileiros (como RAIS, CAGED, ENEM, Censo Escolar e declarações regulatórias da CVM) frequentemente mudam de layout ao longo dos anos: colunas são adicionadas, renomeadas ou descontinuadas entre safras.
+
+Para manter a leitura unificada em todo o dataset via `scan_dataset()` e DuckDB:
+
+- **Contrato unificado (`DataContract`)**: define o superconjunto canônico de colunas na nomenclatura atual (`snake_case` ASCII).
+- **Mapeamento de aliases históricos**: o conversor em `lake.py` traduz nomes legados de safras antigas para os nomes canônicos do contrato antes da escrita.
+- **Preenchimento explícito com `NULL` tipado**: colunas ausentes em determinada era histórica devem ser projetadas como `NULL` explicitamente tipado (`pl.lit(None, dtype=...)` no Polars ou `CAST(NULL AS <TIPO>)` no DuckDB), assegurando que todos os arquivos Parquet do dataset compartilhem o mesmo schema PyArrow.
+
+### 9.2 Preservação de zeros à esquerda e códigos alfanuméricos (`pl.String`)
+
+Todos os identificadores cadastrais, códigos geográficos, postais e classificações estatísticas devem ser modelados como **`pl.String`** (`VARCHAR` no DuckDB / `pa.string()` no PyArrow), **nunca** como inteiros (`Int32`/`Int64`):
+
+- **Identificadores fiscais e pessoais**: `cnpj` (14 posições, compatível com o formato alfanumérico `[0-9A-Z]{12}[0-9]{2}` instituído pela Receita Federal a partir de 2026), `cnpj_basico`, `cnpj_ordem`, `cnpj_dv`, `cpf`.
+- **Códigos territoriais e postais**: `codigo_municipio_ibge`, `codigo_uf_ibge`, `cep` (8 dígitos, preservando o zero inicial de CEPs como `01001000`).
+- **Classificadores econômicos e ocupacionais**: `cnae`, `cbo`, `ncm`, `sh4`, `cfop`, `codigo_inep_escola`, `codigo_cnes`.
+
+Na ingestão de arquivos texto (`.csv`/`.txt`), a leitura bruta deve desativar a inferência numérica precoce (`all_varchar = true` no DuckDB ou `infer_schema_length = 0` no Polars) antes de aplicar os tipos declarados no `DataContract`.
+
+### 9.3 Dados geoespaciais vetoriais (`geom_wkb` e Bounding Box)
+
+Conjuntos de dados contendo geometrias vetoriais (polígonos, linhas ou pontos provenientes de Shapefiles, GeoJSON, GML ou serviços OGC WFS) seguem a representação canônica abaixo no Lake Hive:
+
+1. **Geometria em WKB (`geom_wkb`)**: armazenada na coluna `geom_wkb` com tipo binário (`pa.binary()` / `pl.Binary`) no formato padrão **Well-Known Binary (WKB)**, referenciada em **SIRGAS 2000 (`EPSG:4674`)** ou **WGS 84 (`EPSG:4326`)** na ordem de eixos `(longitude, latitude)`.
+2. **Envelope espacial explícito (*Bounding Box*)**: acompanhada obrigatoriamente de quatro colunas numéricas `Float64` (`DOUBLE`):
+   - `bbox_minx`
+   - `bbox_miny`
+   - `bbox_maxx`
+   - `bbox_maxy`
+
+Essa estrutura permite filtragem espacial rápida por *predicate pushdown* sobre as estatísticas de `row group` do Parquet em qualquer motor analítico, sem exigir extensões geoespaciais para consultas tabulares ou filtros de caixa delimitadora.

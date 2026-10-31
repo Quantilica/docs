@@ -61,6 +61,58 @@ stamp_filename("rtn", "xlsx", None)
 # → "rtn.xlsx"
 ```
 
+### Gramática canônica de particionamento (`format_partition_token`)
+
+Quando um conjunto de dados é distribuído em múltiplos arquivos por recorte temporal ou geográfico, o nome base (`{base}`) incorpora o token de partição separado do identificador do dataset (`{slug}`) por sublinhado (`_`), construído via `build_stamped_filename()` e `format_partition_token`:
+
+```
+{slug}_{partition_token}@{timestamp}.{ext}
+```
+
+| Recorte da partição | Gramática do token (`format_partition_token`) | Exemplo de arquivo bruto |
+|---|---|---|
+| Sem partição (arquivo único) | *(omitido)* | `ncm@20240315.csv` |
+| Anual (`year`) | `{year}` (`YYYY`) | `exp_2023@20240315.csv` |
+| Mensal (`year`, `month`) | `{year}-{month:02d}` ou `{year}{month:02d}` | `novo-caged_2024-01@20240315.7z` |
+| Semestral (`year`, `semester`) | `{year}-{semester:02d}` ou `{year}-S{semester}` | `bpc_2024-01@20240810.csv` |
+| Temporal + UF / Região | `{periodo}-{uf_ou_regiao}` (minúsculo) | `sih-rd_202001-sp@20240115.dbc`, `rais-vinculos_2024-sul@20260513.7z` |
+
+### Posicionamento de `@YYYYMMDD` antes de extensões compostas
+
+O carimbo `@YYYYMMDD` (ou `@YYYYMMDDTHHMMSS`) posiciona-se **sempre imediatamente antes da extensão completa do arquivo** — inclusive quando o arquivo possui extensão composta de compressão (como `.csv.gz`, `.tar.gz`, `.json.zst`):
+
+- **Correto**: `cotacoes_2024@20250110.csv.gz` (sidecar: `cotacoes_2024@20250110.csv.gz.manifest.json`)
+- **Incorreto**: `cotacoes_2024.csv@20250110.gz`
+
+Na etapa de conversão para o [Lake Hive](../normas/lake.md), a função `file_key()` de `quantilica.core.lake` remove iterativamente todas as extensões brutas da lista canônica (`.gz`, `.csv`, `.zip`, `.7z`, `.tar`, etc.) e, ao final, descarta o sufixo `@YYYYMMDD`, restituindo de forma determinística a chave limpa `cotacoes_2024` para gerar `cotacoes_2024.parquet`.
+
+### Preservação histórica e imutabilidade da camada bruta ("nada se apaga")
+
+Um objetivo central da Quantilica é possibilitar e facilitar o **arquivamento e a preservação histórica de dados públicos brutos**. O padrão `{base}@{timestamp}.{ext}` garante que o diretório bruto funcione como um acervo **imutável e *append-only***:
+
+- **Coexistência de revisões:** quando um órgão público retifica ou republica um arquivo histórico com uma nova data de modificação, o coletor grava um novo arquivo ao lado do existente (ex.: `exp_2023@20240315.csv` e `exp_2023@20240620.csv`), cada um com seu próprio `.manifest.json`. **Nada se apaga e nenhuma revisão anterior é sobrescrita.**
+- **Seleção determinística para o Lake (`select_current`):** enquanto a camada bruta preserva todas as safras históricas já publicadas, a função `select_current()` de `quantilica.core.lake` inspeciona as versões disponíveis para cada `file_key()` e elege deterministicamente a revisão vigente (maior `@timestamp`) para alimentar a conversão do Lake Hive.
+
+```mermaid
+flowchart LR
+    subgraph Raw ["Camada Bruta (/data/<fonte>)"]
+        F["{dataset_id}/{slug}_{particao}@{YYYYMMDD}.{ext}"]
+        M["{dataset_id}/{slug}_{particao}@{YYYYMMDD}.{ext}.manifest.json"]
+        F --- M
+    end
+
+    subgraph Key ["Extração de Identidade (quantilica.core.lake)"]
+        FK["file_key() remove .{ext} compostas e @{YYYYMMDD}"]
+    end
+
+    subgraph Lake ["Camada Lake Hive ($QUANTILICA_LAKE_DIR)"]
+        P["<source_id>/<dataset_id>/<k1>=<v1>/{slug}_{particao}.parquet"]
+        D["<source_id>/<dataset_id>/_dataset.json"]
+    end
+
+    Raw --> Key --> Lake
+```
+
 ---
 
 ## Estrutura de Pastas
@@ -92,6 +144,40 @@ class FooRepository(BaseDataRepository):
 ```
 
 Categorias adicionais (documentação, dados processados, etc.) são responsabilidade do fetcher — use `self.storage.path_for(...)` diretamente.
+
+### Decisão de subdiretório por ano ou competência (`subdir_by_year=True` vs `False`)
+
+O `DataRepository` (`quantilica.cli.sdk`) suporta duas estratégias para organizar os arquivos dentro de `{output}/{dataset_id}/`:
+
+| Configuração | Layout em disco | Quando adotar | Exemplos |
+|---|---|---|---|
+| `subdir_by_year=False` *(padrão)* | `{output}/{dataset_id}/{slug}_{particao}@{YYYYMMDD}.{ext}` | Datasets com até algumas centenas de arquivos (partições anuais, semestrais ou mensais nacionais) | `comex-fetcher`, `cvm-fetcher`, `anp-fetcher`, `anac-fetcher`, `tesouro-direto-fetcher` |
+| `subdir_by_year=True` | `{output}/{dataset_id}/{ano_ou_competencia}/{slug}_{particao}@{YYYYMMDD}.{ext}` | Datasets massivamente fragmentados (ex.: competência mensal × 27 UFs = 324 arquivos por ano), evitando diretórios planos com dezenas de milhares de inodes | `datasus-fetcher`, `pdet-fetcher` (RAIS/CAGED particionados) |
+
+### Manifesto de proveniência v2 (`DownloadManifest` e `dataset_id`)
+
+Todo arquivo bruto salvo em `{output}/{dataset_id}/` é acompanhado de um arquivo sidecar `{arquivo}.manifest.json` no schema v2 (`MANIFEST_VERSION = 2` de `quantilica.core.manifests`).
+
+O manifesto registra obrigatoriamente o **`dataset_id`** canônico ao lado do `source_id`, permitindo auditoria de proveniência e vinculação direta com o descritor `_dataset.json` do Lake Hive, além dos 5 grupos opcionais de enriquecimento da v2 (`source_meta`, `fingerprint`, `lineage`, `quality` e `execution` — veja a especificação completa em [Proveniência & Manifestos](proveniencia.md#a-anatomia-de-um-manifesto-schema-v2)):
+
+```json
+{
+  "dataset_id": "exp",
+  "fetched_at": "2026-10-20T14:22:10Z",
+  "manifest_version": 2,
+  "path": "/data/comex/exp/exp_2024@20240315.csv",
+  "producer": "comex-fetcher",
+  "producer_version": "0.4.0",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "size_bytes": 184520910,
+  "source_id": "comex",
+  "source_meta": {
+    "etag": "\"65f41a-2b10c\"",
+    "last_modified": "Fri, 15 Mar 2024 12:00:00 GMT"
+  },
+  "url": "https://balanca.economia.gov.br/balanca/bd/comexstat-bd/ncm/EXP_2024.csv"
+}
+```
 
 ### Exemplos por pacote
 

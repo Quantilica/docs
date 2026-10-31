@@ -27,7 +27,7 @@ docs/
 │   ├── fontes/            # uma pasta por domínio (ibge, tesouro, saude, ...) e uma página por coletor
 │   ├── fundacoes/         # núcleo, camada analítica, CLI, catálogo
 │   ├── guias/             # perfis/ (por onde começar) e receitas/ (cruzamentos passo a passo)
-│   ├── conceitos/         # arquitetura, princípios, padrões (explicação)
+│   ├── conceitos/         # arquitetura, princípios, preservação histórica, proveniência e armazenamento
 │   ├── normas/            # normas de contribuição (referência)
 │   └── status.md roadmap.md changelog.md
 ├── overrides/             # extensões do tema Material

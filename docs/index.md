@@ -11,7 +11,7 @@ hide:
   <img src="assets/logo.png" alt="Logo Quantilica" width="160" height="160">
 </div>
 
-**Quantilica** é um ecossistema aberto de coletores Python para os dados públicos brasileiros — IBGE, Tesouro Nacional, DATASUS, INMET, CAGED, RAIS, Comex e adjacentes. Uma ferramenta especializada por fonte, todas seguindo os mesmos princípios: resiliência, proveniência e Parquet tipado na saída.
+**Quantilica** é um ecossistema aberto de coletores Python para os dados públicos brasileiros — IBGE, Tesouro Nacional, DATASUS, INMET, CAGED, RAIS, Comex e adjacentes. Uma ferramenta especializada por fonte, todas seguindo os mesmos princípios: resiliência, **preservação histórica dos dados brutos (nada se apaga)**, proveniência criptográfica e Parquet tipado na saída.
 
 [Comece em 5 minutos →](quickstart.md){ .md-button .md-button--primary }
 [Ver as receitas](guias/receitas/index.md){ .md-button }
@@ -28,6 +28,7 @@ Quem já tentou trabalhar com dados oficiais brasileiros conhece o roteiro:
 - O CSV de 50M linhas do CAGED estoura a memória do Pandas.
 - O Siscomex serve arquivos GB com SSL quebrado e schemas que mudam sem aviso.
 - O Tesouro publica taxas em planilhas com cabeçalhos hierárquicos e separadores `;`.
+- Órgãos públicos retificam ou substituem arquivos históricos em silêncio — ou tiram links antigos do ar sem aviso.
 - Cada análise começa com duas semanas de yak shaving e raspagem.
 
 Você está fazendo trabalho que outra pessoa já fez ontem. E vai refazer amanhã.
@@ -44,7 +45,7 @@ with SidraClient() as client:
     agregado = client.get_agregado(1705)  # IPCA-15: metadados + 84 períodos + 27 localidades
 ```
 
-Cada download vem acompanhado de um manifesto SHA-256 (proveniência total), retry automático com backoff, e saída padronizada em Parquet — pronto para Polars, DuckDB, ou o que vier.
+Cada download preserva o arquivo bruto original com o carimbo `@timestamp` da publicação oficial (**nada se apaga** quando a fonte retifica um arquivo histórico), acompanhado de um manifesto SHA-256 (proveniência total), retry automático com backoff, e saída padronizada em Parquet — pronto para Polars, DuckDB, ou o que vier.
 
 ## A promessa
 

@@ -195,6 +195,54 @@ def _cmd_sync(args: argparse.Namespace) -> None:
         get_year(year=year, ...)
 ```
 
+### 10.3 Fluxos de contorno para servidores HTTP sem `HEAD` ou sem `Content-Length`
+
+Diversos portais governamentais operam atrás de proxies ou exportadores legados que bloqueiam o método `HEAD` (`HTTP 403`, `405` ou `501`), retornam `Content-Length: 0` no `HEAD` ou transmitem o arquivo em modo `Transfer-Encoding: chunked` sem anunciar o tamanho total.
+
+O fluxo canônico do `HttpClient` (`quantilica.core.http`) e do `FetcherApp` (`quantilica.cli.sdk`) trata essas falhas sem interromper a execução:
+
+1. **Sonda `GET` com `Range: bytes=0-0` (`head_fallback_get`)**: quando o `HEAD` falha ou omite metadados de frescor, o cliente emite `GET` solicitando apenas o primeiro byte (`Range: bytes=0-0`). Se o servidor responder `206 Partial Content`, o tamanho real do artefato é extraído do cabeçalho `Content-Range: bytes 0-0/<total>`, juntamente com `ETag` e `Last-Modified`, encerrando a conexão imediatamente sem baixar o corpo completo.
+2. **Streaming sem `Content-Length` (`total_bytes = 0`)**: durante o download efetivo, quando o servidor não informa `Content-Length`, o `ProgressCallback(downloaded_bytes, total_bytes)` recebe `total_bytes = 0`. A barra de progresso Rich alterna automaticamente para modo indeterminado (exibindo bytes transferidos e taxa de transferência sem percentual fixo).
+3. **Deduplicação por SHA-256 pós-download (`remote_only`)**: quando o endpoint não oferece `Last-Modified` nem `ETag`, o arquivo é baixado em `.tmp`, validado e comparado via hash SHA-256 com o `.manifest.json` local.
+
+```mermaid
+flowchart TD
+    Start["Verificação de entrada (check / sync)"] --> TryHead["Requisição HEAD na URL da entrada"]
+    TryHead --> HeadOk{"HEAD 200 com ETag / Last-Modified / Size?"}
+    HeadOk -->|"Sim"| Compare["Compara com .manifest.json local"]
+    HeadOk -->|"Não (403/405/501 ou cabeçalhos vazios)"| TryRange["Fallback: GET com Range: bytes=0-0"]
+
+    TryRange --> RangeOk{"206 Partial Content ou cabeçalhos presentes?"}
+    RangeOk -->|"Sim (lê Content-Range: bytes 0-0/total)"| Compare
+    RangeOk -->|"Não (servidor dinâmico / chunked puro)"| StreamTmp["Baixa stream em .<arquivo>.tmp (barra total=None)"]
+
+    Compare --> IsFresh{"Local já atualizado?"}
+    IsFresh -->|"Sim"| Skip["Pula download (skip-up-to-date)"]
+    IsFresh -->|"Não"| StreamTmp
+
+    StreamTmp --> Validate["Valida payload com check_payload(.tmp)"]
+    Validate --> ValidOk{"Passou anti-Soft-200 e CRC?"}
+    ValidOk -->|"Não"| RaiseErr["Remove .tmp e lança CorruptPayloadError"]
+    ValidOk -->|"Sim"| AtomicReplace["os.replace(.tmp -> destino) + atualiza .manifest.json"]
+```
+
+### 10.4 Detecção de Soft-200 HTML e proteção contra arquivos truncados
+
+Portais públicos sujeitos a instabilidade frequentemente respondem com status `HTTP 200 OK` devolvendo uma página HTML de erro (`<!DOCTYPE html><html>...`) no lugar de um arquivo `.csv`, `.zip` ou `.7z` (**Soft-200**).
+
+- **Validação obrigatória antes do swap atômico**: toda escrita de arquivo de dados passa por `check_payload(temp_path, name=target.name)` (`quantilica.core.files`) enquanto o arquivo ainda está em `.tmp`:
+  - Rejeita qualquer arquivo de dados (`.csv`, `.txt`, `.zip`, `.7z`, `.xls`, `.xlsx`, `.json`, `.dbc`, `.dbf`) cujos primeiros 512 bytes (ignorando BOM UTF-8 e espaços) iniciem com `<!doctype html` ou `<html`;
+  - Executa `zipfile.ZipFile.testzip()` em arquivos `.zip` e `.xlsx` para detectar truncamento de stream ou falha de CRC-32;
+  - Executa `7z t -bd` em arquivos `.7z` quando o utilitário está disponível no sistema.
+- Em caso de falha, `CorruptPayloadError` é lançada, o arquivo `.tmp` é removido no bloco `finally` e o arquivo local anterior (bem como seu `.manifest.json`) permanece intacto.
+
+### 10.5 Fluxos de paginação para `search_after` (Elasticsearch) e OGC WFS
+
+Quando a fonte não fornece arquivos estáticos e exige varredura paginada sobre motores de busca ou servidores geoespaciais, aplique os seguintes fluxos determinísticos (detalhados em [Cenários e casos especiais](cenarios-e-casos.md)):
+
+- **Elasticsearch `POST /_search` (`search_after`)**: nunca utilize paginação `from + size` para varreduras profundas (limitada a 10.000 registros). Defina uma cláusula `sort` determinística composta pelo carimbo temporal e pelo identificador único (ex.: `[{"dataHoraUltimaAtualizacao": "asc"}, {"id": "asc"}]`), alimentando o campo `search_after` da página seguinte com o vetor `sort` do último documento recebido até que a lista `hits.hits` retorne vazia.
+- **OGC WFS 2.0 (`GetFeature` em GeoServer)**: combine `count=<tamanho_pagina>` e `startIndex=<offset>` sempre acompanhados de **`sortBy=<chave_primaria>+A`**, particionando consultas nacionais densas por UF ou por envelope espacial (`BBOX`).
+
 ---
 
 ## 11. Anti-padrões a evitar
