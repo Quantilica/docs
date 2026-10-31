@@ -48,20 +48,38 @@ Resultado em disco:
 ```
 dados/raw/sidra/
 ├── agregado-1705.json
-└── agregado-1705.json.manifest.json    ← SHA-256, URL, timestamp, producer
+└── agregado-1705.json.manifest.json    ← schema v2: SHA-256, URL, timestamp, producer, source_meta
 ```
 
 ## Módulos
 
 | Módulo | Responsabilidade |
 |---|---|
-| `http` | `HttpClient` e `AsyncHttpClient` com retentativas e backoff exponencial |
-| `ftp` | Cliente FTP resiliente para fontes legadas (DATASUS, etc.) |
+| `http` | `HttpClient` e `AsyncHttpClient` com retentativas, backoff exponencial e `download_with_manifest` |
+| `ftp` | Cliente FTP resiliente para fontes legadas (DATASUS, PDET) com `download_with_manifest` |
 | `retry` | Lógica configurável para falhas de rede e erros transientes |
-| `storage` | `LocalStorage` para artefatos brutos e processados, com escrita atômica |
-| `manifests` | `DownloadManifest`, `DatasetManifest`, `RunManifest` — rastreabilidade SHA-256 |
+| `storage` | `LocalStorage` e `BaseDataRepository` para artefatos brutos e processados |
+| `files` | Escrita atômica, cálculo incremental de SHA-256, descompactação (`decompress_archive`) e validação de payload (`check_payload`) |
+| `manifests` | `DownloadManifest` (schema v2, `MANIFEST_VERSION = 2`), `DatasetManifest`, `RunManifest` e helpers de sidecar `.manifest.json` |
+| `sync` | Probes de frescor (`HttpFreshnessProbe`, `FtpFreshnessProbe`), políticas de skip (`should_skip`) e validação estrita (`is_manifest_valid`) |
+| `lake` | Contrato do Lake Hive (`lake_root`, `file_key`, `DatasetDescriptor`, `select_current`, `materialize_view`) |
 | `logging` | `get_logger`, `log_step` — logging estruturado padronizado |
-| `exceptions` | Hierarquia comum: `FetchError`, `ParseError`, `StorageError` |
+| `exceptions` | Hierarquia comum: `FetchError`, `ParseError`, `StorageError`, `CorruptPayloadError` |
+
+## Manifestos de proveniência (`manifests` — Schema v2)
+
+O módulo `quantilica.core.manifests` define o contrato de proveniência criptográfica na versão `MANIFEST_VERSION = 2`:
+
+- **`DownloadManifest`**: manifesto individual por arquivo baixado (`<arquivo>.manifest.json`). Registra a identidade do recurso (`source_id`, `dataset_id`, `resource_id`, `url`, `path`), integridade (`sha256`, `size_bytes`, `fetched_at`), autoria (`producer`, `producer_version`), `manifest_version = 2` e **5 grupos opcionais de enriquecimento**:
+  - `source_meta` (`SourceMetadata`): `etag`, `last_modified`, `published_at`, `expected_cadence`
+  - `fingerprint` (`ContentFingerprint`): `content_type`, `schema_hash`, `row_count`, `column_count`, `temporal_extent`, `geographic_extent`
+  - `lineage` (`Lineage`): `derived_from`, `pipeline_id`
+  - `quality` (`QualitySignals`): `validation_status`, `null_ratio`, `diff_from_previous`
+  - `execution` (`ExecutionInfo`): `duration_ms`, `retry_count`, `environment`, `data_license`
+- **Helpers de sidecar**: `write_manifest_sidecar(target, manifest)`, `read_manifest_sidecar(target)`, `manifest_sidecar_path(target)` e `is_manifest_valid(manifest_path)` (em `quantilica.core.sync`).
+- **Lotes e execuções**: `DatasetManifest` (snapshot de múltiplos `DownloadManifest`) e `RunManifest` / `ExecutionManifest` (rastreamento de início, fim e status de uma execução).
+
+Para a anatomia completa do `.manifest.json` v2, tabelas de campos e exemplos de leitura, enriquecimento e injeção em Parquet, veja [Proveniência & Manifestos](../conceitos/proveniencia.md).
 
 ## Por que isso importa
 

@@ -150,6 +150,20 @@ A escrita e conversão de dados para o lake analítico seguem estritamente a nor
 - **`DownloadManifest` — obrigatório por arquivo baixado.** Todo arquivo baixado por um fetcher sai acompanhado do seu sidecar `DownloadManifest` (SHA-256, URL de origem, timestamps). O fetcher **não** o constrói manualmente: ele é provido por herança do `FetcherApp` — `FetcherApp._download_file` delega a `client.download_with_manifest` (`quantilica-cli/src/quantilica/cli/sdk.py`), implementado em `HttpClient.download_with_manifest` (`quantilica-core/src/quantilica/core/http.py`) e `FtpClient.download_with_manifest` (`quantilica-core/src/quantilica/core/ftp.py`), que faz freshness check, escrita atômica e emite o sidecar. Regra prática: baixe sempre via o caminho do `FetcherApp` (`download_entry`/`download_datasets`); nunca faça streaming próprio sem manifest.
 - **`ExecutionManifest` — não exigido por download.** `ExecutionManifest` é apenas o alias de `RunManifest` (`quantilica-core/src/quantilica/core/manifests.py`), disponível no core e re-exportado em `quantilica.core`. O código não impõe sua produção a fetchers nem o SDK o emite no caminho de download — portanto **nenhum fetcher precisa produzi-lo por arquivo baixado**.
 
+### 1.5 Arquétipos de coleta e cenários especiais
+
+As fontes públicas brasileiras distribuem-se em **7 arquétipos canônicos de transporte e descoberta**, documentados em detalhe em [Cenários, arquétipos de fonte e casos especiais](cli-fetchers/cenarios-e-casos.md):
+
+| Arquétipo | Protocolo / Descoberta | Exemplos de referência | Estratégia padrão |
+|---|---|---|---|
+| **1. Diretórios estáticos / FTP / WebDAV** | Autoindex HTML, `FtpClient` (`MLSD`/`LIST`) ou `PROPFIND` | `cvm-fetcher`, `rfb-cnpj-fetcher`, `pdet-fetcher`, `datasus-fetcher` | `FetcherApp` + `DataRepository`, `FreshnessPolicy` `head_or_manifest` |
+| **2. Portais CKAN v3 + Storage S3/HTTP** | `GET /api/3/action/package_show?id=<slug>` | `tesouro-direto-fetcher`, `anp-fetcher`, `anac-fetcher` | Metadados extraídos do JSON CKAN (`last_modified`) propagados ao download |
+| **3. APIs OData v4 (Olinda) e REST paginado** | Paginação `$top` / `$skip` com `$orderby` determinístico | `bcb-sgs-fetcher`, APIs Olinda, PNCP, SICONFI | Coleta particionada por janela temporal com snapshots JSON/CSV |
+| **4. Handshake / Tokens efêmeros / Base64** | Parâmetros Base64 na rota ou token de curta duração | `b3-fetcher` | Resolução tardia (*lazy*) do token dentro de `download_entry` |
+| **5. Elasticsearch POST (`search_after`)** | `POST /_search` com `sort` determinístico e cursor `search_after` | Buscadores processuais (ex.: DataJud) | Chave pública da API documentada + lotes `.jsonl` por partição |
+| **6. Serviços geoespaciais OGC WFS 2.0** | `GetFeature` paginado (`count`, `startIndex`, `sortBy`) | GeoServer fundiário/ambiental (INCRA, CAR, ANA) | Fatiamento por UF/`BBOX` + conversão para `geom_wkb` (WKB) no Lake |
+| **7. Endpoints dinâmicos sem `HEAD`** | `GET`/`POST` sem `Content-Length` ou `Last-Modified` | `anp-fetcher`, `inep-fetcher`, exportadores legados | `head_fallback_get` (`Range: bytes=0-0`) ou deduplicação SHA-256 + `check_payload` |
+
 ---
 
 ## Mapa da norma
@@ -163,7 +177,8 @@ A norma é dividida por assunto. Os números de seção (§) se mantêm em todas
 | [Plugin](cli-fetchers/plugin.md) | [§3](cli-fetchers/plugin.md) | `plugin.py`, `setup_rich_logging`, comandos, extras opcionais, entry points |
 | [Padrões visuais Rich](cli-fetchers/rich.md) | [§4](cli-fetchers/rich.md) | Status, barras de progresso, tabelas, painéis e mensagens |
 | [Progresso e logging](cli-fetchers/progresso-e-logging.md) | [§5](cli-fetchers/progresso-e-logging.md), [§6](cli-fetchers/progresso-e-logging.md) | Callbacks de progresso e níveis de log |
-| [Erros, fluxos e anti-padrões](cli-fetchers/erros-e-fluxos.md) | [§7](cli-fetchers/erros-e-fluxos.md) a [§11](cli-fetchers/erros-e-fluxos.md) | Códigos de saída, pipelines, dry-run, anos e o que evitar |
+| [Erros, fluxos e anti-padrões](cli-fetchers/erros-e-fluxos.md) | [§7](cli-fetchers/erros-e-fluxos.md) a [§11](cli-fetchers/erros-e-fluxos.md) | Códigos de saída, pipelines, dry-run, anos, contornos HTTP e o que evitar |
+| [Cenários e casos especiais](cli-fetchers/cenarios-e-casos.md) | [§14](cli-fetchers/cenarios-e-casos.md) a [§18](cli-fetchers/cenarios-e-casos.md) | Arquétipos de fonte (HTTP, FTP, CKAN, OData, WFS), políticas de freshness, Soft-200 e casos especiais do Lake |
 
 ---
 
