@@ -33,7 +33,7 @@ graph LR
     B --> C[Polars / pandas / Jupyter]
 ```
 
-### Stack 2 — Produção (`sidra-sql` + `sidra-pipelines`)
+### Stack 2 — Produção (legado: `sidra-sql` + `sidra-pipelines`)
 
 Para pipelines automatizados, data warehouses multi-usuário e definições declarativas. Motor ETL baseado em plugins que ingere SIDRA num star schema PostgreSQL com bulk load `COPY FROM STDIN` (400k+ rows/s) e SCD Type II para preservar revisões históricas.
 
@@ -56,15 +56,15 @@ graph LR
 ## Pacotes
 
 - **[sidra-fetcher](sidra-fetcher.md)** — SDK sync/async para extração robusta, com smart caching via `Last-Modified`, classe `Parametro` para abstração de URL, e tipagem forte de metadados.
-- **[sidra-sql](sidra-sql.md)** — motor ETL com plugins TOML (`fetch.toml` + `transform.toml` + `transform.sql`), bulk load `COPY`, schema relacional 5-tabelas, SCD Type II.
-- **[sidra-pipelines](sidra-pipelines.md)** — catálogo pré-construído de pipelines production-ready (PIB, IPCA, população, agricultura). Deploy one-command via `sidra-sql run std <pipeline>`.
+- **[sidra-sql](sidra-sql.md)** (legado, substituído pelo [quantilica-sql](../../fundacoes/quantilica-sql.md)) — motor ETL com plugins TOML (`fetch.toml` + `transform.toml` + `transform.sql`), bulk load `COPY`, schema relacional 5-tabelas, SCD Type II.
+- **[sidra-pipelines](sidra-pipelines.md)** (legado, substituído pelo [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)) — catálogo pré-construído de pipelines production-ready (PIB, IPCA, população, agricultura). Deploy one-command via `sidra-sql run std <pipeline>`.
 
 Os [Princípios de Design](../../conceitos/principios.md) do ecossistema — Resiliência, Performance, Reprodutibilidade, Sem Mágica — se aplicam diretamente aqui. Receitas táticas em [Padrões Práticos](../../conceitos/padroes.md): [Concorrência para I/O](../../conceitos/padroes.md#concorrencia-io), [Auto-retry](../../conceitos/padroes.md#auto-retry).
 
 ## Próximos passos
 
 - Para análise rápida em notebook: vá para **[sidra-fetcher](sidra-fetcher.md)**.
-- Para data warehouse PostgreSQL: vá para **[sidra-sql](sidra-sql.md)** + **[sidra-pipelines](sidra-pipelines.md)**.
+- Para data warehouse PostgreSQL: vá para **[quantilica-sql](../../fundacoes/quantilica-sql.md)** + **[quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)**. A documentação dos pacotes legados está em [sidra-sql](sidra-sql.md) e [sidra-pipelines](sidra-pipelines.md).
 - Para combinar IBGE com outras fontes: veja a receita **[Análise Econômica Multi-Fonte](../../guias/receitas/analise-economica-multi-fonte.md)**.
 
 ## Recursos externos

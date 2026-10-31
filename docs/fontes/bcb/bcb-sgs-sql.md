@@ -7,7 +7,7 @@ description: Camada SQL sobre o bcb-sgs-fetcher: carrega catálogo, temas e obse
 
 !!! warning "Substituído pelo quantilica-sql"
 
-    Este pacote continua instalável e documentado, mas o motor unificado [quantilica-sql](../../fundacoes/quantilica-sql.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-sql.
+    Este pacote está depreciado e o repositório foi arquivado (somente leitura). As versões já publicadas continuam instaláveis pelo índice e esta página segue como referência, mas o motor unificado [quantilica-sql](../../fundacoes/quantilica-sql.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-sql.
 
 
 **Camada de ETL e Data Warehousing para as séries temporais do BCB SGS em PostgreSQL.**

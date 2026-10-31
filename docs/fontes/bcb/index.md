@@ -41,7 +41,7 @@ graph LR
     C --> D[Polars / análise]
 ```
 
-### Stack 2 — Produção (`bcb-sgs-sql` + PostgreSQL)
+### Stack 2 — Produção (legado: `bcb-sgs-sql` + PostgreSQL)
 
 Para carga recorrente e consumo BI: `bcb-sgs-sql` carrega catálogo, temas e observações no
 PostgreSQL, com *soft-versioning* (histórico de revisões sem tabela de auditoria). Funciona
@@ -71,11 +71,11 @@ graph LR
 - **[bcb-sgs-fetcher](bcb-sgs-fetcher.md)** — extração do SGS: `SgsDataClient` (API JSON,
   com estratégia retroativa para séries diárias) e `ScraperClient` (metadados via HTML,
   sessão stateful). Saída em JSON/dataclasses (adaptador de fonte; sem Parquet).
-- **[bcb-sgs-sql](bcb-sgs-sql.md)** — camada SQL/ETL: carrega catálogo (`series_metadata`),
+- **[bcb-sgs-sql](bcb-sgs-sql.md)** (legado, substituído pelo [quantilica-sql](../../fundacoes/quantilica-sql.md)) — camada SQL/ETL: carrega catálogo (`series_metadata`),
   observações (`series_data`, soft-versioned) e hierarquia de temas (`theme`) em
   PostgreSQL. Pipelines TOML declarativos, ingestão via `COPY`, comando `load` para
   artefatos em disco.
-- **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)** — catálogo pré-construído de 13 pipelines
+- **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)** (legado, substituído pelo [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)) — catálogo pré-construído de 13 pipelines
   production-ready (preços, juros, câmbio, atividade, crédito, monetário e setoriais).
   Deploy one-command via `bcb-sgs-sql run std <pipeline>`.
 
@@ -99,7 +99,7 @@ tabela-fato) e a separação de camadas fetcher/sql — o mesmo padrão de
 ## Próximos passos
 
 - Para extrair séries: vá para **[bcb-sgs-fetcher](bcb-sgs-fetcher.md)**.
-- Para carregar em PostgreSQL com histórico: vá para **[bcb-sgs-sql](bcb-sgs-sql.md)** + **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)**.
+- Para carregar em PostgreSQL com histórico: vá para **[quantilica-sql](../../fundacoes/quantilica-sql.md)** + **[quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)**. A documentação dos pacotes legados está em [bcb-sgs-sql](bcb-sgs-sql.md) e [bcb-sgs-pipelines](bcb-sgs-pipelines.md).
 - Para combinar SGS com IPCA/PIB do IBGE e Tesouro: veja **[Análise Econômica
   Multi-Fonte](../../guias/receitas/analise-economica-multi-fonte.md)**.
 
