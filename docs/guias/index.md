@@ -9,6 +9,7 @@ Páginas para quem já sabe o que quer fazer e precisa do caminho.
 
 | Guia | Quando usar |
 |---|---|
+| [Montar o lake numa máquina nova](lake-maquina-nova.md) | Do acervo bruto baixado pelos fetchers até o lake particionado em Hive auditado numa máquina limpa |
 | [Por perfil](perfis/index.md) | Você se reconhece como analista macro, cientista de saúde pública, engenheiro de dados ou pesquisador, e quer saber por onde começar |
 | [Receitas](receitas/index.md) | Você quer um resultado concreto (uma curva de juros, uma série, um cruzamento) com o código completo |
 
