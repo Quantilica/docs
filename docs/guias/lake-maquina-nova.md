@@ -1,6 +1,6 @@
 ---
 title: Montar o lake numa máquina nova
-description: Do bruto baixado pelos fetchers até o lake de Parquet auditado — quantilica lake select, build e audit numa máquina limpa, com requisitos, tempos medidos e problemas comuns.
+description: Do bruto baixado pelos fetchers até o lake auditado: quantilica lake select, build e audit numa máquina nova, com requisitos, tempos medidos e problemas comuns.
 ---
 
 # Montar o lake numa máquina nova
