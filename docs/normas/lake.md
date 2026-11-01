@@ -155,8 +155,8 @@ Os tipos declarados em `partition_types` dentro do `_dataset.json` restringem-se
 
 | Tipo canônico (`CANONICAL_PARTITION_TYPES`) | Aliases aceitos | Tipo DuckDB (`hive_types`) | Tipo Polars | Tipo PyArrow | Uso típico em partições |
 |---|---|---|---|---|---|
-| `varchar` | `string`, `str` | `VARCHAR` | `pl.String` | `pa.string()` | `uf`, `regiao`, `mes` (`"01"`..`"12"`), códigos com zero à esquerda |
-| `int` | `integer`, `bigint`, `int64` | `BIGINT` | `pl.Int64` | `pa.int64()` | `ano` (`2024`), `eleicao`, `semestre` |
+| `varchar` | `string`, `str` | `VARCHAR` | `pl.String` | `pa.string()` | `uf`, `regiao`, `mes` (`"01"`..`"12"`), `trimestre` (`"T1"`..`"T4"`), `semestre` (`"S1"`/`"S2"`), `periodo`, códigos |
+| `int` | `integer`, `bigint`, `int64` | `BIGINT` | `pl.Int64` | `pa.int64()` | `ano` (`2024`), `eleicao` |
 | `smallint` | `int16` | `SMALLINT` | `pl.Int16` | `pa.int16()` | Partições numéricas compactas |
 | `double` | `float`, `float64` | `DOUBLE` | `pl.Float64` | `pa.float64()` | Partições numéricas contínuas |
 | `date` | — | `DATE` | `pl.Date` | `pa.date32()` | `data_referencia` (`YYYY-MM-DD`) |
