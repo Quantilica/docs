@@ -58,7 +58,7 @@ def main() -> int:
             h2 = {t.lower() for lvl, t in heads if lvl == 2}
             for sec in REQUIRED_SECTIONS:
                 if sec not in h2:
-                    erros.append(f"{rel}: falta a seção H2 \"{sec}\"")
+                    erros.append(f'{rel}: falta a seção H2 "{sec}"')
     for e in erros:
         print(e)
     pages_count = len(list(DOCS.rglob("*.md")))
