@@ -28,7 +28,8 @@ def on_nav(nav, config, files):
 
 def on_page_markdown(markdown, page, config, files):
     meta = page.meta or {}
-    _meta[page.url] = (meta.get("title") or page.title or page.url, meta.get("description", ""))
+    title = meta.get("title") or page.title or page.url
+    _meta[page.url] = (title, meta.get("description", ""))
     return markdown
 
 
@@ -39,8 +40,10 @@ def on_post_build(config):
         "",
         f"> {config['site_description']}",
         "",
-        "Cada fonte tem um coletor próprio, instalado com `quantilica install <fonte>`. "
-        "A documentação está em português do Brasil.",
+        (
+            "Cada fonte tem um coletor próprio, instalado com "
+            "`quantilica install <fonte>`. A documentação está em português do Brasil."
+        ),
     ]
     current = None
     for section, url in _order:
@@ -50,4 +53,5 @@ def on_post_build(config):
             current = section
         suffix = f": {description}" if description else ""
         lines.append(f"- [{title}]({base}/{url}){suffix}")
-    (Path(config["site_dir"]) / "llms.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    out_file = Path(config["site_dir"]) / "llms.txt"
+    out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")

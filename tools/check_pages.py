@@ -61,7 +61,8 @@ def main() -> int:
                     erros.append(f"{rel}: falta a seção H2 \"{sec}\"")
     for e in erros:
         print(e)
-    print(f"{len(list(DOCS.rglob('*.md')))} página(s) conferida(s), {len(erros)} problema(s)")
+    pages_count = len(list(DOCS.rglob("*.md")))
+    print(f"{pages_count} página(s) conferida(s), {len(erros)} problema(s)")
     return 1 if erros else 0
 
 
