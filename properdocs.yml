@@ -119,6 +119,7 @@ nav:
 
   - Guias:
       - guias/index.md
+      - Montar o lake numa máquina nova: guias/lake-maquina-nova.md
       - Por perfil:
           - guias/perfis/index.md
           - Analista macroeconômico: guias/perfis/analista-macro.md
