@@ -167,6 +167,7 @@ nav:
       - Padronização de pyproject.toml: normas/pyproject.md
       - Padronização de CHANGELOG.md: normas/changelog.md
       - Publicação e Release: normas/publicacao.md
+      - Operação de Crons: normas/operacao-crons.md
 
   - Projeto:
       - Status das fontes: status.md
