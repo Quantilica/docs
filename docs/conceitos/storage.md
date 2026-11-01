@@ -73,8 +73,10 @@ Quando um conjunto de dados é distribuído em múltiplos arquivos por recorte t
 |---|---|---|
 | Sem partição (arquivo único) | *(omitido)* | `ncm@20240315.csv` |
 | Anual (`year`) | `{year}` (`YYYY`) | `exp_2023@20240315.csv` |
-| Mensal (`year`, `month`) | `{year}-{month:02d}` ou `{year}{month:02d}` | `novo-caged_2024-01@20240315.7z` |
-| Semestral (`year`, `semester`) | `{year}-{semester:02d}` ou `{year}-S{semester}` | `bpc_2024-01@20240810.csv` |
+| Semestral (`year`, `semester`) | `{year}-S{semester}` (ex.: `2025-S1`) | `ca-combustiveis_2025-S1@20250815.csv` |
+| Trimestral (`year`, `quarter`) | `{year}-T{quarter}` (ex.: `2026-T3`) | `pgfn-sida_2026-T3@20261012.zip` |
+| Mensal (`year`, `month`) | `{year}-{month:02d}` | `novo-caged_2024-01@20240315.7z` |
+| Diário (`year`, `month`, `day`) | `{year}-{month:02d}-{day:02d}` | `cotahist_2026-10-27@20261027.zip` |
 | Temporal + UF / Região | `{periodo}-{uf_ou_regiao}` (minúsculo) | `sih-rd_202001-sp@20240115.dbc`, `rais-vinculos_2024-sul@20260513.7z` |
 
 ### Posicionamento de `@YYYYMMDD` antes de extensões compostas
@@ -152,7 +154,7 @@ O `DataRepository` (`quantilica.cli.sdk`) suporta duas estratégias para organiz
 | Configuração | Layout em disco | Quando adotar | Exemplos |
 |---|---|---|---|
 | `subdir_by_year=False` *(padrão)* | `{output}/{dataset_id}/{slug}_{particao}@{YYYYMMDD}.{ext}` | Datasets com até algumas centenas de arquivos (partições anuais, semestrais ou mensais nacionais) | `comex-fetcher`, `cvm-fetcher`, `anp-fetcher`, `anac-fetcher`, `tesouro-direto-fetcher` |
-| `subdir_by_year=True` | `{output}/{dataset_id}/{ano_ou_competencia}/{slug}_{particao}@{YYYYMMDD}.{ext}` | Datasets massivamente fragmentados (ex.: competência mensal × 27 UFs = 324 arquivos por ano), evitando diretórios planos com dezenas de milhares de inodes | `datasus-fetcher`, `pdet-fetcher` (RAIS/CAGED particionados) |
+| `subdir_by_year=True` | `{output}/{dataset_id}/{ano_ou_competencia}/{slug}_{particao}@{YYYYMMDD}.{ext}` | Datasets massivamente fragmentados (ex.: competência mensal × 27 UFs = 324 arquivos por ano), evitando diretórios planos com dezenas de milhares de inodes | `datasus-fetcher`, `pdet-fetcher`, `b3-fetcher`, `inmet-fetcher` |
 
 ### Manifesto de proveniência v2 (`DownloadManifest` e `dataset_id`)
 
@@ -235,6 +237,7 @@ Abaixo estão definidos os diretórios de saída padrão (`default` de `--output
 |---|---|
 | `anac-fetcher` | `/data/anac` |
 | `anp-fetcher` | `/data/anp` |
+| `b3-fetcher` | `/data/b3` |
 | `bcb-sgs-fetcher` | `/data/bcb-sgs` |
 | `comex-fetcher` | `/data/comex` |
 | `cvm-fetcher` | `/data/cvm` |
