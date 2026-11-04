@@ -78,6 +78,7 @@ graph LR
 - **[bcb-sgs-pipelines](bcb-sgs-pipelines.md)** (legado, substituído pelo [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)) — catálogo pré-construído de 13 pipelines
   production-ready (preços, juros, câmbio, atividade, crédito, monetário e setoriais).
   Deploy one-command via `bcb-sgs-sql run std <pipeline>`.
+- **[bcb-microdados-fetcher](bcb-microdados-fetcher.md)** — microdados do BCB: crédito SCR.data (um ZIP por ano), estatística bancária ESTBAN e balancetes COSIF em 8 segmentos, convertidos para Parquet.
 
 Os [Princípios de Design](../../conceitos/principios.md) aparecem aqui de forma clara:
 idempotência (recarga com zero churn), reprodutibilidade (histórico de revisões na própria

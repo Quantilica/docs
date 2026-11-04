@@ -20,6 +20,7 @@ Extrair e processar os microdados de saúde do Brasil envolve superar sérias ba
 ## Pacotes
 
 - **[datasus-fetcher](datasus-fetcher.md)** — Crawler multithread concorrente para extração resiliente dos 113 datasets de saúde brasileiros (SIM, SINASC, SIH, SIA, CNES, SINAN, etc.). Realiza downloads paralelos, retoma transferências interrompidas e resolve o versionamento de arquivos modificados retroativamente.
+- **[sigtap-fetcher](sigtap-fetcher.md)** — Tabela Unificada de Procedimentos do SUS (SIGTAP) no FTP do DATASUS: 41 tabelas por competência, convertidas para Parquet.
 
 ## Próximos passos
 

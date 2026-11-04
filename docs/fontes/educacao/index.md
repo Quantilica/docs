@@ -22,3 +22,4 @@ O pacote `inep-fetcher` baixa os arquivos do INEP por grupo, em paralelo e com m
 | Ferramenta | O que faz |
 |---|---|
 | **[inep-fetcher](inep-fetcher.md)** | Baixa microdados educacionais por grupo (ENEM, SAEB, ENADE e outros), com download concorrente e manifestos SHA-256 |
+| **[capes-fetcher](capes-fetcher.md)** | Coleta teses, programas e cursos de pós-graduação do portal de dados abertos da CAPES (10 pacotes baixados de 89 catalogados) e converte para Parquet por `ano` |
