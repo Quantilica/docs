@@ -1,6 +1,6 @@
 ---
 title: Montagem, Operação e Automação do Data Lake no Pendulograph
-description: "Guia operacional definitivo para montagem física, particionamento Hive, perfis DuckDB para 96 GB de RAM, automação desacoplada e esteira contínua de marts analíticos no pendulograph."
+description: "Guia operacional para montagem física, particionamento Hive, perfis DuckDB, automação desacoplada e esteira contínua de marts analíticos."
 ---
 
 # Montagem, Operação e Automação do Data Lake no Pendulograph
