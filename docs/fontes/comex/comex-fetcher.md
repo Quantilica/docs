@@ -1,6 +1,6 @@
 ---
 title: comex-fetcher — Comércio exterior do Brasil via Siscomex
-description: Downloader resiliente para os arquivos GB do Siscomex (importação e exportação). Idempotência temporal, streaming chunked, tolerância a SSL ruim.
+description: Coleta resiliente do Siscomex (importação e exportação): idempotência temporal, streaming chunked, validação de conteúdo e NCM vigente do Portal Único.
 ---
 
 # Comércio Exterior (Comex)
@@ -16,6 +16,8 @@ Dados de importação e exportação brasileira extraídos do Siscomex (Sistema 
     - **Schema NCM vs NBM.** A classificação NCM cobre as transações de 1997 em diante; a NBM cobre o buraco negro de 1989 a 1996 e possui colunas diferentes. Não os concatene de olhos fechados.
     - **A matrix dimensional.** Os arquivos principais trazem apenas IDs numéricos (País=23, UF=1). O real valor analítico só surge quando você faz JOIN com as 20 tabelas auxiliares (países, municípios, vias de transporte), baixadas no grupo `auxiliary`.
     - **Idempotência é temporal.** Como não há API moderna fornecendo Hashes, o fetcher usa requisições `HEAD` para validar o cabeçalho `Last-Modified` do servidor FTP/HTTP. Se o MDIC corrigir uma linha do passado, ele baixará novamente o arquivo modificado de forma indetectável para você.
+    - **`206` no lugar do arquivo.** O host atual (`balanca.mdic.gov.br`) responde `206` com o código-fonte PHP do Joomla quando o arquivo pedido não existe (ano fora da faixa ou ainda não publicado), em vez de `404`. O `sync` valida a primeira linha do CSV/JSON antes de gravar o arquivo e o `convert` confere de novo antes de escrever Parquet: a página de erro vira erro contado, nunca dado.
+    - **NCM vigente sem validador de frescor.** O JSON do Portal Único não envia `Last-Modified` nem `ETag`, então o nome carimba a data do download e o `sync` deduplica por `sha256` — sem isso, cada dia nasceria uma "nova versão" do mesmo conteúdo.
 
 ## Instalação
 
@@ -45,6 +47,9 @@ quantilica comex sync -o ./data
 
 # Apenas atualizar as tabelas auxiliares
 quantilica comex sync auxiliary -o ./data
+
+# NCM vigente do Siscomex e tabelas de correlações de códigos
+quantilica comex sync other -o ./data
 ```
 
 ---
@@ -64,6 +69,33 @@ O grupo `auxiliary` (incluído no `sync` sem argumentos, mas não nos grupos `tr
 - e outras, como `cuci`, `isic`, `nbm`, `unidade` e `grupo`
 
 Os arquivos levam a data da fonte no nome (por exemplo, `auxiliary-tables/ncm@20240315.csv`).
+
+### Outras tabelas (grupo `other`)
+
+O catálogo tem 10 grupos e 164 entradas. Além dos grupos de transação, do `auxiliary` (20 dicionários) e de `repetro` (2 planilhas de exportação/importação) e `validation` (4 CSVs de totais para conferência), o grupo `other` traz dois itens — entra no `sync` sem argumentos e também pelo alias `tables`:
+
+- **`ncm-vigente`**: a NCM vigente publicada pelo **Portal Único Siscomex** (JSON, ~3 MB), com **15.157 nomenclaturas** — código, descrição, início e fim de vigência e o ato que a instituiu. Não traz TEC, IPI, PIS/Cofins nem alíquotas. Sem `Last-Modified`/`ETag`, o arquivo é carimbado pela data do download em `ncm-vigente/ncm-vigente@AAAAMMDD.json` e deduplicado por `sha256`.
+- **`tabelas-auxiliares`**: `TABELAS_AUXILIARES.xlsx`, as tabelas de correlações de códigos e classificações, salvo em `auxiliary-tables/tabelas-auxiliares@AAAAMMDD.xlsx`.
+
+---
+
+## Conversão para o lake
+
+```bash
+quantilica comex convert -i ./data --lake /caminho/do/lake
+```
+
+- **Transações** (`exp`, `imp`, `exp-mun`, `imp-mun`, `exp-nbm`, `imp-nbm`): Parquet particionado por `ano=<ano>` (inteiro), lido do CSV com separador `;` e `latin-1`. As colunas de código (`co_ncm`, `co_pais`, `co_mun`...) ficam sempre texto, para não perder zero à esquerda.
+- **Tabelas de referência** (`auxiliary-tables`, `repetro`, `validacao`, `ncm-vigente`): sem partição.
+- **XLSX vira um Parquet por aba**, com chave composta `<arquivo>__<aba>`, sem extensão nem carimbo `@data` na base e com a aba normalizada em `snake_case` (`tabelas-auxiliares@20240315.xlsx` + aba `Tabela 1.1` → `tabelas-auxiliares__tabela_1_1`). Abas vazias ficam de fora; planilha sem nenhuma aba com dados é erro contado. Os nomes de coluna viram `snake_case` e só são convertidos para número quando todo valor converte — nada de virar nulo em silêncio.
+- **ZIP vira um Parquet por membro** CSV/XLSX, extraído em streaming para não depender de memória livre. A chave combina arquivo, membro e, quando o membro é um XLSX, a aba dele (`TABELAS_AUXILIARES.zip` + `tabelas.xlsx` + `Tabela 2` → `TABELAS_AUXILIARES__tabelas_xlsx_tabela_2`). Membro de outro tipo ou ZIP sem nenhum membro tabular é **erro contado**, nunca ignorado em silêncio.
+- **JSON do Siscomex** (`ncm-vigente`) vira uma tabela longa: `codigo`, `codigo_ncm`, `descricao`, `data_inicio`, `data_fim`, `tipo_ato_ini`, `numero_ato_ini`, `ano_ato_ini`, `nivel_digitos`, `vigente_em` e `ato`.
+- De cada base só a **versão vigente** é convertida (`select_current`); versões antigas do mesmo arquivo ficam contadas como puladas. Sidecars `*.manifest.json`, arquivos `*.tmp` e entradas que não se enquadram em CSV/XLSX/ZIP/JSON ficam de fora, e um ano de transação que não se infere do nome é erro contado.
+
+### Reconversão necessária
+
+- Os Parquets de `auxiliary-tables` e `repetro` gerados por versões anteriores guardavam **só a primeira aba** do XLSX: remova-os e reconverta com `--force`.
+- Arquivos `.zip` e o JSON do Siscomex não eram convertidos antes (ficavam de fora, sem aviso): converta com `--force` para trazê-los ao lake.
 
 ---
 

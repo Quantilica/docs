@@ -7,12 +7,14 @@ description: Catálogo da ANP: preços de combustíveis, vendas, produção, com
 
 Dados abertos e estatísticos da ANP (Agência Nacional do Petróleo, Gás Natural e Biocombustíveis).
 
-**anp-fetcher** descobre datasets a partir de um catálogo declarativo (sem chamadas de rede) e baixa cada um com manifesto de proveniência (`quantilica-core`), organizados por grupo. Ele foi projetado para esconder toda a complexidade e instabilidade da fonte original.
+**anp-fetcher** descobre datasets a partir de um catálogo declarativo (sem chamadas de rede) e baixa cada um com manifesto de proveniência (`quantilica-core`), organizados por grupo. O catálogo tem **63 grupos** e **45 aliases**, com mais de 1.700 arquivos. Ele foi projetado para esconder toda a complexidade e instabilidade da fonte original.
 
 !!! warning "Pegadinhas da fonte oficial (que o anp-fetcher resolve para você)"
 
     - **Convenção de nome de arquivo muda ao longo do tempo:** Ex.: preços mensais de diesel/GNV usam `precos-{produto}-{mm}.csv` até 2025 e `{mm}-dados-abertos-precos-{produto}.{ext}` a partir de 2026. Além disso, a partir de 2026, certos dados saem em `.xlsx` em vez de `.csv`. O fetcher tenta a extensão principal e possui URLs de fallback dinâmicas.
     - **Separador de campo mutável:** Royalties por união/estado/município têm três eras de nomenclatura (`royalties_uniao_2018.csv` → `royalties-uniao-2019.csv`).
+    - **Royalties e participação especial não têm código IBGE:** os CSVs reais não trazem `codigo_ibge` — o município vem só por nome, em minúsculo e sem acento. As colunas `competencia` e `caixa` são datas seriais do Excel (número de dias), não texto. A junção por código de município não existe na fonte.
+    - **A camada de poços do BDEP não é coletada:** os endereços `bdep.gov.br`, `www.bdep.gov.br`, `bdep.anp.gov.br`, `geo.anp.gov.br` e `sigep.anp.gov.br` não resolvem DNS, e a página de shapefiles da ANP (`/dados-tecnicos/shapefile-de-dados`) publica só rodadas/blocos (`brc`, `op`, `a3`, `a4`), sem camada de poços. Os poços públicos seguem vindo do grupo `acervo-dados-tecnicos` (`pocos-publicos-<ano>.csv`); `situacao-pocos` traz `Latitude_da_base`/`Longitude_da_base` em graus (`-18:22:40,186`), mas sem datum declarado — assumir EPSG:4674 seria suposição.
     - **Sem API:** Os dados são arquivos estáticos servidos a partir de páginas do `gov.br/anp`; não há endpoint consultável. O catálogo da Quantilica resolve isso com hardcoding inteligente e lógica de predição temporal.
 
 ## Instalação
@@ -35,8 +37,15 @@ quantilica anp <command> [args]
 Comandos:
   sync [GRUPOS...] [-o DIR] [--dry-run] [--verbose]
         Sincronizar datasets. Sem GRUPOS, baixa todos.
+  check [GRUPOS...] [--json | --out ARQ]
+        Comparar disco e remoto sem baixar; grava o plano que o
+        `sync --from-plan` consome.
   list
         Listar todos os datasets do catálogo, sem baixar.
+  convert [-i DIR] [--lake DIR] [--dataset DS] [--force]
+        Converter o acervo bruto para o lake Hive (requer o extra analysis).
+  pipeline [GRUPOS...] [-o DIR] [--lake DIR]
+        Baixar e converter em uma só execução.
 ```
 
 `DIR` padrão é `/data/anp`.
@@ -109,6 +118,8 @@ gasolina_sp = (
 
 ## Datasets
 
+O catálogo tem **63 grupos** e **45 aliases**; as tabelas abaixo cobrem as famílias mais usadas. Execute `quantilica anp list` para a lista completa, com todas as entradas e URLs.
+
 ### Dados Estatísticos (XLS/XLSX)
 
 | Grupo | Descrição |
@@ -144,9 +155,25 @@ gasolina_sp = (
 | `rodadas` | Rodadas de licitações |
 | `concessionarios` | Relação de concessionários e país de origem |
 | `revendedores` / `revendas-glp` | Cadastro de revendedores varejistas |
-| `royalties` | Participações governamentais (royalties, participação especial) |
+| `royalties` | Participações governamentais (royalties e participação especial) e preços de referência |
 
-Execute `quantilica anp list` para a lista completa.
+## Participações governamentais e preços de referência
+
+O grupo `royalties` reúne arquivos de esquemas diferentes: royalties da união, do estado e do município; participação especial da união, do estado, do município e do campo; e os preços de referência do gás natural e do petróleo. O conversor do lake usa uma tabela de roteamento explícita, pelo `base_id` do catálogo (nunca por trecho do nome), e separa cada um em seu próprio dataset:
+
+| `base_id` | dataset no lake |
+|---|---|
+| `royalties-uniao` | `royalties_uniao` |
+| `royalties-estado` | `royalties_estado` |
+| `royalties-municipio` | `royalties_municipio` |
+| `pe-uniao`, `pe-estado`, `pe-municipio`, `pe-campo` | `participacoes_especiais` |
+| `preco-ref-gn` | `preco_referencia_gn` |
+| `preco-ref-petroleo` | `preco_referencia_petroleo` |
+
+- Os quatro recortes de participação especial convivem no mesmo dataset: a coluna **`recorte`** (`uniao`, `estado`, `municipio`, `campo`) os separa, porque os esquemas diferem.
+- `base_id` fora da tabela fica no dataset do grupo, sem adivinhação.
+- Em `--dataset`, os nomes de dataset (`royalties_uniao`, `royalties_estado`, `royalties_municipio`, `participacoes_especiais`, `preco_referencia_gn`, `preco_referencia_petroleo`) são aceitos como aliases do grupo `royalties`: cada um converte apenas o próprio dataset e `--dataset royalties` converte todos de uma vez.
+- **Reconversão:** os parquets `preco-ref-*` gerados por versão anterior estão em `royalties/` — remova-os de lá e reconverta com `--force`; `participacoes_especiais` também pede `--force` para ganhar a coluna `recorte`.
 
 ## Saiba Mais
 
