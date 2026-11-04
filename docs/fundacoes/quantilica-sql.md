@@ -75,7 +75,7 @@ Rodar o `load` de novo não duplica nada: cada arquivo carregado fica registrado
 | `quantilica sql tablespaces` | Lista as tablespaces da instância |
 | `quantilica sql maintenance` | Tarefas de manutenção e índices |
 
-Domínios aceitos em `load`: `anac`, `anp`, `b3`, `bcb`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb`, `rfb-cnpj`, `rtn`, `secex-comex`, `sidra`, `tddata`, `tesouro-direto`, `tesouro_direto` e `tse`.
+Domínios aceitos em `load`: `anac`, `anp`, `b3`, `bcb`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb`, `rfb-cnpj`, `rtn`, `secex-comex` (alias legado de `comex`), `sidra`, `tddata`, `tesouro-direto`, `tesouro_direto` e `tse`.
 
 Fora da CLI unificada, o mesmo conjunto de comandos está disponível como `quantilica-sql` (útil em scripts, agendadores e contêineres).
 
