@@ -186,6 +186,7 @@ nav:
       - Padronização de Lake Hive: normas/lake.md
       - Padronização de pyproject.toml: normas/pyproject.md
       - Padronização de CHANGELOG.md: normas/changelog.md
+      - Documentação dos dados: normas/documentacao-dados.md
       - Publicação e Release: normas/publicacao.md
       - Operação de Crons: normas/operacao-crons.md
 
