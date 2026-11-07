@@ -1,6 +1,6 @@
 ---
 title: Documentação dos dados
-description: Norma da documentação dos dados de cada fetcher Quantilica — uma página por dataset, cabeçalho YAML verificado no CI, seções fixas, dicionário de todas as variáveis e publicação neste site.
+description: Norma da documentação dos dados de cada fetcher — uma página por dataset, cabeçalho verificado no CI e dicionário de todas as variáveis.
 ---
 
 # Documentação dos dados
