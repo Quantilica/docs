@@ -132,4 +132,4 @@ O comando `quantilica docs <fonte> --update` reescreve a ficha técnica a partir
 
 ## 8. Publicação
 
-Este site importa a pasta `docs/` de cada fetcher no build e publica as páginas sob a página da ferramenta (`fontes/<tema>/<fetcher>/dados/<dataset_id>`). O cabeçalho também alimenta o catálogo do portal. O repositório do fetcher é a fonte da verdade: correções se fazem lá, não aqui.
+Este site importa a pasta `docs/` de cada fetcher no build, lendo o repositório na tag da última versão lançada, e publica as páginas sob a página da ferramenta (`fontes/<tema>/<fetcher>/dados/` para o README e `.../dados/datasets/<dataset_id>` para cada dataset). O build roda todo dia, então uma versão nova aparece aqui no máximo no dia seguinte. A lista de fetchers importados está em `tools/dados_fetchers.yml`. O cabeçalho também alimenta o catálogo do portal. O repositório do fetcher é a fonte da verdade: correções se fazem lá, não aqui.

@@ -277,6 +277,7 @@ plugins:
 
 hooks:
   - hooks/llms_txt.py
+  - hooks/dados_fetchers.py
 
 validation:
   omitted_files: info

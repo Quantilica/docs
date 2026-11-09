@@ -1,0 +1,6 @@
+# Fetchers cuja documentação dos dados o site importa (hooks/dados_fetchers.py).
+# repo: repositório em github.com/Quantilica; pagina: página do coletor no site,
+# que vira seção da navegação; destino: pasta onde as páginas de dados entram.
+- repo: bcb-microdados-fetcher
+  pagina: fontes/bcb/bcb-microdados-fetcher.md
+  destino: fontes/bcb/bcb-microdados-fetcher/dados
