@@ -17,6 +17,9 @@ on:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    # Pega as versões novas dos fetchers (documentação dos dados importada no build).
+    - cron: "0 9 * * *"
 
 permissions:
   contents: read
@@ -57,6 +60,7 @@ jobs:
       - name: Build documentation
         run: uv run --no-sync properdocs build --strict
         env:
+          DADOS_FETCHERS_STRICT: "1"
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
           UMAMI_WEBSITE_ID: ${{ secrets.UMAMI_WEBSITE_ID }}
           UMAMI_SCRIPT_URL: ${{ secrets.UMAMI_SCRIPT_URL }}
@@ -85,7 +89,7 @@ jobs:
           path: "./site"
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
     needs: build
     environment:
       name: github-pages
