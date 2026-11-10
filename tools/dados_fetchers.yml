@@ -25,3 +25,12 @@
 - repo: tesouro-direto-fetcher
   pagina: fontes/tesouro/tesouro-direto-fetcher.md
   destino: fontes/tesouro/tesouro-direto-fetcher/dados
+- repo: comex-fetcher
+  pagina: fontes/comex/comex-fetcher.md
+  destino: fontes/comex/comex-fetcher/dados
+- repo: ipeadata-fetcher
+  pagina: fontes/ipea/ipeadata-fetcher.md
+  destino: fontes/ipea/ipeadata-fetcher/dados
+- repo: tse-fetcher
+  pagina: fontes/politica/tse-fetcher.md
+  destino: fontes/politica/tse-fetcher/dados
