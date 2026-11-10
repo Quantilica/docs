@@ -22,3 +22,6 @@
 - repo: transparencia-sp-fetcher
   pagina: fontes/governo/transparencia-sp-fetcher.md
   destino: fontes/governo/transparencia-sp-fetcher/dados
+- repo: tesouro-direto-fetcher
+  pagina: fontes/tesouro/tesouro-direto-fetcher.md
+  destino: fontes/tesouro/tesouro-direto-fetcher/dados
