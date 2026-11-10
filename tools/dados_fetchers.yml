@@ -40,3 +40,6 @@
 - repo: rfb-cnpj-fetcher
   pagina: fontes/empresas/rfb-cnpj-fetcher.md
   destino: fontes/empresas/rfb-cnpj-fetcher/dados
+- repo: antt-fetcher
+  pagina: fontes/transportes/antt-fetcher.md
+  destino: fontes/transportes/antt-fetcher/dados
