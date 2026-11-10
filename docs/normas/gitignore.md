@@ -130,3 +130,63 @@ output/
 ```
 
 O template base não é replicado — o workspace root já o cobre.
+
+---
+
+## 7. Template canônico — aplicação web (`quantilica-portal`)
+
+Diferente das bibliotecas, aplicações web versionam `uv.lock` para deploys reproduzíveis e ignoram artefatos de runtime web (`static/collected/`, sockets, pids):
+
+```gitignore
+# Build / packaging
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual envs e caches do uv
+.venv/
+.uv-cache/
+
+# uv.lock é versionado em apps (deploy reproduzível)
+# uv.lock
+
+# Caches de teste / lint / tipos
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Cobertura
+.coverage
+.coverage.*
+htmlcov/
+
+# Runtime web
+*.pid
+*.sock
+static/collected/
+media/
+data/cache/
+
+# Build de docs (mkdocs / sphinx)
+site/
+_build/
+
+# Editor / IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs e env locais
+*.log
+.env
+.env.local
+.env.*.local
+
+# Claude
+.claude/
+```
+
