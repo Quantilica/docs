@@ -80,7 +80,10 @@ Durante downloads maciços em redes Gigabit, a velocidade de entrada pode supera
 O ciclo de vida de cada execução emite eventos estruturados via `workers.cli telemetry emit`:
 - **`start`:** registra o início da execução com metadados do comando;
 - **`heartbeat`:** atualiza o timestamp de atividade para tarefas longas;
-- **`finish`:** registra encerramento com status (`completed` ou `failed`), código de saída e duração em segundos.
+- **`finish`:** registra encerramento com status (`completed`, `failed` ou `timeout`), código de saída, duração e espera por slot em segundos.
+
+### Banco de telemetria
+Os eventos são gravados em `core.task_run` e `core.task_run_log` do banco de `TELEMETRY_DATABASE_URI`. No `fedora`, esse banco é o `quantilica_ingest`, que não é recriado: o `quantilica` (`DATABASE_URI`) é restaurado do dump da VPS todo dia pelo `sync-db.sh`. Sem a variável, a telemetria usa o `DATABASE_URI`. O schema `core`, as tabelas e o tipo de status são criados no primeiro uso. O reaper do `fedora` é `workers.cli cleanup --telemetry`, que limpa nesse mesmo banco.
 
 ### Spool Offline SQLite
 Se o PostgreSQL estiver temporariamente inacessível, o módulo de telemetria enfileira os eventos no banco SQLite local (`telemetry_spool.db`, com fallback defensivo para `/tmp/quantilica_telemetry_spool.db`). Na execução seguinte com banco disponível ou com o argumento `--flush`, os registros são transferidos deterministicamente para `core.task_run` e `core.task_run_log`.
