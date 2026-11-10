@@ -34,3 +34,9 @@
 - repo: tse-fetcher
   pagina: fontes/politica/tse-fetcher.md
   destino: fontes/politica/tse-fetcher/dados
+- repo: pdet-fetcher
+  pagina: fontes/trabalho/pdet-fetcher.md
+  destino: fontes/trabalho/pdet-fetcher/dados
+- repo: rfb-cnpj-fetcher
+  pagina: fontes/empresas/rfb-cnpj-fetcher.md
+  destino: fontes/empresas/rfb-cnpj-fetcher/dados
