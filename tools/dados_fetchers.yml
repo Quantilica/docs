@@ -4,3 +4,21 @@
 - repo: bcb-microdados-fetcher
   pagina: fontes/bcb/bcb-microdados-fetcher.md
   destino: fontes/bcb/bcb-microdados-fetcher/dados
+- repo: capes-fetcher
+  pagina: fontes/educacao/capes-fetcher.md
+  destino: fontes/educacao/capes-fetcher/dados
+- repo: pgfn-fetcher
+  pagina: fontes/tesouro/pgfn-fetcher.md
+  destino: fontes/tesouro/pgfn-fetcher/dados
+- repo: loterias-fetcher
+  pagina: fontes/loterias/loterias-fetcher.md
+  destino: fontes/loterias/loterias-fetcher/dados
+- repo: inmet-fetcher
+  pagina: fontes/clima/inmet-fetcher.md
+  destino: fontes/clima/inmet-fetcher/dados
+- repo: infosiga-fetcher
+  pagina: fontes/transportes/infosiga-fetcher.md
+  destino: fontes/transportes/infosiga-fetcher/dados
+- repo: transparencia-sp-fetcher
+  pagina: fontes/governo/transparencia-sp-fetcher.md
+  destino: fontes/governo/transparencia-sp-fetcher/dados
