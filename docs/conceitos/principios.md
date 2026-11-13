@@ -5,7 +5,7 @@ description: Modularidade, resiliência, performance, reprodutibilidade e sem m�
 
 # Princípios de Design
 
-O Ecossistema Quantilica é construído sobre cinco princípios que orientam cada ferramenta — de `sidra-fetcher` a `datasus-fetcher`. Entendê-los ajuda a usar as ferramentas com eficácia e a estendê-las para necessidades próprias.
+O Ecossistema Quantilica é construído sobre cinco princípios que orientam cada ferramenta — de `ibge-sidra-fetcher` a `datasus-fetcher`. Entendê-los ajuda a usar as ferramentas com eficácia e a estendê-las para necessidades próprias.
 
 > **Construa para o mundo real.** Dados governamentais são bagunçados. APIs são instáveis. Redes são lentas. Não assuma perfeição: trate falhas, valide dados, registre decisões. Torne usuários produtivos, não frustrados.
 
@@ -29,7 +29,7 @@ Cada ferramenta é **independente, auto-contida e reutilizável**. Você usa ape
 
 Fontes de dados governamentais brasileiros são diversas e fragmentadas. Forçar uma API monolítica única sacrificaria as otimizações especializadas que cada fonte exige:
 
-- `sidra-fetcher` é otimizada para a API REST do IBGE com concorrência assíncrona.
+- `ibge-sidra-fetcher` é otimizada para a API REST do IBGE com concorrência assíncrona.
 - `pdet-fetcher` é otimizada para CSVs massivos da RAIS/CAGED com processamento vetorial Polars.
 - `datasus-fetcher` é otimizada para a infraestrutura FTP legada do DATASUS com crawling multithreaded.
 - `comex-fetcher` é otimizada para arquivos GB do Siscomex com streaming chunked sem dependências externas.
@@ -40,7 +40,7 @@ Misturar tudo em um "mega-fetcher" enfraqueceria todas. Modularidade preserva a 
 
 | Fetcher | Dependências de runtime | Extra `analysis` |
 |---|---|---|
-| `sidra-fetcher` | `quantilica-core` | — |
+| `ibge-sidra-fetcher` | `quantilica-core` | — |
 | `tesouro-direto-fetcher` | `quantilica-core` | `altair`, `quantilica-analytics` |
 | `pdet-fetcher` | `quantilica-core` | `polars` |
 | `comex-fetcher` | `quantilica-core` | — |
@@ -53,13 +53,13 @@ Nenhum fetcher depende de outro fetcher.
 
 - Sem dependências internas compartilhadas entre ferramentas.
 - Cada uma tem sua própria lógica de retry, tratamento de erro e estratégia de cache.
-- Ferramentas são **composáveis**: combine `sidra-fetcher` + `tesouro-direto-fetcher` + `pdet-fetcher` no mesmo pipeline sem conflito.
+- Ferramentas são **composáveis**: combine `ibge-sidra-fetcher` + `tesouro-direto-fetcher` + `pdet-fetcher` no mesmo pipeline sem conflito.
 
 ### Exemplo: três fontes, zero acoplamento
 
 ```python
 import asyncio
-from sidra_fetcher.fetcher import AsyncSidraClient
+from ibge_sidra_fetcher.fetcher import AsyncSidraClient
 from pathlib import Path
 from tesouro_direto_fetcher.analytics import calculate_portfolio_monthly_returns
 
@@ -116,7 +116,7 @@ Truncamento silencioso      Validação de tamanho/checksum na fonte
 ### Exemplo: retry automático
 
 ```python
-from sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.fetcher import SidraClient
 
 # tenacity faz 3 tentativas com backoff exponencial
 with SidraClient(timeout=60) as client:
@@ -172,7 +172,7 @@ Escolhas ruins aqui prendem você em infraestrutura lenta e cara. Toda ferrament
 ### Como aplicamos
 
 - **Concorrência multithreaded** onde aplicável (`datasus-fetcher`).
-- **Async/await** onde aplicável (`sidra-fetcher`, na coleta de metadados).
+- **Async/await** onde aplicável (`ibge-sidra-fetcher`, na coleta de metadados).
 - **Processamento vetorial Polars** onde aplicável (`pdet-fetcher`).
 - **Cache + verificações de idempotência** (`comex-fetcher`: re-runs sem mudança custam uma consulta ao remoto por arquivo).
 - **Streaming/chunked** para arquivos grandes (`comex-fetcher`, em chunks de 64 KiB).
@@ -316,8 +316,8 @@ df = fetch_gdp()  # De onde? Atualizado quando? Cacheado?
 
 # ✅ Explícito: cada parâmetro é nomeado e visível
 import polars as pl
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 param = Parametro(
     agregado="1620",                            # Tabela de PIB

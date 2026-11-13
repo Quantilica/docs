@@ -1,5 +1,5 @@
 ---
-title: sidra-fetcher — Cliente Python para a API SIDRA do IBGE
+title: ibge-sidra-fetcher — Cliente Python para a API SIDRA do IBGE
 description: SDK Python para extrair dados e metadados da API IBGE/SIDRA. Cliente sync e async, parsing de períodos, construtor de URL tipado, retry resiliente.
 ---
 
@@ -14,14 +14,18 @@ Cliente Python para a API SIDRA do IBGE — com suporte para requisições assí
     - **Limitação invisível por volume.** O IBGE trunca silenciosamente respostas de tabelas muito grandes (como o PIB Municipal ou o Censo) resultando em um erro genérico `503`. O fetcher fragmenta a requisição automaticamente: primeiro por período e, se ainda passar do limite da API, por lote de localidades, variável e classificações.
     - **Rate Limit Oculto.** Evite horários comerciais. Em scripts massivos, utilize o cliente `AsyncSidraClient` travado com um `asyncio.Semaphore` para não ser banido temporariamente pelo governo.
 
+!!! info "Renomeado em 13/11/2026"
+
+    O pacote antes se chamava `sidra-fetcher`. O nome novo é `ibge-sidra-fetcher` e o módulo é `ibge_sidra_fetcher`, sem módulo de compatibilidade: quem importava `sidra_fetcher` precisa trocar o import. As wheels antigas ficam congeladas no índice em `sidra-fetcher` (até a 0.10.4). No registro de fetchers o id é `ibge-sidra`; os apelidos `sidra` e `ibge` continuam funcionando na CLI.
+
 ## Instalação
 
 ```bash
 # Via CLI unificada (recomendado)
-quantilica install sidra
+quantilica install ibge-sidra
 
 # Ou como biblioteca no seu projeto
-uv add sidra-fetcher --index https://index.quantilica.com/simple/
+uv add ibge-sidra-fetcher --index https://index.quantilica.com/simple/
 ```
 
 ## CLI Oficial (Ambiente Unificado)
@@ -30,31 +34,31 @@ A forma recomendada de exploração via terminal é através da CLI central, que
 
 ```bash
 # Listar todas as pesquisas (Censo, IPCA, PNAD)
-quantilica sidra list pesquisas
+quantilica ibge-sidra list pesquisas
 
 # Descobrir metadados detalhados de uma tabela específica (ex: IPCA 1737)
-quantilica sidra info 1737
+quantilica ibge-sidra info 1737
 
 # Listar os períodos disponíveis (id, rótulo, frequência e data da última modificação)
-quantilica sidra periods 1620
+quantilica ibge-sidra periods 1620
 
 # Verificar o que mudou sem baixar (plano de freshness por nível)
-quantilica sidra check 1620 -o ./data
+quantilica ibge-sidra check 1620 -o ./data
 
 # Fazer o dump completo respeitando limites da API
-quantilica sidra sync 1620 -o ./data
+quantilica ibge-sidra sync 1620 -o ./data
 ```
 
 ---
 
 ## Cookbook Analítico: IBGE com Polars
 
-O gargalo de uso do SIDRA é criar a sintaxe da URL sem cometer erros. Através da biblioteca Python, nós abstraímos isso com a classe `Parametro`. O exemplo usa Polars, que não é dependência do `sidra-fetcher`: instale-o à parte com `uv add polars`.
+O gargalo de uso do SIDRA é criar a sintaxe da URL sem cometer erros. Através da biblioteca Python, nós abstraímos isso com a classe `Parametro`. O exemplo usa Polars, que não é dependência do `ibge-sidra-fetcher`: instale-o à parte com `uv add polars`.
 
 ```python
 import polars as pl
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 # 1. Constrói declarativamente a requisição sem sujar as mãos com strings
 param = Parametro(
@@ -92,7 +96,7 @@ Para coletar metadados de agregados com muitas localidades, o cliente `async` da
 
 ```python
 import asyncio
-from sidra_fetcher.fetcher import AsyncSidraClient
+from ibge_sidra_fetcher.fetcher import AsyncSidraClient
 
 async def coleta_macro():
     """Busca o IPCA e o PIB concorrentemente."""
@@ -115,7 +119,7 @@ Achou um gráfico legal no site do SIDRA e quer automatizar a extração no Pyth
 Basta copiar a URL do portal web do governo e jogar no decodificador:
 
 ```python
-from sidra_fetcher.sidra import parameter_from_url
+from ibge_sidra_fetcher.sidra import parameter_from_url
 
 url = "https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2265/p/all/d/m"
 param = parameter_from_url(url)
@@ -126,5 +130,5 @@ print(param.variaveis)  # ["2265"]
 
 ## Saiba Mais
 
-- **[sidra-sql](sidra-sql.md)** — Motor de data warehousing e ETL que consome o `sidra-fetcher`.
+- **[sidra-sql](sidra-sql.md)** — Motor de data warehousing e ETL que consome o `ibge-sidra-fetcher`.
 - **[Arquitetura do Ecossistema](../../conceitos/arquitetura.md)** — Como as bibliotecas se conectam.

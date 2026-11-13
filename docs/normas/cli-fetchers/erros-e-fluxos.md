@@ -177,7 +177,7 @@ def cmd_sync(
 
 ### 10.2 Na CLI nativa (`cli.py`)
 
-> **Só se aplica a fetcher customizado** (hoje, apenas `sidra-fetcher`, ADR `2026-10-08`) — wrappers finos delegam anos/intervalos ao `plugin.py` e não usam `argparse` ([§1.3](../cli-fetchers.md)).
+> **Só se aplica a fetcher customizado** (hoje, apenas `ibge-sidra-fetcher`, ADR `2026-10-08`) — wrappers finos delegam anos/intervalos ao `plugin.py` e não usam `argparse` ([§1.3](../cli-fetchers.md)).
 
 Na CLI nativa standalone (que não depende de `rich`), utilize diretamente a função **`expand_year_range`** de `quantilica.core.dates`. Como ela pode lançar `ValueError` para intervalos ou anos inválidos, capture e trate a exceção exibindo uma mensagem no stderr:
 

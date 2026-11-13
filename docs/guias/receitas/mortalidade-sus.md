@@ -5,7 +5,7 @@ description: Cruza microdados do SIM com população do SIDRA e cadastro CNES. D
 
 # Mortalidade infantil × cobertura SUS por município
 
-> **Tempo estimado:** 30 minutos (depende do recorte). **Pacotes:** `datasus-fetcher`, `sidra-fetcher`, `polars`, `pyreaddbc`.
+> **Tempo estimado:** 30 minutos (depende do recorte). **Pacotes:** `datasus-fetcher`, `ibge-sidra-fetcher`, `polars`, `pyreaddbc`.
 
 "Quantas crianças morreram antes de 1 ano no meu município — e quantos postos de saúde existem para cada 10 mil habitantes?" A pergunta que todo secretário de saúde faz (e teme) se responde com três sistemas oficiais que nunca conversaram entre si: SIM e CNES no DATASUS, população no IBGE. Vamos costurá-los num pipeline reproduzível e calcular a taxa por 1.000 nascidos vivos.
 
@@ -22,7 +22,7 @@ Uma tabela municipal com:
 ## Setup
 
 ```bash
-uv add datasus-fetcher sidra-fetcher polars pyreaddbc --index https://index.quantilica.com/simple/
+uv add datasus-fetcher ibge-sidra-fetcher polars pyreaddbc --index https://index.quantilica.com/simple/
 ```
 
 ## A receita
@@ -46,8 +46,8 @@ quantilica datasus sync -o ./dados cnes-st --start 2022-12 --end 2022-12 --regio
 from pathlib import Path
 import polars as pl
 import pyreaddbc
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 
 # Estimativas de população por município — agregado 6579, variável 9324

@@ -13,7 +13,7 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 ### Macroeconomia
 
-- **[A Curva de Phillips brasileira em 30 linhas](curva-phillips.md)** — IPCA × Desemprego mensal, regressão e visualização. Só `sidra-fetcher`.
+- **[A Curva de Phillips brasileira em 30 linhas](curva-phillips.md)** — IPCA × Desemprego mensal, regressão e visualização. Só `ibge-sidra-fetcher`.
 - **[Análise Econômica Multi-Fonte](analise-economica-multi-fonte.md)** — IPCA + yields do Tesouro + emprego: o painel macro completo. Combina três `-fetcher`.
 
 ### Finanças
@@ -23,7 +23,7 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 ### Saúde pública
 
-- **[Mortalidade infantil × cobertura SUS por município](mortalidade-sus.md)** — SIM, SINASC, CNES e população do SIDRA em uma única tabela municipal. `datasus-fetcher` + `sidra-fetcher`.
+- **[Mortalidade infantil × cobertura SUS por município](mortalidade-sus.md)** — SIM, SINASC, CNES e população do SIDRA em uma única tabela municipal. `datasus-fetcher` + `ibge-sidra-fetcher`.
 
 ### Clima
 

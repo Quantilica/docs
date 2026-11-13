@@ -247,7 +247,7 @@ Abaixo estão definidos os diretórios de saída padrão (`default` de `--output
 | `pdet-fetcher` | `/data/pdet` |
 | `rfb-cnpj-fetcher` | `/data/rfb-cnpj` |
 | `rtn-fetcher` | `/data/rtn` |
-| `sidra-fetcher` | `/data/sidra` |
+| `ibge-sidra-fetcher` | `/data/sidra` |
 | `tesouro-direto-fetcher` | `/data/tesouro-direto` |
 | `tse-fetcher` | `/data/tse` |
 

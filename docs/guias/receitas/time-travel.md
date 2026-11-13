@@ -43,7 +43,7 @@ data = json.loads(
 print(data["sha256"])      # 'a3f9...'
 print(data["fetched_at"])  # '2019-12-15T14:23:01Z'
 print(data["url"])         # endpoint exato com parâmetros
-print(data["producer"])    # 'sidra-fetcher'
+print(data["producer"])    # 'ibge-sidra-fetcher'
 ```
 
 Se você ainda tem o arquivo bruto, confirme o hash:
@@ -132,7 +132,7 @@ Para o apêndice metodológico do paper, anexe:
 
 1. **`pib-municipal.json.manifest.json`** versionado no repositório do paper.
 2. **A query SQL** com `modificacao <= 'YYYY-MM-DD'` literal, sem variáveis.
-3. **A versão do `sidra-sql`** e do `sidra-fetcher` usadas (output de `uv pip show`).
+3. **A versão do `sidra-sql`** e do `ibge-sidra-fetcher` usadas (output de `uv pip show`).
 4. **Um README** mostrando como subir o warehouse a partir do zero e rodar a query.
 
 Quatro arquivos. Zero ambiguidade.

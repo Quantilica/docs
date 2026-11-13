@@ -309,7 +309,7 @@ Caso o usuário invoque `convert` ou `pipeline` sem o extra instalado, a CLI int
 
 ### 7.5 Isenção de `[analysis]` e `lake.py` para coletores de séries JSON puras
 
-Coletores cuja fonte primária entrega exclusivamente **séries temporais ou agregados leves em formato JSON** via API REST — especificamente **`sidra-fetcher`** (API de Agregados do IBGE) e **`bcb-sgs-fetcher`** (Sistema Gerenciador de Séries Temporais do Banco Central) — são **isentos** de declarar o extra opcional `[analysis]`, o módulo `lake.py` e o entry point `quantilica.lake`.
+Coletores cuja fonte primária entrega exclusivamente **séries temporais ou agregados leves em formato JSON** via API REST — especificamente **`ibge-sidra-fetcher`** (API de Agregados do IBGE) e **`bcb-sgs-fetcher`** (Sistema Gerenciador de Séries Temporais do Banco Central) — são **isentos** de declarar o extra opcional `[analysis]`, o módulo `lake.py` e o entry point `quantilica.lake`.
 
 A justificativa arquitetural decorre do princípio da separação de carga ([§1](#1-visão-geral-e-princípios-fundamentais)): essas duas fontes produzem séries macroeconômicas e agregadas compactas que são ingeridas diretamente no banco de dados relacional (PostgreSQL) pelos adaptadores do `quantilica-sql`, não constituindo bases volumosas de microdados brutos que demandem estágio intermediário no Lake Hive em Parquet.
 

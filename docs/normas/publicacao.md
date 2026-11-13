@@ -10,11 +10,11 @@ Os pacotes públicos do ecossistema Quantilica seguem **dois fluxos de release d
 | Fluxo | Canal | Pacotes | Workflow |
 |---|---|---|---|
 | **A — PyPI (OIDC)** | PyPI oficial | `quantilica-core`, `quantilica-cli` | `publish.yml` com Trusted Publishing |
-| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` e `*-sql` (inclui `sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`) | `publish.yml` com GitHub Release + dispatch |
+| **B — GitHub Releases** | Índice estático próprio | `quantilica-analytics`, `quantilica-catalog`, todos os `*-fetcher` e `*-sql` (inclui `ibge-sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`) | `publish.yml` com GitHub Release + dispatch |
 
 > Pacotes distribuídos via índice próprio não passam pelo PyPI. Instalam-se via `quantilica install <fonte>`, que consulta o índice hospedado em `quantilica-index` no GitHub Pages. Aqui, `<fonte>` é a chave do `SOURCES_REGISTRY` local (`quantilica-cli/src/quantilica/cli/sources.py`) mesclada com o `sources.json` remoto do índice; chaves remotas atuais: `anac`, `anp`, `bcb-sgs`, `bcb-sgs-sql`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb-cnpj`, `rtn`, `sidra`, `sidra-sql`, `tesouro-direto`, `tse`, `quantilica-analytics`, `quantilica-catalog` (o registro local tem também `td`) — não necessariamente o nome do pacote (ex.: `td` → `tesouro-direto-fetcher`).
 >
-> `sidra-fetcher 0.10.5`, `sidra-sql 2.0.1` e `bcb-sgs-sql 0.2.2` (2026-10-08) foram os primeiros releases no Fluxo B; versões anteriores permanecem congeladas no PyPI.
+> `sidra-fetcher 0.10.5` (hoje `ibge-sidra-fetcher`), `sidra-sql 2.0.1` e `bcb-sgs-sql 0.2.2` (2026-10-08) foram os primeiros releases no Fluxo B; versões anteriores permanecem congeladas no PyPI.
 
 ---
 
@@ -124,7 +124,7 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, use a vari
 
 (todo o resto do `test.yml` permanece igual, sempre com `uv run --no-sync` — regra 2 acima).
 
-> **Deriva cross-repo:** workflows por pacote não enxergam a quebra de um vizinho (ex.: função removida de `sidra-fetcher` quebrando `sidra-sql` em silêncio por ~1 mês). Para isso existe `integration.yml` em `quantilica-core` (cron diário): monta o uv workspace com todos os members, roda o suite conjunto e veta o vazamento de `workspace = true`.
+> **Deriva cross-repo:** workflows por pacote não enxergam a quebra de um vizinho (ex.: função removida de `ibge-sidra-fetcher` quebrando `sidra-sql` em silêncio por ~1 mês). Para isso existe `integration.yml` em `quantilica-core` (cron diário): monta o uv workspace com todos os members, roda o suite conjunto e veta o vazamento de `workspace = true`.
 
 ### `public-hygiene.yml` — termos internos (todos os repositórios públicos)
 
@@ -312,7 +312,7 @@ Nunca misture código de funcionalidades (`feat`, `fix`, `refactor`) no mesmo co
 Dependa **sempre por versão de registro** (`pacote>=X.Y`), nunca por `git+https`/`allow-direct-references`.
 
 ### Ordem Obrigatória de Publicação (Upstream $\to$ Downstream)
-Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma alteração em `quantilica-core` que é consumida por `quantilica-analytics` e depois por `sidra-fetcher`):
+Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma alteração em `quantilica-core` que é consumida por `quantilica-analytics` e depois por `ibge-sidra-fetcher`):
 1. Faça o release e push da tag do pacote upstream (`quantilica-core`).
 2. **Aguarde a conclusão do workflow de CI/CD** (PyPI ou GitHub Release + `quantilica-index`) e certifique-se de que a nova versão já está resolúvel no índice.
 3. Somente então atualize o pin mínimo no `pyproject.toml` do pacote downstream (ex: `quantilica-core>=0.5.0`), teste localmente e proceda com o release do downstream.

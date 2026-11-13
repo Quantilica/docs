@@ -27,7 +27,7 @@ description: Motor ETL com plugin architecture, bulk load via COPY, star schema 
 
 **`sidra-sql`** é uma infraestrutura completa de Data Warehousing e ETL (Extração, Transformação, Carregamento) projetada para ingerir, estruturar e versionarizare dados extraídos do SIDRA.
 
-Enquanto **sidra-fetcher** resolve o problema de comunicação (obter dados da API), **sidra-sql** resolve o problema de **governança, persistência e reprodutibilidade**. Converte dados IBGE brutos e hierárquicos em um banco de dados relacional PostgreSQL otimizado para consultas analíticas pesadas.
+Enquanto **ibge-sidra-fetcher** resolve o problema de comunicação (obter dados da API), **sidra-sql** resolve o problema de **governança, persistência e reprodutibilidade**. Converte dados IBGE brutos e hierárquicos em um banco de dados relacional PostgreSQL otimizado para consultas analíticas pesadas.
 
 ## Problema que Resolve
 
@@ -350,7 +350,7 @@ Governança de dados e revisões, ingestão streaming, referência de API, forma
 ## Saiba Mais
 
 - [Visão Geral IBGE](index.md)
-- [sidra-fetcher](sidra-fetcher.md) — Ferramenta de extração de dados
+- [ibge-sidra-fetcher](ibge-sidra-fetcher.md) — Ferramenta de extração de dados
 - [sidra-pipelines](sidra-pipelines.md) — Catálogo de pipelines padrão
 - [Princípios de Design](../../conceitos/principios.md)
 - [Banco de Dados SIDRA (Português)](https://sidra.ibge.gov.br/)

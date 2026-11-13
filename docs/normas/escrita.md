@@ -13,7 +13,7 @@ Este documento define o padrão de README adotado por todos os repositórios da 
 
 - **Idioma:** Todo o texto em prosa (descrições, títulos de seção, comentários) é escrito em **português**. Exemplos de código, flags de CLI, identificadores e nomes de funções permanecem em inglês.
 - **Emoji:** Nenhum emoji decorativo em cabeçalhos ou prosa. Usar somente onde necessário para clareza técnica (ex: tabelas comparativas).
-- **Instalação:** apenas `quantilica-core` e `quantilica-cli` são publicados no PyPI e usam `pip install <pacote>` / `uv add <pacote>`; os demais (`sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`, fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
+- **Instalação:** apenas `quantilica-core` e `quantilica-cli` são publicados no PyPI e usam `pip install <pacote>` / `uv add <pacote>`; os demais (`ibge-sidra-fetcher`, `sidra-sql`, `bcb-sgs-sql`, fetchers restantes, analytics, catalog) são instalados via `quantilica install <fonte>` ou com `--index https://index.quantilica.com/simple/`.
 
 ---
 
@@ -192,7 +192,7 @@ MIT — veja [LICENSE](LICENSE).
 | `quantilica-core` | Infraestrutura | PT | ✓ |
 | `quantilica-analytics` | Infraestrutura | PT | ✓ |
 | `rtn-fetcher` | Data Package | PT | ✓ |
-| `sidra-fetcher` | Client Library | PT | ✓ |
+| `ibge-sidra-fetcher` | Client Library | PT | ✓ |
 | `sidra-pipelines` | Catálogo ETL | PT | ✓ |
 | `sidra-sql` | Motor ETL | PT | ✓ |
 | `tesouro-direto-fetcher` | Data Package | PT | ✓ |

@@ -39,7 +39,7 @@ Quantilica resolve isso de uma vez, **para todo mundo**. Uma ferramenta por font
 
 ```python
 # Baixar o IPCA cheio em 3 linhas
-from sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.fetcher import SidraClient
 
 with SidraClient() as client:
     agregado = client.get_agregado(1705)  # IPCA-15: metadados + 84 períodos + 27 localidades
@@ -59,7 +59,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 
 | Ferramenta | A dor que ela elimina |
 |---|---|
-| **[sidra-fetcher](fontes/ibge/sidra-fetcher.md)** | API REST do IBGE instável, rate limiting, períodos em strings ambíguas |
+| **[ibge-sidra-fetcher](fontes/ibge/ibge-sidra-fetcher.md)** | API REST do IBGE instável, rate limiting, períodos em strings ambíguas |
 | **[sidra-sql](fontes/ibge/sidra-sql.md)** | Bulk load de SIDRA em PostgreSQL com histórico de revisões (SCD II) |
 | **[sidra-pipelines](fontes/ibge/sidra-pipelines.md)** | Catálogo declarativo de pipelines IBGE prontos para rodar |
 | **[tesouro-direto-fetcher](fontes/tesouro/tesouro-direto-fetcher.md)** | CKAN do Tesouro, leitores por dataset, gráficos prontos |

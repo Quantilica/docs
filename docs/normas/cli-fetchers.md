@@ -9,7 +9,7 @@ description: "Norma da interface de linha de comando dos fetchers: cli.py (wrapp
 >
 > Para o contexto conceitual por trás destas regras, veja [Arquitetura de CLI](../conceitos/arquitetura.md#arquitetura-de-cli) (os dois níveis) e o padrão [UX de CLI: progresso vs. logs](../conceitos/padroes.md#cli-ux).
 
-Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher implementa: o **wrapper da CLI standalone** (`cli.py`) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich). A estrutura canônica de `cli.py` segue o ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`: para fetchers baseados no `FetcherApp`, `cli.py` é apenas um **wrapper fino** do app Typer do `plugin.py`; `argparse` completo ([§2](cli-fetchers/cli-nativa.md)) fica restrito a fetchers com comandos customizados fora do `FetcherApp` (hoje, `sidra-fetcher`).
+Este documento é o guia normativo para a construção de interfaces de linha de comando nos pacotes fetcher do ecossistema Quantilica. Cobre os dois níveis de interface que cada fetcher implementa: o **wrapper da CLI standalone** (`cli.py`) e o **plugin para o hub unificado** (`plugin.py`, Typer + Rich). A estrutura canônica de `cli.py` segue o ADR `2026-10-08-fetcher-cli-wrapper-e-canal-de-distribuicao`: para fetchers baseados no `FetcherApp`, `cli.py` é apenas um **wrapper fino** do app Typer do `plugin.py`; `argparse` completo ([§2](cli-fetchers/cli-nativa.md)) fica restrito a fetchers com comandos customizados fora do `FetcherApp` (hoje, `ibge-sidra-fetcher`).
 
 Seguir este guia garante comportamento consistente entre fetchers, integração correta com `quantilica-cli` e UX homogênea para o usuário final.
 
@@ -66,7 +66,7 @@ existente nesta tabela:
 | `periods` | Listar os períodos disponíveis para uma entidade específica | — |
 
 !!! note "Verbos de domínio"
-    Verbos específicos do pacote são permitidos além desta tabela (ex: `archive` no `datasus-fetcher`, `periods` no `sidra-fetcher`). A regra é nunca reutilizar um verbo da tabela com semântica diferente.
+    Verbos específicos do pacote são permitidos além desta tabela (ex: `archive` no `datasus-fetcher`, `periods` no `ibge-sidra-fetcher`). A regra é nunca reutilizar um verbo da tabela com semântica diferente.
 
 Regras de ouro:
 
@@ -107,7 +107,7 @@ Regras de ouro:
 
 Fetchers padrão (que fazem download de datasets estruturados via HTTP estático) devem instanciar o `FetcherApp` em `plugin.py` e passar seus metadados, estrutura de catálogos (ex: `GROUPS`, `GROUP_ALIASES`) e uma factory de rotas (`path_builder`). Com isso, a `cli.py` atua apenas como wrapper de execução, removendo totalmente a necessidade de escrever `argparse`, subcomandos manuais, e formatações Rich descritas nas seções 2 a 5.
 
-Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão. Ressalva: o `sidra-fetcher` instancia o `FetcherApp` no `plugin.py`, mas mantém uma `cli.py` com `argparse` dedicado (única exceção, conforme o ADR 2026-10-08); logo, sua `cli.py` não é um wrapper fino.
+Fetchers mais complexos (como os baseados em FTP ou APIs REST paginadas, ex: `datasus-fetcher` e `ibge-sidra-fetcher`) não estão isentos desta regra: eles **devem** herdar da `FetcherApp` ou sobrepor seus comandos canônicos via `aliases_dict` e composição (`_build_commands`), e aproveitar o `FtpClient` do `quantilica-core` para manter o plugin alinhado à SDK padrão. Ressalva: o `ibge-sidra-fetcher` instancia o `FetcherApp` no `plugin.py`, mas mantém uma `cli.py` com `argparse` dedicado (única exceção, conforme o ADR 2026-10-08); logo, sua `cli.py` não é um wrapper fino.
 
 As seções a seguir (2 a 5) devem ser aplicadas **apenas** para o entendimento da engenharia por trás do `FetcherApp` ou quando, em último caso, um fetcher precisar estender a CLI nativamente e customizar intensamente.
 
@@ -194,7 +194,7 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 - [ ] `cli.py` não importa `quantilica.cli.sdk`/`quantilica.cli.ui` diretamente — apenas o `plugin.py` ([§3.2](cli-fetchers/plugin.md)).
 - [ ] Entry point declarado em `[project.scripts]`.
 
-### `cli.py` — argparse (apenas fetcher customizado, ex: `sidra-fetcher`)
+### `cli.py` — argparse (apenas fetcher customizado, ex: `ibge-sidra-fetcher`)
 
 - [ ] `argparse.ArgumentParser` com `prog` e `description` definidos.
 - [ ] `--version` com `action="version"` lendo de `__version__`.
@@ -245,13 +245,13 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 | `ProgressCallback` per-file + `_file_callback` | `comex-fetcher` | `plugin.py` |
 | `on_done(filename, result)` callback pós-arquivo | `rtn-fetcher` | `plugin.py :: _sync_publications` |
 | `console.status` + `asyncio.run()` para downloads async | `tesouro-direto-fetcher` | `plugin.py :: cmd_sync` |
-| `getLogger("quantilica.core"/"<pacote>").setLevel(WARNING)` em cli.py | `sidra-fetcher` | `src/sidra_fetcher/cli.py :: main` |
+| `getLogger("quantilica.core"/"<pacote>").setLevel(WARNING)` em cli.py | `ibge-sidra-fetcher` | `src/ibge_sidra_fetcher/cli.py :: main` |
 | Wrapper fino de `plugin.py` com import protegido | `bcb-sgs-fetcher` | `cli.py` |
 | Table com totais em rodapé | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | `console.status` em conexão FTP | `datasus-fetcher` | `plugin.py :: cmd_list` |
 | Subcommands aninhados (`series_sub`, `catalogo_sub`) | `bcb-sgs-fetcher` | `plugin.py` |
 | Expansão de intervalos de anos `2018:2020` | `comex-fetcher` | `plugin.py :: expand_years_cli` |
-| Panel com metadados de entidade | `sidra-fetcher` | `plugin.py :: cmd_info` |
+| Panel com metadados de entidade | `ibge-sidra-fetcher` | `plugin.py :: cmd_info` |
 | `--dry-run` com tabela de pré-visualização | `datasus-fetcher` | `plugin.py :: cmd_sync` |
 | Pipeline `sync` → `export`/`convert` | `rtn-fetcher` | `plugin.py :: cmd_pipeline` |
 | `_print_info` como helper de tabela reutilizável | `tesouro-direto-fetcher` | `plugin.py :: _print_info` |
