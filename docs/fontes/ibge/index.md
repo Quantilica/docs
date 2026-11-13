@@ -1,6 +1,6 @@
 ---
 title: IBGE — macroeconomia via SIDRA
-description: Estatísticas oficiais do IBGE via SIDRA — sidra-fetcher para exploração, sidra-sql e sidra-pipelines para produção.
+description: Estatísticas oficiais do IBGE via SIDRA — ibge-sidra-fetcher para exploração, sidra-sql e sidra-pipelines para produção.
 ---
 
 # IBGE — Macroeconomia
@@ -23,13 +23,13 @@ O ecossistema fornece **dois stacks complementares** para SIDRA — escolha base
 
     O stack de produção (`sidra-sql` e `sidra-pipelines`) tem substituto: o [quantilica-sql](../../fundacoes/quantilica-sql.md) e o [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md). Os pacotes legados seguem documentados abaixo.
 
-### Stack 1 — Exploração (`sidra-fetcher`)
+### Stack 1 — Exploração (`ibge-sidra-fetcher`)
 
 Para análise ad-hoc, notebooks Jupyter, lógica customizada e fetching on-demand. SDK Python com clientes sync (`SidraClient`) e async (`AsyncSidraClient`).
 
 ```mermaid
 graph LR
-    A[API SIDRA] --> B[sidra-fetcher<br/>SDK sync/async]
+    A[API SIDRA] --> B[ibge-sidra-fetcher<br/>SDK sync/async]
     B --> C[Polars / pandas / Jupyter]
 ```
 
@@ -55,7 +55,7 @@ graph LR
 
 ## Pacotes
 
-- **[sidra-fetcher](sidra-fetcher.md)** — SDK sync/async para extração robusta, com smart caching via `Last-Modified`, classe `Parametro` para abstração de URL, e tipagem forte de metadados.
+- **[ibge-sidra-fetcher](ibge-sidra-fetcher.md)** — SDK sync/async para extração robusta, com smart caching via `Last-Modified`, classe `Parametro` para abstração de URL, e tipagem forte de metadados.
 - **[sidra-sql](sidra-sql.md)** (legado, substituído pelo [quantilica-sql](../../fundacoes/quantilica-sql.md)) — motor ETL com plugins TOML (`fetch.toml` + `transform.toml` + `transform.sql`), bulk load `COPY`, schema relacional 5-tabelas, SCD Type II.
 - **[sidra-pipelines](sidra-pipelines.md)** (legado, substituído pelo [quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)) — catálogo pré-construído de pipelines production-ready (PIB, IPCA, população, agricultura). Deploy one-command via `sidra-sql run std <pipeline>`.
 
@@ -63,7 +63,7 @@ Os [Princípios de Design](../../conceitos/principios.md) do ecossistema — Res
 
 ## Próximos passos
 
-- Para análise rápida em notebook: vá para **[sidra-fetcher](sidra-fetcher.md)**.
+- Para análise rápida em notebook: vá para **[ibge-sidra-fetcher](ibge-sidra-fetcher.md)**.
 - Para data warehouse PostgreSQL: vá para **[quantilica-sql](../../fundacoes/quantilica-sql.md)** + **[quantilica-pipelines](../../fundacoes/quantilica-pipelines.md)**. A documentação dos pacotes legados está em [sidra-sql](sidra-sql.md) e [sidra-pipelines](sidra-pipelines.md).
 - Para combinar IBGE com outras fontes: veja a receita **[Análise Econômica Multi-Fonte](../../guias/receitas/analise-economica-multi-fonte.md)**.
 

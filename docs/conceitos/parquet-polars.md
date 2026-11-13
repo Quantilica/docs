@@ -117,7 +117,7 @@ result = (
 ```python
 import polars as pl
 
-# Após buscar do SIDRA via sidra-fetcher e salvar como Parquet
+# Após buscar do SIDRA via ibge-sidra-fetcher e salvar como Parquet
 gdp = pl.read_parquet("gdp_raw.parquet")
 
 # Cast e enriquecimento explícitos

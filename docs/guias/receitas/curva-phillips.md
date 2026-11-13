@@ -1,11 +1,11 @@
 ---
 title: A Curva de Phillips brasileira em 30 linhas
-description: Cruzar IPCA mensal e taxa de desemprego do IBGE para visualizar a Curva de Phillips brasileira. Só sidra-fetcher.
+description: Cruzar IPCA mensal e taxa de desemprego do IBGE para visualizar a Curva de Phillips brasileira. Só ibge-sidra-fetcher.
 ---
 
 # A Curva de Phillips brasileira em 30 linhas
 
-> **Tempo estimado:** 5 minutos. **Pacotes:** `sidra-fetcher`, `polars`, `altair`.
+> **Tempo estimado:** 5 minutos. **Pacotes:** `ibge-sidra-fetcher`, `polars`, `altair`.
 
 Toda turma de macroeconomia desenha a Curva de Phillips no quadro — inflação contra desemprego, a troca cruel da política monetária. Mas quando você baixa as séries reais do Brasil e plota, a curva se recusa a cooperar: ruído, quebras estruturais, pontos fora da reta. Vamos buscar IPCA e desocupação direto do SIDRA, juntar por mês e encarar o gráfico como ele é.
 
@@ -18,7 +18,7 @@ Um scatter plot mensal com IPCA YoY contra a taxa de desocupação da PNAD Cont�
 ## Setup
 
 ```bash
-uv add sidra-fetcher polars "altair[save]" --index https://index.quantilica.com/simple/
+uv add ibge-sidra-fetcher polars "altair[save]" --index https://index.quantilica.com/simple/
 ```
 
 ## A receita
@@ -26,8 +26,8 @@ uv add sidra-fetcher polars "altair[save]" --index https://index.quantilica.com/
 ```python
 import polars as pl
 import altair as alt
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 
 def fetch_serie(client, agregado, variavel):
@@ -91,5 +91,5 @@ chart.save("phillips.html")
 
 ## Veja também
 
-- [sidra-fetcher](../../fontes/ibge/sidra-fetcher.md)
+- [ibge-sidra-fetcher](../../fontes/ibge/ibge-sidra-fetcher.md)
 - [Análise Econômica Multi-Fonte](analise-economica-multi-fonte.md) — adiciona finanças e mercado de trabalho ao mesmo painel.

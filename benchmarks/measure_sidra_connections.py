@@ -25,7 +25,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from sidra_fetcher.fetcher import AsyncSidraClient, SidraClient
+from ibge_sidra_fetcher.fetcher import AsyncSidraClient, SidraClient
 
 N_REQUESTS = 15
 IDS = [1737, 1620, 5938, 4099, 6381, 1705, 1612, 200]

@@ -33,11 +33,11 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
     Baixa os metadados completos do IPCA-15 (agregado 1705) e mostra a estrutura: períodos disponíveis, localidades cobertas, variáveis.
 
     ```bash
-    uv add sidra-fetcher --index https://index.quantilica.com/simple/
+    uv add ibge-sidra-fetcher --index https://index.quantilica.com/simple/
     ```
 
     ```python
-    from sidra_fetcher.fetcher import SidraClient
+    from ibge_sidra_fetcher.fetcher import SidraClient
 
     with SidraClient() as client:
         agregado = client.get_agregado(1705)  # IPCA-15
@@ -56,7 +56,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
 
     **Próximos passos:**
 
-    - [Construa uma URL `/values` SIDRA com `Parametro`](fontes/ibge/sidra-fetcher.md)
+    - [Construa uma URL `/values` SIDRA com `Parametro`](fontes/ibge/ibge-sidra-fetcher.md)
     - [Carregue tudo em PostgreSQL com `sidra-sql`](fontes/ibge/sidra-sql.md)
     - [Use um pipeline pronto do catálogo](fontes/ibge/sidra-pipelines.md)
 

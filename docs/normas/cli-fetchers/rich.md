@@ -240,7 +240,7 @@ if basic.start_date or basic.end_date:
 console.print(Panel("\n".join(lines), title=f"Série {series_id}"))
 ```
 
-Exemplo do `sidra-fetcher`:
+Exemplo do `ibge-sidra-fetcher`:
 
 ```python
 console.print(

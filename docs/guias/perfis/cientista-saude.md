@@ -12,7 +12,7 @@ Você trabalha com microdados do SUS — mortalidade (SIM), nascimentos (SINASC)
 | Dor | A ferramenta |
 |---|---|
 | Mais de 400 GB de microdados em FTP legado que cai três vezes por semana | **[`datasus-fetcher`](../../fontes/saude/datasus-fetcher.md)** |
-| Denominadores populacionais por município, ano, faixa etária | **[`sidra-fetcher`](../../fontes/ibge/sidra-fetcher.md)** (Censo, Estimativas) |
+| Denominadores populacionais por município, ano, faixa etária | **[`ibge-sidra-fetcher`](../../fontes/ibge/ibge-sidra-fetcher.md)** (Censo, Estimativas) |
 | Auditar exatamente qual versão do dado alimentou seu paper | **[Proveniência & Manifestos](../../conceitos/proveniencia.md)** |
 
 ## Por onde começar

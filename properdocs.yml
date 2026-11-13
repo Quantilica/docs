@@ -60,7 +60,7 @@ nav:
       - fontes/index.md
       - IBGE (Macroeconomia):
           - fontes/ibge/index.md
-          - sidra-fetcher: fontes/ibge/sidra-fetcher.md
+          - ibge-sidra-fetcher: fontes/ibge/ibge-sidra-fetcher.md
           - sidra-sql:
               - fontes/ibge/sidra-sql.md
               - Referência: fontes/ibge/sidra-sql/referencia.md
@@ -230,8 +230,9 @@ plugins:
         educacao/inep-fetcher.md: fontes/educacao/inep-fetcher.md
         empresas/index.md: fontes/empresas/index.md
         empresas/rfb-cnpj-fetcher.md: fontes/empresas/rfb-cnpj-fetcher.md
+        fontes/ibge/sidra-fetcher.md: fontes/ibge/ibge-sidra-fetcher.md
         ibge/index.md: fontes/ibge/index.md
-        ibge/sidra-fetcher.md: fontes/ibge/sidra-fetcher.md
+        ibge/sidra-fetcher.md: fontes/ibge/ibge-sidra-fetcher.md
         ibge/sidra-pipelines.md: fontes/ibge/sidra-pipelines.md
         ibge/sidra-sql.md: fontes/ibge/sidra-sql.md
         mercado-capitais/b3-fetcher.md: fontes/mercado-capitais/b3-fetcher.md

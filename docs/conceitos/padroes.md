@@ -84,7 +84,7 @@ quantilica datasus sync -o ./data sim-do-cid10 \
 
 ```python
 import asyncio
-from sidra_fetcher.fetcher import AsyncSidraClient
+from ibge_sidra_fetcher.fetcher import AsyncSidraClient
 
 async def fetch_multiple_metadata():
     async with AsyncSidraClient(timeout=60) as client:
@@ -182,7 +182,7 @@ def with_retry(func, max_retries=3, backoff_factor=2):
     raise last_exception
 
 # Exemplo: envolver chamada SIDRA
-from sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.fetcher import SidraClient
 client = SidraClient()
 result = with_retry(lambda: client.get_agregado(1620), max_retries=5)
 ```
@@ -277,7 +277,7 @@ def validate_rais_row_count(df: pl.DataFrame, year: int) -> bool:
 
 ### Padrão: uma barra de lote e um pool fixo de barras por worker
 
-O `sync` do `FetcherApp` já implementa o padrão, então todo fetcher que usa o SDK o herda sem escrever código. Só `sidra-fetcher` e `bcb-sgs-fetcher`, que não usam `FetcherApp`, o implementam no próprio `plugin.py`. Os helpers vêm de `quantilica.cli.ui`, que só o `plugin.py` de um fetcher pode importar:
+O `sync` do `FetcherApp` já implementa o padrão, então todo fetcher que usa o SDK o herda sem escrever código. Só `ibge-sidra-fetcher` e `bcb-sgs-fetcher`, que não usam `FetcherApp`, o implementam no próprio `plugin.py`. Os helpers vêm de `quantilica.cli.ui`, que só o `plugin.py` de um fetcher pode importar:
 
 ```python
 # plugin.py

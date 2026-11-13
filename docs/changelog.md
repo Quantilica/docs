@@ -7,6 +7,12 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-11 — `sidra-fetcher` vira `ibge-sidra-fetcher`
+
+- **Renome:** o fetcher do SIDRA passa a levar o prefixo do órgão, como `bcb-sgs` e `bcb-microdados`. A distribuição é `ibge-sidra-fetcher` e o módulo é `ibge_sidra_fetcher`, sem módulo de compatibilidade. Ver [ibge-sidra-fetcher](fontes/ibge/ibge-sidra-fetcher.md).
+- **CLI:** `quantilica install ibge-sidra` e `quantilica ibge-sidra ...`. Os apelidos `sidra` e `ibge` continuam funcionando.
+- **Não mudou:** o produto SIDRA, o QSID `sidra:`, o diretório `sidra/` do lake e o `sidra-sql`.
+
 ## 2026-10 — Fluxo B para os fetchers, CVM e TSE documentados
 
 - **Distribuição:** só `quantilica-core` e `quantilica-cli` seguem no PyPI. Fetchers, `quantilica-analytics`, `quantilica-catalog` e os loaders SQL são distribuídos pelo índice próprio e instalados com `quantilica install <fonte>`. Ver [Publicação e Release](normas/publicacao.md).
@@ -254,7 +260,7 @@ Para releases granulares (PATCH/MINOR/MAJOR), consulte o `CHANGELOG.md` ou as re
 - [inmet-fetcher](https://github.com/Quantilica/inmet-fetcher/releases)
 - [pdet-fetcher](https://github.com/Quantilica/pdet-fetcher/releases)
 - [rtn-fetcher](https://github.com/Quantilica/rtn-fetcher/releases)
-- [sidra-fetcher](https://github.com/Quantilica/sidra-fetcher/releases)
+- [ibge-sidra-fetcher](https://github.com/Quantilica/ibge-sidra-fetcher/releases)
 - [sidra-sql](https://github.com/Quantilica/sidra-sql/releases)
 - [sidra-pipelines](https://github.com/Quantilica/sidra-pipelines/releases)
 - [tesouro-direto-fetcher](https://github.com/Quantilica/tesouro-direto-fetcher/releases)

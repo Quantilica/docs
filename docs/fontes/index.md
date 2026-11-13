@@ -11,7 +11,7 @@ Antes de rodar um download grande, confira o [estado atual das fontes](../status
 
 | Domínio | Coletores | Fonte oficial |
 |---|---|---|
-| [IBGE (Macroeconomia)](ibge/index.md) | [sidra-fetcher](ibge/sidra-fetcher.md) | IBGE SIDRA e Agregados |
+| [IBGE (Macroeconomia)](ibge/index.md) | [ibge-sidra-fetcher](ibge/ibge-sidra-fetcher.md) | IBGE SIDRA e Agregados |
 | [Tesouro (Finanças)](tesouro/index.md) | [tesouro-direto-fetcher](tesouro/tesouro-direto-fetcher.md), [rtn-fetcher](tesouro/rtn-fetcher.md), [pgfn-fetcher](tesouro/pgfn-fetcher.md) | Tesouro Nacional e PGFN |
 | [Banco Central](bcb/index.md) | [bcb-sgs-fetcher](bcb/bcb-sgs-fetcher.md), [bcb-microdados-fetcher](bcb/bcb-microdados-fetcher.md) | BCB SGS e microdados |
 | [Mercado de Trabalho](trabalho/index.md) | [pdet-fetcher](trabalho/pdet-fetcher.md) | MTE/PDET (CAGED, RAIS) |

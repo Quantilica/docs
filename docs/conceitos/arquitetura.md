@@ -13,7 +13,7 @@ Como o Ecossistema Quantilica é organizado e como as partes se conectam. Esta p
 graph TD
     Sources["Fontes de Dados Governamentais<br/>(IBGE, Tesouro, BCB, Trabalho, Saúde, Receita Federal, Educação, Aviação, CVM, TSE, etc)"]
 
-    Sources -->|IBGE SIDRA| SF["sidra-fetcher"]
+    Sources -->|IBGE SIDRA| SF["ibge-sidra-fetcher"]
     Sources -->|IBGE SIDRA| SQL["sidra-sql"]
     Sources -->|Tesouro Direto| TD["tesouro-direto-fetcher"]
     Sources -->|RTN/STN| RTN["rtn-fetcher"]
@@ -73,7 +73,7 @@ A fundação é dividida em dois pilares para equilibrar leveza e poder:
 
 | Tipo | Padrão Esperado | Exemplos |
 | :--- | :--- | :--- |
-| **Client (Fetcher)** | Biblioteca Python + CLI simples | `sidra-fetcher`, `bcb-sgs-fetcher` |
+| **Client (Fetcher)** | Biblioteca Python + CLI simples | `ibge-sidra-fetcher`, `bcb-sgs-fetcher` |
 | **Data Extractor (Bulk)** | Download massivo com manifestos. Só alguns têm `convert` para Parquet (extra `analysis`) | `rfb-cnpj-fetcher` e `inep-fetcher` (só baixam); `pdet-fetcher` e `datasus-fetcher` (também convertem) |
 | **Pipeline DB** | Motor ETL + definições TOML/SQL | `sidra-sql`, `bcb-sgs-sql` |
 | **Catálogo de pipelines** | Repositório Git com `manifest.toml` + `fetch.toml`/`transform.sql` por pipeline | `sidra-pipelines`, `bcb-sgs-pipelines` |
@@ -142,7 +142,7 @@ A camada de armazenamento foi desenhada para ser estritamente **agnóstica** —
 Para o usuário não lidar com um binário independente por fonte, adotamos a estratégia de Hub Híbrido:
 
 ### CLI dos fetchers
-Cada fetcher expõe um `cli.py` que é um wrapper fino sobre o `plugin.py` (padrão em [Padronização de CLI](../normas/cli-fetchers.md)); só o `sidra-fetcher` mantém CLI própria em `argparse`. O import do host é protegido, então um ambiente sem `quantilica-cli` falha com a instrução `quantilica install <fonte>`.
+Cada fetcher expõe um `cli.py` que é um wrapper fino sobre o `plugin.py` (padrão em [Padronização de CLI](../normas/cli-fetchers.md)); só o `ibge-sidra-fetcher` mantém CLI própria em `argparse`. O import do host é protegido, então um ambiente sem `quantilica-cli` falha com a instrução `quantilica install <fonte>`.
 
 ### Hub Plugin Central
 Para exploração diária, todos os fetchers expõem uma ponte (entry point) Typer rica e em cores para o host `quantilica-cli` (como demonstrado extensivamente em toda a documentação, nos chamados "Uso com Ambiente Unificado").

@@ -9,7 +9,7 @@ description: "Norma da CLI nativa (argparse) dos fetchers customizados: esquelet
 
 > **Escopo restrito (ADR `2026-10-08`):** `argparse` completo aplica-se apenas a
 > fetchers com **comandos customizados fora do `FetcherApp`** — hoje, somente o
-> `sidra-fetcher`. Todo fetcher novo baseado no `FetcherApp` **não** escreve a
+> `ibge-sidra-fetcher`. Todo fetcher novo baseado no `FetcherApp` **não** escreve a
 > CLI nesta seção: usa o wrapper fino ([§1.3](../cli-fetchers.md)).
 
 ## 2.1 Esqueleto obrigatório
@@ -146,7 +146,7 @@ def _cmd_sync(args):
 
 ## 2.6 Silenciar logs INFO quando exibindo progresso
 
-> **Só se aplica a fetcher customizado** (hoje, apenas `sidra-fetcher`, ADR `2026-10-08`) — wrappers finos não exibem progresso próprio nem tocam em loggers ([§1.3](../cli-fetchers.md)).
+> **Só se aplica a fetcher customizado** (hoje, apenas `ibge-sidra-fetcher`, ADR `2026-10-08`) — wrappers finos não exibem progresso próprio nem tocam em loggers ([§1.3](../cli-fetchers.md)).
 
 `configure_cli_logging(verbose=False)` define o nível raiz em `INFO`. Isso faz com que mensagens internas do core (como `log_step` em `quantilica.core.http`) apareçam no terminal e corrompam a saída de barras tqdm.
 

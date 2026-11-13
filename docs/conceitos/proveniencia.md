@@ -58,7 +58,7 @@ Para cada artefato bruto baixado (ex.: `exp_2024@20240315.csv`), existe um sidec
 | `size_bytes` | `int` | Obrigatório | Tamanho exato do arquivo em bytes. |
 | `resource_id` | `str \| None` | Opcional | Identificador específico do recurso ou partição quando distinto de `dataset_id`. |
 | `path` | `str \| None` | Opcional | Caminho do arquivo bruto gravado em disco. |
-| `producer` | `str \| None` | Opcional | Nome do pacote ou ferramenta que realizou a coleta (ex.: `"sidra-fetcher"`). |
+| `producer` | `str \| None` | Opcional | Nome do pacote ou ferramenta que realizou a coleta (ex.: `"ibge-sidra-fetcher"`). |
 | `producer_version` | `str \| None` | Opcional | Versão do pacote coletor no momento da execução. |
 | `metadata` | `dict[str, Any]` | Opcional (`{}`) | Dicionário livre para metadados específicos da fonte. |
 
@@ -96,7 +96,7 @@ manifest = DownloadManifest.from_file(
     dataset_id="sidra-1705",
     url="https://servicodados.ibge.gov.br/api/v3/agregados/1705/metadados",
     file_path="dados/raw/sidra/agregado-1705.json",
-    producer="sidra-fetcher",
+    producer="ibge-sidra-fetcher",
 )
 
 # Como DownloadManifest é frozen=True, use dataclasses.replace para enriquecer:

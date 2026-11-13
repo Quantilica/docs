@@ -20,7 +20,7 @@ Para isso precisamos de:
 ## Pré-requisitos
 
 ```bash
-uv add sidra-fetcher pdet-fetcher "tesouro-direto-fetcher[analysis]" polars --index https://index.quantilica.com/simple/
+uv add ibge-sidra-fetcher pdet-fetcher "tesouro-direto-fetcher[analysis]" polars --index https://index.quantilica.com/simple/
 ```
 
 Para `pdet-fetcher`, é necessário ter o binário `7z` no `PATH` (descompressão `.7z`).
@@ -31,8 +31,8 @@ Para `pdet-fetcher`, é necessário ter o binário `7z` no `PATH` (descompressã
 
 ```python
 import polars as pl
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 
 # IPCA: tabela 1737, variável 2266 (variação mensal)
 ipca_param = Parametro(
@@ -192,8 +192,8 @@ wages_real.write_parquet("data/wages_real.parquet")
 
 ## O que esta receita demonstra
 
-- **Modularidade**: três pacotes (`sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`) sem dependências cruzadas, compostos em camada do usuário.
-- **Idempotência**: as três etapas de extração são seguras para re-rodar — `sidra-fetcher` cacheia via `Last-Modified`, `quantilica td sync` verifica `last_modified` no CKAN, `quantilica pdet sync` pula `.7z` já baixados.
+- **Modularidade**: três pacotes (`ibge-sidra-fetcher`, `tesouro-direto-fetcher`, `pdet-fetcher`) sem dependências cruzadas, compostos em camada do usuário.
+- **Idempotência**: as três etapas de extração são seguras para re-rodar — `ibge-sidra-fetcher` cacheia via `Last-Modified`, `quantilica td sync` verifica `last_modified` no CKAN, `quantilica pdet sync` pula `.7z` já baixados.
 - **Performance**: tudo em Polars com lazy evaluation; mesmo cobrindo 14 anos da RAIS (~700M registros), agregações finais rodam em segundos.
 - **Reprodutibilidade**: cada estágio salva um Parquet intermediário, então re-análises não exigem re-fetch.
 
@@ -205,7 +205,7 @@ wages_real.write_parquet("data/wages_real.parquet")
 
 ## Saiba mais
 
-- **[sidra-fetcher](../../fontes/ibge/sidra-fetcher.md)** — SDK SIDRA detalhado.
+- **[ibge-sidra-fetcher](../../fontes/ibge/ibge-sidra-fetcher.md)** — SDK SIDRA detalhado.
 - **[tesouro-direto-fetcher](../../fontes/tesouro/tesouro-direto-fetcher.md)** — análise Tesouro Direto.
 - **[pdet-fetcher](../../fontes/trabalho/pdet-fetcher.md)** — RAIS/CAGED.
 - **[Cálculo de Retornos de Renda Fixa](../../conceitos/calculo-retornos-renda-fixa.md)** — matemática por trás de yield real, duration, FIFO.

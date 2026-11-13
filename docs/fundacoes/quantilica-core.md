@@ -38,7 +38,7 @@ manifest = DownloadManifest.from_file(
     dataset_id="sidra-1705",
     url="https://servicodados.ibge.gov.br/...",
     file_path=stat.path,
-    producer="sidra-fetcher",
+    producer="ibge-sidra-fetcher",
 )
 write_manifest_sidecar(stat.path, manifest)
 ```

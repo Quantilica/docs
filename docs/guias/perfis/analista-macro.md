@@ -11,7 +11,7 @@ Você acompanha PIB, IPCA, desemprego, juros e câmbio. Tira gráficos para reun
 
 | Dor | A ferramenta |
 |---|---|
-| Coletar IPCA, PIB, PNAD, IBC-Br sem virar especialista em URL do SIDRA | **[`sidra-fetcher`](../../fontes/ibge/sidra-fetcher.md)** |
+| Coletar IPCA, PIB, PNAD, IBC-Br sem virar especialista em URL do SIDRA | **[`ibge-sidra-fetcher`](../../fontes/ibge/ibge-sidra-fetcher.md)** |
 | Yield curve, retorno de carteira de renda fixa, prêmio de risco fiscal | **[`tesouro-direto-fetcher`](../../fontes/tesouro/tesouro-direto-fetcher.md)** + **[`rtn-fetcher`](../../fontes/tesouro/rtn-fetcher.md)** |
 | Reproduzir o número exato de um relatório anterior depois que a fonte revisou | **[Proveniência & Manifestos](../../conceitos/proveniencia.md)** |
 
@@ -24,8 +24,8 @@ Você acompanha PIB, IPCA, desemprego, juros e câmbio. Tira gráficos para reun
 ### IPCA em 10 linhas
 
 ```python
-from sidra_fetcher.fetcher import SidraClient
-from sidra_fetcher.sidra import Parametro, Formato, Precisao
+from ibge_sidra_fetcher.fetcher import SidraClient
+from ibge_sidra_fetcher.sidra import Parametro, Formato, Precisao
 import polars as pl
 
 param = Parametro(

@@ -19,7 +19,7 @@ quantilica
 ├── inmet        ← inmet_fetcher.plugin:app
 ├── pdet         ← pdet_fetcher.plugin:app
 ├── rtn          ← rtn_fetcher.plugin:app
-├── sidra        ← sidra_fetcher.plugin:app
+├── sidra        ← ibge_sidra_fetcher.plugin:app
 └── td           ← tesouro_direto_fetcher.plugin:app
 ```
 

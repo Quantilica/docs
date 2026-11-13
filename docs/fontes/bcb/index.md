@@ -83,7 +83,7 @@ graph LR
 Os [Princípios de Design](../../conceitos/principios.md) aparecem aqui de forma clara:
 idempotência (recarga com zero churn), reprodutibilidade (histórico de revisões na própria
 tabela-fato) e a separação de camadas fetcher/sql — o mesmo padrão de
-[sidra-fetcher](../ibge/sidra-fetcher.md) / [sidra-sql](../ibge/sidra-sql.md).
+[ibge-sidra-fetcher](../ibge/ibge-sidra-fetcher.md) / [sidra-sql](../ibge/sidra-sql.md).
 
 ## Temas do SGS
 

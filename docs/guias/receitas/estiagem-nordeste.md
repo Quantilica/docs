@@ -96,7 +96,7 @@ trend = base.mark_line(strokeDash=[6, 4]).encode(y="tendencia:Q", color="uf:N")
 ## Variações
 
 - **Mapa coroplético** — agregue por município (usando o município mais próximo de cada estação) e plote com `geopandas`.
-- **Compare com produção agrícola** — junte com PAM via `sidra-fetcher` e olhe correlação chuva × safra.
+- **Compare com produção agrícola** — junte com PAM via `ibge-sidra-fetcher` e olhe correlação chuva × safra.
 - **Anomalia padronizada** — calcule `(valor - média) / dp` por estação para visualizar secas relativas.
 
 ## Veja também
