@@ -16,7 +16,9 @@ Cliente Python para a API SIDRA do IBGE — com suporte para requisições assí
 
 !!! info "Renomeado em 13/11/2026"
 
-    O pacote antes se chamava `sidra-fetcher`. O nome novo é `ibge-sidra-fetcher` e o módulo é `ibge_sidra_fetcher`, sem módulo de compatibilidade: quem importava `sidra_fetcher` precisa trocar o import. As wheels antigas ficam congeladas no índice em `sidra-fetcher` (até a 0.10.4). No registro de fetchers o id é `ibge-sidra`; os apelidos `sidra` e `ibge` continuam funcionando na CLI.
+    O pacote antes se chamava `sidra-fetcher`. O nome novo é `ibge-sidra-fetcher` e o módulo é `ibge_sidra_fetcher`, sem módulo de compatibilidade: quem importava `sidra_fetcher` precisa trocar o import. As wheels antigas ficam congeladas como `sidra-fetcher`: o índice da Quantilica guarda da 0.10.5 à 0.11.0, e a 0.10.4 e as anteriores estão só no PyPI. No registro de fetchers o id é `ibge-sidra`; os apelidos `sidra` e `ibge` continuam funcionando na CLI.
+
+    Quem tem o `sidra-fetcher` antigo instalado migra com `quantilica install ibge-sidra`, que instala a distribuição nova e remove a antiga (precisa do `quantilica-cli` com a correção do laço de instalação, ainda não lançada na 0.20.0). À mão: `uv pip uninstall sidra-fetcher && uv pip install ibge-sidra-fetcher --index https://index.quantilica.com/simple/`.
 
 ## Instalação
 
