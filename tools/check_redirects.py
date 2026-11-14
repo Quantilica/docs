@@ -2,13 +2,15 @@
 
 Uso: uv run properdocs build -d site && uv run python tools/check_redirects.py site
 Falha se uma URL antiga não gerou página de redirecionamento ou se o destino não existe.
+O mapa é o do properdocs.yml (manual) mais o gerado do `historico` do registro público
+(hooks/registro.py; `REGISTRO_LOCAL` aponta um registro local).
 """
 
 import re
 import sys
 from pathlib import Path
 
-import yaml
+from _registro import carrega_hook
 
 
 def _url_dir(md_path: str) -> str:
@@ -17,16 +19,8 @@ def _url_dir(md_path: str) -> str:
 
 
 def main(site: str) -> int:
-    class _Loader(yaml.SafeLoader):
-        pass
-
-    # properdocs.yml usa tags python/!ENV; só o bloco de plugins interessa.
-    _Loader.add_multi_constructor("", lambda loader, suffix, node: None)
-    cfg = yaml.load(Path("properdocs.yml").read_text(encoding="utf-8"), Loader=_Loader)
-    maps: dict[str, str] = {}
-    for plugin in cfg.get("plugins", []):
-        if isinstance(plugin, dict) and "redirects" in plugin:
-            maps = plugin["redirects"]["redirect_maps"]
+    hook = carrega_hook()
+    maps = hook.redirects_completos(hook.carregar_registro())
     root = Path(site)
     erros = []
     for old, new in maps.items():

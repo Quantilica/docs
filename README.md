@@ -12,8 +12,16 @@ uv run properdocs serve
 As URLs antigas (`concepts/`, `cookbook/`, `personas/` e as pastas de domínio na raiz) continuam funcionando por redirecionamento (`mkdocs-redirects`). Depois de mover uma página, adicione-a em `redirect_maps` (em `properdocs.yml`) e confira com:
 
 ```bash
-uv run properdocs build -d site && uv run --with pyyaml python tools/check_redirects.py site
+uv run properdocs build -d site && uv run python tools/check_redirects.py site
 ```
+
+### Coletores vêm do registro
+
+A seção de coletores (navegação, tabela de `fontes/index.md`, redirects de renomes e importação dos dados) é gerada pelo hook `hooks/registro.py` a partir do registro público (`https://index.quantilica.com/registry.json`). O build e as guardas em `tools/` falham se o registro não carregar. Para trabalhar sem rede, aponte um registro local: `REGISTRO_LOCAL=/caminho/registry.json`.
+
+- Coletor novo ou renomeado: ajuste o registro (`docs_pasta`, `historico`) e crie a página `fontes/<docs_pasta>/<distribuição>.md`. `tools/check_pages.py` confere páginas e registro nos dois sentidos.
+- Só os textos de apresentação (título do grupo, "Fonte oficial", ordem) ficam em `extra.fontes_grupos` do `properdocs.yml`.
+- Os blocos entre `<!-- registro:inicio ... -->` e `<!-- registro:fim ... -->` são regerados no build; para reescrever os arquivos: `uv run python hooks/registro.py --escrever`.
 
 O site local sobe em `http://127.0.0.1:8000/`; a versão publicada fica em `https://docs.quantilica.com/`.
 
@@ -33,7 +41,8 @@ docs/
 ├── overrides/             # extensões do tema Material
 │   ├── main.html          # meta tags Open Graph / Twitter
 │   └── partials/integrations/analytics/custom.html # analytics (consent-aware)
-├── tools/check_redirects.py  # confere o mapa de redirects contra o site construído
+├── hooks/registro.py      # navegação, tabelas e redirects dos coletores, do registro público
+├── tools/                 # guardas: check_pages.py (páginas × registro) e check_redirects.py
 └── properdocs.yml
 ```
 

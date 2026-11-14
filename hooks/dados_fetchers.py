@@ -9,8 +9,10 @@ na tag da última versão lançada, e os publica ao lado da página do coletor:
     <destino>/datasets/<id>.md      <- docs/datasets/<id>.md
     <destino>/datasets/<id>.schema.json
 
-Os fetchers a importar estão em tools/dados_fetchers.yml. A página do coletor
-(`pagina`) vira uma seção da navegação, com "Dados" e um item por dataset.
+Os fetchers a importar saem do registro público (hooks/registro.py): todo
+coletor com página no site é tentado, e os que não têm `docs/README.md` na
+última tag (ainda sem a documentação dos dados) ficam de fora sem aviso. A página do
+coletor vira uma seção da navegação, com "Dados" e um item por dataset.
 
 Variáveis de ambiente:
     DADOS_FETCHERS_LOCAL   pasta com cópias locais dos repositórios (prévia de
@@ -33,12 +35,11 @@ from properdocs.structure.files import File
 log = logging.getLogger("properdocs.hooks.dados_fetchers")
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRO = ROOT / "tools" / "dados_fetchers.yml"
 CACHE = ROOT / ".cache" / "dados-fetchers"
 ORG_URL = "https://github.com/Quantilica"
 _TAG = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 
-# (entrada do registro, [(src_uri no site, conteúdo texto | Path binário)], navegação)
+# (coletor, [(src_uri no site, conteúdo texto | Path binário)], navegação)
 _importados: list[tuple[dict, list[tuple[str, str | Path]], list]] = []
 
 
@@ -65,14 +66,15 @@ def ultima_tag(repo: str) -> str:
     return max(tags)[1]
 
 
-def _docs_do_fetcher(repo: str) -> tuple[Path, str]:
-    """Pasta `docs/` do fetcher e a versão (tag) lida."""
+def _docs_do_fetcher(repo: str) -> tuple[Path, str] | None:
+    """Pasta `docs/` do fetcher e a versão (tag) lida; None se não tem `docs/`."""
     local = os.environ.get("DADOS_FETCHERS_LOCAL")
     if local:
-        return Path(local) / repo / "docs", "local"
+        docs = Path(local) / repo / "docs"
+        return (docs, "local") if docs.is_dir() else None
     tag = ultima_tag(repo)
     destino = CACHE / f"{repo}@{tag}"
-    if not (destino / "docs").is_dir():
+    if not destino.is_dir():
         destino.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(
             ["git", "clone", "--quiet", "--depth", "1", "--branch", tag,
@@ -80,7 +82,7 @@ def _docs_do_fetcher(repo: str) -> tuple[Path, str]:
             check=True,
             timeout=300,
         )
-    return destino / "docs", tag
+    return (destino / "docs", tag) if (destino / "docs").is_dir() else None
 
 
 def _separa(texto: str) -> tuple[dict, str]:
@@ -113,11 +115,17 @@ def _primeiro_paragrafo(corpo: str) -> str:
     return ""
 
 
-def _importa(entrada: dict) -> tuple[list[tuple[str, str | Path]], list]:
+def _importa(entrada: dict) -> tuple[list[tuple[str, str | Path]], list] | None:
     repo = entrada["repo"]
-    docs, tag = _docs_do_fetcher(repo)
+    achado = _docs_do_fetcher(repo)
+    if achado is None:
+        log.info("%s: sem docs/ na última versão, nada a importar", repo)
+        return None
+    docs, tag = achado
     if not (docs / "README.md").is_file():
-        raise RuntimeError(f"{repo} ({tag}): docs/README.md não existe")
+        # A norma exige docs/README.md; sem ele a documentação ainda não foi adotada.
+        log.info("%s (%s): docs/ sem README.md, nada a importar", repo, tag)
+        return None
     destino = entrada["destino"].strip("/")
     arquivos: list[tuple[str, str | Path]] = []
     nav_datasets: list = []
@@ -166,19 +174,38 @@ def _insere_na_nav(itens: list, pagina: str, nav_dados: list) -> bool:
     return False
 
 
+def _entradas(config) -> list[dict]:
+    """Um coletor por entrada do registro que tem página no site."""
+    fetchers = config["extra"].get("registro_fetchers")
+    if not fetchers:
+        raise RuntimeError(
+            "registro dos coletores não carregado: hooks/registro.py deve vir "
+            "antes de dados_fetchers.py em `hooks`"
+        )
+    entradas = []
+    for f in fetchers:
+        pasta, dist = f["docs_pasta"], f["distribution"]
+        entradas.append({
+            "repo": f["repo"].rstrip("/").rsplit("/", 1)[-1],
+            "pagina": f"fontes/{pasta}/{dist}.md",
+            "destino": f"fontes/{pasta}/{dist}/dados",
+        })
+    return entradas
+
+
 def on_config(config):
     _importados.clear()
-    if not REGISTRO.is_file():
-        return config
-    registro = yaml.safe_load(REGISTRO.read_text(encoding="utf-8")) or []
-    for entrada in registro:
+    for entrada in _entradas(config):
         try:
-            arquivos, nav = _importa(entrada)
+            importado = _importa(entrada)
         except Exception as exc:  # noqa: BLE001 - rede, git ou formato
             if _strict():
                 raise
-            log.warning("dados do %s não importados: %s", entrada.get("repo"), exc)
+            log.warning("dados do %s não importados: %s", entrada["repo"], exc)
             continue
+        if importado is None:
+            continue
+        arquivos, nav = importado
         if not _insere_na_nav(config["nav"], entrada["pagina"], nav):
             raise RuntimeError(
                 f"{entrada['repo']}: página {entrada['pagina']} não está na navegação"

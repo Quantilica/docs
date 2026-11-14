@@ -4,7 +4,13 @@ Regras:
 - toda página em docs/ (exceto assets/) tem `title` e `description`;
 - `description` entre 50 e 160 caracteres;
 - exatamente um H1 fora de blocos de código;
-- páginas de coletor (fontes/*/*-fetcher.md) têm as seções "Instalação" e "Saiba mais".
+- páginas de coletor (fontes/*/*-fetcher.md) têm as seções "Instalação" e "Saiba mais";
+- páginas × registro público, nos dois sentidos: todo coletor com `docs_pasta` tem
+  a página fontes/<pasta>/<distribuição>.md, e toda página de coletor é de um
+  coletor do registro, na pasta certa;
+- os blocos gerados do registro (marcadores `registro:inicio`) estão em dia.
+
+O registro vem do índice público (ou de `REGISTRO_LOCAL`); sem ele a checagem falha.
 
 Uso: uv run python tools/check_pages.py
 """
@@ -12,6 +18,8 @@ Uso: uv run python tools/check_pages.py
 import re
 import sys
 from pathlib import Path
+
+from _registro import carrega_hook
 
 DOCS = Path("docs")
 REQUIRED_SECTIONS = ("instalação", "saiba mais")
@@ -39,8 +47,27 @@ def _headings(body: str) -> list[tuple[int, str]]:
     return out
 
 
+def confere_registro(erros: list[str]) -> None:
+    hook = carrega_hook()
+    fetchers = hook.carregar_registro()
+    grupos = hook.organiza(fetchers, hook.carregar_grupos_do_yml())
+    esperadas = {hook._pagina(f) for f in fetchers if f.get("docs_pasta")}
+    existentes = {
+        p.relative_to(DOCS).as_posix() for p in DOCS.glob("fontes/*/*-fetcher.md")
+    }
+    for rel in sorted(esperadas - existentes):
+        erros.append(f"{rel}: coletor do registro sem página")
+    for rel in sorted(existentes - esperadas):
+        erros.append(f"{rel}: página de coletor que o registro não tem (ou em outra pasta)")
+    for rel in hook.blocos_desatualizados(grupos):
+        erros.append(
+            f"{rel}: bloco gerado desatualizado (uv run python hooks/registro.py --escrever)"
+        )
+
+
 def main() -> int:
     erros: list[str] = []
+    confere_registro(erros)
     for page in sorted(DOCS.rglob("*.md")):
         rel = page.relative_to(DOCS).as_posix()
         fm, body = _split(page.read_text(encoding="utf-8"))

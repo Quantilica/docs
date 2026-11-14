@@ -58,75 +58,7 @@ nav:
 
   - Fontes de dados:
       - fontes/index.md
-      - IBGE (Macroeconomia):
-          - fontes/ibge/index.md
-          - ibge-sidra-fetcher: fontes/ibge/ibge-sidra-fetcher.md
-          - sidra-sql:
-              - fontes/ibge/sidra-sql.md
-              - Referência: fontes/ibge/sidra-sql/referencia.md
-          - sidra-pipelines: fontes/ibge/sidra-pipelines.md
-      - Tesouro (Finanças):
-          - fontes/tesouro/index.md
-          - tesouro-direto-fetcher: fontes/tesouro/tesouro-direto-fetcher.md
-          - rtn-fetcher: fontes/tesouro/rtn-fetcher.md
-          - pgfn-fetcher: fontes/tesouro/pgfn-fetcher.md
-      - Banco Central (BCB):
-          - fontes/bcb/index.md
-          - bcb-sgs-fetcher: fontes/bcb/bcb-sgs-fetcher.md
-          - bcb-sgs-sql:
-              - fontes/bcb/bcb-sgs-sql.md
-              - Referência: fontes/bcb/bcb-sgs-sql/referencia.md
-          - bcb-sgs-pipelines: fontes/bcb/bcb-sgs-pipelines.md
-          - bcb-microdados-fetcher: fontes/bcb/bcb-microdados-fetcher.md
-      - Mercado de Trabalho:
-          - fontes/trabalho/index.md
-          - pdet-fetcher: fontes/trabalho/pdet-fetcher.md
-      - Comércio Exterior:
-          - fontes/comex/index.md
-          - comex-fetcher: fontes/comex/comex-fetcher.md
-      - Saúde Pública:
-          - fontes/saude/index.md
-          - datasus-fetcher: fontes/saude/datasus-fetcher.md
-          - sigtap-fetcher: fontes/saude/sigtap-fetcher.md
-      - Clima & Meio Ambiente:
-          - fontes/clima/index.md
-          - inmet-fetcher: fontes/clima/inmet-fetcher.md
-      - Aviação Civil (ANAC):
-          - fontes/aviacao/index.md
-          - anac-fetcher: fontes/aviacao/anac-fetcher.md
-      - Petróleo, Gás e Biocombustíveis (ANP):
-          - fontes/petroleo/index.md
-          - anp-fetcher: fontes/petroleo/anp-fetcher.md
-      - Educação (INEP):
-          - fontes/educacao/index.md
-          - inep-fetcher: fontes/educacao/inep-fetcher.md
-          - capes-fetcher: fontes/educacao/capes-fetcher.md
-      - Empresas (Receita Federal):
-          - fontes/empresas/index.md
-          - rfb-cnpj-fetcher: fontes/empresas/rfb-cnpj-fetcher.md
-      - Mercado de Capitais (CVM e B3):
-          - fontes/mercado-capitais/index.md
-          - cvm-fetcher: fontes/mercado-capitais/cvm-fetcher.md
-          - b3-fetcher: fontes/mercado-capitais/b3-fetcher.md
-      - Política (TSE):
-          - fontes/politica/index.md
-          - tse-fetcher: fontes/politica/tse-fetcher.md
-      - Energia Elétrica (ONS):
-          - fontes/energia/index.md
-          - ons-fetcher: fontes/energia/ons-fetcher.md
-      - Transportes (ANTT e Infosiga):
-          - fontes/transportes/index.md
-          - antt-fetcher: fontes/transportes/antt-fetcher.md
-          - infosiga-fetcher: fontes/transportes/infosiga-fetcher.md
-      - Governo e Transparência (SP):
-          - fontes/governo/index.md
-          - transparencia-sp-fetcher: fontes/governo/transparencia-sp-fetcher.md
-      - Loterias (Caixa):
-          - fontes/loterias/index.md
-          - loterias-fetcher: fontes/loterias/loterias-fetcher.md
-      - Ipeadata (Ipea):
-          - fontes/ipea/index.md
-          - ipeadata-fetcher: fontes/ipea/ipeadata-fetcher.md
+      - registro:fetchers
 
   - Fundações:
       - fundacoes/index.md
@@ -230,7 +162,6 @@ plugins:
         educacao/inep-fetcher.md: fontes/educacao/inep-fetcher.md
         empresas/index.md: fontes/empresas/index.md
         empresas/rfb-cnpj-fetcher.md: fontes/empresas/rfb-cnpj-fetcher.md
-        fontes/ibge/sidra-fetcher.md: fontes/ibge/ibge-sidra-fetcher.md
         ibge/index.md: fontes/ibge/index.md
         ibge/sidra-fetcher.md: fontes/ibge/ibge-sidra-fetcher.md
         ibge/sidra-pipelines.md: fontes/ibge/sidra-pipelines.md
@@ -278,6 +209,7 @@ plugins:
 
 hooks:
   - hooks/llms_txt.py
+  - hooks/registro.py
   - hooks/dados_fetchers.py
 
 validation:
@@ -291,6 +223,103 @@ extra_javascript:
 
 extra:
   generator: false
+  # Grupos da seção "Fontes de dados" (nav e tabela de fontes/index.md). Quais
+  # coletores existem, e em que pasta, vem do registro (hooks/registro.py);
+  # aqui ficam só os textos e a ordem de apresentação.
+  #   pasta   docs_pasta do registro (a ordem da lista é a da nav e da tabela)
+  #   titulo  título do grupo na nav;  curto  nome do domínio na tabela
+  #   fonte   coluna "Fonte oficial" da tabela
+  #   ordem   opcional: ids de coletores e itens de nav literais (páginas que
+  #           não são coletor); os coletores não citados vão ao fim, por id
+  fontes_grupos:
+    - pasta: ibge
+      titulo: IBGE (Macroeconomia)
+      curto: IBGE (Macroeconomia)
+      fonte: IBGE SIDRA e Agregados
+      ordem:
+        - ibge-sidra
+        - sidra-sql:
+            - fontes/ibge/sidra-sql.md
+            - Referência: fontes/ibge/sidra-sql/referencia.md
+        - sidra-pipelines: fontes/ibge/sidra-pipelines.md
+    - pasta: tesouro
+      titulo: Tesouro (Finanças)
+      curto: Tesouro (Finanças)
+      fonte: Tesouro Nacional e PGFN
+      ordem: [tesouro-direto, rtn, pgfn]
+    - pasta: bcb
+      titulo: Banco Central (BCB)
+      curto: Banco Central
+      fonte: BCB SGS e microdados
+      ordem:
+        - bcb-sgs
+        - bcb-sgs-sql:
+            - fontes/bcb/bcb-sgs-sql.md
+            - Referência: fontes/bcb/bcb-sgs-sql/referencia.md
+        - bcb-sgs-pipelines: fontes/bcb/bcb-sgs-pipelines.md
+        - bcb-microdados
+    - pasta: trabalho
+      titulo: Mercado de Trabalho
+      curto: Mercado de Trabalho
+      fonte: MTE/PDET (CAGED, RAIS)
+    - pasta: comex
+      titulo: Comércio Exterior
+      curto: Comércio Exterior
+      fonte: MDIC/Comex Stat
+    - pasta: saude
+      titulo: Saúde Pública
+      curto: Saúde Pública
+      fonte: DATASUS
+    - pasta: clima
+      titulo: Clima & Meio Ambiente
+      curto: Clima
+      fonte: INMET BDMEP
+    - pasta: aviacao
+      titulo: Aviação Civil (ANAC)
+      curto: Aviação Civil
+      fonte: ANAC
+    - pasta: petroleo
+      titulo: Petróleo, Gás e Biocombustíveis (ANP)
+      curto: Petróleo, Gás e Biocombustíveis
+      fonte: ANP
+    - pasta: educacao
+      titulo: Educação (INEP)
+      curto: Educação
+      fonte: INEP e CAPES
+      ordem: [inep, capes]
+    - pasta: empresas
+      titulo: Empresas (Receita Federal)
+      curto: Empresas
+      fonte: Receita Federal
+    - pasta: mercado-capitais
+      titulo: Mercado de Capitais (CVM e B3)
+      curto: Mercado de Capitais
+      fonte: CVM e B3
+      ordem: [cvm, b3]
+    - pasta: politica
+      titulo: Política (TSE)
+      curto: Política
+      fonte: TSE
+    - pasta: energia
+      titulo: Energia Elétrica (ONS)
+      curto: Energia Elétrica
+      fonte: ONS
+    - pasta: transportes
+      titulo: Transportes (ANTT e Infosiga)
+      curto: Transportes
+      fonte: ANTT e Infosiga-SP (Detran-SP)
+    - pasta: governo
+      titulo: Governo e Transparência (SP)
+      curto: Governo e Transparência
+      fonte: Portal da Transparência de SP
+    - pasta: loterias
+      titulo: Loterias (Caixa)
+      curto: Loterias
+      fonte: Caixa Econômica Federal
+    - pasta: ipea
+      titulo: Ipeadata (Ipea)
+      curto: Ipeadata
+      fonte: Ipea
   analytics:
     provider: custom
     property: !ENV [GOOGLE_ANALYTICS_KEY, ""]

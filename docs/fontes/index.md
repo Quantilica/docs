@@ -9,6 +9,8 @@ Cada fonte pública tem um coletor próprio, instalado sob demanda com `quantili
 
 Antes de rodar um download grande, confira o [estado atual das fontes](../status.md).
 
+<!-- registro:inicio tabela-fontes -->
+
 | Domínio | Coletores | Fonte oficial |
 |---|---|---|
 | [IBGE (Macroeconomia)](ibge/index.md) | [ibge-sidra-fetcher](ibge/ibge-sidra-fetcher.md) | IBGE SIDRA e Agregados |
@@ -29,6 +31,8 @@ Antes de rodar um download grande, confira o [estado atual das fontes](../status
 | [Governo e Transparência](governo/index.md) | [transparencia-sp-fetcher](governo/transparencia-sp-fetcher.md) | Portal da Transparência de SP |
 | [Loterias](loterias/index.md) | [loterias-fetcher](loterias/loterias-fetcher.md) | Caixa Econômica Federal |
 | [Ipeadata](ipea/index.md) | [ipeadata-fetcher](ipea/ipeadata-fetcher.md) | Ipea |
+
+<!-- registro:fim tabela-fontes -->
 
 Os domínios do IBGE e do Banco Central também documentam os carregadores SQL e os catálogos de pipelines que vêm depois do coletor.
 
