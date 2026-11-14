@@ -172,7 +172,7 @@ A norma é dividida por assunto. Os números de seção (§) se mantêm em todas
 
 | Página | Seções | Quando consultar |
 |---|---|---|
-| Esta página | §1, §12, §13 | Arquitetura de dois níveis, vocabulário de subcomandos, `FetcherApp`, checklist e exemplos de referência |
+| Esta página | §1, §12, §13, [Nomes de fetchers](#nomes-de-fetchers) | Arquitetura de dois níveis, vocabulário de subcomandos, `FetcherApp`, checklist, exemplos de referência e a convenção de nomes dos fetchers |
 | [CLI nativa](cli-fetchers/cli-nativa.md) | [§2](cli-fetchers/cli-nativa.md) | Fetcher customizado com `cli.py` em `argparse` |
 | [Plugin](cli-fetchers/plugin.md) | [§3](cli-fetchers/plugin.md) | `plugin.py`, `setup_rich_logging`, comandos, extras opcionais, entry points |
 | [Padrões visuais Rich](cli-fetchers/rich.md) | [§4](cli-fetchers/rich.md) | Status, barras de progresso, tabelas, painéis e mensagens |
@@ -259,9 +259,53 @@ Use esta lista ao implementar ou revisar a CLI de um fetcher:
 
 ---
 
+## Nomes de fetchers
+
+O nome de um fetcher é uma decisão pública: aparece no comando (`quantilica install <id>`), na distribuição instalada, na URL do repositório e na página da fonte. Renomear depois custa um [renome em cadeia](publicacao.md#7-renomear-um-fetcher); acertar o nome na criação não custa nada.
+
+### Regra de base
+
+- O **id** do fetcher é o **nome do repositório sem `-fetcher`**. O repositório e a distribuição são `<id>-fetcher`; o módulo é `<id_com_sublinhado>_fetcher`. O teste de identidade de cada fetcher confere essa regra.
+- O id é kebab ASCII em minúsculas: `^[a-z0-9]+(-[a-z0-9]+)*$`. Sem acento, sem sublinhado, sem maiúscula, sem `-fetcher` no id.
+- O nome diz a **fonte** (quem publica o dado), não a tecnologia nem o produto do consumidor.
+
+### Fontes subnacionais
+
+| Escopo | Forma | Exemplos | Contraexemplos |
+|---|---|---|---|
+| **Estado** | `<fonte>-<uf>`; a UF é uma das 27 siglas, em minúsculas | `ssp-sp`, `tce-pe`, `transparencia-sp` | `ssp-saopaulo` (UF por extenso), `ssp_sp` (sublinhado), `sp-ssp` (UF no começo), `tce-xx` (`xx` não é UF) |
+| **Município, a fonte é a prefeitura** | `prefeitura-<município>-<produto>`; o município em slug kebab | `prefeitura-sp-dados`, `prefeitura-recife-dados-abertos` | `prefeitura-sp` (falta o produto), `sp-prefeitura-dados` |
+| **Município, a fonte não é a prefeitura** | `<fonte>-<município>-<uf>` | `ssp-campinas-sp` | `ssp-campinas` (falta a UF), `ssp-sp-campinas` (UF fora do fim) |
+| **Federal** | sem sufixo; `-federal` **só** quando existe um irmão subnacional de mesmo nome | `transparencia-federal` ao lado de `transparencia-sp` | `anac-federal` (a ANAC não tem irmão estadual; é `anac`) |
+
+Duas consequências práticas:
+
+- **A UF fecha o id.** Se o id tem mais de um segmento e o último tem 2 letras, esse segmento é uma UF. É o que permite distinguir `transparencia-sp` (estado de São Paulo) de um nome qualquer terminado em duas letras. O `b3` (um segmento só) não é afetado.
+- **`-federal` é a exceção, não o padrão.** O nome da fonte federal fica sem sufixo até aparecer o primeiro irmão subnacional; só então se acrescenta `-federal` (um [renome](publicacao.md#7-renomear-um-fetcher), com apelido). Sem irmão, a checagem emite um aviso.
+
+### Prefixo de órgão
+
+- Quando o órgão tem **vários fetchers com nome de produto genérico**, o id leva o órgão como prefixo: `ibge-sidra`, `ibge-microdados`, `bcb-sgs`, `bcb-microdados`. Assim os fetchers do mesmo órgão aparecem juntos nas listas ordenadas, e um nome de produto (SIDRA) não é lido como nome do órgão.
+- **O nome do sistema é uma alternativa legítima** quando ele é, por si só, o nome conhecido da fonte: `datasus`, `sigtap`, `rtn`. Esses não são candidatos a renome por falta de prefixo.
+- Um fetcher com nome de produto genérico **sem** irmão do mesmo órgão pode ficar sem prefixo; o prefixo entra com o segundo fetcher do órgão (um renome).
+
+### Checagem automática
+
+`infra/nomes_fetchers.py` (no repositório do workspace) valida a gramática, a regra da UF e o aviso de `-federal` sem irmão:
+
+```bash
+python3 infra/nomes_fetchers.py ssp-sp transparencia-federal
+python3 infra/nomes_fetchers.py --registro https://index.quantilica.com/registry.json
+```
+
+O script de renome (`infra/rename_fetcher.py`) recusa um id novo que a checagem reprova. O prefixo de órgão e o nome de sistema são decisões editoriais e ficam fora da máquina.
+
+---
+
 ## Saiba mais
 
 - [Arquitetura de CLI e Estratégia de Dependências](../conceitos/arquitetura.md#arquitetura-de-cli) — visão arquitetural de alto nível.
 - [quantilica-cli](../fundacoes/quantilica-cli.md) — como o hub descobre e monta os plugins.
 - [Padrões Práticos — UX de CLI](../conceitos/padroes.md#cli-ux) — padrão progresso vs. logs.
+- [Renomear um fetcher](publicacao.md#7-renomear-um-fetcher) — o contrato e o script de renome.
 - [Padronização de Versão](python.md) — como expor `__version__` em argparse e Typer.
