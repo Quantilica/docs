@@ -351,3 +351,73 @@ Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma al
 [ ] verificar: quantilica-index atualizado (~1 min após o dispatch)
 [ ] verificar: quantilica install <fonte> em venv limpa (<fonte> = chave do SOURCES_REGISTRY)
 ```
+
+---
+
+## 7. Renomear um fetcher
+
+Renomear é uma operação com contrato: o resultado é o mesmo em qualquer fetcher e quase tudo é derivado do registro público. A meta é tocar à mão **no máximo quatro repositórios** (o fetcher, a raiz do workspace, `quantilica-index` e, quando houver import, `quantilica-workers`); portal, dashboard, `quantilica-cli`, docs, site e skills não recebem commit. O nome novo segue a [convenção de nomes](cli-fetchers.md#nomes-de-fetchers).
+
+### Contrato
+
+1. **O id antigo vira apelido.** O `FetcherInfo` do fetcher passa a declarar o id novo e traz o antigo em `aliases`. A distribuição e o repositório antigos entram no `historico` da seção do fetcher em `quantilica-index/registro.toml`, com `distribution`, `repo`, `id` e `data`.
+2. **O que já está persistido continua válido sem migração manual.**
+    - URLs públicas: o apelido de fonte redireciona (301) para o id canônico.
+    - `catalog.dataset.fetcher_id` e `core.fetcher_run` no portal: o `registry sync` canoniza o id que virou apelido.
+    - Lake, `source_id`, `raw_subdir` e os nomes de cron **não mudam**. O script fixa o `source_id` antigo no `FetcherApp` (ele derivava do `name`), e `infra/fetchers.toml` mantém `cron_names` e `raw_subdir`. O registro guarda o mapa.
+3. **O inevitável é feito por script**: `infra/rename_fetcher.py`.
+4. **Sem módulo de compatibilidade.** O módulo e a distribuição antigos deixam de existir; o índice mantém as wheels antigas congeladas em `/simple/<id-antigo>-fetcher/` e o `historico` alimenta os redirects do docs, o `quantilica install` do apelido e as sondas do cli. A quebra entra no `CHANGELOG.md` do fetcher, em versão MINOR (pré-1.0) ou MAJOR.
+
+### O script
+
+```bash
+# ensaio (padrão): imprime o plano e não escreve nada
+python3 infra/rename_fetcher.py --de transparencia-sp --para ensaio-sp
+# aplica
+python3 infra/rename_fetcher.py --de transparencia-sp --para ensaio-sp --aplicar
+```
+
+| Opção | Efeito |
+|---|---|
+| `--aplicar` | escreve; sem ela é ensaio |
+| `--forcar` | trabalha mesmo com repositório git que tem arquivo rastreado alterado (o padrão é recusar) |
+| `--raiz DIR` | raiz do workspace (padrão: a do script) |
+| `--registro URL\|ARQUIVO` | registro público de origem (padrão: o do índice) |
+| `--data AAAA-MM-DD` | data do `historico` (padrão: hoje) |
+
+O script recusa um id novo fora da convenção, um id que já existe (id ou apelido) e uma árvore suja. É determinístico: a mesma árvore e a mesma `--data` produzem o mesmo resultado.
+
+**O que ele reescreve:**
+
+- no pacote do fetcher: `pyproject.toml` (nome, script, entry point `quantilica.fetchers`, URLs, `packages`), o diretório do módulo (`git mv`), os imports, `FetcherApp(name=)`, `producer=`, README, docs e testes, e acrescenta a entrada de quebra no `CHANGELOG.md`;
+- no `FetcherInfo`: o id novo, o antigo em `aliases`, e o `source_id` fixado no valor antigo;
+- em `infra/fetchers.toml`: a seção renomeada, com `cron_names` e `raw_subdir` mantidos;
+- em `quantilica-index/registro.toml`: a seção renomeada e a entrada no `historico`;
+- nos outros repositórios do workspace: imports do módulo antigo em `.py` e a dependência em `pyproject.toml`;
+- nas listas geradas (`pyproject.toml`, `bootstrap.sh`, `bootstrap.ps1`, `.gitignore`, tabelas do `README.md` e do `AGENTS.md`, matriz do CI de integração): chama `registry_build.py --listas` com o registro já com o id novo.
+
+**O que ele imprime e não faz:** a lista dos repositórios tocados (a métrica da meta), os *residuais* (menções ao nome antigo que ficam para revisão: muitas são dado persistido, como `SOURCE_ID`, a chave de `quantilica.lake` e `/data/<id>`, que devem ficar) e o checklist abaixo.
+
+### Passos fora do git
+
+Em ordem, depois de revisar o ensaio, aplicar e commitar por repositório:
+
+```text
+[ ] testes e lint do fetcher; commit em cada repositório tocado (commits separados da release)
+[ ] release MINOR do fetcher (o índice precisa da wheel nova antes do registro)
+[ ] gh repo rename <id-novo>-fetcher --repo Quantilica/<id-antigo>-fetcher
+    (nunca crie outro repositório com o nome antigo: quebra o redirecionamento do GitHub)
+[ ] git remote set-url origin https://github.com/Quantilica/<id-novo>-fetcher.git
+    em todas as máquinas que têm o clone
+[ ] mv <id-antigo>-fetcher <id-novo>-fetcher na raiz do workspace de cada máquina
+[ ] uv sync --all-packages --all-extras  (um `uv sync` puro remove o cli e os fetchers do ambiente)
+[ ] workflow_dispatch do quantilica-index: publica o registro com o id novo e /simple/<id-novo>-fetcher/
+[ ] registry sync no portal (ou esperar o timer diário): canoniza o fetcher_id
+[ ] registry_build.py --check --listas e fetchers_ops.py check contra o registro publicado
+[ ] ambientes do lake que instalam o pacote: trocar a distribuição antiga pela nova
+```
+
+### O que não é renome de fetcher
+
+Vocabulário de produto (o nome SIDRA, `/hub/ibge`, rotas, agendas, schemas), `source_id`, diretórios do lake e nomes de cron persistidos ficam como estão: nada se renomeia em disco nem em banco.
+
