@@ -67,6 +67,11 @@ Cada conjunto pertence a um grupo; `quantilica cvm list` mostra os arquivos de c
 | FII, FIDC, FIAGRO e FIP (`estruturados`) | `fii-inf-mensal`, `fii-inf-trim`, `fii-inf-anual`, `fii-dfin`, `fidc-inf-mensal`, `fiagro-inf-mensal`, `fip-inf` |
 | Ofertas e securitização (`ofertas`) | `ofertas`, `securit-cra`, `securit-cri` |
 
+!!! note "Debêntures e informes de FIAGRO"
+
+    - **Debêntures**: não constituem uma árvore de dados separada na CVM (`DEBENTURES/` não existe no servidor de dados abertos). As emissões e ofertas de debêntures são cobertas pelo grupo `ofertas` (`oferta_distribuicao.zip`, cobrindo ritos CVM 400, 476 e 160). Para negociação secundária de debêntures, a fonte de referência é a ANBIMA e a B3.
+    - **FIAGRO**: a CVM publica exclusivamente informes mensais (`FIAGRO/DOC/INF_MENSAL` desde maio de 2025, no grupo `fiagro-inf-mensal`), inexistindo informe trimestral oficial publicado pela autarquia.
+
 Passe um macro-alias no lugar dos grupos individuais para baixar a área inteira:
 
 ```bash
