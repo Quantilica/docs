@@ -169,6 +169,12 @@ def organiza(fetchers: list[dict], grupos: list[dict]) -> list[dict]:
         for entrada in g.get("ordem", []):
             if isinstance(entrada, str):
                 if entrada not in membros:
+                    # um id renomeado segue valendo na `ordem` pelo apelido
+                    entrada = next(
+                        (k for k, m in membros.items() if entrada in m.get("aliases", [])),
+                        entrada,
+                    )
+                if entrada not in membros:
                     raise RegistroError(
                         f"`ordem` de `{g['pasta']}` cita `{entrada}`, que não está na pasta"
                     )

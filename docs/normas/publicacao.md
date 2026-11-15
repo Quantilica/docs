@@ -356,7 +356,7 @@ Quando uma funcionalidade afetar múltiplos pacotes interdependentes (ex: uma al
 
 ## 7. Renomear um fetcher
 
-Renomear é uma operação com contrato: o resultado é o mesmo em qualquer fetcher e quase tudo é derivado do registro público. A meta é tocar à mão **no máximo quatro repositórios** (o fetcher, a raiz do workspace, `quantilica-index` e, quando houver import, `quantilica-workers`); portal, dashboard, `quantilica-cli`, docs, site e skills não recebem commit. O nome novo segue a [convenção de nomes](cli-fetchers.md#nomes-de-fetchers).
+Renomear é uma operação com contrato: o resultado é o mesmo em qualquer fetcher e quase tudo é derivado do registro público. A meta é tocar à mão **no máximo quatro repositórios** (o fetcher, a raiz do workspace, `quantilica-index` e, quando houver import, `quantilica-workers`); portal, dashboard, `quantilica-cli`, site e skills não recebem commit. O docs recebe um commit, mas **gerado pelo script**: ele move a página e regera os blocos, sem edição à mão. Por isso o script lista o docs entre os repositórios tocados. O nome novo segue a [convenção de nomes](cli-fetchers.md#nomes-de-fetchers).
 
 ### Contrato
 
@@ -393,7 +393,8 @@ O script recusa um id novo fora da convenção, um id que já existe (id ou apel
 - no `FetcherInfo`: o id novo, o antigo em `aliases`, e o `source_id` fixado no valor antigo;
 - em `infra/fetchers.toml`: a seção renomeada, com `cron_names` e `raw_subdir` mantidos;
 - em `quantilica-index/registro.toml`: a seção renomeada e a entrada no `historico`;
-- nos outros repositórios do workspace: imports do módulo antigo em `.py` e a dependência em `pyproject.toml`;
+- nos outros repositórios do workspace: imports do módulo antigo em `.py` e a dependência em `pyproject.toml` (só nas listas de dependências e em `[tool.uv.sources]`; comentários e descrições não mudam);
+- no docs: `git mv` de `docs/fontes/<pasta>/<distribuição-antiga>.md` para a página nova, a troca da distribuição, do módulo e do comando no texto da página, os links `<distribuição-antiga>.md` do `index.md` da pasta e os blocos gerados (`hooks/registro.py --escrever`, lendo o registro com o id novo; um id citado na `ordem` do `properdocs.yml` segue valendo pelo apelido), de modo que `tools/check_pages.py` passa sem edição à mão. O redirect da página antiga para a nova vem do `historico`, sem edição;
 - nas listas geradas (`pyproject.toml`, `bootstrap.sh`, `bootstrap.ps1`, `.gitignore`, tabelas do `README.md` e do `AGENTS.md`, matriz do CI de integração): chama `registry_build.py --listas` com o registro já com o id novo.
 
 **O que ele imprime e não faz:** a lista dos repositórios tocados (a métrica da meta), os *residuais* (menções ao nome antigo que ficam para revisão: muitas são dado persistido, como `SOURCE_ID`, a chave de `quantilica.lake` e `/data/<id>`, que devem ficar) e o checklist abaixo.
