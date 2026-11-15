@@ -363,7 +363,8 @@ Renomear é uma operação com contrato: o resultado é o mesmo em qualquer fetc
 1. **O id antigo vira apelido.** O `FetcherInfo` do fetcher passa a declarar o id novo e traz o antigo em `aliases`. A distribuição e o repositório antigos entram no `historico` da seção do fetcher em `quantilica-index/registro.toml`, com `distribution`, `repo`, `id` e `data`.
 2. **O que já está persistido continua válido sem migração manual.**
     - URLs públicas: o apelido de fonte redireciona (301) para o id canônico.
-    - `catalog.dataset.fetcher_id` e `core.fetcher_run` no portal: o `registry sync` canoniza o id que virou apelido.
+    - `catalog.dataset.fetcher_id` e `core.fetcher_run` no portal: o `registry sync` canoniza o id que virou apelido (`fetcher_id` é a identidade do fetcher).
+    - Fichas do catálogo (`catalog.source`, `catalog.dataset` e filhos): o comando `catalog-canonizar` do portal (o `deploy.sh` o roda depois do `registry sync`) aplica a regra do `aliases.py`. Fetcher **fora** do `hub_catalog.json` tem as fichas renomeadas para o id novo, com fusão se a ficha nova já existir; fetcher **do** hub (`rtn`, `anp`, `bcb-sgs`...) mantém a fonte do hub, e o apelido não a renomeia. O `registry sync` do workers não toca nas chaves do catálogo, porque só o portal conhece o hub.
     - Lake, `source_id`, `raw_subdir` e os nomes de cron **não mudam**. O script fixa o `source_id` antigo no `FetcherApp` (ele derivava do `name`), e `infra/fetchers.toml` mantém `cron_names` e `raw_subdir`. O registro guarda o mapa.
 3. **O inevitável é feito por script**: `infra/rename_fetcher.py`.
 4. **Sem módulo de compatibilidade.** O módulo e a distribuição antigos deixam de existir; o índice mantém as wheels antigas congeladas em `/simple/<id-antigo>-fetcher/` e o `historico` alimenta os redirects do docs, o `quantilica install` do apelido e as sondas do cli. A quebra entra no `CHANGELOG.md` do fetcher, em versão MINOR (pré-1.0) ou MAJOR.
@@ -406,14 +407,19 @@ Em ordem, depois de revisar o ensaio, aplicar e commitar por repositório:
 ```text
 [ ] testes e lint do fetcher; commit em cada repositório tocado (commits separados da release)
 [ ] release MINOR do fetcher (o índice precisa da wheel nova antes do registro)
+[ ] workflow_dispatch do quantilica-index: publica o registro com o id novo e /simple/<id-novo>-fetcher/
+[ ] registry sync no servidor do portal LOGO DEPOIS da publicação e ANTES de instalar a versão nova nas máquinas que rodam os fetchers:
+    canoniza o fetcher_id e faz o portal conhecer o apelido. Se uma máquina rodar o catalog sync com o id
+    novo antes disso, nasce uma ficha nova ao lado da antiga e a canonização do catálogo passa a fundir.
+[ ] catálogo do portal: o deploy roda o catalog-canonizar; sem deploy, rode
+    docker compose run --rm --no-deps -T quantilica-portal python -m quantilica_portal.cli catalog-canonizar --dry-run
+    e depois sem --dry-run (fonte do hub não muda; fora do hub vira o id novo)
 [ ] gh repo rename <id-novo>-fetcher --repo Quantilica/<id-antigo>-fetcher
     (nunca crie outro repositório com o nome antigo: quebra o redirecionamento do GitHub)
 [ ] git remote set-url origin https://github.com/Quantilica/<id-novo>-fetcher.git
     em todas as máquinas que têm o clone
 [ ] mv <id-antigo>-fetcher <id-novo>-fetcher na raiz do workspace de cada máquina
 [ ] uv sync --all-packages --all-extras  (um `uv sync` puro remove o cli e os fetchers do ambiente)
-[ ] workflow_dispatch do quantilica-index: publica o registro com o id novo e /simple/<id-novo>-fetcher/
-[ ] registry sync no portal (ou esperar o timer diário): canoniza o fetcher_id
 [ ] registry_build.py --check --listas e fetchers_ops.py check contra o registro publicado
 [ ] ambientes do lake que instalam o pacote: trocar a distribuição antiga pela nova
 ```
