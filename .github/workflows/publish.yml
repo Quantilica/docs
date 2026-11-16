@@ -23,8 +23,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages-${{ github.event_name == 'pull_request' && github.ref || 'main' }}"
@@ -35,10 +33,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # O plugin de data de revisão lê o histórico do git.
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Bibliotecas do plugin social (cards Open Graph)
         run: |
@@ -46,7 +45,7 @@ jobs:
           sudo apt-get install -y -qq libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v10.3.2
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           python-version: "3.13"
           enable-cache: true
@@ -71,7 +70,7 @@ jobs:
       # Excluídos: portais gov.br e BCB que respondem 404/502 a clientes sem navegador
       # ou ficam fora do ar por horas; os links foram conferidos à mão.
       - name: Conferir links externos (aviso, não bloqueia)
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         continue-on-error: true
         with:
           args: >-
@@ -84,13 +83,16 @@ jobs:
           fail: false
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: "./site"
 
   deploy:
     if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -98,4 +100,23 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  zizmor:
+    name: Audit de workflows (zizmor)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: false
+
+      - name: Audit workflows with zizmor
+        run: uvx zizmor --no-online-audits --min-severity high .github/workflows
