@@ -365,7 +365,7 @@ Renomear é uma operação com contrato: o resultado é o mesmo em qualquer fetc
     - URLs públicas: o apelido de fonte redireciona (301) para o id canônico.
     - `catalog.dataset.fetcher_id` e `core.fetcher_run` no portal: o `registry sync` canoniza o id que virou apelido (`fetcher_id` é a identidade do fetcher).
     - Fichas do catálogo (`catalog.source`, `catalog.dataset` e filhos): o comando `catalog-canonizar` do portal (o `deploy.sh` o roda depois do `registry sync`) aplica a regra do `aliases.py`. Fetcher **fora** do `hub_catalog.json` tem as fichas renomeadas para o id novo, com fusão se a ficha nova já existir; fetcher **do** hub (`rtn`, `anp`, `bcb-sgs`...) mantém a fonte do hub, e o apelido não a renomeia. O `registry sync` do workers não toca nas chaves do catálogo, porque só o portal conhece o hub.
-    - Lake, `source_id`, `raw_subdir` e os nomes de cron **não mudam**. O script fixa o `source_id` antigo no `FetcherApp` (ele derivava do `name`), e `infra/fetchers.toml` mantém `cron_names` e `raw_subdir`. O registro guarda o mapa.
+    - Os **dados em disco acompanham o id novo**: `source_id`, `raw_subdir` e os diretórios do bruto (`/data/<id>`), do Drive e do lake passam ao id novo. O script grava o `source_id` novo no `FetcherApp` e o `raw_subdir` novo em `infra/fetchers.toml`, e imprime o passo de migração dos diretórios. Os manifests já gravados não são reescritos: o `source_id` antigo neles é apelido do novo. Os nomes de cron **não mudam** (`cron_names` fica).
 3. **O inevitável é feito por script**: `infra/rename_fetcher.py`.
 4. **Sem módulo de compatibilidade.** O módulo e a distribuição antigos deixam de existir; o índice mantém as wheels antigas congeladas em `/simple/<id-antigo>-fetcher/` e o `historico` alimenta os redirects do docs, o `quantilica install` do apelido e as sondas do cli. A quebra entra no `CHANGELOG.md` do fetcher, em versão MINOR (pré-1.0) ou MAJOR.
 
@@ -391,14 +391,14 @@ O script recusa um id novo fora da convenção, um id que já existe (id ou apel
 **O que ele reescreve:**
 
 - no pacote do fetcher: `pyproject.toml` (nome, script, entry point `quantilica.fetchers`, URLs, `packages`), o diretório do módulo (`git mv`), os imports, `FetcherApp(name=)`, `producer=`, README, docs e testes, e acrescenta a entrada de quebra no `CHANGELOG.md`;
-- no `FetcherInfo`: o id novo, o antigo em `aliases`, e o `source_id` fixado no valor antigo;
-- em `infra/fetchers.toml`: a seção renomeada, com `cron_names` e `raw_subdir` mantidos;
+- no `FetcherInfo`: o id novo e o antigo em `aliases`; o `source_id` passa ao id novo;
+- em `infra/fetchers.toml`: a seção renomeada e o `raw_subdir` com o id novo, com `cron_names` mantidos;
 - em `quantilica-index/registro.toml`: a seção renomeada e a entrada no `historico`;
 - nos outros repositórios do workspace: imports do módulo antigo em `.py` e a dependência em `pyproject.toml` (só nas listas de dependências e em `[tool.uv.sources]`; comentários e descrições não mudam);
 - no docs: `git mv` de `docs/fontes/<pasta>/<distribuição-antiga>.md` para a página nova, a troca da distribuição, do módulo e do comando no texto da página, os links `<distribuição-antiga>.md` do `index.md` da pasta e os blocos gerados (`hooks/registro.py --escrever`, lendo o registro com o id novo; um id citado na `ordem` do `properdocs.yml` segue valendo pelo apelido), de modo que `tools/check_pages.py` passa sem edição à mão. O redirect da página antiga para a nova vem do `historico`, sem edição;
 - nas listas geradas (`pyproject.toml`, `bootstrap.sh`, `bootstrap.ps1`, `.gitignore`, tabelas do `README.md` e do `AGENTS.md`, matriz do CI de integração): chama `registry_build.py --listas` com o registro já com o id novo.
 
-**O que ele imprime e não faz:** a lista dos repositórios tocados (a métrica da meta), os *residuais* (menções ao nome antigo que ficam para revisão: muitas são dado persistido, como `SOURCE_ID`, a chave de `quantilica.lake` e `/data/<id>`, que devem ficar) e o checklist abaixo.
+**O que ele imprime e não faz:** a lista dos repositórios tocados (a métrica da meta), os *residuais* (menções ao nome antigo que ficam para revisão: muitas são dado persistido, como os manifests já gravados e os nomes de cron, que devem ficar) e o checklist abaixo.
 
 ### Passos fora do git
 
@@ -419,6 +419,8 @@ Em ordem, depois de revisar o ensaio, aplicar e commitar por repositório:
 [ ] git remote set-url origin https://github.com/Quantilica/<id-novo>-fetcher.git
     em todas as máquinas que têm o clone
 [ ] mv <id-antigo>-fetcher <id-novo>-fetcher na raiz do workspace de cada máquina
+[ ] dados em disco: mover /data/<id-antigo> para /data/<id-novo> em cada máquina que coleta,
+    e as pastas do Drive (quantilica/<id-antigo>, quantilica-lake/<id-antigo>) para o id novo
 [ ] uv sync --all-packages --all-extras  (um `uv sync` puro remove o cli e os fetchers do ambiente)
 [ ] registry_build.py --check --listas e fetchers_ops.py check contra o registro publicado
 [ ] ambientes do lake que instalam o pacote: trocar a distribuição antiga pela nova
@@ -426,5 +428,5 @@ Em ordem, depois de revisar o ensaio, aplicar e commitar por repositório:
 
 ### O que não é renome de fetcher
 
-Vocabulário de produto (o nome SIDRA, `/hub/ibge`, rotas, agendas, schemas), `source_id`, diretórios do lake e nomes de cron persistidos ficam como estão: nada se renomeia em disco nem em banco.
+Vocabulário de produto (o nome SIDRA, `/hub/ibge`, rotas, agendas, schemas) e nomes de cron persistidos ficam como estão: nada se renomeia em banco. Os dados em disco (`source_id`, bruto, Drive e lake) seguem o id canônico do fetcher (ADR `2026-11-19-layout-bruto-ibge-sidra`).
 
