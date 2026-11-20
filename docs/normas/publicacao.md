@@ -411,7 +411,7 @@ Em ordem, depois de revisar o ensaio, aplicar e commitar por repositório:
 [ ] release MINOR do fetcher (o índice precisa da wheel nova antes do registro)
 [ ] workflow_dispatch do quantilica-index: publica o registro com o id novo e /simple/<id-novo>-fetcher/
 [ ] registry sync no servidor do portal LOGO DEPOIS da publicação e ANTES de instalar a versão nova nas máquinas que rodam os fetchers:
-    canoniza o fetcher_id e faz o portal conhecer o apelido. Se uma máquina rodar o catalog sync com o id
+    canoniza o fetcher_id e faz o portal conhecer o apelido. Se uma máquina sincronizar o catálogo com o id
     novo antes disso, nasce uma ficha nova ao lado da antiga e a canonização do catálogo passa a fundir.
 [ ] catálogo do portal: o deploy roda o catalog-canonizar; sem deploy, rode
     docker compose run --rm --no-deps -T quantilica-portal python -m quantilica_portal.cli catalog-canonizar --dry-run
