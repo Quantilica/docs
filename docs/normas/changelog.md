@@ -130,11 +130,17 @@ A mesma regra vale para **README** e para as **mensagens de commit**: o históri
 git é público e permanente, e reescrevê-lo depois exige _force-push_.
 
 **Verificação automática.** Todo repositório público tem o workflow
-`.github/workflows/public-hygiene.yml`, idêntico em todos eles. Ele roda em
+`.github/workflows/public-hygiene.yml`, com a mesma lógica em todos eles. Ele roda em
 `push`, em `pull_request` e sob demanda, e falha o CI quando encontra termos
 internos em `CHANGELOG.md`, `README*` e `docs/changelog.md` — e, nos PRs, nas
-mensagens dos commits. A lista de termos fica no próprio arquivo; ao alterá-la,
-altere em todos os repositórios. Falso positivo legítimo: termine a linha com
+mensagens dos commits. A lista de termos **não é pública**: listá-la num
+repositório público revelaria justamente o que ela protege. Ela vive num segredo
+de organização do GitHub (`HYGIENE_TERMS`), lido pelo workflow, e a fonte
+editável fica em arquivo privado da skill `quantilica-ci`. Para alterá-la, edite
+esse arquivo e republique o segredo com `driver.py hygiene-secret`; nenhum
+repositório precisa de commit. Em PRs de _forks_ o segredo não existe: o job avisa
+e passa, e a verificação roda quando o mantenedor integra. Falso positivo
+legítimo: termine a linha com
 `<!-- hygiene-ok -->`. O workflow é uma rede de segurança, não um substituto
 para o teste prático acima: ele só conhece os termos que já vazaram.
 

@@ -128,8 +128,10 @@ Se o repo tem testes que exigem um extra opcional do próprio pacote, use a vari
 
 ### `public-hygiene.yml` — termos internos (todos os repositórios públicos)
 
-Workflow idêntico em todos os repositórios públicos, independente do fluxo de
-publicação. Veta termos internos (planos, decisões, repositórios privados,
+Mesma lógica em todos os repositórios públicos (a variação é só o _pinning_ do
+checkout), independente do fluxo de publicação. A lista de termos não está no
+arquivo: o workflow a lê do segredo de organização `HYGIENE_TERMS`, mantido a
+partir de um arquivo privado da skill `quantilica-ci`. Veta termos internos (planos, decisões, repositórios privados,
 infraestrutura) em `CHANGELOG.md`, `README*` e nas mensagens de commit dos PRs. A
 regra e as categorias estão em [Padronização de CHANGELOG.md](changelog.md#51-o-que-um-changelog-nunca-cita);
 deve estar verde no `main` antes de criar a tag, como o `test.yml`.
