@@ -15,7 +15,7 @@ O ecossistema adota uma arquitetura em três camadas fundamentais para o process
 
 1. **Camada Bruta (`raw` — Imutável, "Nada se Apaga")**: Armazena os artefatos originais obtidos diretamente dos portais governamentais (arquivos compactados em formatos como `.zip` ou `.7z`, tabelas em `.csv`, `.txt`, `.dbf`, entre outros). Opera em regime estritamente *append-only*: cada versão publicada pela fonte é gravada com seu carimbo `@timestamp` (`{base}@{YYYYMMDD}.{ext}`) e acompanhada de um manifesto de proveniência (`.manifest.json`) contendo a URL de origem, o carimbo de data/hora do download e o hash SHA-256. Republicações ou retificações governamentais geram novos arquivos brutos lado a lado, sem jamais apagar ou sobrescrever versões históricas anteriores. A seleção da versão vigente para conversão ao Lake é feita deterministicamente por `select_current()` (`quantilica.core.lake`).
 2. **Camada de Lake (`lake`)**: Armazena os dados descompactados, normalizados e convertidos para arquivos colunares Parquet particionados segundo o layout Hive. É projetada para análise massiva em disco local ou armazenamento compartilhado.
-3. **Camada de Serviço / Marts (`marts` e PostgreSQL)**: Armazena exclusivamente séries consolidadas, agregações analíticas e tabelas de consulta direta necessárias para aplicações e interfaces web.
+3. **Camada de Serviço (PostgreSQL)**: Armazena exclusivamente séries consolidadas, agregados servidos (calculados em DuckDB sobre o Lake e publicados no PostgreSQL só quando uma aplicação os serve) e tabelas de consulta direta necessárias para aplicações e interfaces web.
 
 ### Princípio da separação de carga
 
