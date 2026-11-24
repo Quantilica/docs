@@ -164,6 +164,17 @@ As fontes públicas brasileiras distribuem-se em **7 arquétipos canônicos de t
 | **6. Serviços geoespaciais OGC WFS 2.0** | `GetFeature` paginado (`count`, `startIndex`, `sortBy`) | GeoServer fundiário/ambiental (INCRA, CAR, ANA) | Fatiamento por UF/`BBOX` + conversão para `geom_wkb` (WKB) no Lake |
 | **7. Endpoints dinâmicos sem `HEAD`** | `GET`/`POST` sem `Content-Length` ou `Last-Modified` | `anp-fetcher`, `inep-fetcher`, exportadores legados | `head_fallback_get` (`Range: bytes=0-0`) ou deduplicação SHA-256 + `check_payload` |
 
+### 1.6 Mudar o esquema de nomes do bruto
+
+Um fetcher que muda o esquema de nomes dos arquivos que grava (diretório, prefixo, sufixo de data, forma do `<dataset_id>`) **publica o mapa antigo→novo** junto da versão que muda o esquema. O mapa lista, para cada versão já coletada, o caminho antigo e o caminho novo do mesmo conteúdo (mesmo `sha256`).
+
+- **O mapa vira alias no ledger.** O registro de ingestão passa a conhecer os nomes novos como alias dos conteúdos já registrados. Sem isso, a primeira coleta com o esquema novo trata cada arquivo como conteúdo inédito: baixa, grava e envia de novo o acervo inteiro.
+- **Nada de renomear arquivo à mão.** Quem aplica o mapa é o ledger; renomear no disco, no espelho ou no lake de forma avulsa desalinha as três cópias do mesmo bruto. A versão antiga continua acessível pelo nome antigo.
+- **A quebra entra no `CHANGELOG.md` do fetcher** (MINOR em 0.x, MAJOR depois), com o esquema antigo, o novo e onde fica o mapa. Um fetcher que não traz o mapa não muda o esquema.
+- **Mudança de id canônico não é mudança de esquema.** O renome de um fetcher (id, diretório do bruto e do lake) segue o [§7 de Publicação](publicacao.md#7-renomear-um-fetcher), que move as pastas inteiras e deixa os nomes dos arquivos como estão.
+
+Exemplo: o `ibge-sidra-fetcher` 0.13.0 (ADR `2026-11-19-layout-bruto-ibge-sidra`) trocou o NDJSON mesclado por um arquivo por consulta.
+
 ---
 
 ## Mapa da norma
@@ -172,7 +183,7 @@ A norma é dividida por assunto. Os números de seção (§) se mantêm em todas
 
 | Página | Seções | Quando consultar |
 |---|---|---|
-| Esta página | §1, §12, §13, [Nomes de fetchers](#nomes-de-fetchers) | Arquitetura de dois níveis, vocabulário de subcomandos, `FetcherApp`, checklist, exemplos de referência e a convenção de nomes dos fetchers |
+| Esta página | §1 (inclui §1.6, mudança do esquema de nomes), §12, §13, [Nomes de fetchers](#nomes-de-fetchers) | Arquitetura de dois níveis, vocabulário de subcomandos, `FetcherApp`, checklist, exemplos de referência e a convenção de nomes dos fetchers |
 | [CLI nativa](cli-fetchers/cli-nativa.md) | [§2](cli-fetchers/cli-nativa.md) | Fetcher customizado com `cli.py` em `argparse` |
 | [Plugin](cli-fetchers/plugin.md) | [§3](cli-fetchers/plugin.md) | `plugin.py`, `setup_rich_logging`, comandos, extras opcionais, entry points |
 | [Padrões visuais Rich](cli-fetchers/rich.md) | [§4](cli-fetchers/rich.md) | Status, barras de progresso, tabelas, painéis e mensagens |

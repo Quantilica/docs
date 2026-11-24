@@ -392,8 +392,8 @@ O script recusa um id novo fora da convenção, um id que já existe (id ou apel
 
 **O que ele reescreve:**
 
-- no pacote do fetcher: `pyproject.toml` (nome, script, entry point `quantilica.fetchers`, URLs, `packages`), o diretório do módulo (`git mv`), os imports, `FetcherApp(name=)`, `producer=`, README, docs e testes, e acrescenta a entrada de quebra no `CHANGELOG.md`;
-- no `FetcherInfo`: o id novo e o antigo em `aliases`; o `source_id` passa ao id novo;
+- no pacote do fetcher: `pyproject.toml` (nome, script, entry points `quantilica.fetchers` e `quantilica.lake`, URLs, `packages`), o diretório do módulo (`git mv`), os imports, `FetcherApp(name=)`, `producer=`, README, docs e testes, e acrescenta a entrada de quebra no `CHANGELOG.md`;
+- no `FetcherInfo`: o id novo e o antigo em `aliases`; o `source_id` passa ao id novo; o mesmo vale para o lake: `SOURCE_ID = "<id>"` dos módulos do pacote (ex.: `lake.py`) e a chave do entry point `quantilica.lake`;
 - em `infra/fetchers.toml`: a seção renomeada e o `raw_subdir` com o id novo, com `cron_names` mantidos;
 - em `quantilica-index/registro.toml`: a seção renomeada e a entrada no `historico`;
 - nos outros repositórios do workspace: imports do módulo antigo em `.py` e a dependência em `pyproject.toml` (só nas listas de dependências e em `[tool.uv.sources]`; comentários e descrições não mudam);

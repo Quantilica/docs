@@ -51,6 +51,23 @@ quantilica ibge-sidra check 1620 -o ./data
 quantilica ibge-sidra sync 1620 -o ./data
 ```
 
+### Layout do bruto
+
+A partir da 0.13.0, o `sync` grava **um arquivo por consulta** ao endpoint `/values`, com a resposta crua do servidor (sem mesclar e sem NDJSON):
+
+```text
+<raiz>/t-<id>/t-<id>_p-<periodo>_f-<formato>_n<nivel>-<locs>_v-<vars>[_c<id>-<cats>...]@AAAAMMDD.json
+<raiz>/t-<id>/metadados@AAAAMMDD.json
+<raiz>/indice_pesquisas@AAAAMMDD.json
+```
+
+- O miolo do nome é o caminho da URL do `/values`; `@AAAAMMDD` é a data de modificação do período no SIDRA (`@00010101` quando a API não informa). Uma revisão do IBGE gera arquivo novo e o antigo fica.
+- O frescor é a existência do arquivo com a data da API: o `check` e o `sync` pulam o que já existe.
+- Listas longas (nome com mais de 200 caracteres) viram `h` + 8 hex do sha256 da lista ordenada; a lista completa fica em `metadata.parametros` do sidecar `.manifest.json`.
+- `metadados@AAAAMMDD.json` e `indice_pesquisas@AAAAMMDD.json` levam a data da coleta e só são regravados quando o sha256 muda.
+- O `source_id` e o diretório de saída padrão são `ibge-sidra` (`/data/ibge-sidra`).
+- Na leitura, `ibge_sidra_fetcher.reader.iter_dados_tabela(raiz, id)` junta os pedaços de uma tabela.
+
 ---
 
 ## Cookbook Analítico: IBGE com Polars
