@@ -11,7 +11,7 @@ Ele **substitui** os motores `sidra-sql` e `bcb-sgs-sql`, que seguem documentado
 
 | | |
 |---|---|
-| **Versão** | 0.4.0 |
+| **Versão** | 0.4.1 |
 | **Banco** | PostgreSQL (driver `psycopg` 3, carga por `COPY`) |
 | **Fontes** | 15 adaptadores: ANAC, ANP, B3, BCB-SGS, Comex, CVM, DATASUS, INEP, INMET, PDET, RFB-CNPJ, RTN, SIDRA, Tesouro Direto e TSE |
 | **Distribuição** | índice da Quantilica (não está no PyPI) |
