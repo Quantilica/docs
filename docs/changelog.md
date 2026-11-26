@@ -7,6 +7,10 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-11 — `series_metadata` do BCB SGS criada pelo `quantilica-sql`
+
+- **Corrigido (`quantilica-sql` 0.4.1):** o `load bcb-sgs --all` carrega também os metadados do bruto do `bcb-sgs-fetcher` e cria `series_metadata`, a tabela que as SQL de `macro/*` e `setorial/*` do [quantilica-pipelines](fundacoes/quantilica-pipelines.md) juntam a `series_data`. Antes, em banco novo, `quantilica sql run macro/...` falhava com `relation "series_metadata" does not exist`. Ver [BCB SGS no quantilica-sql](fundacoes/quantilica-sql.md#bcb-sgs-bcb_sgs).
+
 ## 2026-11 — Carga do SIDRA no `quantilica-sql` (modelo, revisões e consulta no tempo)
 
 - **Documentado:** a seção [SIDRA do quantilica-sql](fundacoes/quantilica-sql.md#sidra-ibge_sidra) descreve o modelo estrela em formato longo, a leitura do papel de cada dimensão a partir da URL e dos metadados (nunca da posição), a vigência das revisões por versão de arquivo, `--historico`, `--force` e `--recriar`, e a função `dados_em`. A seção BCB SGS descreve `load bcb-sgs` (pasta e `--all`).

@@ -199,16 +199,34 @@ A versão 0.3.x guardava só uma tabela `dados` com os códigos crus (a "dimens�
 ## BCB SGS (`bcb_sgs`)
 
 ```bash
-# bruto do bcb-sgs-fetcher: <raiz>/data/series_<id>@AAAAMMDDTHHMMSS.json
-quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --all       # o snapshot mais recente de cada série
-quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --table 433  # uma série
+# bruto do bcb-sgs-fetcher:
+#   <raiz>/data/series_<id>@AAAAMMDDTHHMMSS.json              observações
+#   <raiz>/bcb-sgs_AAAA-MM/metadata/<id com 6 dígitos>.json    metadados da série
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --all       # observações e metadados de todas as séries
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --table 433  # uma série (dados e metadados)
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto>/bcb-sgs_2026-11/metadata/000433.json  # só os metadados de uma série
 ```
 
-`bcb-sgs` é o nome da fonte e `bcb` é o domínio; os dois aceitam. A tabela `bcb_sgs.series_data` (`series_id`, `date`, `date_end`, `value`, `ativo`, `loaded_at`) recebe a revisão como no `bcb-sgs-sql`: uma carga desativa a linha anterior só onde o valor difere e insere a nova; recarregar um snapshot idêntico não muda nada; `--force` recarrega. O valor `0` é carregado como zero.
+`bcb-sgs` é o nome da fonte e `bcb` é o domínio; os dois aceitam. O `load` cria e preenche duas tabelas:
 
-!!! warning "`series_metadata` não é criada pelo `load`"
+| Tabela | Conteúdo |
+|---|---|
+| `bcb_sgs.series_data` | observações: `series_id`, `date`, `date_end`, `value`, `ativo`, `loaded_at` |
+| `bcb_sgs.series_metadata` | uma linha por série: `series_id` (chave), `name`, `name_abbreviated`, `name_english`, `name_english_abbreviated`, `theme_hierarchy` (`text[]`, com índice GIN), `frequency`, `unit`, `source`, `start_date`, `end_date`, `series_type`, `precision`, `min_value`, `max_value`, `manager_owner`, `special`, `formula`, `primitive_series`, `warning_message`, `last_update`, `loaded_at` |
 
-    Os pipelines de `macro/*` e `setorial/*` juntam `series_data` com `series_metadata` (nome, unidade, frequência e tema da série), e nenhum adaptador do `quantilica-sql` cria ou preenche essa tabela. O `load bcb-sgs` carrega só as observações: sem `series_metadata` no banco, `quantilica sql run macro/...` falha com `relation "series_metadata" does not exist`.
+!!! note "Metadados: a partir da versão 0.4.1"
+
+    Até a 0.4.0 o `load bcb-sgs` carregava só as observações e nenhuma tabela `series_metadata` existia: `quantilica sql run macro/...` falhava com `relation "series_metadata" does not exist`. A partir da 0.4.1 o `load` cria e preenche a tabela, e um banco criado pela 0.4.0 ganha `series_metadata` na próxima carga.
+
+**Observações.** A revisão é como no `bcb-sgs-sql`: uma carga desativa a linha anterior só onde o valor difere e insere a nova; recarregar um snapshot idêntico não muda nada; `--force` recarrega. O valor `0` é carregado como zero.
+
+**Metadados.** A tabela é o que os pipelines de `macro/*` e `setorial/*` juntam a `series_data` (nome, unidade, frequência e a hierarquia de temas que filtra as séries, como `theme_hierarchy @> ARRAY['Preços']`).
+
+- A fonte é o `<id>.json` que o `bcb-sgs-fetcher` grava em `bcb-sgs_AAAA-MM/metadata/` (`{"basic": ..., "full": ...}`). Quando a mesma série tem arquivo em vários meses, vale o do mês mais novo. A tabela guarda os campos de `basic` e a data de atualização dos metadados (`full.last_update`); descrição, metodologia e formatos de divulgação ficam no bruto.
+- `frequency` e `unit` são o texto do SGS (`Mensal`, `Diária`, `Var. % mensal`), e o campo que a fonte não informa fica nulo: nada é inventado.
+- O ledger usa `sha256`, uma entrada por série: arquivo igual é pulado, conteúdo novo substitui a linha inteira (uma renomeação na fonte atualiza o nome; o campo que deixou de ser informado volta a ser nulo) e `--force` recarrega. Cada arquivo é uma transação.
+- Uma série com dados e sem metadado não é erro, mas as SQL de `macro/*` usam `INNER JOIN` e **não a veem**: o `load` avisa com os ids, e o `status` do adaptador informa `series_sem_metadata` e `series_sem_metadata_ids` (além de `series_metadata_rows` e `metadados_sem_dados`). Para tê-la nos pipelines, colete os metadados dela (`quantilica bcb-sgs catalogo sync`, ou `series metadata <id>` para uma série) e carregue de novo.
+- Metadado ilegível (JSON truncado, id de dentro diferente do nome do arquivo) interrompe a carga com o caminho do arquivo.
 
 ## Pipelines
 

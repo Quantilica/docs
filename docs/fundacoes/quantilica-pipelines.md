@@ -27,7 +27,7 @@ quantilica-pipelines/
     - **Não é um pacote Python.** O repositório não tem `pyproject.toml` — não existe `quantilica install pipelines` nem `uv add quantilica-pipelines`. O catálogo é instalado como plugin do motor (abaixo).
     - **Identificadores legados não resolvem mais.** O `manifest.toml` unificado registra ids com prefixo de domínio (`macro_juros`, `ibge_precos`); `snipc` ou `precos` puros não são ids válidos. Use a forma por caminho: `quantilica sql run ibge/precos/snipc`.
     - **Modelos `cross/` leem a camada `analytics`.** O `cross/macro_trabalho` seleciona de `analytics.precos`, `analytics.juros` e `analytics.pnadcm_ocupada` — rode os pipelines de origem antes do modelo cruzado.
-    - **`macro/*` e `setorial/*` dependem de `series_metadata`.** As SQL juntam `series_data` com a tabela `series_metadata` (nome, unidade, frequência e tema da série; o filtro por `themes`, como em `macro/juros`, também vem dela). O `quantilica sql load bcb-sgs` carrega só as observações e nenhum adaptador do `quantilica-sql` cria ou preenche `series_metadata`: sem ela no banco, esses pipelines falham com `relation "series_metadata" does not exist`.
+    - **`macro/*` e `setorial/*` dependem de `series_metadata`.** Dez das 13 SQL que leem `series_data` juntam a tabela `series_metadata` (nome, unidade, frequência e tema da série; o filtro por tema, como em `macro/juros`, também vem dela) com `INNER JOIN`. Desde a versão 0.4.1 do `quantilica-sql`, o `quantilica sql load bcb-sgs` cria e preenche essa tabela a partir dos metadados do bruto do `bcb-sgs-fetcher`; uma série com dados e sem metadado carregado não aparece nos resultados. Com a 0.4.0 ou anterior a tabela não existia e esses pipelines falhavam com `relation "series_metadata" does not exist`.
 
 ## Instalação
 
@@ -253,8 +253,9 @@ A raiz do repositório traz um `manifest.toml` com os metadados do catálogo (`[
 ```bash
 # 1. Carregar os dados brutos no PostgreSQL (domínios sidra e bcb-sgs)
 #    sidra: <raiz-do-bruto> é a pasta do ibge-sidra, com t-<id>/ dentro
+#    bcb-sgs: <raiz-do-bruto> é a pasta do bcb-sgs, com data/ e bcb-sgs_AAAA-MM/metadata/
 quantilica sql load sidra --source-path <raiz-do-bruto> --all
-quantilica sql load bcb-sgs --source-path <diretorio-de-dados> --all
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --all   # observações e metadados
 
 # 2. Materializar um pipeline
 quantilica sql run ibge/precos/snipc
@@ -265,9 +266,9 @@ quantilica sql run ibge/precos/snipc
 SELECT * FROM analytics.ipca WHERE periodo >= '2024-01-01' ORDER BY periodo DESC;
 ```
 
-No `sidra`, `--all` carrega a versão vigente de cada consulta da pasta (o carimbo `@AAAAMMDD` mais novo; as versões antigas ficam de fora, e `--historico` as carrega). Para uma tabela só, use `--table <id>`; pasta sem `--all` nem `--table` dá erro. As SQL de `ibge/**` leem o esquema que o `load` cria (`dados`, `dimensao`, `localidade` e `periodo`) sem mudança, e filtram `ativo = TRUE`: a versão vigente de cada célula. `dados.modificacao` é a data de modificação do período informada pelo SIDRA (sidecar `.manifest.json` ou carimbo do nome) e fica nula quando a API não a informa; para o que valia numa data, use `ibge_sidra.dados_em(data, tabela)` em vez de filtrar `modificacao` (veja [SIDRA](quantilica-sql.md#sidra-ibge_sidra)). No `bcb-sgs`, `--all` carrega o snapshot mais recente de cada série.
+No `sidra`, `--all` carrega a versão vigente de cada consulta da pasta (o carimbo `@AAAAMMDD` mais novo; as versões antigas ficam de fora, e `--historico` as carrega). Para uma tabela só, use `--table <id>`; pasta sem `--all` nem `--table` dá erro. As SQL de `ibge/**` leem o esquema que o `load` cria (`dados`, `dimensao`, `localidade` e `periodo`) sem mudança, e filtram `ativo = TRUE`: a versão vigente de cada célula. `dados.modificacao` é a data de modificação do período informada pelo SIDRA (sidecar `.manifest.json` ou carimbo do nome) e fica nula quando a API não a informa; para o que valia numa data, use `ibge_sidra.dados_em(data, tabela)` em vez de filtrar `modificacao` (veja [SIDRA](quantilica-sql.md#sidra-ibge_sidra)). No `bcb-sgs`, `--all` carrega o snapshot mais recente de cada série e os metadados de cada uma (`series_metadata`, o mês mais novo de cada `<id>.json`); `--table <id>` carrega uma série. Veja [BCB SGS](quantilica-sql.md#bcb-sgs-bcb_sgs).
 
-O catálogo tem testes de contrato: cada SQL de `ibge/**` que lê o esquema do SIDRA (51 de 55) e cada SQL de `macro/*` e `setorial/*` que lê `series_data` (13) passa por `EXPLAIN` contra o esquema que o `quantilica-sql` cria, e cinco pipelines do IBGE têm o resultado conferido contra dado real.
+O catálogo tem testes de contrato: cada SQL de `ibge/**` que lê o esquema do SIDRA (51 de 55) e cada SQL de `macro/*` e `setorial/*` que lê `series_data` (13) passa por `EXPLAIN` contra o esquema que o `quantilica-sql` cria (inclusive `series_metadata`), e cinco pipelines do IBGE e dois do BCB (`macro/bcb_precos` e `macro/juros`) têm o resultado conferido contra dado real carregado pelo `load`.
 
 O schema de origem é inferido do `fetch.toml` (`[[tabelas]]` → `ibge_sidra`; `[[series]]` → `bcb_sgs`) e colocado no `search_path`; os modelos cross-domain qualificam os schemas explicitamente no SQL.
 
