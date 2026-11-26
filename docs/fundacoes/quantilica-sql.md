@@ -75,6 +75,8 @@ Rodar o `load` de novo não duplica nada: cada arquivo carregado fica registrado
 | `quantilica sql tablespaces` | Lista as tablespaces da instância |
 | `quantilica sql maintenance` | Tarefas de manutenção e índices |
 
+**Pasta e `--all`.** `-s` aceita um arquivo ou uma pasta. No `sidra`, a pasta é a raiz do bruto (`t-<id>/...`) e exige `--all` (todas as tabelas) ou `-t <id>` (uma tabela); só a versão vigente de cada arquivo (carimbo `@AAAAMMDD` mais novo) é carregada. `ibge_sidra.dados.modificacao` recebe a data de modificação da fonte, lida do sidecar `.manifest.json` ou do carimbo do nome, e fica nula quando o SIDRA não a informa.
+
 Domínios aceitos em `load`: `anac`, `anp`, `b3`, `bcb`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb`, `rfb-cnpj`, `rtn`, `secex-comex` (alias legado de `comex`), `sidra`, `tddata`, `tesouro-direto`, `tesouro_direto` e `tse`.
 
 Fora da CLI unificada, o mesmo conjunto de comandos está disponível como `quantilica-sql` (útil em scripts, agendadores e contêineres).

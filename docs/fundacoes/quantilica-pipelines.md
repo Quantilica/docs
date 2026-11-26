@@ -252,7 +252,8 @@ A raiz do repositório traz um `manifest.toml` com os metadados do catálogo (`[
 
 ```bash
 # 1. Carregar os dados brutos no PostgreSQL (domínios sidra e bcb-sgs)
-quantilica sql load sidra --source-path <diretorio-de-dados> --all
+#    sidra: <raiz-do-bruto> é a pasta do ibge-sidra, com t-<id>/ dentro
+quantilica sql load sidra --source-path <raiz-do-bruto> --all
 quantilica sql load bcb-sgs --source-path <diretorio-de-dados> --all
 
 # 2. Materializar um pipeline
@@ -263,6 +264,8 @@ quantilica sql run ibge/precos/snipc
 # 3. Consultar como qualquer tabela SQL
 SELECT * FROM analytics.ipca WHERE periodo >= '2024-01-01' ORDER BY periodo DESC;
 ```
+
+No `sidra`, `--all` carrega a versão vigente de cada arquivo da pasta (o carimbo `@AAAAMMDD` mais novo de cada consulta; as versões antigas ficam de fora). Para uma tabela só, use `--table <id>`; pasta sem `--all` nem `--table` dá erro. A coluna `ibge_sidra.dados.modificacao` guarda a data de modificação informada pelo SIDRA (sidecar `.manifest.json` ou carimbo do nome) e fica nula quando a API não a informa.
 
 O schema de origem é inferido do `fetch.toml` (`[[tabelas]]` → `ibge_sidra`; `[[series]]` → `bcb_sgs`) e colocado no `search_path`; os modelos cross-domain qualificam os schemas explicitamente no SQL.
 
