@@ -57,7 +57,7 @@ uv add comex-fetcher --index https://index.quantilica.com/simple/
     **Próximos passos:**
 
     - [Construa uma URL `/values` SIDRA com `Parametro`](fontes/ibge/ibge-sidra-fetcher.md)
-    - [Carregue tudo em PostgreSQL com `sidra-sql`](fontes/ibge/sidra-sql.md)
+    - [Carregue tudo em PostgreSQL com `quantilica-sql`](fundacoes/quantilica-sql.md#sidra-ibge_sidra)
     - [Use um pipeline pronto do catálogo](fontes/ibge/sidra-pipelines.md)
 
 === "Tesouro — Yield Curve"

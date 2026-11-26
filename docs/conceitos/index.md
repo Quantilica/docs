@@ -50,8 +50,8 @@ Páginas conceituais focadas em um tema específico:
 
 | Necessidade | Ferramenta do ecossistema |
 |---|---|
-| Dados macroeconômicos IBGE | `ibge-sidra-fetcher`, `sidra-sql` |
-| Indicadores macroeconômicos BCB (SGS) | `bcb-sgs-fetcher`, `bcb-sgs-sql` |
+| Dados macroeconômicos IBGE | `ibge-sidra-fetcher`, `quantilica-sql` |
+| Indicadores macroeconômicos BCB (SGS) | `bcb-sgs-fetcher`, `quantilica-sql` |
 | Títulos do Tesouro brasileiro | `tesouro-direto-fetcher`, `rtn-fetcher` |
 | Emprego e mercado de trabalho | `pdet-fetcher` |
 | Fluxos de comércio (import/export) | `comex-fetcher` |

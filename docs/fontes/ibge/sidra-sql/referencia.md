@@ -5,7 +5,7 @@ description: "Governança de revisões, ingestão streaming, API, formato TOML, 
 
 # sidra-sql — referência
 
-> Parte da documentação do [sidra-sql](../sidra-sql.md). Instalação, configuração e o exemplo rápido ficam na página principal.
+> Parte da documentação do [sidra-sql](../sidra-sql.md), **pacote arquivado**: esta página é referência histórica. O que vale hoje (modelo, revisões e consulta no tempo com `dados_em`) está em [quantilica-sql — SIDRA](../../../fundacoes/quantilica-sql.md#sidra-ibge_sidra). Instalação, configuração e o exemplo rápido do `sidra-sql` ficam na página principal.
 
 ## Governança de Dados: Tratamento de Revisões
 
@@ -330,7 +330,7 @@ with open("data/metadata.json", "w") as f:
     json.dump(metadata, f, indent=2)
 ```
 
-Então consulte com `Dados.modificacao <= snapshot_date` para reproduzir o dataset exato.
+Então consulte com `Dados.modificacao <= snapshot_date` para aproximar o dataset da data (no `sidra-sql`, a consulta exige reconstruir a versão vigente em cada data; no `quantilica-sql`, use `dados_em`).
 
 ### 3. Use Star Schema para Ferramentas BI
 

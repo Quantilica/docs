@@ -5,16 +5,18 @@ description: Motor ETL com plugin architecture, bulk load via COPY, star schema 
 
 # sidra-sql
 
-!!! warning "Substituído pelo quantilica-sql"
+!!! warning "Substituído pelo quantilica-sql — página de arquivo histórico"
 
-    Este pacote está depreciado e o repositório foi arquivado (somente leitura). As versões já publicadas continuam instaláveis pelo índice e esta página segue como referência, mas o motor unificado [quantilica-sql](../../fundacoes/quantilica-sql.md) o substitui. Para novos projetos, comece por ele. A tabela de migração está na página do quantilica-sql.
+    Este pacote está depreciado e o repositório foi arquivado (somente leitura). As versões já publicadas continuam instaláveis pelo índice e esta página segue como referência histórica do que o `sidra-sql` fazia, mas o motor unificado [quantilica-sql](../../fundacoes/quantilica-sql.md) o substitui. Para novos projetos, comece por ele.
+
+    **O que vale hoje está na seção [SIDRA do quantilica-sql](../../fundacoes/quantilica-sql.md#sidra-ibge_sidra):** o modelo de dados, a leitura do papel de cada dimensão, a vigência das revisões, as opções `--historico`, `--force` e `--recriar` e a consulta no tempo com `dados_em`. O SCD Type II, as colunas `ativo` e `modificacao` e as consultas desta página descrevem o pacote arquivado: o `quantilica-sql` guarda uma versão por arquivo e deriva a vigência por célula, e a tabela de migração (também na página do quantilica-sql) lista as diferenças.
 
 
 **Infraestrutura avançada de ETL e Data Warehousing para dados SIDRA do IBGE.**
 
 !!! warning "Pegadinhas da fonte oficial"
 
-    - **O IBGE revisa dados sem aviso.** PIB Q3 2020 publicado em janeiro de 2021 pode estar diferente em 2026. O `sidra-sql` usa SCD Type II (`ativo`, `modificacao`) — nunca sobrescreve, sempre acrescenta. Queries com `WHERE modificacao <= 'YYYY-MM-DD' AND ativo = TRUE` reproduzem qualquer snapshot histórico.
+    - **O IBGE revisa dados sem aviso.** PIB Q3 2020 publicado em janeiro de 2021 pode estar diferente em 2026. O `sidra-sql` usa SCD Type II (`ativo`, `modificacao`) — nunca sobrescreve, sempre acrescenta. Consultar `modificacao <= 'YYYY-MM-DD'` junto com `ativo = TRUE` parece reproduzir um snapshot histórico, mas descarta o que foi revisado depois da data (a versão antiga já está inativa); no `quantilica-sql`, a consulta correta é `dados_em`.
     - **Códigos de tabela são strings.** `"1620"`, não `1620`. Inteiro causa `404` silencioso.
     - **`unnest_classifications = true` é uma arma carregada.** Tabelas com 6 classificações fazem cross-product explosivo. Comece com `false` e expanda só quando souber o volume.
     - **`INSERT` linha-a-linha leva horas.** O motor usa `COPY FROM STDIN` + tabela de staging. Não tente "otimizar" via SQLAlchemy ORM.

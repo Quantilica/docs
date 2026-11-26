@@ -60,7 +60,7 @@ A camada de confiança entre você e os dados públicos do Brasil — para que v
 | Ferramenta | A dor que ela elimina |
 |---|---|
 | **[ibge-sidra-fetcher](fontes/ibge/ibge-sidra-fetcher.md)** | API REST do IBGE instável, rate limiting, períodos em strings ambíguas |
-| **[sidra-sql](fontes/ibge/sidra-sql.md)** | Bulk load de SIDRA em PostgreSQL com histórico de revisões (SCD II) |
+| **[quantilica-sql](fundacoes/quantilica-sql.md)** | Bulk load de SIDRA e de outras 14 fontes em PostgreSQL, com revisões preservadas por versão e consulta no tempo (`dados_em`). Substitui o `sidra-sql` (arquivado; [página histórica](fontes/ibge/sidra-sql.md)) |
 | **[sidra-pipelines](fontes/ibge/sidra-pipelines.md)** | Catálogo declarativo de pipelines IBGE prontos para rodar |
 | **[tesouro-direto-fetcher](fontes/tesouro/tesouro-direto-fetcher.md)** | CKAN do Tesouro, leitores por dataset, gráficos prontos |
 | **[rtn-fetcher](fontes/tesouro/rtn-fetcher.md)** | Planilhas hierárquicas do RTN viradas em DataFrame tipado |

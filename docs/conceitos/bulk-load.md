@@ -1,18 +1,20 @@
 ---
 title: Bulk Load & Versionamento de Revisões
-description: Como sidra-sql e bcb-sgs-sql ingerem milhões de linhas via COPY FROM STDIN e preservam o histórico de revisões oficiais.
+description: Como o quantilica-sql (e os legados sidra-sql e bcb-sgs-sql) ingere milhões de linhas via COPY e preserva o histórico de revisões oficiais.
 ---
 
 # Bulk Load & Versionamento de Revisões
 
-Os data warehouses do ecossistema — **[sidra-sql](../fontes/ibge/sidra-sql.md)** (IBGE) e
-**[bcb-sgs-sql](../fontes/bcb/bcb-sgs-sql.md)** (BCB SGS) — compartilham dois mecanismos de
-infraestrutura. Esta página explica *como funcionam*; as páginas de cada pacote mostram
-*como usá-los*.
+Os data warehouses do ecossistema — o **[quantilica-sql](../fundacoes/quantilica-sql.md)** (IBGE
+SIDRA, BCB SGS e as demais fontes) e os pacotes legados que ele substitui,
+**[sidra-sql](../fontes/ibge/sidra-sql.md)** e **[bcb-sgs-sql](../fontes/bcb/bcb-sgs-sql.md)** —
+compartilham dois mecanismos de infraestrutura. Esta página explica *como funcionam*; as
+páginas de cada pacote mostram *como usá-los*. O que cada um faz no versionamento está
+na tabela [abaixo](#versionamento-de-revisões).
 
 1. **Ingestão em massa** sem estourar RAM, via `COPY FROM STDIN` + tabela de staging.
 2. **Versionamento de revisões**: as fontes oficiais revisam dados publicados sem aviso, e
-   o warehouse nunca sobrescreve — acrescenta a nova versão e marca a antiga como inativa.
+   o warehouse nunca sobrescreve — acrescenta a nova versão e deixa a antiga como história.
 
 Ambos materializam os princípios de [Resiliência e Reprodutibilidade](principios.md):
 um snapshot histórico pode ser reproduzido exatamente, mesmo após correções da fonte.
@@ -56,7 +58,10 @@ A forma do modelo de dados decide quantos passes a carga precisa:
 === "SIDRA — dois passes (star schema)"
 
     O modelo dimensional do SIDRA tem chaves estrangeiras (localidade, período, dimensão)
-    que precisam ser resolvidas **antes** da carga dos fatos.
+    que precisam ser resolvidas **antes** da carga dos fatos. O diagrama abaixo é o do
+    `sidra-sql`; o `quantilica-sql` segue a mesma ideia por arquivo: resolve as dimensões em
+    memória, grava as observações por `COPY` e refaz a vigência das células afetadas, tudo
+    na mesma transação do arquivo (e do registro no ledger).
 
     ```mermaid
     graph TD
@@ -101,13 +106,18 @@ inativa, preservando a trilha completa.
 
 Cada warehouse aplica a variante adequada à sua fonte:
 
-| | `sidra-sql` (SIDRA) | `bcb-sgs-sql` (SGS) |
-|---|---|---|
-| Técnica | SCD Type II | Soft-versioning por detecção-de-mudança |
-| Colunas | `ativo`, `modificacao` | `ativo`, `loaded_at` |
-| "Verdade atual" | `WHERE ativo = TRUE` | `WHERE ativo = TRUE` |
-| Trilha de revisões | `ORDER BY modificacao` | `ORDER BY loaded_at` |
-| Tabela de auditoria | nenhuma (na própria fato) | nenhuma (na própria fato) |
+| | `sidra-sql` (legado, SIDRA) | `quantilica-sql` (SIDRA) | `bcb-sgs-sql` e `quantilica-sql` (SGS) |
+|---|---|---|---|
+| Técnica | SCD Type II por linha | Versão por arquivo, vigência derivada por célula | Soft-versioning por detecção-de-mudança |
+| Colunas | `ativo`, `modificacao` na linha | `ativo` na observação; `modificacao`, `sha256` e `consulta` na `versao` | `ativo`, `loaded_at` |
+| "Verdade atual" | `WHERE ativo = TRUE` | `WHERE ativo = TRUE` | `WHERE ativo = TRUE` |
+| Trilha de revisões | `ORDER BY modificacao` | uma `versao` por arquivo, nada apagado | `ORDER BY loaded_at` |
+| Consulta no tempo | `modificacao <= D` com `ativo = TRUE` (incorreta: descarta o que foi revisado depois de D) | `dados_em(D, tabela)` | não há (só `loaded_at`) |
+| Tabela de auditoria | nenhuma (na própria fato) | `versao` e o ledger `arquivo_carregado` (`sha256`) | o ledger `arquivo_carregado` |
+
+No SIDRA do `quantilica-sql`, cada arquivo coletado é uma versão e só uma observação por célula é
+`ativo`: a da versão mais recente da consulta mais recente que a cobre. O estado ativo não
+depende da ordem de carga. O detalhe está em [quantilica-sql — SIDRA](../fundacoes/quantilica-sql.md#sidra-ibge_sidra).
 
 ### A ordem importa: desativar antes de inserir
 
@@ -131,20 +141,32 @@ o que torna as recargas idempotentes.
 
 ### Reproduzir um snapshot histórico
 
-Como nenhuma versão é apagada, filtrar pela data de revisão reconstrói o banco como ele
-estava em qualquer momento do passado — a base do padrão de [Proveniência &
-Manifestos](proveniencia.md) e da receita [Time Travel](../guias/receitas/time-travel.md):
+Como nenhuma versão é apagada, é possível reconstruir o banco como ele estava em qualquer
+momento do passado — a base do padrão de [Proveniência & Manifestos](proveniencia.md) e da
+receita [Time Travel](../guias/receitas/time-travel.md).
+
+No SIDRA do `quantilica-sql`, a função `dados_em` faz a consulta (a versão mais recente com
+`modificacao` até a data, ativa ou não):
 
 ```sql
 -- O dado como existia em 2024-06-01
-SELECT * FROM ibge_sidra.dados
-WHERE modificacao <= '2024-06-01' AND ativo = TRUE;
+SELECT * FROM ibge_sidra.dados_em('2024-06-01', '5938');
 ```
+
+!!! warning "`modificacao <= D` com `ativo = TRUE` não reproduz o passado"
+
+    `ativo` marca a versão vigente hoje. Uma célula revisada depois de `D` tem a versão que
+    valia em `D` inativa, e o filtro a descarta (a consulta volta sem a célula, em vez de
+    devolver o valor antigo). Foi a receita do `sidra-sql`; use `dados_em`.
+
+No SGS (`series_data`) o que existe é `loaded_at`: `WHERE ativo` dá a verdade atual, e
+as linhas inativas, ordenadas por `loaded_at`, são a trilha de revisões.
 
 ---
 
 ## Onde isto aparece
 
-- **[sidra-sql](../fontes/ibge/sidra-sql.md)** — dois passes + SCD Type II para o star schema do SIDRA.
-- **[bcb-sgs-sql](../fontes/bcb/bcb-sgs-sql.md)** — passe único + soft-versioning para as séries do SGS.
+- **[quantilica-sql](../fundacoes/quantilica-sql.md)** — versões por arquivo e `dados_em` para o star schema do SIDRA; soft-versioning para as séries do SGS.
+- **[sidra-sql](../fontes/ibge/sidra-sql.md)** (legado) — dois passes + SCD Type II para o star schema do SIDRA.
+- **[bcb-sgs-sql](../fontes/bcb/bcb-sgs-sql.md)** (legado) — passe único + soft-versioning para as séries do SGS.
 - **[Proveniência & Manifestos](proveniencia.md)** — o lado de coleta da mesma garantia de reprodutibilidade.

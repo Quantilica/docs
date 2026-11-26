@@ -11,7 +11,7 @@ Ele **substitui** os motores `sidra-sql` e `bcb-sgs-sql`, que seguem documentado
 
 | | |
 |---|---|
-| **Versão** | 0.1.1 |
+| **Versão** | 0.4.0 |
 | **Banco** | PostgreSQL (driver `psycopg` 3, carga por `COPY`) |
 | **Fontes** | 15 adaptadores: ANAC, ANP, B3, BCB-SGS, Comex, CVM, DATASUS, INEP, INMET, PDET, RFB-CNPJ, RTN, SIDRA, Tesouro Direto e TSE |
 | **Distribuição** | índice da Quantilica (não está no PyPI) |
@@ -61,21 +61,21 @@ quantilica sql load cvm -s ./data/cvm
 quantilica sql status
 ```
 
-Rodar o `load` de novo não duplica nada: cada arquivo carregado fica registrado em `{schema}.arquivo_carregado`, e os já registrados são pulados. `--force` refaz a carga.
+Rodar o `load` de novo não duplica nada: cada arquivo carregado fica registrado em `{schema}.arquivo_carregado` com o `sha256` do conteúdo. Arquivo igual é pulado; o mesmo nome com conteúdo novo é recarregado; `--force` refaz a carga mesmo assim.
 
 ## Comandos
 
 | Comando | O que faz |
 |---|---|
 | `quantilica sql status` | Mostra schemas, tamanhos e tabelas no PostgreSQL |
-| `quantilica sql load <domínio>` | Carrega uma fonte. `-s` caminho dos arquivos, `-c` competência (`AAAA-MM` ou lista), `-a` todas as partições, `-t` filtra tabela ou grupo, `--tablespace`, `--staging-dir`, `-f` força recarga |
+| `quantilica sql load <domínio>` | Carrega uma fonte. `-s` caminho dos arquivos, `-c` competência (`AAAA-MM` ou lista), `-a` todas as partições, `-t` filtra tabela ou grupo, `--tablespace`, `--staging-dir`, `-f` força recarga. No SIDRA, também `--historico` e `--recriar` ([abaixo](#sidra-ibge_sidra)) |
 | `quantilica sql run <pipeline>` | Executa um pipeline de transformação na camada `analytics`. `--raw-schema` e `--target-schema` ajustam os schemas |
 | `quantilica sql scaffold <nome>` | Gera o esqueleto de um pipeline (`-t ibge`, `bcb` ou `general`) ou de um catálogo (`--catalog`) |
 | `quantilica sql plugin install\|list\|remove` | Gerencia catálogos de pipelines instalados via Git |
 | `quantilica sql tablespaces` | Lista as tablespaces da instância |
 | `quantilica sql maintenance` | Tarefas de manutenção e índices |
 
-**Pasta e `--all`.** `-s` aceita um arquivo ou uma pasta. No `sidra`, a pasta é a raiz do bruto (`t-<id>/...`) e exige `--all` (todas as tabelas) ou `-t <id>` (uma tabela); só a versão vigente de cada arquivo (carimbo `@AAAAMMDD` mais novo) é carregada. `ibge_sidra.dados.modificacao` recebe a data de modificação da fonte, lida do sidecar `.manifest.json` ou do carimbo do nome, e fica nula quando o SIDRA não a informa.
+**Pasta e `--all`.** `-s` aceita um arquivo ou uma pasta. No `sidra` e no `bcb`, a pasta é a raiz do bruto (`t-<id>/...` ou `data/...`) e exige `--all` (todas as tabelas ou séries) ou `-t <id>` (uma); só a versão vigente de cada consulta (carimbo mais novo do nome) é carregada. Os detalhes de cada fonte estão nas seções [SIDRA](#sidra-ibge_sidra) e [BCB SGS](#bcb-sgs-bcb_sgs).
 
 Domínios aceitos em `load`: `anac`, `anp`, `b3`, `bcb`, `bcb-sgs`, `comex`, `cvm`, `datasus`, `inep`, `inmet`, `pdet`, `rfb`, `rfb-cnpj`, `rtn`, `secex-comex` (alias legado de `comex`), `sidra`, `tddata`, `tesouro-direto`, `tesouro_direto` e `tse`.
 
@@ -89,6 +89,126 @@ Fora da CLI unificada, o mesmo conjunto de comandos está disponível como `quan
 - **`COPY` em streaming:** a carga usa `COPY` com `psycopg` 3, sem montar o arquivo inteiro em memória.
 - **Partições:** tabelas grandes são particionadas por mês ou por ano.
 - **Adaptadores:** cada fonte tem um adaptador que sabe localizar os arquivos, criar as tabelas e carregar. Um motor genérico cobre o que é comum entre eles.
+
+## SIDRA (`ibge_sidra`)
+
+O adaptador `sidra` lê os arquivos do `ibge-sidra-fetcher` (`t-<id>/t-<id>_...@AAAAMMDD.json`, com o sidecar `.manifest.json` e o `metadados@AAAAMMDD.json` da tabela) e grava um modelo estrela em formato longo. Qualquer tabela do SIDRA carrega, com qualquer número de dimensões e de classificações.
+
+```bash
+# bruto coletado: <raiz>/t-1737/..., <raiz>/t-7060/...
+quantilica sql load sidra --source-path <raiz-do-bruto> --all          # só a versão vigente de cada consulta
+quantilica sql load sidra --source-path <raiz-do-bruto> --table 7060   # uma tabela
+quantilica sql load sidra --source-path <raiz-do-bruto> --all --historico  # todas as versões, da mais antiga para a mais nova
+```
+
+### O modelo
+
+```mermaid
+erDiagram
+    tabela ||--o{ variavel : tem
+    tabela ||--o{ classificacao : tem
+    classificacao ||--o{ categoria : tem
+    tabela ||--o{ serie : tem
+    serie ||--o{ serie_categoria : "ponte (N classificações)"
+    categoria ||--o{ serie_categoria : usa
+    tabela ||--o{ versao : "um arquivo = uma versão"
+    versao ||--o{ observacao : origem
+    serie ||--o{ observacao : mede
+    localidade ||--o{ observacao : onde
+    periodo ||--o{ observacao : quando
+    observacao {
+        int versao_id
+        int tabela_id
+        int serie_id
+        int localidade_id
+        int periodo_id
+        numeric valor
+        text simbolo
+        bool ativo
+    }
+    versao {
+        int id
+        int tabela_id
+        text consulta
+        date modificacao
+        text arquivo
+        text sha256
+        bigint linhas
+    }
+```
+
+A **série** concentra a variável, a unidade e a combinação de categorias das classificações; a ponte para as N classificações fica nela, não no fato (uma tabela municipal grande tem dezenas de milhões de observações e poucas centenas ou milhares de séries). O fato custa cerca de 100 bytes por linha com o índice único, e a carga roda a cerca de 100 mil linhas por segundo em PostgreSQL local. Exige **PostgreSQL 12+** (colunas geradas).
+
+### O papel de cada dimensão vem da fonte
+
+O SIDRA numera `D1..Dn` na ordem dos segmentos da URL da consulta, e não pela tabela: a mesma tabela devolve o período em `D2` ou em `D1` conforme a ordem pedida. Por isso o adaptador **nunca assume a posição**. O papel de cada dimensão (território, variável, período, classificação) sai da URL gravada no sidecar e, de forma independente, do cabeçalho do arquivo conferido com os metadados da tabela; as duas leituras têm de concordar. Divergência, dimensão sem papel e falta do sidecar e dos metadados interrompem a carga do arquivo, com o nome dele e o motivo. A regra foi testada com a mesma tabela em quatro ordens de URL.
+
+### Valores e símbolos
+
+`V` numérico vira `numeric` com a escala do texto (`7695.8200000000000` volta idêntico). Os símbolos do IBGE (`-`, `..`, `...`, `X`, `Z`) vão para `simbolo`, com `valor` nulo: nunca viram `0`. Zero numérico do IBGE (`0`, `0.0`) é `valor = 0`.
+
+### Revisões e vigência
+
+Cada arquivo é uma **versão** (`ibge_sidra.versao`): a consulta, a data de modificação do período na fonte (`modificacao`), o `sha256` e o número de linhas. Uma revisão do IBGE chega como arquivo novo (`@data_nova`) ao lado do antigo; a carga insere a versão nova e **não apaga** a antiga. Só uma observação por célula é `ativo`:
+
+- cada consulta afirma o que traz a sua última versão: uma célula que a revisão deixou de trazer sai da vigência e continua no banco como história;
+- entre consultas diferentes que cobrem a mesma célula, vale a de maior data de modificação (empate: a primeira carregada, com aviso se o valor diferir);
+- o estado ativo **não depende da ordem de carga** nem de `--all` contra `--historico`;
+- uma versão sem nenhuma célula, ou que perde mais de 50% das células da versão anterior da mesma consulta, é recusada (uma resposta cortada não apaga a vigência); `--force` carrega mesmo assim.
+
+Isto **não é** o SCD Type II do `sidra-sql`: não há `valido_de`/`valido_ate` por linha nem diff valor a valor; a versão é o arquivo e a vigência é derivada. A tabela abaixo resume as diferenças.
+
+### Consulta no tempo: `dados_em`
+
+A função `ibge_sidra.dados_em(data[, tabela])` devolve o que valia numa data, com as mesmas colunas de `dados`:
+
+```sql
+-- PIB municipal como estava no IBGE em 15/12/2019
+SELECT l.d1c AS municipio, p.ano, d.v::numeric AS valor
+FROM ibge_sidra.dados_em(DATE '2019-12-15', '5938') d
+JOIN ibge_sidra.localidade l ON d.localidade_id = l.id
+JOIN ibge_sidra.periodo p ON d.periodo_id = p.id
+JOIN ibge_sidra.dimensao dim ON d.dimensao_id = dim.id
+WHERE dim.d2n = 'Produto Interno Bruto a preços correntes';
+```
+
+Para cada célula vale a versão mais recente com `modificacao <= data`, e para a data de hoje o resultado é igual a `dados WHERE ativo`. Uma célula removida por uma revisão não volta; versão sem data não entra. Passe a tabela (`'5938'`) sempre que souber: sem ela a função percorre o fato inteiro.
+
+!!! warning "Não combine `modificacao <= data` com `ativo = TRUE`"
+
+    Era a receita do `sidra-sql`, mas está errada: `ativo` marca só a versão vigente **hoje**. Uma chave revisada depois de `data` tem a versão que valia em `data` inativa, e o filtro a descarta em vez de devolvê-la. Use `dados_em`.
+
+O histórico só existe no banco se as versões antigas estiverem no bruto (o coletor nunca apaga uma versão) e forem carregadas: `--all --historico` reconstrói a história a partir do bruto; sem `--historico` ela passa a acumular a partir das revisões seguintes.
+
+### Superfície para consultas
+
+| Objeto | O que é |
+|---|---|
+| `dados` (view) | uma linha por célula: `tabela_sidra_id`, `localidade_id`, `dimensao_id`, `periodo_id`, `modificacao`, `ativo` e `v` (texto do valor ou do símbolo) |
+| `localidade`, `periodo` | `localidade` com `nc`, `nn` (nível), `d1c`, `d1n` (código e nome); `periodo` com `ano`, `mes`, `trimestre`, `frequencia`, `data_inicio` |
+| `dimensao` (view) | uma linha por série: `mc`, `mn` (unidade), `d2c`, `d2n` (variável), `d4c`..`d9n` (até 6 classificações, na ordem dos metadados) |
+| `observacao_plana` (view) | os nomes, com as categorias em JSONB, sem JOIN |
+| `dados_em(data[, tabela])` | o que valia numa data |
+
+`dados`, `dimensao`, `localidade` e `periodo` são os nomes das consultas do catálogo [`quantilica-pipelines`](quantilica-pipelines.md): as SQL de `ibge/**` leem essa superfície sem mudança.
+
+### Esquema da versão 0.3.x
+
+A versão 0.3.x guardava só uma tabela `dados` com os códigos crus (a "dimensão" era o código da variável e as classificações eram descartadas). Esse esquema não se converte: a primeira carga num schema antigo sai com código 1 e uma mensagem. `quantilica sql load sidra ... --recriar` renomeia a tabela antiga para `dados_legado_v0`, apaga do ledger as linhas do SIDRA e cria o esquema novo, sem migrar dados; recarregue o bruto em seguida.
+
+## BCB SGS (`bcb_sgs`)
+
+```bash
+# bruto do bcb-sgs-fetcher: <raiz>/data/series_<id>@AAAAMMDDTHHMMSS.json
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --all       # o snapshot mais recente de cada série
+quantilica sql load bcb-sgs --source-path <raiz-do-bruto> --table 433  # uma série
+```
+
+`bcb-sgs` é o nome da fonte e `bcb` é o domínio; os dois aceitam. A tabela `bcb_sgs.series_data` (`series_id`, `date`, `date_end`, `value`, `ativo`, `loaded_at`) recebe a revisão como no `bcb-sgs-sql`: uma carga desativa a linha anterior só onde o valor difere e insere a nova; recarregar um snapshot idêntico não muda nada; `--force` recarrega. O valor `0` é carregado como zero.
+
+!!! warning "`series_metadata` não é criada pelo `load`"
+
+    Os pipelines de `macro/*` e `setorial/*` juntam `series_data` com `series_metadata` (nome, unidade, frequência e tema da série), e nenhum adaptador do `quantilica-sql` cria ou preenche essa tabela. O `load bcb-sgs` carrega só as observações: sem `series_metadata` no banco, `quantilica sql run macro/...` falha com `relation "series_metadata" does not exist`.
 
 ## Pipelines
 
@@ -106,7 +226,10 @@ Veja [`quantilica-pipelines`](quantilica-pipelines.md) para a estrutura e o cat�
 | Legado | `quantilica-sql` |
 |---|---|
 | `sidra-sql run <catálogo> <pipeline>`, `bcb-sgs-sql run …` | `quantilica sql run <pipeline>` (por exemplo `macro/juros`) |
-| `bcb-sgs-sql load …` | `quantilica sql load bcb-sgs …` |
+| `bcb-sgs-sql load …` | `quantilica sql load bcb-sgs --source-path <raiz> --all` |
+| `sidra-sql run` (busca na API e carrega) | coletor `quantilica ibge-sidra sync` e depois `quantilica sql load sidra --source-path <raiz> --all` (o `quantilica-sql` não baixa) |
+| SCD Type II por linha (`ativo`, `modificacao` gravados na linha) | versão por arquivo, vigência derivada por célula (`ativo` na observação, `modificacao` na versão) |
+| `modificacao <= D` junto com `ativo = TRUE` (consulta no tempo) | `ibge_sidra.dados_em(D, '<tabela>')` |
 | `sidra-sql plugin install\|list\|remove` | `quantilica sql plugin install\|list\|remove` |
 | `sidra-sql plugin scaffold` | `quantilica sql scaffold` |
 | `config set\|get\|list`, `plugin update`, `plugin validate`, `plugin add-pipeline`, `transform`, `run-path` | sem equivalente na CLI da versão 0.1.1 (a configuração vem de variáveis de ambiente) |

@@ -35,7 +35,7 @@ O Cookbook é o lugar onde **Modularidade** sai do princípio abstrato para a pr
 
 ### Reprodutibilidade
 
-- **[Reproduzir um paper de 2019 — Time Travel](time-travel.md)** — usar manifesto SHA-256 + SCD Type II do `sidra-sql` para defender um número exato anos depois.
+- **[Reproduzir um paper de 2019 — Time Travel](time-travel.md)** — usar manifesto SHA-256 + versões preservadas no `quantilica-sql` (`dados_em`) para defender um número exato anos depois.
 
 ### Combinações sugeridas (propostas)
 

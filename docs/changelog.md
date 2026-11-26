@@ -7,6 +7,12 @@ description: Marcos importantes do ecossistema Quantilica — novos pacotes, mud
 
 Marcos importantes do ecossistema como um todo. Cada pacote mantém seu próprio `CHANGELOG.md` no repositório do GitHub — este aqui é o resumo cross-pacote.
 
+## 2026-11 — Carga do SIDRA no `quantilica-sql` (modelo, revisões e consulta no tempo)
+
+- **Documentado:** a seção [SIDRA do quantilica-sql](fundacoes/quantilica-sql.md#sidra-ibge_sidra) descreve o modelo estrela em formato longo, a leitura do papel de cada dimensão a partir da URL e dos metadados (nunca da posição), a vigência das revisões por versão de arquivo, `--historico`, `--force` e `--recriar`, e a função `dados_em`. A seção BCB SGS descreve `load bcb-sgs` (pasta e `--all`).
+- **Corrigido:** as páginas que prometiam SCD Type II e a consulta `modificacao <= D` com `ativo = TRUE` como time travel (receita [Time Travel](guias/receitas/time-travel.md), [Bulk Load](conceitos/bulk-load.md), perfis de pesquisador e de engenheiro de dados) usam `dados_em`. A consulta antiga descartava o que foi revisado depois da data.
+- **Arquivo histórico:** as páginas do `sidra-sql` (arquivado) ganharam aviso de topo apontando para a seção nova.
+
 ## 2026-11 — `sidra-fetcher` vira `ibge-sidra-fetcher`
 
 - **Renome:** o fetcher do SIDRA passa a levar o prefixo do órgão, como `bcb-sgs` e `bcb-microdados`. A distribuição é `ibge-sidra-fetcher` e o módulo é `ibge_sidra_fetcher`, sem módulo de compatibilidade. Ver [ibge-sidra-fetcher](fontes/ibge/ibge-sidra-fetcher.md).

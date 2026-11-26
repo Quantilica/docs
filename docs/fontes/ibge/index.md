@@ -33,13 +33,15 @@ graph LR
     B --> C[Polars / pandas / Jupyter]
 ```
 
-### Stack 2 — Produção (legado: `sidra-sql` + `sidra-pipelines`)
+### Stack 2 — Produção (`quantilica-sql` + `quantilica-pipelines`; legado: `sidra-sql` + `sidra-pipelines`)
 
-Para pipelines automatizados, data warehouses multi-usuário e definições declarativas. Motor ETL baseado em plugins que ingere SIDRA num star schema PostgreSQL com bulk load `COPY FROM STDIN` (400k+ rows/s) e SCD Type II para preservar revisões históricas.
+Para pipelines automatizados, data warehouses multi-usuário e definições declarativas. O `ibge-sidra-fetcher` coleta o bruto e o [quantilica-sql](../../fundacoes/quantilica-sql.md#sidra-ibge_sidra) o carrega num star schema PostgreSQL por `COPY` (cerca de 100 mil linhas/s), preservando as revisões históricas por versão (consulta no tempo com `dados_em`). O `sidra-sql` legado buscava na API e usava SCD Type II; está arquivado.
 
 ```mermaid
 graph LR
-    A[API SIDRA] --> B[sidra-sql<br/>fetch + normalização + load]
+    A[API SIDRA] --> F[ibge-sidra-fetcher<br/>sync]
+    F --> R[(bruto<br/>t-id/...@data.json)]
+    R --> B[quantilica-sql<br/>load sidra]
     B --> C[(PostgreSQL<br/>star schema)]
     C --> D[Power BI / Metabase / SQL]
 ```
@@ -50,7 +52,7 @@ graph LR
 | Frequência | on-demand | horária / diária / semanal |
 | Escala | uso pessoal, notebooks | multi-usuário, enterprise |
 | Validação | manual | automatizada (constraints) |
-| Auditoria | logging básico | SCD Type II completo |
+| Auditoria | logging básico | versões por arquivo e consulta no tempo (`dados_em`); o legado `sidra-sql` usava SCD Type II |
 | Transformação | Python (Polars) | SQL declarativo |
 
 ## Pacotes

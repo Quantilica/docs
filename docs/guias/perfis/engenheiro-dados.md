@@ -13,22 +13,26 @@ Você é responsável pela infraestrutura que serve os analistas. Constrói pipe
 |---|---|
 | Cada nova fonte exigia retry, manifesto, logging e exceção customizada | **[`quantilica-core`](../../fundacoes/quantilica-core.md)** |
 | Encoding inconsistente, schemas mutantes, falta de tipagem na ingestão | **[`quantilica-analytics`](../../fundacoes/quantilica-analytics.md)** (Data Contracts) |
-| Carregar SIDRA em PostgreSQL com revisões preservadas (SCD II) | **[`sidra-sql`](../../fontes/ibge/sidra-sql.md)** |
+| Carregar SIDRA em PostgreSQL com revisões preservadas (versões por arquivo) | **[`quantilica-sql`](../../fundacoes/quantilica-sql.md#sidra-ibge_sidra)** |
 
 ## Por onde começar
 
 1. **5 minutos:** leia a [Arquitetura](../../conceitos/arquitetura.md). Entenda como `-fetcher`, `-sql` e `-pipelines` se conectam.
-2. **15 minutos:** rode um pipeline declarativo via `sidra-sql plugin install ... --alias std && sidra-sql run std snipc`. Isso é o "fim do túnel" — pipelines como TOML versionado.
+2. **15 minutos:** rode um pipeline declarativo via `quantilica sql plugin install ... --alias std && quantilica sql run ibge/precos/snipc`. Isso é o "fim do túnel" — pipelines como TOML versionado.
 3. **30 minutos:** monte a receita **[Balança comercial em DuckDB](../receitas/balanca-duckdb.md)** — `comex-fetcher` para baixar, DuckDB para consultar Parquet sem RAM.
 
-### Pipeline de inflação em 1 comando
+### Pipeline de inflação em 3 comandos
 
 ```bash
-# Instalar catálogo padrão de pipelines IBGE
-sidra-sql plugin install sidra-pipelines --alias std
+# 1. Coletar as tabelas do SNIPC (uma vez, ou a cada revisão)
+quantilica ibge-sidra sync 7060 -o ./data/ibge-sidra
 
-# Rodar pipeline SNIPC → baixa, normaliza e carrega INPC, IPCA e IPCA-15 em PostgreSQL
-sidra-sql run std snipc
+# 2. Carregar o bruto no PostgreSQL (só a versão vigente de cada consulta)
+quantilica sql load sidra --source-path ./data/ibge-sidra --all
+
+# 3. Instalar o catálogo e rodar o pipeline SNIPC → materializa INPC, IPCA e IPCA-15
+quantilica sql plugin install https://github.com/Quantilica/quantilica-pipelines.git --alias std
+quantilica sql run ibge/precos/snipc
 ```
 
 ```python
@@ -52,14 +56,14 @@ print(latest["sha256"])  # hash do arquivo de origem
 ## Padrões que escalam
 
 - **Manifestos no git, dados fora.** Versionar `.manifest.json` no repositório do projeto, manter os arquivos em S3/MinIO. O manifesto é a fonte de verdade.
-- **TOML > código Python para pipelines repetitivos.** O `sidra-sql` aceita pipelines declarativos. Versionados, lintáveis, lidos por não-devs.
-- **`COPY FROM STDIN` em vez de `INSERT`.** 400k linhas/s vs horas para 10M linhas. O `sidra-sql` já faz isso.
-- **SCD Type II sempre.** Nunca sobrescreva dado oficial; marque `ativo=FALSE` e insira nova versão. Auditoria gratuita.
+- **TOML > código Python para pipelines repetitivos.** O `quantilica-sql` aceita pipelines declarativos. Versionados, lintáveis, lidos por não-devs.
+- **`COPY FROM STDIN` em vez de `INSERT`.** Cerca de 100 mil linhas/s no SIDRA do `quantilica-sql`, contra horas para 10M linhas com `INSERT`. O `quantilica-sql` já faz isso.
+- **Versão nova, nunca sobrescrever.** Nunca sobrescreva dado oficial; a revisão entra como versão nova e a antiga fica inativa (`ativo = FALSE`), consultável com `dados_em`. Auditoria gratuita.
 - **DuckDB sobre Parquet.** Para queries ad-hoc em bilhões de linhas sem provisionar warehouse.
 
 ## Caminho de aprofundamento
 
 - [`quantilica-core` — anatomia de um download](../../fundacoes/quantilica-core.md)
 - [`quantilica-analytics` — Parquet com proveniência embarcada](../../fundacoes/quantilica-analytics.md)
-- [`sidra-sql` — warehouse + SCD II](../../fontes/ibge/sidra-sql.md)
+- [`quantilica-sql` — warehouse, versões e `dados_em`](../../fundacoes/quantilica-sql.md)
 - [Padrões Práticos](../../conceitos/padroes.md) — receitas táticas para casos comuns.

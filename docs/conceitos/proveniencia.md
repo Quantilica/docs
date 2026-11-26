@@ -215,4 +215,4 @@ Quando você re-roda um pipeline e o `sha256` do novo download não bate com o d
 - **[Padronização de Lake Hive](../normas/lake.md)** — como a proveniência do manifesto é propagada para os metadados `quantilica.*` do Parquet e para `_dataset.json`.
 - **[`quantilica-core`](../fundacoes/quantilica-core.md)** — onde os manifestos e validadores vivem.
 - **[`quantilica-analytics`](../fundacoes/quantilica-analytics.md)** — injeção de proveniência em Parquet.
-- **[`sidra-sql`](../fontes/ibge/sidra-sql.md)** — proveniência em nível de linha via SCD Type II no warehouse.
+- **[`quantilica-sql`](../fundacoes/quantilica-sql.md#sidra-ibge_sidra)** — proveniência no warehouse: uma versão por arquivo (`consulta`, `modificacao`, `sha256`) e consulta no tempo com `dados_em`.

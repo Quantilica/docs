@@ -56,5 +56,5 @@ print(df.select(["D2N", "V"]).tail(12))  # últimos 12 meses
 ## Caminho de aprofundamento
 
 - [`sidra-pipelines`](../../fontes/ibge/sidra-pipelines.md) — catálogo de 20 pipelines IBGE prontos para carregar em PostgreSQL.
-- [`sidra-sql`](../../fontes/ibge/sidra-sql.md) — quando seu fluxo virou pipeline e você quer warehouse com SCD II.
+- [`quantilica-sql`](../../fundacoes/quantilica-sql.md) — quando seu fluxo virou pipeline e você quer warehouse com as revisões preservadas.
 - [Cookbook completo](../receitas/index.md) — receitas que você pode parafrasear.
