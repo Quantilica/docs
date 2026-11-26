@@ -1,6 +1,6 @@
 ---
 title: Reproduzir um paper de 2019 — Time Travel com manifestos
-description: Como o manifesto SHA-256 e as versões preservadas no quantilica-sql (dados_em) permitem reproduzir um número exato anos depois, mesmo após revisão silenciosa do IBGE.
+description: Como o manifesto SHA-256 e a função dados_em do quantilica-sql reproduzem um número exato anos depois, mesmo após revisão silenciosa do IBGE.
 ---
 
 # Reproduzir um paper de 2019 — Time Travel real
